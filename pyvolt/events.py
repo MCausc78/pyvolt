@@ -725,3 +725,8 @@ class SessionDeleteAllEvent(AuthifierEvent):
     exclude_session_id: core.ULID | None = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
+
+
+@define(slots=True)
+class LogoutEvent(BaseEvent):
+    pass

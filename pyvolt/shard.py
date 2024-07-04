@@ -24,7 +24,8 @@ class Reconnect(BaseException):
 
 
 class EventHandler(abc.ABC):
-    async def handle_raw(self, shard: "Shard", d: "raw.ClientEvent") -> None: ...
+    @abc.abstractmethod
+    async def handle_raw(self, shard: Shard, d: raw.ClientEvent) -> None: ...
 
 
 DEFAULT_SHARD_USER_AGENT = (
@@ -266,6 +267,7 @@ class Shard:
         self._last_close_code = None
 
     async def _handle(self, d: raw.ClientEvent) -> bool:
+        logged_out = False
         if d["type"] == "Pong":
             nonce = d["data"]
             if nonce != self._heartbeat_sequence:
@@ -290,8 +292,7 @@ class Shard:
                     )
                 return not self.reconnect_on_timeout
         elif d["type"] == "Logout":
-            self.logged_out = True
-            return False
+            logged_out = True
 
         if self.handler is not None:
             # asyncio.create_task(self.handler.handle_raw(self, d), name=f"pyvolt-eht-{self._sequence}")
@@ -300,7 +301,7 @@ class Shard:
             except Exception as exc:
                 _L.exception("error occured on seq=%s", self._sequence, exc_info=exc)
             self._sequence += 1
-        return True
+        return logged_out
 
 
 __all__ = ("Close", "Reconnect", "EventHandler", "DEFAULT_SHARD_USER_AGENT", "Shard")

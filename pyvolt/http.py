@@ -502,7 +502,7 @@ class HTTPClient:
         ------
         :class:`APIError`
             Getting channel pins failed.
-        
+
         Returns
         -------
         :class:`list`[:class:`messages.Message`]
@@ -834,7 +834,7 @@ class HTTPClient:
             The channel.
         message: :class:`core.ResolvableULID`
             The message.
-        
+
         Raises
         ------
         :class:`Forbidden`

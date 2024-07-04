@@ -75,9 +75,7 @@ class BaseChannel(base.Base, abc.ABC):
         :class:`APIError`
             Closing the channel failed.
         """
-        return await self.state.http.close_channel(
-            self.id, silent=silent
-        )
+        return await self.state.http.close_channel(self.id, silent=silent)
 
     async def edit(
         self,

@@ -592,6 +592,11 @@ class Parser:
             id=d["id"],
         )
 
+    def parse_logout_event(
+        self, shard: Shard, d: raw.ClientLogoutEvent
+    ) -> events.LogoutEvent:
+        return events.LogoutEvent(shard=shard)
+
     def parse_member(
         self,
         d: raw.Member,

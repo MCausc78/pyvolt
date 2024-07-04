@@ -21,7 +21,7 @@ from .user import SelfUser
 from . import core, events, utils
 
 if t.TYPE_CHECKING:
-    from . import  raw
+    from . import raw
 
 
 _L = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class _ClientHandler(EventHandler):
         pass
 
     def handle_logout(self, shard: Shard, payload: raw.ClientLogoutEvent, /) -> None:
-        pass
+        self.dispatch(self._state.parser.parse_logout_event(shard, payload))
 
     def handle_ready(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> None:
         event = self._state.parser.parse_ready_event(shard, payload)
@@ -355,7 +355,8 @@ class Client:
         token: str,
         bot: bool = True,
         cache: (
-            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]] | core.UndefinedOr[Cache | None]
+            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]]
+            | core.UndefinedOr[Cache | None]
         ) = core.UNDEFINED,
         cdn_base: str | None = None,
         cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
@@ -389,7 +390,6 @@ class Client:
             else:
                 cr = cache
             c = cr if core.is_defined(cr) else MapCache()
-            
 
             state.setup(
                 cache=c,
@@ -453,7 +453,9 @@ class Client:
                 try:
                     await utils._maybe_coroutine(self.on_error, event)
                 except Exception as exc:
-                    _L.exception("on_error (task: %s) raised an exception", name, exc_info=exc)
+                    _L.exception(
+                        "on_error (task: %s) raised an exception", name, exc_info=exc
+                    )
             if not event.is_cancelled:
                 event.process()
                 await event.aprocess()
@@ -471,8 +473,13 @@ class Client:
 
             handlers = self._handlers.get(type, [])
             if _L.isEnabledFor(logging.DEBUG):
-                _L.debug("Dispatching %s (%i handlers, originating from %s)", type.__name__, len(handlers), event.__class__.__name__)
-            
+                _L.debug(
+                    "Dispatching %s (%i handlers, originating from %s)",
+                    type.__name__,
+                    len(handlers),
+                    event.__class__.__name__,
+                )
+
             name = name = f"pyvolt-dispatch-{self._get_i()}"
             asyncio.create_task(self._dispatch(handlers, event, name), name=name)
 
@@ -523,5 +530,6 @@ class Client:
 
     async def start(self) -> None:
         await self._state.shard.connect()
+
 
 __all__ = ("Client",)
