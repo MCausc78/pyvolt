@@ -329,7 +329,13 @@ class Client:
     __slots__ = ("_handlers", "_types", "_i", "_state", "extra")
 
     @t.overload
-    def __init__(self, *, token: str, bot: bool = True, state: State) -> None: ...
+    def __init__(
+        self,
+        *,
+        token: str,
+        bot: bool = True,
+        state: ca.Callable[[Client], State] | State | None = None,
+    ) -> None: ...
 
     @t.overload
     def __init__(
@@ -365,7 +371,7 @@ class Client:
         parser: ca.Callable[[Client, State], Parser] | None = None,
         shard: ca.Callable[[Client, State], Shard] | None = None,
         websocket_base: str | None = None,
-        state: State | None = None,
+        state: ca.Callable[[Client], State] | State | None = None,
     ) -> None:
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
         self._handlers: dict[
@@ -380,9 +386,12 @@ class Client:
 
         self.extra = {}
         if state:
-            self._state = state
+            if callable(state):
+                self._state = state(self)
+            else:
+                self._state = state
         else:  # elif any(x is not None for x in (cache, cdn_client, http, parser, shard)):
-            state = self._state = State()
+            state = State()
 
             c = None
             if callable(cache):
@@ -411,6 +420,7 @@ class Client:
                 ),
                 parser=parser(self, state) if parser else Parser(state),
             )
+            self._state = state
             state.setup(
                 shard=(
                     shard(self, state)
@@ -456,9 +466,14 @@ class Client:
                     _L.exception(
                         "on_error (task: %s) raised an exception", name, exc_info=exc
                     )
-            if not event.is_cancelled:
-                event.process()
-                await event.aprocess()
+
+        if not event.is_cancelled:
+            _L.debug("Processing %s", event.__class__.__name__)
+
+            event.process()
+            await event.aprocess()
+        else:
+            _L.debug("%s processing was cancelled", event.__class__.__name__)
 
     def dispatch(self, event: events.BaseEvent) -> None:
         """Dispatches a event."""
