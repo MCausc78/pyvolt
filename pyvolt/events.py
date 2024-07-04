@@ -275,10 +275,9 @@ class MessageCreateEvent(BaseEvent):
         if isinstance(author, servers.Member):
             if isinstance(author._user, users.User):
                 cache.store_user(author._user, caching._MESSAGE_CREATE)
+            cache.store_server_member(author, caching._MESSAGE_CREATE)
         elif isinstance(author, users.User):
             cache.store_user(author, caching._MESSAGE_CREATE)
-        else:
-            pass
 
         read_state = cache.get_read_state(
             self.message.channel_id, caching._MESSAGE_CREATE
