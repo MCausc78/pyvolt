@@ -1,0 +1,746 @@
+{
+	"_id": "01F7ZSBSFHQ8TA81725KQCSDDP",
+	"owner": "01EX2NCWQ0CHS3QJF0FEQS1GR4",
+	"name": "Revolt",
+	"description": "Official server run by the team behind #Revolt.\nGeneral conversation and support server.\n \nAppeals and reports: lounge@revolt.chat",
+	"channels": [
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F7ZSBSFHCAAJQ92ZGTY67HMN",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Lounge 🦝",
+			"description": "This channel is not for reporting bugs or issues! https://app.revolt.chat/settings/feedback No issue, no fix.",
+			"last_message_id": "01HC0RAFEZ2JTEPQVHC053ABT0",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01G3RYHN19HZKX42754TD5YMAR": {
+					"a": 0,
+					"d": 5242880
+				},
+				"01FRED5JVVYPCAKA6K8R1HA6Z0": {
+					"a": 201326592,
+					"d": 0
+				},
+				"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+					"a": 0,
+					"d": 0
+				},
+				"01FMFTQA97DNMH773MYB538S75": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01GDE9VX4AD3T3KBPYZE7932P9": {
+					"a": 0,
+					"d": 0
+				},
+				"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+					"a": 339738624,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F80YXPABK0NVD3KMY0Z6VK5G",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Music",
+			"description": "",
+			"icon": {
+				"_id": "CMxdtCRjFgXn_8UCGCCkMa2clcIKhmZbex93H2wD2B",
+				"tag": "icons",
+				"filename": "music_note.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 6541
+			},
+			"last_message_id": "01HBYV7XCK2JWRCCYPRHA1QF00",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F8PZ2ZHPZFCHAEGQQWSMMF3N",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Old Development Channel",
+			"description": "This channel is for active Revolt development",
+			"icon": {
+				"_id": "MK2Q_OiUCQtYODObUKHTETMGJ7NgfEzU3fi4Uxt51R",
+				"tag": "icons",
+				"filename": "wrench.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 9326
+			},
+			"last_message_id": "01HC0Q58RBP2GH69RWM191HZ68",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F92C5ZXBQWQ8KY7J8KY917NM",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Revolt Discussion",
+			"description": "On-topic channel for discussions regarding Revolt",
+			"last_message_id": "01J1ZT0S06CR2A5VF4AYX2BNJW",
+			"default_permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"role_permissions": {
+				"01FRED5JVVYPCAKA6K8R1HA6Z0": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01FMFTQA97DNMH773MYB538S75": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F9534XAHDCCS60M5W0J9DJQQ",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Information",
+			"description": "",
+			"last_message_id": "01HWN55T4G40PRFHEK751GGQM9",
+			"default_permissions": {
+				"a": 0,
+				"d": 541065216
+			},
+			"role_permissions": {
+				"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01GDE9VX4AD3T3KBPYZE7932P9": {
+					"a": 0,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F9CKVJXYJC0328M3YQZYXNV7",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Themes",
+			"icon": {
+				"_id": "CAuid78dIWs9RdAjYJyIyDk-v6yPkIsSpUl_Wb_35_",
+				"tag": "icons",
+				"filename": "artist_palette.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 18832
+			},
+			"last_message_id": "01HC0JTWNEKPPRKKV1C0NRS572",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F9CKVSCWBJTHJKJX4F459SS5",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Translators",
+			"description": "Please [let me know here](https://github.com/revoltchat/revite/issues/362) if you have added a new language. [Badges and maintenance.](https://github.com/revoltchat/translations/issues/new/choose)",
+			"icon": {
+				"_id": "dp-qh0f40imvfusFFMMmGWaxhXBWulqtcGVya80jR-",
+				"tag": "icons",
+				"filename": "globe.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 15377
+			},
+			"last_message_id": "01H3PTJRBJRYPHCGZB67MKCFK5",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01F9KATFHCAWGYG1NQ13MFDRAT",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Revolt Updates",
+			"description": "",
+			"last_message_id": "01J0VT4K8H3DM42S2G9411VTDX",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01GDE9VX4AD3T3KBPYZE7932P9": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01G2J8G50VGWD6AEZ891WS54SK": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FBZBDB31QKBAK8ZXASDR6PQZ",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Art",
+			"description": "Anything artsy that is hand-made, digital or drawn.",
+			"icon": {
+				"_id": "jnsJh_Xx1UxGIQuYIyB_amEbn7ykFkfebhQ2zbOQ4v",
+				"tag": "icons",
+				"filename": "1f58c.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 7560
+			},
+			"last_message_id": "01J1ZT90PYY3R3BH5X4H007AJY"
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FBZBDFDD1VS81ZZ89RN9YXCC",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Programming",
+			"icon": {
+				"_id": "KvDHKchedSHJmWZRIQ3j1YvTS3dunplhcJj-TdsIqk",
+				"tag": "icons",
+				"filename": "laptop.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 4006
+			},
+			"last_message_id": "01HC0JMDEY6CB41ADNSMC8H7ZH",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FD53QCD84PX7D2GBV5SBE09N",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Submit to Discover",
+			"description": "Please read our guidelines first: https://support.revolt.chat/kb/safety/discover-guidelines",
+			"last_message_id": "01J1XS36NG1QDEM3Y15NDQM0SD"
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FD5J33XHKGMJJ9XCM71B9924",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Counting",
+			"last_message_id": "01HC0FMF8GZBR4S3RQJEYR8JX2",
+			"default_permissions": {
+				"a": 0,
+				"d": 205520896
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FDAHKCQ96CGMGC8YYC74F75W",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Suggestions",
+			"description": "One suggestion per message, wait for someone to triage your issue.",
+			"last_message_id": "01HC0KQXHRQF9T3TC9GAMDTK0T",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FFJHD9V7XSN74VAJ661EZVE7",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Joins and Leaves",
+			"description": "",
+			"last_message_id": "01J1ZGZCV28DFZY6HSKDRGE8H2",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+					"a": 12582912,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FR415PBTTABVESSRB2ESGHZR",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Public Logs",
+			"description": "",
+			"last_message_id": "01HV2757DA118NPNXRHGRH084J",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FW9XW0MCK2CXPRAA7AAY59CB",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Mascot",
+			"description": "Click for message pins.\n\nRed Panda: [1](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FWAY6GCFS4Q494GR1M1H11QD) [2](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FWMV1YX0JGF5TER9KMC2XQHM) [3](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FXNJ8YB7NV7E0AMBM9KJZH63) [4](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FXQZY1KXM9JV762PMZCX3YBM)\nOther submissions: [1](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FWD1J29HM10F62DRKGBA7V3M) [2](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FXRHCZYFK7RZN9CJZ0Z4N1Y0) [3](https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01FW9XW0MCK2CXPRAA7AAY59CB/01FZE5FAN8NF8Q01VMNQDZBYSQ)",
+			"last_message_id": "01HBRW5HPY2GENAGJ1B3MNDN24",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01FY1ENB2K17625XAB985HVWSQ",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Support",
+			"description": "Get help with issues using Revolt",
+			"icon": {
+				"_id": "id2uKoNID6ooWLfmFDOy97t0DLMN8qZ4jbinAC8xSk",
+				"tag": "icons",
+				"filename": "battery.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 3591
+			},
+			"last_message_id": "01J1ZF4GB5NAD1AYSA4933QHQ2"
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01GQJ90K6Y89M94DTK68MWJ5VY",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Git",
+			"last_message_id": "01J1ZMCECCDX2T9E4363NJ6K0Y",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01GQJ90SEQK1KHXGVNPNK2QHHN",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "GitHub Issues",
+			"last_message_id": "01J1ZRRATRHKD51WTJP4GK8FXJ",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01GWC3QCX43AVWYKKF0R0Z00GG",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Games",
+			"icon": {
+				"_id": "eUGeASDxD9Z39A0G4zpbQkxP7ZSpS_3ZnxcEudsHc0",
+				"tag": "icons",
+				"filename": "1f3ae.png",
+				"metadata": {
+					"type": "Image",
+					"width": 256,
+					"height": 256
+				},
+				"content_type": "image/png",
+				"size": 12911
+			},
+			"last_message_id": "01HBVGS8SVTMS96JDP657KCAWA",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01GWCS2WZF2G2P4NA91WSRWK9H",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Tech",
+			"icon": {
+				"_id": "BNcuOkYt3CQFr2ESEB1LKXQOdV609qKq84lwn3VW87",
+				"tag": "icons",
+				"filename": "01GVDGM582F97G4DD9XTKY5M1F.png",
+				"metadata": {
+					"type": "Image",
+					"width": 500,
+					"height": 500
+				},
+				"content_type": "image/png",
+				"size": 213861
+			},
+			"last_message_id": "01HC02HCNS1SWT1MZVZ0F1XQ4G",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01H0TPNRZ2CJK97Z33J45CF04Y",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Rules",
+			"last_message_id": "01H2TQ2VD2Y0CVDNXB3RKBX2PK",
+			"default_permissions": {
+				"a": 0,
+				"d": 4194304
+			},
+			"role_permissions": {
+				"01GDE9VX4AD3T3KBPYZE7932P9": {
+					"a": 4194304,
+					"d": 0
+				},
+				"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+					"a": 4194304,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01HC0P7QBKYPHH97D1ZMD9E9BC",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Looking For Group",
+			"description": "Find groups centred around common interests, not for discussion. New servers may drop an invite *once* with a reasonably sized message (i.e. it doesn't take up half the screen). Nothing stops any server being linked to provided someone asks for it though.",
+			"last_message_id": "01J1HBB9PZ1RABA3QWAAZ28C4R"
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01HGJPTXVPM3RJV0RG3YQA20KZ",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "New Web Feedback",
+			"description": "",
+			"last_message_id": "01J1ZGEFRHMTY6SR984AJM2PMZ",
+			"default_permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"role_permissions": {
+				"01GDE9VX4AD3T3KBPYZE7932P9": {
+					"a": 0,
+					"d": 0
+				}
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01HGQYA79RNDB30YSD6WEN2136",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Off Topic",
+			"last_message_id": "01J1ZTH3E40S04MCWAX361ZFFK",
+			"default_permissions": {
+				"a": 0,
+				"d": 0
+			}
+		},
+		{
+			"channel_type": "TextChannel",
+			"_id": "01HXKSABKSDC3WMR1AVC67TEN1",
+			"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+			"name": "Month in Revolt",
+			"description": "Place for developers and community members to contribute to monthly blog series.",
+			"last_message_id": "01J1X1W3ERYJHNSXVGK76Q992V"
+		}
+	],
+	"categories": [
+		{
+			"id": "01H7J6TH1YYW8Y2C700FC9PSFD",
+			"title": "Information",
+			"channels": [
+				"01F9534XAHDCCS60M5W0J9DJQQ",
+				"01H0TPNRZ2CJK97Z33J45CF04Y",
+				"01F9KATFHCAWGYG1NQ13MFDRAT",
+				"01GQJ90K6Y89M94DTK68MWJ5VY",
+				"01GQJ90SEQK1KHXGVNPNK2QHHN"
+			]
+		},
+		{
+			"id": "a",
+			"title": "Discussion",
+			"channels": [
+				"01F92C5ZXBQWQ8KY7J8KY917NM",
+				"01HGQYA79RNDB30YSD6WEN2136",
+				"01HGJPTXVPM3RJV0RG3YQA20KZ",
+				"01FY1ENB2K17625XAB985HVWSQ",
+				"01FBZBDB31QKBAK8ZXASDR6PQZ",
+				"01HXKSABKSDC3WMR1AVC67TEN1"
+			]
+		},
+		{
+			"id": "01HC0P7FNSEA6FMTQ1QAVB46NG",
+			"title": "Social",
+			"channels": [
+				"01FD53QCD84PX7D2GBV5SBE09N",
+				"01HC0P7QBKYPHH97D1ZMD9E9BC"
+			]
+		},
+		{
+			"id": "01G3E05H65N1K6WM64SPVJ4PSE",
+			"title": "Moderation",
+			"channels": [
+				"01FFJHD9V7XSN74VAJ661EZVE7",
+				"01FR415PBTTABVESSRB2ESGHZR",
+				"01H0T2H7MR3PH4NFSY0MGPDBB1",
+				"01G3E05SSC1EQC0M10YHJQKCP4",
+				"01FQWEDGBE9K4JR7GCS5G5EMNB",
+				"01GEFVJKBZJ08D86J1W48DNNFW",
+				"01GNHP9CXFEN5YCNH9CMWPAXS5",
+				"01GQF3F07966JHKP1FZTNZ5592",
+				"01GSZQ1AH8Y0PKB3R83H1AMQR9"
+			]
+		},
+		{
+			"id": "01HC0JQH88WC02Y0S1VE9WEBRM",
+			"title": "Archive",
+			"channels": [
+				"01F7ZSBSFHCAAJQ92ZGTY67HMN",
+				"01FDAHKCQ96CGMGC8YYC74F75W",
+				"01FD5J33XHKGMJJ9XCM71B9924",
+				"01F8PZ2ZHPZFCHAEGQQWSMMF3N",
+				"01FW9XW0MCK2CXPRAA7AAY59CB",
+				"01G2FX72TXKJY8MF2CPXBBG0CB",
+				"01H2EAMX399RYD3P59RQKJRCZF",
+				"01GG7KWQ3VNFWJP25Z19DZPQP7",
+				"01GXXWR5KCA6935XXM9V2ZSGY9",
+				"01GWC3QCX43AVWYKKF0R0Z00GG",
+				"01FDAY86R8XYHRXDK5H707GC87",
+				"01F9CKVSCWBJTHJKJX4F459SS5",
+				"01F9CKVJXYJC0328M3YQZYXNV7",
+				"01F80YXPABK0NVD3KMY0Z6VK5G",
+				"01GWCS2WZF2G2P4NA91WSRWK9H",
+				"01FBZBDFDD1VS81ZZ89RN9YXCC",
+				"01FBCT2PXQC0SSH6GD3V1BEHRP",
+				"01FMNH11130YBK8QYWVK0ECB23"
+			]
+		}
+	],
+	"system_messages": {
+		"user_joined": "01FFJHD9V7XSN74VAJ661EZVE7",
+		"user_left": "01FFJHD9V7XSN74VAJ661EZVE7",
+		"user_kicked": "01FFJHD9V7XSN74VAJ661EZVE7",
+		"user_banned": "01FFJHD9V7XSN74VAJ661EZVE7"
+	},
+	"roles": {
+		"01HZMTF48RS88YB1YXS4VC0AGE": {
+			"name": "Retired",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"colour": "#696969",
+			"rank": 19
+		},
+		"01GGWTQSB7BMEMJAFB83YKCFPQ": {
+			"name": "Masquerade",
+			"permissions": {
+				"a": 268435456,
+				"d": 0
+			},
+			"rank": 1000
+		},
+		"01FMD8N4XW9QAHZSYBEEBVZ4H2": {
+			"name": "Bot",
+			"permissions": {
+				"a": 482356680,
+				"d": 0
+			},
+			"colour": "#1ABC9C",
+			"hoist": true,
+			"rank": 5
+		},
+		"01GXXWWJ66ANEK2RMRW8DD3SFF": {
+			"name": "Not in the focus group",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"rank": 21
+		},
+		"01FBF9DNHSRPVTWFMNB3JNB8FK": {
+			"name": "Founder",
+			"permissions": {
+				"a": 1590705871,
+				"d": 0
+			},
+			"colour": "linear-gradient(30deg, purple, orange)",
+			"hoist": true,
+			"rank": 0
+		},
+		"01GBDDB3J1TS17SZA9SY61TQHM": {
+			"name": "Security Triage",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"hoist": true,
+			"rank": 9
+		},
+		"01G3RYHN19HZKX42754TD5YMAR": {
+			"name": "Muted Bots",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"rank": 8
+		},
+		"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+			"name": "Moderator",
+			"permissions": {
+				"a": 545270208,
+				"d": 0
+			},
+			"colour": "linear-gradient(20deg, #FF424F, rgb(173,20,87))",
+			"hoist": true,
+			"rank": 3
+		},
+		"01FM3NVKW274HDNBMJ94PVSMX0": {
+			"name": "W",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"rank": 0
+		},
+		"01FMFTQA97DNMH773MYB538S75": {
+			"name": "(real)",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"colour": "#FF7F50",
+			"hoist": true,
+			"rank": 1
+		},
+		"01FRED5JVVYPCAKA6K8R1HA6Z0": {
+			"name": "Regulars",
+			"permissions": {
+				"a": 205520896,
+				"d": 0
+			},
+			"colour": "#8fbad6",
+			"rank": 20
+		},
+		"01FBF9NZAYKKMZPYFBXSC1JVX6": {
+			"name": "pink",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"colour": "#D468EE",
+			"rank": 4
+		},
+		"01G83VP6TC9V3XFJF8TAM27QT8": {
+			"name": "Homophobe",
+			"permissions": {
+				"a": 268435456,
+				"d": 0
+			},
+			"colour": "linear-gradient(to right,red 0%,#ff9a00 10%,#d0de21 20%,#4fdc4a 30%,#3fdad8 40%,#2fc9e2 50%,#1c7fee 60%,#5f15f2 70%,#ba0cf8 80%)",
+			"rank": 19
+		},
+		"01G2J8G50VGWD6AEZ891WS54SK": {
+			"name": "PR",
+			"permissions": {
+				"a": 0,
+				"d": 0
+			},
+			"rank": 200
+		},
+		"01GDE9VX4AD3T3KBPYZE7932P9": {
+			"name": "Team",
+			"permissions": {
+				"a": 750795732,
+				"d": 0
+			},
+			"colour": "#FD6671",
+			"hoist": true,
+			"rank": 2
+		}
+	},
+	"default_permissions": 4000322560,
+	"icon": {
+		"_id": "gtc0gJE2S3RvuDhrl2-JeakvgbqEGr2acvBnRTTh6k",
+		"tag": "icons",
+		"filename": "logo_round.png",
+		"metadata": {
+			"type": "Image",
+			"width": 500,
+			"height": 500
+		},
+		"content_type": "image/png",
+		"size": 7558
+	},
+	"banner": {
+		"_id": "G_Q-6Y8KiGFVBNY2qVtDS25bX9Dh14CK2Py3TmLN_P",
+		"tag": "banners",
+		"filename": "Lounge_Banner_Old.png",
+		"metadata": {
+			"type": "Image",
+			"width": 1920,
+			"height": 1080
+		},
+		"content_type": "image/png",
+		"size": 138982
+	},
+	"flags": 1,
+	"analytics": true,
+	"discoverable": true
+}

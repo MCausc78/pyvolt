@@ -1,0 +1,21 @@
+{
+	"_id": "01J1W5QRYPK703Q3VNN6SC2F5F",
+	"nonce": "01J1W5QRYMABJB690HAH3EK8NT",
+	"channel": "01FHJD5D2PBRTEVPNFM1FRY85J",
+	"author": "01H0WEAYEKFXF58QDHXFJERKXM",
+	"embeds": [
+		{
+			"type": "Text",
+			"icon_url": "https://autumn.revolt.chat/avatars/90sHZ7sXKu0s59x2ayzlbG_ltq2kgVaYcn0wlFADse",
+			"title": "Help for Ayana",
+			"description": "Use `nya!help <command>` to get help for a specific command.\n## No category\n#### `help`\n\n## Core\nCore Commands\n\n#### `reloadext`\n#### `loadext`\n#### `unloadext`\n#### `say`\n#### `leaveserver`\n#### `delmsg`\n#### `shutdown`\n\n## Miscellaneous\nRandom stuff :yed:\n\n#### `test`\n#### `info`\n#### `embedecho`\n#### `ping`\n#### `chrash`\n\n## Utilities\nUseful stuff\n\n#### `serverinfo`\n#### `whois`\n#### `avatar`\n#### `bio`\n#### `rawbio`\n#### `neofetch`\n#### `banner`\n#### `discrim`\n\n## Fun\nFun little commands\n\n#### `hack`\n#### `nya`\n#### `8ball`\n#### `ban`\n#### `xkcd`\n#### `http`\n#### `commit`\n\n## Games\nSome simple games. I'm bad at python so most of them are simple.\n\n#### `rps`\n#### `tictactoe`\n\n## Image Manipulation\nself explanatory.\n\n#### `gentoo`\n#### `windows`\n#### `void`\n#### `arch`\n\n",
+			"colour": "#efc8f5"
+		}
+	],
+	"mentions": [
+		"01H1QAGNCAP1VHW0CYXBZ5P176"
+	],
+	"replies": [
+		"01J1W5QR7TPNMWEW5DXTXMBF4X"
+	]
+}

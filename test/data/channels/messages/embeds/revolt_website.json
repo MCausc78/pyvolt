@@ -1,0 +1,18 @@
+{
+    "type": "Website",
+    "url": "https://revolt.chat",
+    "original_url": "https://revolt.chat",
+    "special": {
+        "type": "None"
+    },
+    "title": "Revolt",
+    "description": "Find your community, connect with the world. The chat platform that puts you first.",
+    "image": {
+        "url": "https://revolt.chat/opengraph.png",
+        "width": 1280,
+        "height": 720,
+        "size": "Large"
+    },
+    "icon_url": "https://revolt.chat/favicon.ico",
+    "colour": "#ff4654"
+}

@@ -516,12 +516,19 @@ class ServerMemberLeaveEvent(BaseEvent):
         )
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
         if not cache:
             return False
+
+        me = state.me
+        is_me = me.id == self.user_id if me else False
+
         cache.delete_server_member(
             self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE
         )
+        if is_me:
+            cache.delete_server(self.server_id, caching._SERVER_MEMBER_DELETE)
         return True
 
 

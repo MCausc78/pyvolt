@@ -1,0 +1,24 @@
+{
+    "_id": "01EX2NCWQ0CHS3QJF0FEQS1GR4",
+    "username": "insert",
+    "discriminator": "6271",
+    "display_name": "insert ",
+    "avatar": {
+        "_id": "6rgg372gI2LrxCUx0CiA2R1Qs6eTtmC-2NpMq1Xa_3",
+        "tag": "avatars",
+        "filename": "e4332b6d70619b8a98086e532dbd4b9e.png",
+        "metadata": {
+            "type": "Image",
+            "width": 128,
+            "height": 128
+        },
+        "content_type": "image/png",
+        "size": 23321
+    },
+    "badges": 435,
+    "status": {
+        "presence": "Online"
+    },
+    "relationship": "None",
+    "online": false
+}

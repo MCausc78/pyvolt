@@ -1542,10 +1542,9 @@ class HTTPClient:
             routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code)
         )
         if d["type"] == "Server":
-            sc = [self.state.parser.parse_channel(c) for c in d["channels"]]
             return self.state.parser.parse_server(
                 d["server"],
-                (False, sc),  # type: ignore
+                (False, d["channels"]),
             )
         elif d["type"] == "Group":
             return self.state.parser.parse_group_channel(
@@ -2270,10 +2269,9 @@ class HTTPClient:
             routes.SERVERS_SERVER_CREATE.compile(), json=j
         )
 
-        sc = [self.state.parser.parse_channel(c) for c in d["channels"]]
         return self.state.parser.parse_server(
             d["server"],
-            (False, sc),  # type: ignore
+            (False, d["channels"]),
         )
 
     async def delete_server(self, server: core.ResolvableULID, /) -> None:

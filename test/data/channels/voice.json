@@ -1,0 +1,18 @@
+{
+	"channel_type": "VoiceChannel",
+	"_id": "01FGM929Y56R1X3JK6YE0NE4W7",
+	"server": "01F80118K1F2EYD9XAMCPQ0BCT",
+	"name": "Verbal Assault",
+	"icon": {
+		"_id": "EHRFwgs7LoS8mRKhpSmi4uwO1_SfLVpAZ35GNo8N-2",
+		"tag": "icons",
+		"filename": "verbal_assault.png",
+		"metadata": {
+			"type": "Image",
+			"width": 128,
+			"height": 128
+		},
+		"content_type": "image/png",
+		"size": 3164
+	}
+}

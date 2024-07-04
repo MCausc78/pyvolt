@@ -1,0 +1,25 @@
+{
+    "type": "Website",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "original_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "special": {
+        "type": "YouTube",
+        "id": "dQw4w9WgXcQ"
+    },
+    "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+    "description": "The official video for “Never Gonna Give You Up” by Rick Astley. The new album 'Are We There Yet?' is out now: Download here: https://RickAstley.lnk.to/AreWe...",
+    "image": {
+        "url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+        "width": 1280,
+        "height": 720,
+        "size": "Preview"
+    },
+    "video": {
+        "url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        "width": 1280,
+        "height": 720
+    },
+    "site_name": "YouTube",
+    "icon_url": "https://www.youtube.com/s/desktop/1d05d8a6/img/favicon_144x144.png",
+    "colour": "#FF424F"
+}

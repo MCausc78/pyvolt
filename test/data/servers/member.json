@@ -1,0 +1,20 @@
+{
+    "_id": {
+        "server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+        "user": "01EX2NCWQ0CHS3QJF0FEQS1GR4"
+    },
+    "joined_at": "2022-07-15T20:50:36.631Z",
+    "avatar": {
+        "_id": "X-sUZ8KJ0W8_BTFa4GFj5vqLgHY2oJkO5NdGkpOt1D",
+        "tag": "avatars",
+        "filename": "1689571705840576.jpg",
+        "metadata": {
+            "type": "Image",
+            "width": 1112,
+            "height": 1113
+        },
+        "content_type": "image/jpeg",
+        "size": 104276
+    },
+    "roles": ["01FBF9DNHSRPVTWFMNB3JNB8FK","01GDE9VX4AD3T3KBPYZE7932P9"]
+}
