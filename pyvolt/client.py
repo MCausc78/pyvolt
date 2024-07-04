@@ -1,0 +1,527 @@
+from __future__ import annotations
+
+import aiohttp
+import asyncio
+import builtins
+from collections import abc as ca
+import logging
+import sys
+import typing as t
+
+from .cache import Cache, MapCache
+from .cdn import CDNClient
+from .channel import SavedMessagesChannel
+from .http import HTTPClient
+from .parser import Parser
+from .server import Server
+from .shard import EventHandler, Shard
+from .state import State
+from .user import SelfUser
+
+from . import core, events, utils
+
+if t.TYPE_CHECKING:
+    from . import  raw
+
+
+_L = logging.getLogger(__name__)
+
+
+def _session_factory(_) -> aiohttp.ClientSession:
+    return aiohttp.ClientSession()
+
+
+class _ClientHandler(EventHandler):
+    __slots__ = ("_client", "_state", "dispatch", "_handlers")
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+        self._state = client._state
+        self.dispatch = client.dispatch
+
+        self._handlers = {
+            "Bulk": self.handle_bulk,
+            "Authenticated": self.handle_authenticated,
+            "Logout": self.handle_logout,
+            "Ready": self.handle_ready,
+            "Pong": self.handle_pong,
+            "Message": self.handle_message,
+            "MessageUpdate": self.handle_message_update,
+            "MessageAppend": self.handle_message_append,
+            "MessageDelete": self.handle_message_delete,
+            "MessageReact": self.handle_message_react,
+            "MessageUnreact": self.handle_message_unreact,
+            "MessageRemoveReaction": self.handle_message_remove_reaction,
+            "BulkMessageDelete": self.handle_bulk_message_delete,
+            "ServerCreate": self.handle_server_create,
+            "ServerUpdate": self.handle_server_update,
+            "ServerDelete": self.handle_server_delete,
+            "ServerMemberJoin": self.handle_server_member_join,
+            "ServerMemberLeave": self.handle_server_member_leave,
+            "ServerRoleUpdate": self.handle_server_role_update,
+            "ServerRoleDelete": self.handle_server_role_delete,
+            "UserUpdate": self.handle_user_update,
+            "UserRelationship": self.handle_user_relationship,
+            "UserSettingsUpdate": self.handle_user_settings_update,
+            "UserPlatformWipe": self.handle_user_platform_wipe,
+            "EmojiCreate": self.handle_emoji_create,
+            "EmojiDelete": self.handle_emoji_delete,
+            "ChannelCreate": self.handle_channel_create,
+            "ChannelUpdate": self.handle_channel_update,
+            "ChannelDelete": self.handle_channel_delete,
+            "ChannelGroupJoin": self.handle_channel_group_join,
+            "ChannelGroupLeave": self.handle_channel_group_leave,
+            "ChannelStartTyping": self.handle_channel_start_typing,
+            "ChannelStopTyping": self.handle_channel_stop_typing,
+            "ChannelAck": self.handle_channel_ack,
+            "WebhookCreate": self.handle_webhook_create,
+            "WebhookUpdate": self.handle_webhook_update,
+            "WebhookDelete": self.handle_webhook_delete,
+            "Auth": self.handle_auth,
+        }
+
+    async def handle_bulk(self, shard: Shard, payload: raw.ClientBulkEvent, /) -> None:
+        for v in payload["v"]:
+            await self._handle(shard, v)
+
+    def handle_authenticated(
+        self, shard: Shard, payload: raw.ClientAuthenticatedEvent, /
+    ) -> None:
+        pass
+
+    def handle_logout(self, shard: Shard, payload: raw.ClientLogoutEvent, /) -> None:
+        pass
+
+    def handle_ready(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> None:
+        event = self._state.parser.parse_ready_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_pong(self, shard: Shard, payload: raw.ClientPongEvent, /) -> None:
+        pass
+
+    def handle_message(self, shard: Shard, payload: raw.ClientMessageEvent, /) -> None:
+        event = self._state.parser.parse_message_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_update(
+        self, shard: Shard, payload: raw.ClientMessageUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_append(
+        self, shard: Shard, payload: raw.ClientMessageAppendEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_append_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_delete(
+        self, shard: Shard, payload: raw.ClientMessageDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_react(
+        self, shard: Shard, payload: raw.ClientMessageReactEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_react_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_unreact(
+        self, shard: Shard, payload: raw.ClientMessageUnreactEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_unreact_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_remove_reaction(
+        self, shard: Shard, payload: raw.ClientMessageRemoveReactionEvent, /
+    ) -> None:
+        event = self._state.parser.parse_message_remove_reaction_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_bulk_message_delete(
+        self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_bulk_message_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_create(
+        self, shard: Shard, payload: raw.ClientServerCreateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_create_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_update(
+        self, shard: Shard, payload: raw.ClientServerUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_delete(
+        self, shard: Shard, payload: raw.ClientServerDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_member_join(
+        self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, /
+    ) -> None:
+        joined_at = utils.utcnow()
+        event = self._state.parser.parse_server_member_join_event(
+            shard, payload, joined_at
+        )
+        self.dispatch(event)
+
+    def handle_server_member_leave(
+        self, shard: Shard, payload: raw.ClientServerMemberLeaveEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_member_leave_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_role_update(
+        self, shard: Shard, payload: raw.ClientServerRoleUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_role_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_role_delete(
+        self, shard: Shard, payload: raw.ClientServerRoleDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_server_role_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_update(
+        self, shard: Shard, payload: raw.ClientUserUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_user_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_relationship(
+        self, shard: Shard, payload: raw.ClientUserRelationshipEvent, /
+    ) -> None:
+        event = self._state.parser.parse_user_relationship_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_settings_update(
+        self, shard: Shard, payload: raw.ClientUserSettingsUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_user_settings_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_platform_wipe(
+        self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /
+    ) -> None:
+        event = self._state.parser.parse_user_platform_wipe_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_emoji_create(
+        self, shard: Shard, payload: raw.ClientEmojiCreateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_emoji_create_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_emoji_delete(
+        self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_emoji_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_create(
+        self, shard: Shard, payload: raw.ClientChannelCreateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_create_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_update(
+        self, shard: Shard, payload: raw.ClientChannelUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_delete(
+        self, shard: Shard, payload: raw.ClientChannelDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_group_join(
+        self, shard: Shard, payload: raw.ClientChannelGroupJoinEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_group_join_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_group_leave(
+        self, shard: Shard, payload: raw.ClientChannelGroupLeaveEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_group_leave_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_start_typing(
+        self, shard: Shard, payload: raw.ClientChannelStartTypingEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_start_typing_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_stop_typing(
+        self, shard: Shard, payload: raw.ClientChannelStopTypingEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_stop_typing_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_channel_ack(
+        self, shard: Shard, payload: raw.ClientChannelAckEvent, /
+    ) -> None:
+        event = self._state.parser.parse_channel_ack_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_webhook_create(
+        self, shard: Shard, payload: raw.ClientWebhookCreateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_webhook_create_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_webhook_update(
+        self, shard: Shard, payload: raw.ClientWebhookUpdateEvent, /
+    ) -> None:
+        event = self._state.parser.parse_webhook_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_webhook_delete(
+        self, shard: Shard, payload: raw.ClientWebhookDeleteEvent, /
+    ) -> None:
+        event = self._state.parser.parse_webhook_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_auth(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> None:
+        event = self._state.parser.parse_auth_event(shard, payload)
+        self.dispatch(event)
+
+    async def _handle(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
+        type = payload["type"]
+        try:
+            handler = self._handlers[type]
+        except KeyError:
+            _L.debug("Received unknown event: %s. Discarding.", type)
+        else:
+            _L.debug("Handling %s", type)
+            try:
+                await utils._maybe_coroutine(handler, shard, payload)
+            except Exception as exc:
+                _L.exception("%s handler raised an exception", type, exc_info=exc)
+
+    async def handle_raw(self, shard: Shard, d: raw.ClientEvent) -> None:
+        return await self._handle(shard, d)
+
+
+EventT = t.TypeVar("EventT", bound="events.BaseEvent")
+
+
+def _parents_of(type: type[events.BaseEvent]) -> tuple[type[events.BaseEvent], ...]:
+    if type is events.BaseEvent:
+        return ()
+    tmp: t.Any = type.__mro__[:-2]
+    return tmp
+
+
+class Client:
+    """A Revolt client."""
+
+    __slots__ = ("_handlers", "_types", "_i", "_state", "extra")
+
+    @t.overload
+    def __init__(self, *, token: str, bot: bool = True, state: State) -> None: ...
+
+    @t.overload
+    def __init__(
+        self,
+        *,
+        token: str,
+        bot: bool = True,
+        cache: (
+            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]] | None
+        ) = None,
+        cdn_base: str | None = None,
+        cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
+        http_base: str | None = None,
+        http: ca.Callable[[Client, State], HTTPClient] | None = None,
+        parser: ca.Callable[[Client, State], Parser] | None = None,
+        shard: ca.Callable[[Client, State], Shard] | None = None,
+        websocket_base: str | None = None,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        token: str,
+        bot: bool = True,
+        cache: (
+            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]] | core.UndefinedOr[Cache | None]
+        ) = core.UNDEFINED,
+        cdn_base: str | None = None,
+        cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
+        http_base: str | None = None,
+        http: ca.Callable[[Client, State], HTTPClient] | None = None,
+        parser: ca.Callable[[Client, State], Parser] | None = None,
+        shard: ca.Callable[[Client, State], Shard] | None = None,
+        websocket_base: str | None = None,
+        state: State | None = None,
+    ) -> None:
+        # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
+        self._handlers: dict[
+            type[events.BaseEvent],
+            list[utils.MaybeAwaitableFunc[[events.BaseEvent], None]],
+        ] = {}
+        # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
+        self._types: dict[
+            type[events.BaseEvent], tuple[type[events.BaseEvent], ...]
+        ] = {}
+        self._i = 0
+
+        self.extra = {}
+        if state:
+            self._state = state
+        else:  # elif any(x is not None for x in (cache, cdn_client, http, parser, shard)):
+            state = self._state = State()
+
+            c = None
+            if callable(cache):
+                cr = cache(self, state)
+            else:
+                cr = cache
+            c = cr if core.is_defined(cr) else MapCache()
+            
+
+            state.setup(
+                cache=c,
+                cdn_client=(
+                    cdn_client(self, state)
+                    if cdn_client
+                    else CDNClient(state, session=_session_factory, base=cdn_base)
+                ),
+                http=(
+                    http(self, state)
+                    if http
+                    else HTTPClient(
+                        token,
+                        base=http_base,
+                        bot=bot,
+                        state=state,
+                        session=_session_factory,
+                    )
+                ),
+                parser=parser(self, state) if parser else Parser(state),
+            )
+            state.setup(
+                shard=(
+                    shard(self, state)
+                    if shard
+                    else Shard(
+                        token,
+                        base=websocket_base,
+                        handler=_ClientHandler(self),
+                        session=_session_factory,
+                        state=state,
+                    )
+                )
+            )
+
+    def _get_i(self) -> int:
+        self._i += 1
+        return self._i
+
+    async def on_error(self, event: events.BaseEvent) -> None:
+        _, exc, _ = sys.exc_info()
+        _L.exception(
+            "one of %s handlers raised an exception",
+            event.__class__.__name__,
+            exc_info=exc,
+        )
+
+    async def _dispatch(
+        self,
+        handlers: list[utils.MaybeAwaitableFunc[[EventT], None]],
+        event: EventT,
+        name: str,
+        /,
+    ) -> None:
+        event.before_dispatch()
+        await event.abefore_dispatch()
+        for handler in handlers:
+            try:
+                await utils._maybe_coroutine(handler, event)
+            except Exception:
+                try:
+                    await utils._maybe_coroutine(self.on_error, event)
+                except Exception as exc:
+                    _L.exception("on_error (task: %s) raised an exception", name, exc_info=exc)
+            if not event.is_cancelled:
+                event.process()
+                await event.aprocess()
+
+    def dispatch(self, event: events.BaseEvent) -> None:
+        """Dispatches a event."""
+
+        et = builtins.type(event)
+        try:
+            types = self._types[et]
+        except KeyError:
+            types = self._types[et] = _parents_of(et)
+
+        for type in types:
+
+            handlers = self._handlers.get(type, [])
+            if _L.isEnabledFor(logging.DEBUG):
+                _L.debug("Dispatching %s (%i handlers, originating from %s)", type.__name__, len(handlers), event.__class__.__name__)
+            
+            name = name = f"pyvolt-dispatch-{self._get_i()}"
+            asyncio.create_task(self._dispatch(handlers, event, name), name=name)
+
+    def subscribe(
+        self, event: type[EventT], callback: utils.MaybeAwaitableFunc[[EventT], None]
+    ) -> None:
+        """Subscribes to event."""
+        tmp: t.Any = callback
+
+        try:
+            self._handlers[event].append(tmp)
+        except KeyError:
+            self._handlers[event] = [tmp]
+
+    def on(self, event: type[EventT]) -> ca.Callable[
+        [utils.MaybeAwaitableFunc[[EventT], None]],
+        utils.MaybeAwaitableFunc[[EventT], None],
+    ]:
+        def decorator(
+            callback: utils.MaybeAwaitableFunc[[EventT], None]
+        ) -> utils.MaybeAwaitableFunc[[EventT], None]:
+            self.subscribe(event, callback)
+            return callback
+
+        return decorator
+
+    @property
+    def me(self) -> SelfUser | None:
+        """:class:`SelfUser` | None: The currently logged in user. ``None`` if not logged in."""
+        return self._state._me
+
+    @property
+    def saved_notes(self) -> SavedMessagesChannel | None:
+        """:class:`SavedMessagesChannel` | None: The Saved Notes channel."""
+        return self._state._saved_notes
+
+    @property
+    def http(self) -> HTTPClient:
+        """:class:`HTTPClient`: The HTTP client."""
+        return self._state.http
+
+    @property
+    def servers(self) -> ca.Mapping[core.ULID, Server]:
+        cache = self._state.cache
+        if cache:
+            return cache.get_servers_mapping()
+        return {}
+
+    async def start(self) -> None:
+        await self._state.shard.connect()
+
+__all__ = ("Client",)
