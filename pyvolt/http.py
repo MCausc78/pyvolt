@@ -217,6 +217,16 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The bot name.
+
+        Returns
+        -------
+        :class:`bots.Bot`
+            The created bot.
         """
         j: raw.DataCreateBot = {"name": name}
         d: raw.BotWithUserResponse = await self.request(
@@ -804,9 +814,9 @@ class HTTPClient:
         Parameters
         ----------
         channel: :class:`core.ResolvableULID`
-            Channel to message was sent.
+            The channel.
         message: :class:`core.ResolvableULID`
-            Message edit to.
+            The message.
         content: :class:`str` | None
             New content.
         embeds: :class:`list`[:class:`messages.SendableEmbed`] | None
@@ -899,6 +909,7 @@ class HTTPClient:
         Returns
         -------
         :class:`list`[:class:`messages.Message`]
+            The messages retrieved.
 
         Raises
         ------
@@ -943,17 +954,17 @@ class HTTPClient:
         Parameters
         ----------
         channel: :class:`core.ResolvableULID`
-            Channel to message was sent.
+            The channel.
         message: :class:`core.ResolvableULID`
-            Message react to.
+            The message.
         emoji: :class:`emojis.ResolvableEmoji`
-            Emoji to add.
+            The emoji to react with.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to react to message.
-        :class:`APIError`
+        APIError
             Reacting to message failed.
         """
         await self.request(
@@ -1050,9 +1061,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to pin messages.
-        :class:`APIError`
+        APIError
             Pinning the message failed.
         """
         await self.request(
@@ -1177,9 +1188,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to unpin messages.
-        :class:`APIError`
+        APIError
             Unpinning the message failed.
         """
         await self.request(
@@ -1221,9 +1232,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to remove reactions from message.
-        :class:`APIError`
+        APIError
             Removing reactions from message failed.
         """
         p: raw.OptionsUnreact = {}
@@ -1264,9 +1275,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the channel.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         j: raw.DataSetRolePermissions = {
@@ -1296,9 +1307,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set default permissions on the channel.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         j: raw.DataDefaultChannelPermissions = {
@@ -1335,8 +1346,8 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
-            Asking the token failed.
+        APIError
+            Asking for the token failed.
         """
         return (
             await self.request(
@@ -1368,9 +1379,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the webhook.
-        :class:`APIError`
+        APIError
             Creating the webhook failed.
         """
         j: raw.CreateWebhookBody = {"name": name}
@@ -1395,9 +1406,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to get channel webhooks.
-        :class:`APIError`
+        APIError
             Getting channel webhooks failed.
         """
         return [
