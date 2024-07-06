@@ -2579,7 +2579,7 @@ class HTTPClient:
     ) -> users.User:
         """|coro|
 
-        Edit user.
+        Edits the user.
         https://developers.revolt.chat/api/#tag/User-Information/operation/edit_user_req
 
         Parameters
@@ -2626,7 +2626,7 @@ class HTTPClient:
     ) -> users.User:
         """|coro|
 
-        Edit user.
+        Edits the user.
         https://developers.revolt.chat/api/#tag/User-Information/operation/edit_user_req
 
         Parameters
@@ -2799,7 +2799,6 @@ class HTTPClient:
         """|coro|
 
         Denies another user's friend request.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/remove_friend_req
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2818,8 +2817,7 @@ class HTTPClient:
     async def remove_friend(self, user: core.ResolvableULID, /) -> users.User:
         """|coro|
 
-        Denies another user's friend request or removes an existing friend.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/remove_friend_req
+        Removes an existing friend.
 
         .. note::
             This can only be used by non-bot accounts.
