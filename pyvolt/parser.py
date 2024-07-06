@@ -1041,8 +1041,6 @@ class Parser:
 
         return events.ReadyEvent(
             shard=shard,
-            old_me=self.state._me,
-            new_me=me,
             users=ready_users,
             servers=[
                 self.parse_server(s, (True, [self.parse_id(c) for c in s["channels"]]))
@@ -1051,6 +1049,8 @@ class Parser:
             channels=[self.parse_channel(c) for c in d["channels"]],
             members=[self.parse_member(m) for m in d["members"]],
             emojis=[self.parse_server_emoji(e) for e in d["emojis"]],
+            old_me=None,
+            me=self.parse_self_user(d["me"]),
         )
 
     def parse_relationship(self, d: raw.Relationship) -> users.Relationship:
@@ -1142,7 +1142,7 @@ class Parser:
             discriminator=d["discriminator"],
             display_name=d.get("display_name"),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            relations=[self.parse_relationship(r) for r in d.get("relations") or []],
+            relations=[self.parse_relationship(r) for r in d.get("relations", [])],
             badges=users.UserBadges(d.get("badges") or 0),
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,

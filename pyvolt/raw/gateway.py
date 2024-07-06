@@ -2,18 +2,29 @@ from __future__ import annotations
 
 import typing as t
 
-from . import (
-    authifier,
-    channel_webhooks,
-    channels,
-    emojis,
-    messages,
-    safety_reports,
-    server_members,
-    servers,
-    user_settings,
-    users,
+from .authifier import (
+    AuthifierCreateSessionEvent,
+    AuthifierDeleteSessionEvent,
+    AuthifierDeleteAllSessionsEvent,
 )
+from .channel_webhooks import Webhook, PartialWebhook, FieldsWebhook
+from .channels import (
+    SavedMessagesChannel,
+    DirectMessageChannel,
+    GroupChannel,
+    TextChannel,
+    VoiceChannel,
+    Channel,
+    PartialChannel,
+    FieldsChannel,
+)
+from .emojis import ServerEmoji
+from .messages import Message, PartialMessage, AppendMessage
+from .safety_reports import CreatedReport
+from .server_members import Member, PartialMember, MemberCompositeKey, FieldsMember
+from .servers import Server, PartialServer, PartialRole, FieldsServer, FieldsRole
+from .user_settings import UserSettings
+from .users import User, PartialUser, FieldsUser
 
 
 class ClientBulkEvent(t.TypedDict):
@@ -31,11 +42,13 @@ class ClientLogoutEvent(t.TypedDict):
 
 class ClientReadyEvent(t.TypedDict):
     type: t.Literal["Ready"]
-    users: list[users.User]
-    servers: list[servers.Server]
-    channels: list[channels.Channel]
-    members: list[server_members.Member]
-    emojis: list[emojis.ServerEmoji]
+    users: list[User]
+    servers: list[Server]
+    channels: list[Channel]
+    members: list[Member]
+    emojis: list[ServerEmoji]
+    me: User
+    settinsg: UserSettings
 
 
 Ping = list[int] | int
@@ -46,7 +59,7 @@ class ClientPongEvent(t.TypedDict):
     data: Ping
 
 
-class ClientMessageEvent(messages.Message):
+class ClientMessageEvent(Message):
     type: t.Literal["Message"]
 
 
@@ -54,14 +67,14 @@ class ClientMessageUpdateEvent(t.TypedDict):
     type: t.Literal["MessageUpdate"]
     id: str
     channel: str
-    data: messages.PartialMessage
+    data: PartialMessage
 
 
 class ClientMessageAppendEvent(t.TypedDict):
     type: t.Literal["MessageAppend"]
     id: str
     channel: str
-    append: messages.AppendMessage
+    append: AppendMessage
 
 
 class ClientMessageDeleteEvent(t.TypedDict):
@@ -102,16 +115,16 @@ class ClientBulkMessageDeleteEvent(t.TypedDict):
 class ClientServerCreateEvent(t.TypedDict):
     type: t.Literal["ServerCreate"]
     id: str
-    server: servers.Server
-    channels: list[channels.Channel]
-    emojis: list[emojis.ServerEmoji]
+    server: Server
+    channels: list[Channel]
+    emojis: list[ServerEmoji]
 
 
 class ClientServerUpdateEvent(t.TypedDict):
     type: t.Literal["ServerUpdate"]
     id: str
-    data: servers.PartialServer
-    clear: list[servers.FieldsServer]
+    data: PartialServer
+    clear: list[FieldsServer]
 
 
 class ClientServerDeleteEvent(t.TypedDict):
@@ -121,9 +134,9 @@ class ClientServerDeleteEvent(t.TypedDict):
 
 class ClientServerMemberUpdateEvent(t.TypedDict):
     type: t.Literal["ServerMemberUpdate"]
-    id: server_members.MemberCompositeKey
-    data: server_members.PartialMember
-    clear: list[server_members.FieldsMember]
+    id: MemberCompositeKey
+    data: PartialMember
+    clear: list[FieldsMember]
 
 
 class ClientServerMemberJoinEvent(t.TypedDict):
@@ -142,8 +155,8 @@ class ClientServerRoleUpdateEvent(t.TypedDict):
     type: t.Literal["ServerRoleUpdate"]
     id: str
     role_id: str
-    data: servers.PartialRole
-    clear: list[servers.FieldsRole]
+    data: PartialRole
+    clear: list[FieldsRole]
 
 
 class ClientServerRoleDeleteEvent(t.TypedDict):
@@ -155,21 +168,21 @@ class ClientServerRoleDeleteEvent(t.TypedDict):
 class ClientUserUpdateEvent(t.TypedDict):
     type: t.Literal["UserUpdate"]
     id: str
-    data: users.PartialUser
-    clear: list[users.FieldsUser]
+    data: PartialUser
+    clear: list[FieldsUser]
     event_id: str | None
 
 
 class ClientUserRelationshipEvent(t.TypedDict):
     type: t.Literal["UserRelationship"]
     id: str
-    user: users.User
+    user: User
 
 
 class ClientUserSettingsUpdateEvent(t.TypedDict):
     type: t.Literal["UserSettingsUpdate"]
     id: str
-    update: user_settings.UserSettings
+    update: UserSettings
 
 
 class ClientUserPlatformWipeEvent(t.TypedDict):
@@ -178,7 +191,7 @@ class ClientUserPlatformWipeEvent(t.TypedDict):
     flags: int
 
 
-class ClientEmojiCreateEvent(emojis.ServerEmoji):
+class ClientEmojiCreateEvent(ServerEmoji):
     type: t.Literal["EmojiCreate"]
 
 
@@ -187,27 +200,27 @@ class ClientEmojiDeleteEvent(t.TypedDict):
     id: str
 
 
-class ClientReportCreateEvent(safety_reports.CreatedReport):
+class ClientReportCreateEvent(CreatedReport):
     type: t.Literal["ReportCreate"]
 
 
-class ClientSavedMessagesChannelCreateEvent(channels.SavedMessagesChannel):
+class ClientSavedMessagesChannelCreateEvent(SavedMessagesChannel):
     type: t.Literal["ChannelCreate"]
 
 
-class ClientDirectMessageChannelCreateEvent(channels.DirectMessageChannel):
+class ClientDirectMessageChannelCreateEvent(DirectMessageChannel):
     type: t.Literal["ChannelCreate"]
 
 
-class ClientGroupChannelCreateEvent(channels.GroupChannel):
+class ClientGroupChannelCreateEvent(GroupChannel):
     type: t.Literal["ChannelCreate"]
 
 
-class ClientTextChannelCreateEvent(channels.TextChannel):
+class ClientTextChannelCreateEvent(TextChannel):
     type: t.Literal["ChannelCreate"]
 
 
-class ClientVoiceChannelCreateEvent(channels.VoiceChannel):
+class ClientVoiceChannelCreateEvent(VoiceChannel):
     type: t.Literal["ChannelCreate"]
 
 
@@ -223,8 +236,8 @@ ClientChannelCreateEvent = (
 class ClientChannelUpdateEvent(t.TypedDict):
     type: t.Literal["ChannelUpdate"]
     id: str
-    data: channels.PartialChannel
-    clear: list[channels.FieldsChannel]
+    data: PartialChannel
+    clear: list[FieldsChannel]
 
 
 class ClientChannelDeleteEvent(t.TypedDict):
@@ -263,15 +276,15 @@ class ClientChannelAckEvent(t.TypedDict):
     message_id: str
 
 
-class ClientWebhookCreateEvent(channel_webhooks.Webhook):
+class ClientWebhookCreateEvent(Webhook):
     type: t.Literal["WebhookCreate"]
 
 
 class ClientWebhookUpdateEvent(t.TypedDict):
     type: t.Literal["WebhookUpdate"]
     id: str
-    data: channel_webhooks.PartialWebhook
-    remove: list[channel_webhooks.FieldsWebhook]
+    data: PartialWebhook
+    remove: list[FieldsWebhook]
 
 
 class ClientWebhookDeleteEvent(t.TypedDict):
@@ -279,15 +292,15 @@ class ClientWebhookDeleteEvent(t.TypedDict):
     id: str
 
 
-class ClientCreateSessionAuthEvent(authifier.AuthifierCreateSessionEvent):
+class ClientCreateSessionAuthEvent(AuthifierCreateSessionEvent):
     type: t.Literal["Auth"]
 
 
-class ClientDeleteSessionAuthEvent(authifier.AuthifierDeleteSessionEvent):
+class ClientDeleteSessionAuthEvent(AuthifierDeleteSessionEvent):
     type: t.Literal["Auth"]
 
 
-class ClientDeleteAllSessionsAuthEvent(authifier.AuthifierDeleteAllSessionsEvent):
+class ClientDeleteAllSessionsAuthEvent(AuthifierDeleteAllSessionsEvent):
     type: t.Literal["Auth"]
 
 

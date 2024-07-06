@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import aiohttp
 import asyncio
+from enum import StrEnum
 import logging
 import typing as t
 
@@ -11,6 +12,13 @@ from . import core, errors, utils
 if t.TYPE_CHECKING:
     from . import raw
     from .state import State
+
+try:
+    import msgpack
+except ImportError:
+    _HAS_MSGPACK = False
+else:
+    _HAS_MSGPACK = True
 
 _L = logging.getLogger(__name__)
 
@@ -33,6 +41,11 @@ DEFAULT_SHARD_USER_AGENT = (
 )
 
 
+class ShardFormat(StrEnum):
+    JSON = "json"
+    MSGPACK = "msgpack"
+
+
 class Shard:
     _closing_future: asyncio.Future[None] | None
     _ws: aiohttp.ClientWebSocketResponse | None
@@ -47,6 +60,7 @@ class Shard:
         "base",
         "bot",
         "connect_delay",
+        "format",
         "handler",
         "logged_out",
         "reconnect_on_timeout",
@@ -55,6 +69,8 @@ class Shard:
         "state",
         "token",
         "user_agent",
+        "recv",
+        "send",
     )
 
     def __init__(
@@ -64,6 +80,7 @@ class Shard:
         base: str | None = None,
         bot: bool = True,
         connect_delay: int | float | None = 2,
+        format: ShardFormat = ShardFormat.JSON,
         handler: EventHandler | None = None,
         reconnect_on_timeout: bool = True,
         retries: int | None = None,
@@ -74,6 +91,9 @@ class Shard:
         state: State,
         user_agent: str | None = None,
     ) -> None:
+        if format is ShardFormat.MSGPACK and not _HAS_MSGPACK:
+            raise TypeError("Cannot use msgpack format without dependency")
+
         self._closed = False
         self._closing_future = None
         self._heartbeat_sequence = 1
@@ -83,6 +103,7 @@ class Shard:
         self.base = base or "wss://ws.revolt.chat/"
         self.bot = bot
         self.connect_delay = connect_delay
+        self.format = format
         self.handler = handler
         self.logged_out = False
         self.reconnect_on_timeout = reconnect_on_timeout
@@ -91,6 +112,13 @@ class Shard:
         self.state = state
         self.token = token
         self.user_agent = user_agent or DEFAULT_SHARD_USER_AGENT
+
+        self.recv = (
+            self._recv_json if format is ShardFormat.JSON else self._recv_msgpack
+        )
+        self.send = (
+            self._send_json if format is ShardFormat.JSON else self._send_msgpack
+        )
 
     def is_closed(self) -> bool:
         return self._closed and not self._ws
@@ -118,11 +146,18 @@ class Shard:
     async def subscribe_to(self, server: core.ResolvableULID) -> None:
         await self.send({"type": "Subscribe", "server_id": core.resolve_ulid(server)})
 
-    async def send(self, d: raw.ServerEvent) -> None:
+    async def _send_json(self, d: raw.ServerEvent) -> None:
         _L.debug("sending %s", d)
         await self.ws.send_str(utils.to_json(d))
 
-    async def recv(self) -> raw.ClientEvent | None:
+    async def _send_msgpack(self, d: raw.ServerEvent) -> None:
+        _L.debug("sending %s", d)
+
+        # Will never none according to stubs: https://github.com/sbdchd/msgpack-types/blob/a9ab1c861933fa11aff706b21c303ee52a2ee359/msgpack-stubs/__init__.pyi#L40-L49
+        payload: bytes = msgpack.packb(d)  # type: ignore
+        await self.ws.send_bytes(payload)
+
+    async def _recv_json(self) -> raw.ClientEvent | None:
         try:
             message = await self.ws.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
@@ -143,9 +178,40 @@ class Shard:
         if message.type is aiohttp.WSMsgType.ERROR:
             _L.debug("received invalid websocket payload, reconnecting")
             raise Reconnect
+
         if message.type is not aiohttp.WSMsgType.TEXT:
             return None
         k = utils.from_json(message.data)
+        if k["type"] != "Ready":
+            _L.debug("received %s", k)
+        return k
+
+    async def _recv_msgpack(self) -> raw.ClientEvent | None:
+        try:
+            message = await self.ws.receive()
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            raise Close
+        if message.type in (
+            aiohttp.WSMsgType.CLOSE,
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSMsgType.CLOSING,
+        ):
+            data = message.data
+            self._last_close_code = data
+            _L.debug("websocket closed: %s", data)
+            if self._closed:
+                raise Close
+            else:
+                await asyncio.sleep(1)
+                raise Reconnect
+        if message.type is aiohttp.WSMsgType.ERROR:
+            _L.debug("received invalid websocket payload, reconnecting")
+            raise Reconnect
+
+        if message.type is not aiohttp.WSMsgType.BINARY:
+            return None
+        # `msgpack` wont be unbound here
+        k = msgpack.unpackb(message.data, use_list=True)  # type: ignore
         if k["type"] != "Ready":
             _L.debug("received %s", k)
         return k
@@ -193,6 +259,11 @@ class Shard:
                         "format": "json",
                     },
                 )
+            except OSError as exc:
+                # TODO: 10053
+                if exc.errno in (54, 10054):  # Connection reset by peer
+                    await asyncio.sleep(1.5)
+                    continue
             except Exception as exc:
                 es.append(exc)
                 _L.debug("connection failed on try=%i: %s", i, exc)

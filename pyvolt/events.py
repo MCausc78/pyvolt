@@ -13,10 +13,12 @@ from . import (
     message as messages,
     server as servers,
     shard as sharding,
-    user_settings,
     user as users,
     webhook as webhooks,
 )
+
+from .read_state import ReadState
+from .user_settings import UserSettings
 
 
 @define(slots=True)
@@ -58,13 +60,20 @@ class ReadyEvent(BaseEvent):
         repr=True, hash=True, kw_only=True, eq=True
     )
 
-    old_me: users.SelfUser | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    new_me: users.SelfUser | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    me: users.SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+    read_states: dict[core.ULID, ReadState] = field(
+        repr=True, hash=True, kw_only=True, eq=True
+    )
+
+    def before_dispatch(self) -> None:
+        # People expect bot.me to be available upon `ReadyEvent` dispatching
+        state = self.shard.state
+        state._me = self.me
+        state._settings = self.settings
 
     def process(self) -> bool:
         state = self.shard.state
-        state._me = self.new_me
-
         cache = state.cache
 
         if not cache:
@@ -663,12 +672,8 @@ class UserSettingsUpdateEvent(BaseEvent):
     current_user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current user ID."""
 
-    before: user_settings.UserSettings | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    after: user_settings.UserSettings = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    before: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)

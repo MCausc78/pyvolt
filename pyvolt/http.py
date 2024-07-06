@@ -134,12 +134,19 @@ class HTTPClient:
                 # Do not call factory on future requests
                 self._session = session
 
-            response = await session.request(
-                method,
-                url,
-                headers=headers,
-                **kwargs,
-            )
+            try:
+                response = await session.request(
+                    method,
+                    url,
+                    headers=headers,
+                    **kwargs,
+                )
+            except OSError as exc:
+                # TODO: 10053
+                if exc.errno in (54, 10054):  # Connection reset by peer
+                    await asyncio.sleep(1.5)
+                    continue
+                raise
             if response.status >= 400:
                 if response.status == 502:
                     if retries >= self.max_retries:
