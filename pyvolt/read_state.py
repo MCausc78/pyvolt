@@ -13,7 +13,7 @@ if t.TYPE_CHECKING:
 class ReadState:
     """The channel read state."""
 
-    state: "State" = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """The state channel ID."""

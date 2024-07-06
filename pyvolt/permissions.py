@@ -137,7 +137,7 @@ class PermissionOverride:
         self.allow = allow
         self.deny = deny
 
-    def build(self) -> "raw.Override":
+    def build(self) -> raw.Override:
         return {"allow": int(self.allow), "deny": int(self.deny)}
 
     def __repr__(self) -> str:

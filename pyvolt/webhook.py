@@ -178,5 +178,6 @@ class Webhook(BaseWebhook):
 
 __all__ = (
     "BaseWebhook",
+    "PartialWebhook",
     "Webhook",
 )
