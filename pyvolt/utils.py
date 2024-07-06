@@ -62,16 +62,14 @@ _TRUE: t.Literal["true"] = "true"
 _FALSE: t.Literal["false"] = "false"
 
 
-def _bool(b: bool) -> "raw.Bool":
+def _bool(b: bool) -> raw.Bool:
     return _TRUE if b else _FALSE
 
 
 async def _json_or_text(response: aiohttp.ClientResponse) -> t.Any:
     text = await response.text(encoding="utf-8")
     try:
-        if response.headers["content-type"] == "application/json":
-            if len(text) < 2000:
-                _L.debug("Decoding %s", text)
+        if response.headers["content-type"].startswith("application/json"):
             return from_json(text)
     except KeyError:
         # Thanks Cloudflare

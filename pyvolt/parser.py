@@ -364,7 +364,7 @@ class Parser:
         return discovery.DiscoveryBot(
             state=self.state,
             id=self.parse_id(d["_id"]),
-            username=d.get("username"),
+            name=d["username"],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             internal_profile=self.parse_user_profile(d["profile"]),
             tags=d["tags"],
@@ -432,6 +432,7 @@ class Parser:
             state=self.state,
             name=d["name"],
             description=d["description"],
+            creator=d["creator"],
             slug=d["slug"],
             tags=d["tags"],
             variables=d["variables"],

@@ -1,665 +1,662 @@
 {
-    "pageProps": {
-        "bots": [
-            {
-                "_id": "01GA9PC742D72BM6CNDNXS3X7D",
-                "username": "Reddit",
-                "profile": {
-                    "content": "Automatically send new posts from subreddits and redditors.\n\nCommands work on both Redditors and Subreddits.\nRedditor: `u/spez`\nSubreddit: `r/askreddit`\n[Support Server](https://rvlt.gg/SPMxwwC8)"
-                },
-                "tags": [],
-                "servers": 318,
-                "usage": "high"
+    "bots": [
+        {
+            "_id": "01GA9PC742D72BM6CNDNXS3X7D",
+            "username": "Reddit",
+            "profile": {
+                "content": "Automatically send new posts from subreddits and redditors.\n\nCommands work on both Redditors and Subreddits.\nRedditor: `u/spez`\nSubreddit: `r/askreddit`\n[Support Server](https://rvlt.gg/SPMxwwC8)"
             },
-            {
-                "_id": "01FHGJ3NPP7XANQQH8C2BE44ZY",
-                "username": "AutoMod",
-                "avatar": {
-                    "_id": "pYjK-QyMv92hy8GUM-b4IK1DMzYILys9s114khzzKY",
-                    "tag": "avatars",
-                    "filename": "cut-automod-gay.png",
+            "tags": [],
+            "servers": 318,
+            "usage": "high"
+        },
+        {
+            "_id": "01FHGJ3NPP7XANQQH8C2BE44ZY",
+            "username": "AutoMod",
+            "avatar": {
+                "_id": "pYjK-QyMv92hy8GUM-b4IK1DMzYILys9s114khzzKY",
+                "tag": "avatars",
+                "filename": "cut-automod-gay.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 29618
+            },
+            "profile": {
+                "content": "[Source Code](https://github.com/DeclanChidlow/AutoMod)\n\nRevolt's premier moderation bot.\n\nThanks to [@Amy.](https://miruku.cafe/@amy) for designing the logo and banner!\n\nTo enable automated spam prevention use `/botctl spam_detection on`. Some automatic moderation features are enabled by default - [More info](https://github.com/janderedev/automod/wiki/Global-Blacklist).\n\nFor help join [the AutoMod server](https://rvlt.gg/automod).",
+                "background": {
+                    "_id": "AoRvVsvP1Y8X_A4cEqJ_R7B29wDZI5lNrbiu0A5pJI",
+                    "tag": "backgrounds",
+                    "filename": "banner.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 512,
-                        "height": 512
+                        "width": 1366,
+                        "height": 768
                     },
                     "content_type": "image/png",
-                    "size": 29618
-                },
-                "profile": {
-                    "content": "[Source Code](https://github.com/DeclanChidlow/AutoMod)\n\nRevolt's premier moderation bot.\n\nThanks to [@Amy.](https://miruku.cafe/@amy) for designing the logo and banner!\n\nTo enable automated spam prevention use `/botctl spam_detection on`. Some automatic moderation features are enabled by default - [More info](https://github.com/janderedev/automod/wiki/Global-Blacklist).\n\nFor help join [the AutoMod server](https://rvlt.gg/automod).",
-                    "background": {
-                        "_id": "AoRvVsvP1Y8X_A4cEqJ_R7B29wDZI5lNrbiu0A5pJI",
-                        "tag": "backgrounds",
-                        "filename": "banner.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1366,
-                            "height": 768
-                        },
-                        "content_type": "image/png",
-                        "size": 151802
-                    }
-                },
-                "tags": [],
-                "servers": 3287,
-                "usage": "high"
+                    "size": 151802
+                }
             },
-            {
-                "_id": "01G1Y9M6G254VWBF41W3N5DQY5",
-                "username": "bolt",
-                "avatar": {
-                    "_id": "UI23uI7QEbVtwnj6hQRBe5VSrqfZK8dzAn7xBj71q8",
-                    "tag": "avatars",
-                    "filename": "BoltLogoWhiteOnBlack.png",
+            "tags": [],
+            "servers": 3287,
+            "usage": "high"
+        },
+        {
+            "_id": "01G1Y9M6G254VWBF41W3N5DQY5",
+            "username": "bolt",
+            "avatar": {
+                "_id": "UI23uI7QEbVtwnj6hQRBe5VSrqfZK8dzAn7xBj71q8",
+                "tag": "avatars",
+                "filename": "BoltLogoWhiteOnBlack.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 1000
+                },
+                "content_type": "image/png",
+                "size": 635772
+            },
+            "profile": {
+                "content": "Bolt is a cross-platform chat app connecting communities, wherever your people might be.\nhttps://williamhorning.dev/bolt\n\nbridge revolt",
+                "background": {
+                    "_id": "QZqM7LmRdOAgX-C5lf-yPMyDn6zuDVbMpOc-B-ak6l",
+                    "tag": "backgrounds",
+                    "filename": "BoltWordmarkColorOnBlack.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 1000,
+                        "width": 2000,
                         "height": 1000
                     },
                     "content_type": "image/png",
-                    "size": 635772
-                },
-                "profile": {
-                    "content": "Bolt is a cross-platform chat app connecting communities, wherever your people might be.\nhttps://williamhorning.dev/bolt\n\nbridge revolt",
-                    "background": {
-                        "_id": "QZqM7LmRdOAgX-C5lf-yPMyDn6zuDVbMpOc-B-ak6l",
-                        "tag": "backgrounds",
-                        "filename": "BoltWordmarkColorOnBlack.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 2000,
-                            "height": 1000
-                        },
-                        "content_type": "image/png",
-                        "size": 420325
-                    }
-                },
-                "tags": [
-                    "bridge",
-                    "revolt"
-                ],
-                "servers": 435,
-                "usage": "high"
+                    "size": 420325
+                }
             },
-            {
-                "_id": "01H1DNQN9JGV40W0TJXWV26SGZ",
-                "username": "GlobalAdvertising",
-                "avatar": {
-                    "_id": "YwvIYujaK29YCJ4NvuFHur35ZcRXiWrEEcsiOMjSe4",
-                    "tag": "avatars",
-                    "filename": "8cb449e049d2e5d1dd21eb67f91dd16a.png",
+            "tags": [
+                "bridge",
+                "revolt"
+            ],
+            "servers": 435,
+            "usage": "high"
+        },
+        {
+            "_id": "01H1DNQN9JGV40W0TJXWV26SGZ",
+            "username": "GlobalAdvertising",
+            "avatar": {
+                "_id": "YwvIYujaK29YCJ4NvuFHur35ZcRXiWrEEcsiOMjSe4",
+                "tag": "avatars",
+                "filename": "8cb449e049d2e5d1dd21eb67f91dd16a.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 128,
+                    "height": 128
+                },
+                "content_type": "image/png",
+                "size": 11585
+            },
+            "profile": {
+                "content": "Global Ads uses a `global chat` style system to allow users to easily send any ad in any server by simply sending your ad as a message.\n\nType `g!help` to view all commands.\n\n[Support](https://rvlt.gg/pQZXYcRk) | [Website](https://frontier.cx) | [Discord Equivalent](https://global-advertising.frontier.cx/invite)",
+                "background": {
+                    "_id": "LX-h5uZDQLGVAEsegt-kiG7E2vVtsVFpAnh6SRGZ9y",
+                    "tag": "backgrounds",
+                    "filename": "global.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 128,
-                        "height": 128
+                        "width": 900,
+                        "height": 300
                     },
                     "content_type": "image/png",
-                    "size": 11585
-                },
-                "profile": {
-                    "content": "Global Ads uses a `global chat` style system to allow users to easily send any ad in any server by simply sending your ad as a message.\n\nType `g!help` to view all commands.\n\n[Support](https://rvlt.gg/pQZXYcRk) | [Website](https://frontier.cx) | [Discord Equivalent](https://global-advertising.frontier.cx/invite)",
-                    "background": {
-                        "_id": "LX-h5uZDQLGVAEsegt-kiG7E2vVtsVFpAnh6SRGZ9y",
-                        "tag": "backgrounds",
-                        "filename": "global.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 900,
-                            "height": 300
-                        },
-                        "content_type": "image/png",
-                        "size": 54115
-                    }
-                },
-                "tags": [],
-                "servers": 67,
-                "usage": "high"
+                    "size": 54115
+                }
             },
-            {
-                "_id": "01H3N2N26KYV4626V4ZEZYKHT8",
-                "username": "Masquerade",
-                "profile": {
-                    "content": "Send messages with a different Name, Avatar and Colour.\nUsage:\n`@Masquerade` Send help message\n`@Masquerade create {name} {Display Name}` Create a masquerade\n`name;Text you want to send` Send a message as {name}\n[Support Server](https://rvlt.gg/SPMxwwC8)\n[Source Code](https://github.com/TheBobBobs/masquerade-bot)"
-                },
-                "tags": [],
-                "servers": 282,
-                "usage": "high"
+            "tags": [],
+            "servers": 67,
+            "usage": "high"
+        },
+        {
+            "_id": "01H3N2N26KYV4626V4ZEZYKHT8",
+            "username": "Masquerade",
+            "profile": {
+                "content": "Send messages with a different Name, Avatar and Colour.\nUsage:\n`@Masquerade` Send help message\n`@Masquerade create {name} {Display Name}` Create a masquerade\n`name;Text you want to send` Send a message as {name}\n[Support Server](https://rvlt.gg/SPMxwwC8)\n[Source Code](https://github.com/TheBobBobs/masquerade-bot)"
             },
-            {
-                "_id": "01FGEJB5YQHRE55TWQG9RZMZFJ",
-                "username": "Booru",
-                "profile": {
-                    "content": "29,933,846 Images - 3,444,325 Tags\n!d help\nGet a random image from the top 5 boorus or upload your own.\nUse tags to narrow your search. (!d maid cat_ears)\n\n[danbooru](https://danbooru.donmai.us), [e621](https://e621.net), [gelbooru](https://gelbooru.com), [rule34](https://rule34.xxx), [realbooru](https://realbooru.com/)\n[Support Server](https://rvlt.gg/SPMxwwC8)\n\nNSFW\n"
-                },
-                "tags": [
-                    "nsfw"
-                ],
-                "servers": 396,
-                "usage": "high"
+            "tags": [],
+            "servers": 282,
+            "usage": "high"
+        },
+        {
+            "_id": "01FGEJB5YQHRE55TWQG9RZMZFJ",
+            "username": "Booru",
+            "profile": {
+                "content": "29,933,846 Images - 3,444,325 Tags\n!d help\nGet a random image from the top 5 boorus or upload your own.\nUse tags to narrow your search. (!d maid cat_ears)\n\n[danbooru](https://danbooru.donmai.us), [e621](https://e621.net), [gelbooru](https://gelbooru.com), [rule34](https://rule34.xxx), [realbooru](https://realbooru.com/)\n[Support Server](https://rvlt.gg/SPMxwwC8)\n\nNSFW\n"
             },
-            {
-                "_id": "01HBQ5YTZ17GX9PAH87Q8SBNYE",
-                "username": "Auttaja",
-                "avatar": {
-                    "_id": "PdEyPLzLUX1oJpJ0MhGs3FG_508LkzyC9qHHS57nim",
-                    "tag": "avatars",
+            "tags": [
+                "nsfw"
+            ],
+            "servers": 396,
+            "usage": "high"
+        },
+        {
+            "_id": "01HBQ5YTZ17GX9PAH87Q8SBNYE",
+            "username": "Auttaja",
+            "avatar": {
+                "_id": "PdEyPLzLUX1oJpJ0MhGs3FG_508LkzyC9qHHS57nim",
+                "tag": "avatars",
+                "filename": "Auttaja.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 1024
+                },
+                "content_type": "image/png",
+                "size": 49386
+            },
+            "profile": {
+                "content": "I am a multipurpose bot for Revolt featuring a counting system, moderation, and more.\n‎\nWe have mod & message logs system, logs when a message is edited or deleted, also logs bans, kicks, warns, etc.\n \n(All a work In progress!)‎\nRevolt Bot List - https://revoltbots.org/bots/Auttaja\nmoderation mod logging multipurpose utility",
+                "background": {
+                    "_id": "zPqPKU8sXZ7ZRaLyZD63_MsBZJEo2PwZ9bWLbgr_58",
+                    "tag": "backgrounds",
                     "filename": "Auttaja.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 1024,
-                        "height": 1024
+                        "width": 480,
+                        "height": 218
                     },
                     "content_type": "image/png",
-                    "size": 49386
-                },
-                "profile": {
-                    "content": "I am a multipurpose bot for Revolt featuring a counting system, moderation, and more.\n‎\nWe have mod & message logs system, logs when a message is edited or deleted, also logs bans, kicks, warns, etc.\n \n(All a work In progress!)‎\nRevolt Bot List - https://revoltbots.org/bots/Auttaja\nmoderation mod logging multipurpose utility",
-                    "background": {
-                        "_id": "zPqPKU8sXZ7ZRaLyZD63_MsBZJEo2PwZ9bWLbgr_58",
-                        "tag": "backgrounds",
-                        "filename": "Auttaja.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 480,
-                            "height": 218
-                        },
-                        "content_type": "image/png",
-                        "size": 41721
-                    }
-                },
-                "tags": [
-                    "moderation",
-                    "mod",
-                    "logging",
-                    "multipurpose",
-                    "utility"
-                ],
-                "servers": 103,
-                "usage": "high"
+                    "size": 41721
+                }
             },
-            {
-                "_id": "01G6ECYVSP18H3MV09X3VX2R0G",
-                "username": "PopCord",
-                "profile": {
-                    "content": "Add the  Revolt bot PopCord to set up moderation, fun, utils, social, and NSFW for your Revolt server.\n\n[support server](https://app.revolt.chat/invite/kGZ1D6y6)\n[invite me](https://app.revolt.chat/bot/01G6ECYVSP18H3MV09X3VX2R0G)\n\n[website](https://popcord.github.io/)\n[API](https://api-popcord.vercel.app/)\n\nnsfw adult lewd 18 social anime",
-                    "background": {
-                        "_id": "53d42Jtf_u7qOaJbr7fZqJgC60QhAzooHOf_3R5mbw",
-                        "tag": "backgrounds",
-                        "filename": "image_2023-07-15_165759562.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1200,
-                            "height": 300
-                        },
-                        "content_type": "image/png",
-                        "size": 380078
-                    }
-                },
-                "avatar": {
-                    "_id": "YAi3D8lhWCbNhpuxG0SxdfoDaFbPPPHtw8XpJOMR2N",
-                    "tag": "avatars",
-                    "filename": "a_b0f0c3aab1aa5024dee9be10f68a4641.gif",
+            "tags": [
+                "moderation",
+                "mod",
+                "logging",
+                "multipurpose",
+                "utility"
+            ],
+            "servers": 103,
+            "usage": "high"
+        },
+        {
+            "_id": "01G6ECYVSP18H3MV09X3VX2R0G",
+            "username": "PopCord",
+            "profile": {
+                "content": "Add the  Revolt bot PopCord to set up moderation, fun, utils, social, and NSFW for your Revolt server.\n\n[support server](https://app.revolt.chat/invite/kGZ1D6y6)\n[invite me](https://app.revolt.chat/bot/01G6ECYVSP18H3MV09X3VX2R0G)\n\n[website](https://popcord.github.io/)\n[API](https://api-popcord.vercel.app/)\n\nnsfw adult lewd 18 social anime",
+                "background": {
+                    "_id": "53d42Jtf_u7qOaJbr7fZqJgC60QhAzooHOf_3R5mbw",
+                    "tag": "backgrounds",
+                    "filename": "image_2023-07-15_165759562.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 269,
-                        "height": 269
+                        "width": 1200,
+                        "height": 300
+                    },
+                    "content_type": "image/png",
+                    "size": 380078
+                }
+            },
+            "avatar": {
+                "_id": "YAi3D8lhWCbNhpuxG0SxdfoDaFbPPPHtw8XpJOMR2N",
+                "tag": "avatars",
+                "filename": "a_b0f0c3aab1aa5024dee9be10f68a4641.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 269,
+                    "height": 269
+                },
+                "content_type": "image/gif",
+                "size": 1654485
+            },
+            "tags": [
+                "nsfw",
+                "adult",
+                "lewd",
+                "18",
+                "social",
+                "anime"
+            ],
+            "servers": 278,
+            "usage": "medium"
+        },
+        {
+            "_id": "01FVB28WQ9JHMWK8K7RD0F0VCW",
+            "username": "Remix",
+            "avatar": {
+                "_id": "763s_Jbrgw0VHeW6vOet-bBe5yB-sVW-IBBqbNRaY4",
+                "tag": "avatars",
+                "filename": "Remix.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1440,
+                    "height": 1440
+                },
+                "content_type": "image/png",
+                "size": 263926
+            },
+            "profile": {
+                "content": "Remix is the first open-source music bot for Revolt! if you need help or have any suggestions or feedback, join our support server. Please expect bugs from time to time as some features are under constant development.\n‎\n[Add the bot here](<https://app.revolt.chat/bot/01FVB28WQ9JHMWK8K7RD0F0VCW>) • [Support Server](<http://rvlt.gg/Remix>) • [Sponsor](<https://github.com/sponsors/remix-bot>) • [Web](<https://remix.fairuse.org>)\n\n- You can find Remix's source code [here](<https://github.com/remix-bot/revolt>).\n- [Remix Discord Version](<https://discord.com/oauth2/authorize?client_id=808897601582923806&permissions=2184236096&scope=applications.commands%20bot>).\n‎\nFor commands run `%help`\n- Command prefix might vary from server to server. Run <@​​​​01FVB28WQ9JHMWK8K7RD0F0VCW> to get the prefix in the current server.\n‎\nCheck for current downtime incidents: [Status Page](http://status.remix.fairuse.org)\nVote for Remix on [revoltbots.org](https://revoltbots.org/bots/remix)\n\n- `Made by ShadowLp174 and NoLogicAlan`​​​​\n\nmusic musicbot bot watchtogether dashboard rythm",
+                "background": {
+                    "_id": "hsSRljmK34pgASEXRz28rnBBEbO5iC_C6Z1VWZJ0zK",
+                    "tag": "backgrounds",
+                    "filename": "D4_hBq5D2DObGDeYuo6agc7-5kjWNcefnrqMgHAkL2.gif",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 600,
+                        "height": 360
                     },
                     "content_type": "image/gif",
-                    "size": 1654485
-                },
-                "tags": [
-                    "nsfw",
-                    "adult",
-                    "lewd",
-                    "18",
-                    "social",
-                    "anime"
-                ],
-                "servers": 278,
-                "usage": "medium"
+                    "size": 1739994
+                }
             },
-            {
-                "_id": "01FVB28WQ9JHMWK8K7RD0F0VCW",
-                "username": "Remix",
-                "avatar": {
-                    "_id": "763s_Jbrgw0VHeW6vOet-bBe5yB-sVW-IBBqbNRaY4",
-                    "tag": "avatars",
-                    "filename": "Remix.png",
+            "tags": [
+                "music",
+                "musicbot",
+                "bot",
+                "watchtogether",
+                "dashboard",
+                "rythm"
+            ],
+            "servers": 2286,
+            "usage": "medium"
+        },
+        {
+            "_id": "01HV5TBBZZQQ38N500NER52TRQ",
+            "username": "yagprb",
+            "avatar": {
+                "_id": "YJctin4WI7EpAbaPIDcmvLePJ4JtAUorJgcn-h_CxW",
+                "tag": "avatars",
+                "filename": "lizard.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 413,
+                    "height": 413
+                },
+                "content_type": "image/gif",
+                "size": 3770242
+            },
+            "profile": {
+                "content": "### Hello, I am YAGPRB. A general purpose revolt bot made to help you make your server a better place!\n\nSome of me features are:\n- A customizable levelling system with level rewards!\n- The ability to make custom join/leave messages\n- A highlights system that notifies you whenever a message keyword is sent in chat\n\nAnd even more. [Add me to your server](https://app.revolt.chat/bot/01HV5TBBZZQQ38N500NER52TRQ) now and explore all my features!\n\nutility minigames levelling roles moderation general"
+            },
+            "tags": [
+                "utility",
+                "minigames",
+                "levelling",
+                "roles",
+                "moderation",
+                "general"
+            ],
+            "servers": 24,
+            "usage": "medium"
+        },
+        {
+            "_id": "01FEYFMPWJSJZ0671REAQMP6TY",
+            "username": "Ahni",
+            "avatar": {
+                "_id": "9Em8JLSKOwVoHnqdLaeUj5Z0eZf9UwdC16cdn7LMFW",
+                "tag": "avatars",
+                "filename": "racoon-raccoon.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 498,
+                    "height": 498
+                },
+                "content_type": "image/gif",
+                "size": 2574460
+            },
+            "profile": {
+                "content": "I am a fun and hot NSFW bot.\n:rainbow: LGBTQ+ Friendly :rainbow:\nSupport: https://rvlt.gg/tskJVrtk\nUsing a safe-to-use API, I am here to please. :smile_cat:\nAdd me to your server and try out my commands with `=help`!\n[My Source Code](https://github.com/Akrasio/Ahni-Revolt)\n\nnsfw lgbt adult lewd 18 anime images\n",
+                "background": {
+                    "_id": "TCLfhz7L_zxENtWctj9_ucVTF_9dbKLQLCxN9omNWG",
+                    "tag": "backgrounds",
+                    "filename": "wp6371955.jpg",
                     "metadata": {
                         "type": "Image",
-                        "width": 1440,
-                        "height": 1440
-                    },
-                    "content_type": "image/png",
-                    "size": 263926
-                },
-                "profile": {
-                    "content": "Remix is the first open-source music bot for Revolt! if you need help or have any suggestions or feedback, join our support server. Please expect bugs from time to time as some features are under constant development.\n‎\n[Add the bot here](<https://app.revolt.chat/bot/01FVB28WQ9JHMWK8K7RD0F0VCW>) • [Support Server](<http://rvlt.gg/Remix>) • [Sponsor](<https://github.com/sponsors/remix-bot>) • [Web](<https://remix.fairuse.org>)\n\n- You can find Remix's source code [here](<https://github.com/remix-bot/revolt>).\n- [Remix Discord Version](<https://discord.com/oauth2/authorize?client_id=808897601582923806&permissions=2184236096&scope=applications.commands%20bot>).\n‎\nFor commands run `%help`\n- Command prefix might vary from server to server. Run <@​​​​01FVB28WQ9JHMWK8K7RD0F0VCW> to get the prefix in the current server.\n‎\nCheck for current downtime incidents: [Status Page](http://status.remix.fairuse.org)\nVote for Remix on [revoltbots.org](https://revoltbots.org/bots/remix)\n\n- `Made by ShadowLp174 and NoLogicAlan`​​​​\n\nmusic musicbot bot watchtogether dashboard rythm",
-                    "background": {
-                        "_id": "hsSRljmK34pgASEXRz28rnBBEbO5iC_C6Z1VWZJ0zK",
-                        "tag": "backgrounds",
-                        "filename": "D4_hBq5D2DObGDeYuo6agc7-5kjWNcefnrqMgHAkL2.gif",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 600,
-                            "height": 360
-                        },
-                        "content_type": "image/gif",
-                        "size": 1739994
-                    }
-                },
-                "tags": [
-                    "music",
-                    "musicbot",
-                    "bot",
-                    "watchtogether",
-                    "dashboard",
-                    "rythm"
-                ],
-                "servers": 2286,
-                "usage": "medium"
-            },
-            {
-                "_id": "01HV5TBBZZQQ38N500NER52TRQ",
-                "username": "yagprb",
-                "avatar": {
-                    "_id": "YJctin4WI7EpAbaPIDcmvLePJ4JtAUorJgcn-h_CxW",
-                    "tag": "avatars",
-                    "filename": "lizard.gif",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 413,
-                        "height": 413
-                    },
-                    "content_type": "image/gif",
-                    "size": 3770242
-                },
-                "profile": {
-                    "content": "### Hello, I am YAGPRB. A general purpose revolt bot made to help you make your server a better place!\n\nSome of me features are:\n- A customizable levelling system with level rewards!\n- The ability to make custom join/leave messages\n- A highlights system that notifies you whenever a message keyword is sent in chat\n\nAnd even more. [Add me to your server](https://app.revolt.chat/bot/01HV5TBBZZQQ38N500NER52TRQ) now and explore all my features!\n\nutility minigames levelling roles moderation general"
-                },
-                "tags": [
-                    "utility",
-                    "minigames",
-                    "levelling",
-                    "roles",
-                    "moderation",
-                    "general"
-                ],
-                "servers": 24,
-                "usage": "medium"
-            },
-            {
-                "_id": "01FEYFMPWJSJZ0671REAQMP6TY",
-                "username": "Ahni",
-                "avatar": {
-                    "_id": "9Em8JLSKOwVoHnqdLaeUj5Z0eZf9UwdC16cdn7LMFW",
-                    "tag": "avatars",
-                    "filename": "racoon-raccoon.gif",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 498,
-                        "height": 498
-                    },
-                    "content_type": "image/gif",
-                    "size": 2574460
-                },
-                "profile": {
-                    "content": "I am a fun and hot NSFW bot.\n:rainbow: LGBTQ+ Friendly :rainbow:\nSupport: https://rvlt.gg/tskJVrtk\nUsing a safe-to-use API, I am here to please. :smile_cat:\nAdd me to your server and try out my commands with `=help`!\n[My Source Code](https://github.com/Akrasio/Ahni-Revolt)\n\nnsfw lgbt adult lewd 18 anime images\n",
-                    "background": {
-                        "_id": "TCLfhz7L_zxENtWctj9_ucVTF_9dbKLQLCxN9omNWG",
-                        "tag": "backgrounds",
-                        "filename": "wp6371955.jpg",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1920,
-                            "height": 1080
-                        },
-                        "content_type": "image/jpeg",
-                        "size": 231985
-                    }
-                },
-                "tags": [
-                    "nsfw",
-                    "lgbt",
-                    "adult",
-                    "lewd",
-                    "18",
-                    "anime",
-                    "images"
-                ],
-                "servers": 886,
-                "usage": "low"
-            },
-            {
-                "_id": "01G9XW2NR0QBH5SD3RMDX7VWDB",
-                "username": "Roles",
-                "profile": {
-                    "content": "Create messages that will give roles when reacted to.\n[Support Server](https://rvlt.gg/SPMxwwC8)\n[Source Code](https://github.com/TheBobBobs/roles-bot)"
-                },
-                "tags": [],
-                "servers": 751,
-                "usage": "low"
-            },
-            {
-                "_id": "01GTEXXYPYZQZFQ92AZB7JVR1G",
-                "username": "Bobcat2",
-                "avatar": {
-                    "_id": "Ec85usBR7_2mHVz0MI9rwXPLcaxIrFKy5pM6Y25dzM",
-                    "tag": "avatars",
-                    "filename": "1685936841305_bobcat-_detailed_tongue_and_teeth",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 512,
-                        "height": 512
-                    },
-                    "content_type": "image/png",
-                    "size": 488845
-                },
-                "profile": {
-                    "content": "Clone of BOBCAt, the best (quality is relative) moderation and utilities bot. I did not write it, the source code was made my crispy cat, he wants nothing to do with revolt tho.\nI can dm the source code, if you ask for it...\n\nPrefix is t$"
-                },
-                "tags": [],
-                "servers": 37,
-                "usage": "low"
-            },
-            {
-                "_id": "01GEJRAVCNV8VZNESKYKZG7ZNK",
-                "username": "PHLASH",
-                "avatar": {
-                    "_id": "OSt8882bNBAl7WSKjou1ge3ZRE95urx_Ke655z2_vv",
-                    "tag": "avatars",
-                    "filename": "PHLASH.png",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 256,
-                        "height": 256
-                    },
-                    "content_type": "image/png",
-                    "size": 53622
-                },
-                "profile": {
-                    "content": "A bot to help you get things done in a PHLASH!\nMostly just music right now. Supports queueing songs from youtube/soundcloud, playing livestreams or even radio, and setting filters for individual songs. (speed/reverb/bassboost)\n\nI'm [open source](https://github.com/itzTheMeow/revolt-phlash)!\n\nmusic bot musicbot",
-                    "background": {
-                        "_id": "-PMXovI4tcPjS2RBIuycpRb9H_jThdJGBZn1viOGQS",
-                        "tag": "backgrounds",
-                        "filename": "Shapes Background Large.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 800,
-                            "height": 450
-                        },
-                        "content_type": "image/png",
-                        "size": 7266
-                    }
-                },
-                "tags": [
-                    "music",
-                    "bot",
-                    "musicbot"
-                ],
-                "servers": 394,
-                "usage": "low"
-            },
-            {
-                "_id": "01H302WEK18E6F06NXW3ZF1JQ4",
-                "username": "Logger",
-                "avatar": {
-                    "_id": "feCCSrJ_v-GbUZglZZXWOFn24Chy39fNtZ21HXFo9o",
-                    "tag": "avatars",
-                    "filename": "Revolt_Logger_Bot.png",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 712,
-                        "height": 712
-                    },
-                    "content_type": "image/png",
-                    "size": 23166
-                },
-                "profile": {
-                    "content": "##  Join the Support Server, [Bot Central](https://rvlt.gg/KDsGjPTW)!\nThe ultimate logging Revolt bot! Stay informed with comprehensive logging for message updates, and message deletes, as well as member joins and leaves. Keep a complete record of your server's activity and changes with Logger, your reliable logging companion.",
-                    "background": {
-                        "_id": "yuWwoG6j44x8uZ09e4hicIzxmLpIY5YxRvoo3Ghvyh",
-                        "tag": "backgrounds",
-                        "filename": "3885A408-B4CD-447D-A153-F0324C46407B.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 750,
-                            "height": 499
-                        },
-                        "content_type": "image/png",
-                        "size": 12642
-                    }
-                },
-                "tags": [],
-                "servers": 173,
-                "usage": "low"
-            },
-            {
-                "_id": "01FEMAA7ZDBD7KXBNRQT3PX8G6",
-                "username": "Waifu",
-                "profile": {
-                    "content": "Made with love by Builderb <3 | Updated May 2023!\nA multi-purpose bot with utility and image commands coming soon.\n[Invite Bot](https://app.revolt.chat/bot/01FEMAA7ZDBD7KXBNRQT3PX8G6) | [Revolt Server](https://app.revolt.chat/invite/J5Ras1J3) | [Website](https://fluxpoint.dev) | [Discord Server](https://discord.gg/fluxpoint)\n\nanime imagegen memes utility",
-                    "background": {
-                        "_id": "oVQu_OOPng5YtUx6ej42QLlLYftLNgLCMJhE1M8ZYV",
-                        "tag": "backgrounds",
-                        "filename": "png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1500,
-                            "height": 968
-                        },
-                        "content_type": "image/png",
-                        "size": 2811567
-                    }
-                },
-                "avatar": {
-                    "_id": "-GBne-bBuNmJyg5ABWmc1e1Q6uqLOQqb39dl2S0aRB",
-                    "tag": "avatars",
-                    "filename": "waifu_new_avatar.png",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 2148,
-                        "height": 2148
-                    },
-                    "content_type": "image/png",
-                    "size": 2463533
-                },
-                "tags": [
-                    "anime",
-                    "imagegen",
-                    "memes",
-                    "utility"
-                ],
-                "servers": 503,
-                "usage": "low"
-            },
-            {
-                "_id": "01HS541Y8H5TQMWVEQD2VK213M",
-                "username": "Roulette",
-                "profile": {
-                    "content": "This is the ultimate way to pass the time.\n======================================\nPlay: \".r\" or \".g\"\nLet's match the numbers\n======================================\n[Revolt Bots](https://revoltbots.org/bots/01HS541Y8H5TQMWVEQD2VK213M/)|[GitHub](https://github.com/ztttas1/revolt_render_ru-)|[Web Site](https://revolt-render-ru.onrender.com/)|[Sub machine](https://app.revolt.chat/bot/01J0QDZK8MWZRRX0K1C0NET8K3)\ngame english Revolt",
-                    "background": {
-                        "_id": "SAPWm2EtopAXp04_lR_F3FIB4e5TuyRnIzeO6Y37XO",
-                        "tag": "backgrounds",
-                        "filename": "22696631.jpg",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1600,
-                            "height": 1200
-                        },
-                        "content_type": "image/jpeg",
-                        "size": 61899
-                    }
-                },
-                "avatar": {
-                    "_id": "zCE1XRZCHpEsJiy3Tx2wPYHdEnIU2RoEsFE17wsgM4",
-                    "tag": "avatars",
-                    "filename": "ダウンロード.png",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 186,
-                        "height": 186
-                    },
-                    "content_type": "image/png",
-                    "size": 7315
-                },
-                "tags": [
-                    "game",
-                    "english",
-                    "revolt"
-                ],
-                "servers": 14,
-                "usage": "low"
-            },
-            {
-                "_id": "01GQ6RADXPSXPF6NW4CBXXE0VV",
-                "username": "MeowbahhBot",
-                "avatar": {
-                    "_id": "zXsqmEzZb95w4pikLJpYQgx1Lz0cffY_ecnhhKMXKv",
-                    "tag": "avatars",
-                    "filename": "Meowbahh 2.jpg",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 593,
-                        "height": 593
+                        "width": 1920,
+                        "height": 1080
                     },
                     "content_type": "image/jpeg",
-                    "size": 57953
-                },
-                "profile": {
-                    "content": "HI. I am Meowbahh the Brainless trash bin. Please make me Trash. You can ask me questions with ++askmeow to get dumb answers, see Bad User hate arts with ++art, and more.\nPrefix: ++\n[Add the Bot](https://app.revolt.chat/bot/01GQ6RADXPSXPF6NW4CBXXE0VV) | [Support Server](https://rvlt.gg/sRTVE2sV) | [Website](https://idiotcreaturehater.glitch.me) | [Source Code](https://github.com/BadUserHater/MeowbahhBot/tree/main/revoltbot) | [Status Page](https://idiotcreaturehater.instatus.com)\n\nchatbot idiotcreaturehater fun meme",
-                    "background": {
-                        "_id": "fJUIh2wETjuaDpj9di-YJddh3lKm64CvuNyWhdr_R3",
-                        "tag": "backgrounds",
-                        "filename": "Idiotic Brainless Barbie Bin in Stores.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1272,
-                            "height": 734
-                        },
-                        "content_type": "image/png",
-                        "size": 100147
-                    }
-                },
-                "tags": [
-                    "chatbot",
-                    "idiotcreaturehater",
-                    "fun",
-                    "meme"
-                ],
-                "servers": 49,
-                "usage": "low"
+                    "size": 231985
+                }
             },
-            {
-                "_id": "01HX0519791BX5BFWZ98MNS27H",
-                "username": "Translator",
-                "avatar": {
-                    "_id": "VkyX0a0QnZGW1LKlc6EigRkhBpRf83D2vDQjI8Tcq3",
-                    "tag": "avatars",
-                    "filename": "translator.png",
+            "tags": [
+                "nsfw",
+                "lgbt",
+                "adult",
+                "lewd",
+                "18",
+                "anime",
+                "images"
+            ],
+            "servers": 886,
+            "usage": "low"
+        },
+        {
+            "_id": "01G9XW2NR0QBH5SD3RMDX7VWDB",
+            "username": "Roles",
+            "profile": {
+                "content": "Create messages that will give roles when reacted to.\n[Support Server](https://rvlt.gg/SPMxwwC8)\n[Source Code](https://github.com/TheBobBobs/roles-bot)"
+            },
+            "tags": [],
+            "servers": 751,
+            "usage": "low"
+        },
+        {
+            "_id": "01GTEXXYPYZQZFQ92AZB7JVR1G",
+            "username": "Bobcat2",
+            "avatar": {
+                "_id": "Ec85usBR7_2mHVz0MI9rwXPLcaxIrFKy5pM6Y25dzM",
+                "tag": "avatars",
+                "filename": "1685936841305_bobcat-_detailed_tongue_and_teeth",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 488845
+            },
+            "profile": {
+                "content": "Clone of BOBCAt, the best (quality is relative) moderation and utilities bot. I did not write it, the source code was made my crispy cat, he wants nothing to do with revolt tho.\nI can dm the source code, if you ask for it...\n\nPrefix is t$"
+            },
+            "tags": [],
+            "servers": 37,
+            "usage": "low"
+        },
+        {
+            "_id": "01GEJRAVCNV8VZNESKYKZG7ZNK",
+            "username": "PHLASH",
+            "avatar": {
+                "_id": "OSt8882bNBAl7WSKjou1ge3ZRE95urx_Ke655z2_vv",
+                "tag": "avatars",
+                "filename": "PHLASH.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 256,
+                    "height": 256
+                },
+                "content_type": "image/png",
+                "size": 53622
+            },
+            "profile": {
+                "content": "A bot to help you get things done in a PHLASH!\nMostly just music right now. Supports queueing songs from youtube/soundcloud, playing livestreams or even radio, and setting filters for individual songs. (speed/reverb/bassboost)\n\nI'm [open source](https://github.com/itzTheMeow/revolt-phlash)!\n\nmusic bot musicbot",
+                "background": {
+                    "_id": "-PMXovI4tcPjS2RBIuycpRb9H_jThdJGBZn1viOGQS",
+                    "tag": "backgrounds",
+                    "filename": "Shapes Background Large.png",
                     "metadata": {
                         "type": "Image",
-                        "width": 500,
-                        "height": 500
+                        "width": 800,
+                        "height": 450
                     },
                     "content_type": "image/png",
-                    "size": 29249
-                },
-                "profile": {
-                    "content": "**1st Revolt translation bot !**\n\n> Invite the bot\n>https://app.revolt.chat/bot/01HX0519791BX5BFWZ98MNS27H\n\n> Support server\n>https://rvlt.gg/pfkGX8P9\n\n100% free, no premium features, no limitations. ",
-                    "background": {
-                        "_id": "9H2naWpVOriI4JncxJWoDKA9AuhYb6WTH7NuMHSiQ8",
-                        "tag": "backgrounds",
-                        "filename": "translator_bannière_2.png.png",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 1200,
-                            "height": 480
-                        },
-                        "content_type": "image/png",
-                        "size": 31782
-                    }
-                },
-                "tags": [],
-                "servers": 16,
-                "usage": "low"
+                    "size": 7266
+                }
             },
-            {
-                "_id": "01HPAFAVQM01BE2PN2A7RDTQXJ",
-                "username": "Anna",
-                "profile": {
-                    "content": "I am a bot which is made for AI conversations! If you want to just chat, ping me with a message.\n\nDisclaimer:\nI use an AI Chat service which could be biased or offensive... tread carefully!\n\nAnd yes... I do take some time to respond and provide decent responses! Please be patient!\n\nAI automated chatbot chat fun\n\n- https://revoltbots.org/bots/ai\n- https://github.com/Akrasio/AI\n- [Home Server](https://rvlt.gg/01G5DNGB7K9JN685WABZKTYQ0X)",
-                    "background": {
-                        "_id": "NM_YFL1kYro75TbgI6BMl22l7CFEPpaByOJ6vWUeFK",
-                        "tag": "backgrounds",
-                        "filename": "giphy.gif",
-                        "metadata": {
-                            "type": "Image",
-                            "width": 500,
-                            "height": 280
-                        },
-                        "content_type": "image/gif",
-                        "size": 644907
-                    }
+            "tags": [
+                "music",
+                "bot",
+                "musicbot"
+            ],
+            "servers": 394,
+            "usage": "low"
+        },
+        {
+            "_id": "01H302WEK18E6F06NXW3ZF1JQ4",
+            "username": "Logger",
+            "avatar": {
+                "_id": "feCCSrJ_v-GbUZglZZXWOFn24Chy39fNtZ21HXFo9o",
+                "tag": "avatars",
+                "filename": "Revolt_Logger_Bot.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 712,
+                    "height": 712
                 },
-                "avatar": {
-                    "_id": "VAL7R3NT3xPeOrHRnAiiys2VpRXVYe_rMB7sIoL3V8",
-                    "tag": "avatars",
-                    "filename": "gify.gif",
+                "content_type": "image/png",
+                "size": 23166
+            },
+            "profile": {
+                "content": "##  Join the Support Server, [Bot Central](https://rvlt.gg/KDsGjPTW)!\nThe ultimate logging Revolt bot! Stay informed with comprehensive logging for message updates, and message deletes, as well as member joins and leaves. Keep a complete record of your server's activity and changes with Logger, your reliable logging companion.",
+                "background": {
+                    "_id": "yuWwoG6j44x8uZ09e4hicIzxmLpIY5YxRvoo3Ghvyh",
+                    "tag": "backgrounds",
+                    "filename": "3885A408-B4CD-447D-A153-F0324C46407B.png",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 750,
+                        "height": 499
+                    },
+                    "content_type": "image/png",
+                    "size": 12642
+                }
+            },
+            "tags": [],
+            "servers": 173,
+            "usage": "low"
+        },
+        {
+            "_id": "01FEMAA7ZDBD7KXBNRQT3PX8G6",
+            "username": "Waifu",
+            "profile": {
+                "content": "Made with love by Builderb <3 | Updated May 2023!\nA multi-purpose bot with utility and image commands coming soon.\n[Invite Bot](https://app.revolt.chat/bot/01FEMAA7ZDBD7KXBNRQT3PX8G6) | [Revolt Server](https://app.revolt.chat/invite/J5Ras1J3) | [Website](https://fluxpoint.dev) | [Discord Server](https://discord.gg/fluxpoint)\n\nanime imagegen memes utility",
+                "background": {
+                    "_id": "oVQu_OOPng5YtUx6ej42QLlLYftLNgLCMJhE1M8ZYV",
+                    "tag": "backgrounds",
+                    "filename": "png",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 1500,
+                        "height": 968
+                    },
+                    "content_type": "image/png",
+                    "size": 2811567
+                }
+            },
+            "avatar": {
+                "_id": "-GBne-bBuNmJyg5ABWmc1e1Q6uqLOQqb39dl2S0aRB",
+                "tag": "avatars",
+                "filename": "waifu_new_avatar.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2148,
+                    "height": 2148
+                },
+                "content_type": "image/png",
+                "size": 2463533
+            },
+            "tags": [
+                "anime",
+                "imagegen",
+                "memes",
+                "utility"
+            ],
+            "servers": 503,
+            "usage": "low"
+        },
+        {
+            "_id": "01HS541Y8H5TQMWVEQD2VK213M",
+            "username": "Roulette",
+            "profile": {
+                "content": "This is the ultimate way to pass the time.\n======================================\nPlay: \".r\" or \".g\"\nLet's match the numbers\n======================================\n[Revolt Bots](https://revoltbots.org/bots/01HS541Y8H5TQMWVEQD2VK213M/)|[GitHub](https://github.com/ztttas1/revolt_render_ru-)|[Web Site](https://revolt-render-ru.onrender.com/)|[Sub machine](https://app.revolt.chat/bot/01J0QDZK8MWZRRX0K1C0NET8K3)\ngame english Revolt",
+                "background": {
+                    "_id": "SAPWm2EtopAXp04_lR_F3FIB4e5TuyRnIzeO6Y37XO",
+                    "tag": "backgrounds",
+                    "filename": "22696631.jpg",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 1600,
+                        "height": 1200
+                    },
+                    "content_type": "image/jpeg",
+                    "size": 61899
+                }
+            },
+            "avatar": {
+                "_id": "zCE1XRZCHpEsJiy3Tx2wPYHdEnIU2RoEsFE17wsgM4",
+                "tag": "avatars",
+                "filename": "ダウンロード.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 186,
+                    "height": 186
+                },
+                "content_type": "image/png",
+                "size": 7315
+            },
+            "tags": [
+                "game",
+                "english",
+                "revolt"
+            ],
+            "servers": 14,
+            "usage": "low"
+        },
+        {
+            "_id": "01GQ6RADXPSXPF6NW4CBXXE0VV",
+            "username": "MeowbahhBot",
+            "avatar": {
+                "_id": "zXsqmEzZb95w4pikLJpYQgx1Lz0cffY_ecnhhKMXKv",
+                "tag": "avatars",
+                "filename": "Meowbahh 2.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 593,
+                    "height": 593
+                },
+                "content_type": "image/jpeg",
+                "size": 57953
+            },
+            "profile": {
+                "content": "HI. I am Meowbahh the Brainless trash bin. Please make me Trash. You can ask me questions with ++askmeow to get dumb answers, see Bad User hate arts with ++art, and more.\nPrefix: ++\n[Add the Bot](https://app.revolt.chat/bot/01GQ6RADXPSXPF6NW4CBXXE0VV) | [Support Server](https://rvlt.gg/sRTVE2sV) | [Website](https://idiotcreaturehater.glitch.me) | [Source Code](https://github.com/BadUserHater/MeowbahhBot/tree/main/revoltbot) | [Status Page](https://idiotcreaturehater.instatus.com)\n\nchatbot idiotcreaturehater fun meme",
+                "background": {
+                    "_id": "fJUIh2wETjuaDpj9di-YJddh3lKm64CvuNyWhdr_R3",
+                    "tag": "backgrounds",
+                    "filename": "Idiotic Brainless Barbie Bin in Stores.png",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 1272,
+                        "height": 734
+                    },
+                    "content_type": "image/png",
+                    "size": 100147
+                }
+            },
+            "tags": [
+                "chatbot",
+                "idiotcreaturehater",
+                "fun",
+                "meme"
+            ],
+            "servers": 49,
+            "usage": "low"
+        },
+        {
+            "_id": "01HX0519791BX5BFWZ98MNS27H",
+            "username": "Translator",
+            "avatar": {
+                "_id": "VkyX0a0QnZGW1LKlc6EigRkhBpRf83D2vDQjI8Tcq3",
+                "tag": "avatars",
+                "filename": "translator.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 29249
+            },
+            "profile": {
+                "content": "**1st Revolt translation bot !**\n\n> Invite the bot\n>https://app.revolt.chat/bot/01HX0519791BX5BFWZ98MNS27H\n\n> Support server\n>https://rvlt.gg/pfkGX8P9\n\n100% free, no premium features, no limitations. ",
+                "background": {
+                    "_id": "9H2naWpVOriI4JncxJWoDKA9AuhYb6WTH7NuMHSiQ8",
+                    "tag": "backgrounds",
+                    "filename": "translator_bannière_2.png.png",
+                    "metadata": {
+                        "type": "Image",
+                        "width": 1200,
+                        "height": 480
+                    },
+                    "content_type": "image/png",
+                    "size": 31782
+                }
+            },
+            "tags": [],
+            "servers": 16,
+            "usage": "low"
+        },
+        {
+            "_id": "01HPAFAVQM01BE2PN2A7RDTQXJ",
+            "username": "Anna",
+            "profile": {
+                "content": "I am a bot which is made for AI conversations! If you want to just chat, ping me with a message.\n\nDisclaimer:\nI use an AI Chat service which could be biased or offensive... tread carefully!\n\nAnd yes... I do take some time to respond and provide decent responses! Please be patient!\n\nAI automated chatbot chat fun\n\n- https://revoltbots.org/bots/ai\n- https://github.com/Akrasio/AI\n- [Home Server](https://rvlt.gg/01G5DNGB7K9JN685WABZKTYQ0X)",
+                "background": {
+                    "_id": "NM_YFL1kYro75TbgI6BMl22l7CFEPpaByOJ6vWUeFK",
+                    "tag": "backgrounds",
+                    "filename": "giphy.gif",
                     "metadata": {
                         "type": "Image",
                         "width": 500,
-                        "height": 500
+                        "height": 280
                     },
                     "content_type": "image/gif",
-                    "size": 2263418
-                },
-                "tags": [
-                    "ai",
-                    "automated",
-                    "chatbot",
-                    "chat",
-                    "fun"
-                ],
-                "servers": 7,
-                "usage": "low"
+                    "size": 644907
+                }
             },
-            {
-                "_id": "01H3JFKWCDET5YTMP0J92SXBC9",
-                "username": "BaldiBot",
-                "avatar": {
-                    "_id": "msom_qCb-C7yXTs7zksS6Kx6q8UGloOAd8hNhQS5Ct",
-                    "tag": "avatars",
-                    "filename": "Baldi Bot Icon.png",
-                    "metadata": {
-                        "type": "Image",
-                        "width": 400,
-                        "height": 425
-                    },
-                    "content_type": "image/png",
-                    "size": 140564
+            "avatar": {
+                "_id": "VAL7R3NT3xPeOrHRnAiiys2VpRXVYe_rMB7sIoL3V8",
+                "tag": "avatars",
+                "filename": "gify.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
                 },
-                "profile": {
-                    "content": "Hello, I am Baldi. I can send people to detention, Find high quality Baldi's Basics mods, Baldi's Basics Roleplay commands, and more.\n\nTo get Started with me, use bb!help\n[Support Server](https://rvlt.gg/fSfKknAw) | [Website](https://baldibot.nl) | [Invite Discord Bot (verified by Discord)](https://discord.com/oauth2/authorize?client_id=821513607916814376&permissions=0&integration_type=0&scope=bot+applications.commands)\n\nDISCLAIMER: This bot is not made by or affilirated with mystman12/Basically Games and the creators of Baldi Basics and Baldi Basics Plus. This is a fanmade bot. This bot is intended to be more of a funny bot to provide fun for Baldi Basics fans."
+                "content_type": "image/gif",
+                "size": 2263418
+            },
+            "tags": [
+                "ai",
+                "automated",
+                "chatbot",
+                "chat",
+                "fun"
+            ],
+            "servers": 7,
+            "usage": "low"
+        },
+        {
+            "_id": "01H3JFKWCDET5YTMP0J92SXBC9",
+            "username": "BaldiBot",
+            "avatar": {
+                "_id": "msom_qCb-C7yXTs7zksS6Kx6q8UGloOAd8hNhQS5Ct",
+                "tag": "avatars",
+                "filename": "Baldi Bot Icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 400,
+                    "height": 425
                 },
-                "tags": [],
-                "servers": 21,
-                "usage": "low"
-            }
-        ],
-        "popularTags": [
-            "nsfw",
-            "utility",
-            "moderation",
-            "revolt",
-            "bridge",
-            "mod",
-            "logging",
-            "multipurpose",
-            "anime",
-            "18"
-        ]
-    },
-    "__N_SSP": true
+                "content_type": "image/png",
+                "size": 140564
+            },
+            "profile": {
+                "content": "Hello, I am Baldi. I can send people to detention, Find high quality Baldi's Basics mods, Baldi's Basics Roleplay commands, and more.\n\nTo get Started with me, use bb!help\n[Support Server](https://rvlt.gg/fSfKknAw) | [Website](https://baldibot.nl) | [Invite Discord Bot (verified by Discord)](https://discord.com/oauth2/authorize?client_id=821513607916814376&permissions=0&integration_type=0&scope=bot+applications.commands)\n\nDISCLAIMER: This bot is not made by or affilirated with mystman12/Basically Games and the creators of Baldi Basics and Baldi Basics Plus. This is a fanmade bot. This bot is intended to be more of a funny bot to provide fun for Baldi Basics fans."
+            },
+            "tags": [],
+            "servers": 21,
+            "usage": "low"
+        }
+    ],
+    "popularTags": [
+        "nsfw",
+        "utility",
+        "moderation",
+        "revolt",
+        "bridge",
+        "mod",
+        "logging",
+        "multipurpose",
+        "anime",
+        "18"
+    ]
 }

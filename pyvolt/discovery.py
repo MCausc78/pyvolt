@@ -117,8 +117,8 @@ class BotUsage(StrEnum):
 
 @define(slots=True)
 class DiscoveryBot(bots.BaseBot):
-    username: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The bot's username."""
+    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The bot's name."""
 
     internal_avatar: cdn.StatelessAsset | None = field(
         repr=True, hash=True, kw_only=True, eq=True
@@ -176,6 +176,9 @@ class DiscoveryTheme:
 
     description: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme description."""
+
+    creator: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The theme creator."""
 
     slug: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme slug."""
@@ -283,7 +286,7 @@ class DiscoveryClient:
         self._base = (
             "https://rvlt.gg/_next/data/OddIUaX26creykRzYdVYw/"
             if base is None
-            else base.rstrip("/")
+            else base.rstrip("/") + "/"
         )
         self.session = session
         self.state = state
