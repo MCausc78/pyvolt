@@ -335,9 +335,11 @@ class BaseMessage(base.Base):
         :class:`Message`
             The message sent.
 
-        :class:`Forbidden`
+        Raises
+        ------
+        Forbidden
             You do not have permissions to send messages.
-        :class:`APIError`
+        APIError
             Sending the message failed.
         """
         return await self.state.http.send_message(

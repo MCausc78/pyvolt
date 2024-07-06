@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import typing as t
 
-from . import channels, files, servers, users
+from .channels import GroupChannel, Channel
+from .files import File
+from .servers import Server
+from .users import User
 
 
 class ServerInvite(t.TypedDict):
@@ -28,14 +31,14 @@ class ServerInviteResponse(t.TypedDict):
     code: str
     server_id: str
     server_name: str
-    server_icon: t.NotRequired[files.File]
-    server_banner: t.NotRequired[files.File]
+    server_icon: t.NotRequired[File]
+    server_banner: t.NotRequired[File]
     server_flags: t.NotRequired[int]
     channel_id: str
     channel_name: str
     channel_description: t.NotRequired[str]
     user_name: str
-    user_avatar: t.NotRequired[files.File]
+    user_avatar: t.NotRequired[File]
     member_count: int
 
 
@@ -46,7 +49,7 @@ class GroupInviteResponse(t.TypedDict):
     channel_name: str
     channel_description: t.NotRequired[str]
     user_name: str
-    user_avatar: t.NotRequired[files.File]
+    user_avatar: t.NotRequired[File]
 
 
 InviteResponse = ServerInviteResponse | GroupInviteResponse
@@ -54,14 +57,14 @@ InviteResponse = ServerInviteResponse | GroupInviteResponse
 
 class ServerInviteJoinResponse(t.TypedDict):
     type: t.Literal["Server"]
-    channels: list[channels.Channel]
-    server: servers.Server
+    channels: list[Channel]
+    server: Server
 
 
 class GroupInviteJoinResponse(t.TypedDict):
     type: t.Literal["Group"]
-    channel: channels.GroupChannel
-    users: list[users.User]
+    channel: GroupChannel
+    users: list[User]
 
 
 InviteJoinResponse = ServerInviteJoinResponse | GroupInviteJoinResponse

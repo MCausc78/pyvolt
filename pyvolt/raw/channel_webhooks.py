@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import typing as t
 
-from . import files
+from .files import File
 
 
 class Webhook(t.TypedDict):
     id: str
     name: str
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     channel_id: str
     permissions: int
     token: str | None
@@ -16,7 +16,7 @@ class Webhook(t.TypedDict):
 
 class PartialWebhook(t.TypedDict):
     name: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     permissions: t.NotRequired[int]
 
 

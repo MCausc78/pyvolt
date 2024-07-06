@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing as t
 
+from .user_settings import UserSettings
+
 if t.TYPE_CHECKING:
     from .cache import Cache
     from .cdn import CDNClient
@@ -21,6 +23,7 @@ class State:
         "_shard",
         "_me",
         "_saved_notes",
+        "_settings",
     )
 
     def __init__(
@@ -39,6 +42,7 @@ class State:
         self._shard = shard
         self._me: SelfUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None
+        self._settings: UserSettings | None = None
 
     def setup(
         self,
@@ -95,6 +99,13 @@ class State:
     def saved_notes(self) -> SavedMessagesChannel | None:
         """:class:`SavedMessagesChannel` | None: The Saved Notes channel."""
         return self._saved_notes
+
+    @property
+    def settings(self) -> UserSettings:
+        if self._settings:
+            return self._settings
+        self._settings = UserSettings(state=self, value={}, fake=True)
+        return self._settings
 
 
 __all__ = ("State",)

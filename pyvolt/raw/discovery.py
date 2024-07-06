@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import typing as t
 
-from . import files, users
+from .files import File
+from .users import UserProfile
 
 # Servers
 DiscoveryServerActivity = t.Literal["high", "medium", "low", "no"]
@@ -14,8 +15,8 @@ class DiscoveryServer(t.TypedDict):
     _id: str
     name: str
     description: str | None
-    icon: t.NotRequired[files.File]
-    banner: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
+    banner: t.NotRequired[File]
     flags: t.NotRequired[int]
     tags: list[str]
     members: int
@@ -42,8 +43,8 @@ DiscoveryBotUsage = t.Literal["high", "medium", "low"]
 class DiscoveryBot(t.TypedDict):
     _id: str
     username: str
-    avatar: t.NotRequired[files.File]
-    profile: users.UserProfile
+    avatar: t.NotRequired[File]
+    profile: UserProfile
     tags: list[str]
     servers: int
     usage: DiscoveryBotUsage

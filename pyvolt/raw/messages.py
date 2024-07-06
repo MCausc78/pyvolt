@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import typing as t
 
-from . import basic, channel_webhooks, embeds, files, server_members, users
+from .basic import Bool
+from .channel_webhooks import MessageWebhook
+from .embeds import Embed
+from .files import File
+from .server_members import Member
+from .users import User
 
 
 class Message(t.TypedDict):
@@ -10,14 +15,14 @@ class Message(t.TypedDict):
     nonce: t.NotRequired[str]
     channel: str
     author: str
-    user: t.NotRequired[users.User]
-    member: t.NotRequired[server_members.Member]
-    webhook: t.NotRequired[channel_webhooks.MessageWebhook]
+    user: t.NotRequired[User]
+    member: t.NotRequired[Member]
+    webhook: t.NotRequired[MessageWebhook]
     content: t.NotRequired[str]
     system: t.NotRequired[SystemMessage]
-    attachments: t.NotRequired[list[files.File]]
+    attachments: t.NotRequired[list[File]]
     edited: t.NotRequired[str]
-    embeds: t.NotRequired[list[embeds.Embed]]
+    embeds: t.NotRequired[list[Embed]]
     mentions: t.NotRequired[list[str]]
     replies: t.NotRequired[list[str]]
     reactions: t.NotRequired[dict[str, list[str]]]
@@ -29,14 +34,14 @@ class Message(t.TypedDict):
 class PartialMessage(t.TypedDict):
     content: t.NotRequired[str]
     edited: t.NotRequired[str]
-    embeds: t.NotRequired[list[embeds.Embed]]
+    embeds: t.NotRequired[list[Embed]]
     reactions: t.NotRequired[dict[str, list[str]]]
 
 
 class MessagesAndUsersBulkMessageResponse(t.TypedDict):
     messages: list[Message]
-    users: list[users.User]
-    members: t.NotRequired[list[server_members.Member]]
+    users: list[User]
+    members: t.NotRequired[list[Member]]
 
 
 BulkMessageResponse = list[Message] | MessagesAndUsersBulkMessageResponse
@@ -126,7 +131,7 @@ class Interactions(t.TypedDict):
 
 
 class AppendMessage(t.TypedDict):
-    embeds: t.NotRequired[list[embeds.Embed]]
+    embeds: t.NotRequired[list[Embed]]
 
 
 MessageSort = t.Literal["Relevance", "Latest", "Oldest"]
@@ -162,7 +167,7 @@ class OptionsQueryMessages(t.TypedDict):
     after: t.NotRequired[str]
     sort: t.NotRequired[MessageSort]
     nearby: t.NotRequired[str]
-    include_users: t.NotRequired[basic.Bool]
+    include_users: t.NotRequired[Bool]
 
 
 class DataMessageSearch(t.TypedDict):
@@ -171,12 +176,12 @@ class DataMessageSearch(t.TypedDict):
     before: t.NotRequired[str]
     after: t.NotRequired[str]
     sort: t.NotRequired[MessageSort]
-    include_users: t.NotRequired[basic.Bool]
+    include_users: t.NotRequired[Bool]
 
 
 class DataEditMessage(t.TypedDict):
-    content: t.NotRequired[str | None]
-    embeds: t.NotRequired[list[SendableEmbed] | None]
+    content: t.NotRequired[str]
+    embeds: t.NotRequired[list[SendableEmbed]]
 
 
 class OptionsBulkDelete(t.TypedDict):
@@ -185,7 +190,7 @@ class OptionsBulkDelete(t.TypedDict):
 
 class OptionsUnreact(t.TypedDict):
     user_id: t.NotRequired[str]
-    remove_all: t.NotRequired[basic.Bool]
+    remove_all: t.NotRequired[Bool]
 
 
 __all__ = (

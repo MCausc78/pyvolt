@@ -18,12 +18,12 @@ from . import (
     invite as invites,
     message as messages,
     permissions as permissions_,
-    read_state,
     server as servers,
     user_settings,
     user as users,
     webhook as webhooks,
 )
+from .read_state import ReadState
 
 
 if t.TYPE_CHECKING:
@@ -1014,11 +1014,11 @@ class Parser:
             "Group": self.parse_group_public_invite,
         }.get(d["type"], self.parse_unknown_public_invite)(d)
 
-    def parse_read_state(self, d: raw.ChannelUnread) -> read_state.ReadState:
+    def parse_read_state(self, d: raw.ChannelUnread) -> ReadState:
         id = d["_id"]
         last_id = d.get("last_id")
 
-        return read_state.ReadState(
+        return ReadState(
             state=self.state,
             channel_id=self.parse_id(id["channel"]),
             user_id=self.parse_id(id["user"]),
@@ -1029,19 +1029,11 @@ class Parser:
     def parse_ready_event(
         self, shard: Shard, d: raw.ClientReadyEvent
     ) -> events.ReadyEvent:
-        ready_users = [self.parse_user(u) for u in d["users"]]
-
-        from .user import SelfUser
-
-        me: SelfUser | None = None
-
-        for user in ready_users:
-            if user.__class__ is SelfUser or isinstance(user, SelfUser):
-                me = user  # type: ignore # pyright doesnt understand `user.__class__`
+        read_states = [self.parse_read_state(rs) for rs in d["unreads"]]
 
         return events.ReadyEvent(
             shard=shard,
-            users=ready_users,
+            users=[self.parse_user(u) for u in d["users"]],
             servers=[
                 self.parse_server(s, (True, [self.parse_id(c) for c in s["channels"]]))
                 for s in d["servers"]
@@ -1049,8 +1041,9 @@ class Parser:
             channels=[self.parse_channel(c) for c in d["channels"]],
             members=[self.parse_member(m) for m in d["members"]],
             emojis=[self.parse_server_emoji(e) for e in d["emojis"]],
-            old_me=None,
             me=self.parse_self_user(d["me"]),
+            settings=self.parse_user_settings(d["settings"]),
+            read_states=[self.parse_read_state(rs) for rs in d["unreads"]],
         )
 
     def parse_relationship(self, d: raw.Relationship) -> users.Relationship:
@@ -1635,7 +1628,9 @@ class Parser:
 
     def parse_user_settings(self, d: raw.UserSettings) -> user_settings.UserSettings:
         return user_settings.UserSettings(
-            state=self.state, value={k: (s1, s2) for (k, (s1, s2)) in d.items()}
+            state=self.state,
+            value={k: (s1, s2) for (k, (s1, s2)) in d.items()},
+            fake=False,
         )
 
     def parse_user_settings_update_event(
@@ -1643,8 +1638,8 @@ class Parser:
     ) -> events.UserSettingsUpdateEvent:
         return events.UserSettingsUpdateEvent(
             shard=shard,
-            before=None,
             current_user_id=self.parse_id(d["id"]),
+            before=self.state.settings,
             after=self.parse_user_settings(d["update"]),
         )
 

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import typing as t
 
-from . import basic, channels, files, permissions
+from .basic import Bool
+from .channels import Channel
+from .files import File
+from .permissions import Override, OverrideField
 
 
 # class BaseServer(t.Generic[C], t.TypedDict):
@@ -16,8 +19,8 @@ class BaseServer(t.TypedDict):
     system_messages: t.NotRequired[SystemMessageChannels]
     roles: t.NotRequired[dict[str, Role]]
     default_permissions: int
-    icon: t.NotRequired[files.File]
-    banner: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
+    banner: t.NotRequired[File]
     flags: t.NotRequired[int]
     nsfw: t.NotRequired[bool]
     analytics: t.NotRequired[bool]
@@ -34,10 +37,10 @@ class PartialServer(t.TypedDict):
     description: t.NotRequired[str]
     channels: t.NotRequired[list[str]]
     categories: t.NotRequired[list[Category]]
-    system_messages: t.NotRequired["SystemMessageChannels"]
+    system_messages: t.NotRequired[SystemMessageChannels]
     default_permissions: t.NotRequired[int]
-    icon: t.NotRequired[files.File]
-    banner: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
+    banner: t.NotRequired[File]
     flags: t.NotRequired[int]
     discoverable: t.NotRequired[bool]
     analytics: t.NotRequired[bool]
@@ -45,7 +48,7 @@ class PartialServer(t.TypedDict):
 
 class Role(t.TypedDict):
     name: str
-    permissions: permissions.OverrideField
+    permissions: OverrideField
     colour: t.NotRequired[str]
     hoist: t.NotRequired[bool]
     rank: int
@@ -53,7 +56,7 @@ class Role(t.TypedDict):
 
 class PartialRole(t.TypedDict):
     name: t.NotRequired[str]
-    permissions: t.NotRequired[permissions.OverrideField]
+    permissions: t.NotRequired[OverrideField]
     colour: t.NotRequired[str]
     hoist: t.NotRequired[bool]
     rank: t.NotRequired[int]
@@ -96,15 +99,15 @@ class NewRoleResponse(t.TypedDict):
 
 class CreateServerLegacyResponse(t.TypedDict):
     server: Server
-    channels: list[channels.Channel]
+    channels: list[Channel]
 
 
 class OptionsFetchServer(t.TypedDict):
-    include_channels: t.NotRequired[basic.Bool]
+    include_channels: t.NotRequired[Bool]
 
 
 class ServerWithChannels(BaseServer):
-    channels: list[channels.Channel]
+    channels: list[Channel]
 
 
 FetchServerResponse = Server | ServerWithChannels
@@ -132,11 +135,11 @@ class DataEditRole(t.TypedDict):
 
 
 class DataSetServerRolePermission(t.TypedDict):
-    permissions: permissions.Override
+    permissions: Override
 
 
 class OptionsServerDelete(t.TypedDict):
-    leave_silently: t.NotRequired[basic.Bool]
+    leave_silently: t.NotRequired[Bool]
 
 
 __all__ = (

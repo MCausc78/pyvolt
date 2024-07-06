@@ -2,21 +2,23 @@ from __future__ import annotations
 
 import typing as t
 
-from . import basic, files, users
+from .basic import Bool
+from .files import File
+from .users import User
 
 
 class Member(t.TypedDict):
     _id: MemberCompositeKey
     joined_at: str
     nickname: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     roles: t.NotRequired[list[str]]
     timeout: t.NotRequired[str]
 
 
 class PartialMember(t.TypedDict):
     nickname: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     roles: t.NotRequired[list[str]]
     timeout: t.NotRequired[str]
 
@@ -30,12 +32,12 @@ FieldsMember = t.Literal["Nickname", "Avatar", "Roles", "Timeout"]
 
 
 class OptionsFetchAllMembers(t.TypedDict):
-    exclude_offline: t.NotRequired[basic.Bool]
+    exclude_offline: t.NotRequired[Bool]
 
 
 class AllMemberResponse(t.TypedDict):
     members: list[Member]
-    users: list[users.User]
+    users: list[User]
 
 
 class DataMemberEdit(t.TypedDict):

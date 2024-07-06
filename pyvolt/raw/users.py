@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-from . import files
+from .files import File
 
 
 class User(t.TypedDict):
@@ -10,7 +10,7 @@ class User(t.TypedDict):
     username: str
     discriminator: str
     display_name: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     relations: t.NotRequired[list[Relationship]]
     badges: t.NotRequired[int]
     status: t.NotRequired[UserStatus]
@@ -26,10 +26,10 @@ class PartialUser(t.TypedDict):
     username: t.NotRequired[str]
     discriminator: t.NotRequired[str]
     display_name: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
+    avatar: t.NotRequired[File]
     badges: t.NotRequired[int]
     status: t.NotRequired[UserStatus]
-    # profile: t.NotRequired["UserProfile"]
+    # profile: t.NotRequired[UserProfile]
     flags: t.NotRequired[int]
     online: t.NotRequired[bool]
 
@@ -62,7 +62,7 @@ class UserStatus(t.TypedDict):
 
 class UserProfile(t.TypedDict):
     content: t.NotRequired[str]
-    background: t.NotRequired[files.File]
+    background: t.NotRequired[File]
 
 
 class DataUserProfile(t.TypedDict):

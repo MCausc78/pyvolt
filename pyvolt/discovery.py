@@ -168,7 +168,7 @@ class DiscoveryBotsPage:
 
 @define(slots=True)
 class DiscoveryTheme:
-    state: "State" = field(repr=False, hash=True, eq=True)
+    state: State = field(repr=False, hash=True, eq=True)
     """State that controls this theme."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)

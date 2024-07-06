@@ -1,10 +1,11 @@
 import typing as t
 
-from . import files, server_members
+from .files import File
+from .server_members import MemberCompositeKey
 
 
 class ServerBan(t.TypedDict):
-    _id: server_members.MemberCompositeKey
+    _id: MemberCompositeKey
     reason: str | None
 
 
@@ -16,7 +17,7 @@ class BannedUser(t.TypedDict):
     _id: str
     username: str
     discriminator: str
-    avatar: files.File | None
+    avatar: File | None
 
 
 class BanListResult(t.TypedDict):

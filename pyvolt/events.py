@@ -62,9 +62,7 @@ class ReadyEvent(BaseEvent):
 
     me: users.SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
     settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
-    read_states: dict[core.ULID, ReadState] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    read_states: list[ReadState] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
@@ -93,6 +91,9 @@ class ReadyEvent(BaseEvent):
 
         for e in self.emojis:
             cache.store_emoji(e, caching._READY)
+
+        for rs in self.read_states:
+            cache.store_read_state(rs, caching._READY)
 
         return True
 
@@ -674,6 +675,13 @@ class UserSettingsUpdateEvent(BaseEvent):
 
     before: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
     after: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    def process(self) -> bool:
+        settings = self.shard.state.settings
+        if settings.fake:
+            return False
+        settings.value.update(self.after.value)
+        return True
 
 
 @define(slots=True)

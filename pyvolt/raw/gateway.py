@@ -7,6 +7,7 @@ from .authifier import (
     AuthifierDeleteSessionEvent,
     AuthifierDeleteAllSessionsEvent,
 )
+from .channel_unreads import ChannelUnread
 from .channel_webhooks import Webhook, PartialWebhook, FieldsWebhook
 from .channels import (
     SavedMessagesChannel,
@@ -48,7 +49,8 @@ class ClientReadyEvent(t.TypedDict):
     members: list[Member]
     emojis: list[ServerEmoji]
     me: User
-    settinsg: UserSettings
+    settings: UserSettings
+    unreads: list[ChannelUnread]
 
 
 Ping = list[int] | int

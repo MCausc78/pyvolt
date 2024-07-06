@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-from . import files
+from .files import File
 
 ImageSize = t.Literal["Large", "Preview"]
 
@@ -102,7 +102,7 @@ class Text(t.TypedDict):
     url: t.NotRequired[str]
     title: t.NotRequired[str]
     description: t.NotRequired[str]
-    media: t.NotRequired[files.File]
+    media: t.NotRequired[File]
     colour: t.NotRequired[str]
 
 

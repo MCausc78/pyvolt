@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-from . import users
+from .users import User
 
 
 class Bot(t.TypedDict):
@@ -30,7 +30,7 @@ class PublicBot(t.TypedDict):
 
 class FetchBotResponse(t.TypedDict):
     bot: Bot
-    user: users.User
+    user: User
 
 
 class DataCreateBot(t.TypedDict):
@@ -58,11 +58,11 @@ InviteBotDestination = ServerInviteBotDestination | GroupInviteBotDestination
 
 class OwnedBotsResponse(t.TypedDict):
     bots: list[Bot]
-    users: list[users.User]
+    users: list[User]
 
 
 class BotWithUserResponse(Bot):
-    user: users.User
+    user: User
 
 
 __all__ = (

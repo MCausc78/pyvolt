@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import typing as t
 
-from . import basic, files, permissions
+from .basic import Bool
+from .files import File
+from .permissions import Override, OverrideField
 
 
 class SavedMessagesChannel(t.TypedDict):
@@ -26,7 +28,7 @@ class GroupChannel(t.TypedDict):
     owner: str
     description: t.NotRequired[str]
     recipients: list[str]
-    icon: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
     last_message_id: t.NotRequired[str]
     permissions: t.NotRequired[int]
     nsfw: t.NotRequired[bool]
@@ -38,10 +40,10 @@ class TextChannel(t.TypedDict):
     server: str
     name: str
     description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
     last_message_id: t.NotRequired[str]
-    default_permissions: t.NotRequired[permissions.OverrideField]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
+    default_permissions: t.NotRequired[OverrideField]
+    role_permissions: t.NotRequired[dict[str, OverrideField]]
     nsfw: t.NotRequired[bool]
 
 
@@ -51,9 +53,9 @@ class VoiceChannel(t.TypedDict):
     server: str
     name: str
     description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
-    default_permissions: t.NotRequired[permissions.OverrideField]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
+    icon: t.NotRequired[File]
+    default_permissions: t.NotRequired[OverrideField]
+    role_permissions: t.NotRequired[dict[str, OverrideField]]
     nsfw: t.NotRequired[bool]
 
 
@@ -70,12 +72,12 @@ class PartialChannel(t.TypedDict):
     name: t.NotRequired[str]
     owner: t.NotRequired[str]
     description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
+    icon: t.NotRequired[File]
     nsfw: t.NotRequired[bool]
     active: t.NotRequired[bool]
     permissions: t.NotRequired[int]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
-    default_permissions: t.NotRequired[permissions.OverrideField]
+    role_permissions: t.NotRequired[dict[str, OverrideField]]
+    default_permissions: t.NotRequired[OverrideField]
     last_message_id: t.NotRequired[str]
 
 
@@ -111,15 +113,15 @@ class DataCreateServerChannel(t.TypedDict):
 
 
 class DataDefaultChannelPermissions(t.TypedDict):
-    permissions: permissions.Override | int
+    permissions: Override | int
 
 
 class DataSetRolePermissions(t.TypedDict):
-    permissions: permissions.Override
+    permissions: Override
 
 
 class OptionsChannelDelete(t.TypedDict):
-    leave_silently: t.NotRequired[basic.Bool]
+    leave_silently: t.NotRequired[Bool]
 
 
 class LegacyCreateVoiceUserResponse(t.TypedDict):
