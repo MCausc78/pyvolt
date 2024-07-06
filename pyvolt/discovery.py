@@ -184,7 +184,7 @@ class DiscoveryTheme:
     """The theme tags."""
 
     variables: dict[str, str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The theme color mapping in format `{css_class: '#RRGGBB'}`."""
+    """The theme color mapping in format `{css_class: css_color}`."""
 
     version: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme version."""
