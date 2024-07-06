@@ -21,7 +21,7 @@ class UserSettings:
     """The {user_setting_key: (timestamp, value)} mapping."""
 
     fake: bool = field(repr=False, hash=False, kw_only=True, eq=False)
-    """Whether these user settings are fake."""
+    """Whether user settings are fake. Fake user settings are created by Pyvolt, if not logged in, or in HTTP-only mode."""
 
     def __getitem__(self, key: str) -> str:
         return self.value[key][1]

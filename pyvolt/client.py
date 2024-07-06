@@ -16,6 +16,7 @@ from .parser import Parser
 from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
+from .user_settings import UserSettings
 from .user import SelfUser
 
 from . import core, events, utils
@@ -542,6 +543,11 @@ class Client:
         if cache:
             return cache.get_servers_mapping()
         return {}
+
+    @property
+    def settings(self) -> UserSettings:
+        """:class:`UserSettings`: The current user settings."""
+        return self._state.settings
 
     async def start(self) -> None:
         await self._state.shard.connect()

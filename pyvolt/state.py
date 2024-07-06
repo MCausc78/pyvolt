@@ -102,6 +102,7 @@ class State:
 
     @property
     def settings(self) -> UserSettings:
+        """:class:`UserSettings`: The current user settings."""
         if self._settings:
             return self._settings
         self._settings = UserSettings(state=self, value={}, fake=True)
