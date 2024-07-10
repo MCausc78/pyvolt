@@ -8,28 +8,77 @@ import multidict
 import typing as t
 
 
+from .auth import (
+    PartialAccount,
+    MFATicket,
+    PartialSession,
+    Session,
+    MFAMethod,
+    MFARequired,
+    AccountDisabled,
+    MFAStatus,
+    MFAResponse,
+    LoginResult,
+)
+from .bot import Bot, PublicBot
+from .channel import (
+    ChannelType,
+    SavedMessagesChannel,
+    DMChannel,
+    GroupChannel,
+    ServerChannel,
+    Channel,
+)
+from .emoji import ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
+from .errors import (
+    APIError,
+    Unauthorized,
+    Forbidden,
+    NotFound,
+    Ratelimited,
+    InternalServerError,
+    BadGateway,
+)
+from .invite import BaseInvite, ServerInvite, Invite
+from .message import (
+    Reply,
+    Interactions,
+    Masquerade,
+    SendableEmbed,
+    MessageSort,
+    MessageFlags,
+    Message,
+)
+from .permissions import Permissions, PermissionOverride
+from .read_state import ReadState
+from .safety_reports import ContentReportReason, UserReportReason
+from .server import (
+    ServerFlags,
+    Category,
+    SystemMessageChannels,
+    Role,
+    Server,
+    Ban,
+    Member,
+    MemberList,
+)
+from .user_settings import UserSettings
+from .user import (
+    UserStatusEdit,
+    UserProfile,
+    UserProfileEdit,
+    UserBadges,
+    UserFlags,
+    Mutuals,
+    User,
+    SelfUser,
+)
+from .webhook import Webhook
+
 _L = logging.getLogger(__name__)
 
-from . import (
-    auth,
-    bot as bots,
-    cdn,
-    channel as channels,
-    core,
-    emoji as emojis,
-    errors,
-    invite as invites,
-    message as messages,
-    permissions as permissions_,
-    read_state,
-    routes,
-    safety_reports,
-    server as servers,
-    user_settings,
-    user as users,
-    utils,
-    webhook as webhooks,
-)
+
+from . import cdn, core, routes, utils
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -42,6 +91,13 @@ DEFAULT_HTTP_USER_AGENT = (
 
 
 _L = logging.getLogger(__name__)
+_STATUS_TO_ERRORS = {
+    401: Unauthorized,
+    403: Forbidden,
+    404: NotFound,
+    429: Ratelimited,
+    500: InternalServerError,
+}
 
 
 class HTTPClient:
@@ -150,9 +206,7 @@ class HTTPClient:
             if response.status >= 400:
                 if response.status == 502:
                     if retries >= self.max_retries:
-                        raise errors.BadGateway(
-                            response, await utils._json_or_text(response)
-                        )
+                        raise BadGateway(response, await utils._json_or_text(response))
                     continue
                 if response.status == 429:
                     if retries < self.max_retries:
@@ -177,13 +231,7 @@ class HTTPClient:
                     description = error.get("description")
                     j["type"] = "RocketError"
                     j["err"] = f"{code} {reason}: {description}"
-                raise {
-                    401: errors.Unauthorized,
-                    403: errors.Forbidden,
-                    404: errors.NotFound,
-                    429: errors.Ratelimited,
-                    500: errors.InternalServerError,
-                }.get(response.status, errors.APIError)(response, j)
+                raise _STATUS_TO_ERRORS.get(response.status, APIError)(response, j)
             return response
 
     async def request(
@@ -210,7 +258,7 @@ class HTTPClient:
         return result
 
     # Bots control
-    async def create_bot(self, name: str) -> bots.Bot:
+    async def create_bot(self, name: str) -> Bot:
         """|coro|
 
         Create a new Revolt bot.
@@ -254,7 +302,7 @@ class HTTPClient:
         analytics: core.UndefinedOr[bool] = core.UNDEFINED,
         interactions_url: core.UndefinedOr[str | None] = core.UNDEFINED,
         reset_token: bool = False,
-    ) -> bots.Bot:
+    ) -> Bot:
         """|coro|
 
         Edits the bot.
@@ -285,7 +333,7 @@ class HTTPClient:
             d["user"],
         )
 
-    async def get_bot(self, bot: core.ResolvableULID) -> bots.Bot:
+    async def get_bot(self, bot: core.ResolvableULID) -> Bot:
         """|coro|
 
         Get details of a bot you own.
@@ -299,7 +347,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_bot(d["bot"], d["user"])
 
-    async def get_owned_bots(self) -> list[bots.Bot]:
+    async def get_owned_bots(self) -> list[Bot]:
         """|coro|
 
         Get  all of the bots that you have control over.
@@ -312,7 +360,7 @@ class HTTPClient:
             await self.request(routes.BOTS_FETCH_OWNED.compile())
         )
 
-    async def get_public_bot(self, bot: core.ResolvableULID) -> bots.PublicBot:
+    async def get_public_bot(self, bot: core.ResolvableULID) -> PublicBot:
         """|coro|
 
         Get details of a public (or owned) bot.
@@ -436,7 +484,7 @@ class HTTPClient:
         nsfw: core.UndefinedOr[bool] = core.UNDEFINED,
         archived: core.UndefinedOr[bool] = core.UNDEFINED,
         default_permissions: core.UndefinedOr[None] = core.UNDEFINED,
-    ) -> channels.Channel:
+    ) -> Channel:
         """|coro|
 
         Edits the channel.
@@ -487,7 +535,7 @@ class HTTPClient:
             )
         )
 
-    async def get_channel(self, channel: core.ResolvableULID) -> channels.Channel:
+    async def get_channel(self, channel: core.ResolvableULID) -> Channel:
         """|coro|
 
         Gets the channel.
@@ -508,9 +556,7 @@ class HTTPClient:
             )
         )
 
-    async def get_channel_pins(
-        self, channel: core.ResolvableULID
-    ) -> list[messages.Message]:
+    async def get_channel_pins(self, channel: core.ResolvableULID) -> list[Message]:
         """|coro|
 
         Retrieves all messages that are currently pinned in the channel.
@@ -522,8 +568,8 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`list`[:class:`messages.Message`]
-            The pinned messages.
+        :class:`list`[:class:`Message`]
+            The pinned
         """
         return [
             self.state.parser.parse_message(m)
@@ -574,7 +620,7 @@ class HTTPClient:
         description: str | None = None,
         users: list[core.ResolvableULID] | None = None,
         nsfw: bool | None = None,
-    ) -> channels.GroupChannel:
+    ) -> GroupChannel:
         """|coro|
 
         Creates the new group channel.
@@ -645,7 +691,7 @@ class HTTPClient:
             )
         )
 
-    async def create_invite(self, channel: core.ResolvableULID) -> invites.Invite:
+    async def create_invite(self, channel: core.ResolvableULID) -> Invite:
         """|coro|
 
         Creates an invite to channel.
@@ -678,7 +724,7 @@ class HTTPClient:
     async def get_group_members(
         self,
         channel: core.ResolvableULID,
-    ) -> list[users.User]:
+    ) -> list[User]:
         """|coro|
 
         Retrieves all users who are part of this group.
@@ -723,7 +769,7 @@ class HTTPClient:
             Messages to delete.
 
         :class:`Forbidden`
-            You do not have permissions to delete messages.
+            You do not have permissions to delete
         :class:`APIError`
             Deleting messages failed.
         """
@@ -804,8 +850,8 @@ class HTTPClient:
         message: core.ResolvableULID,
         *,
         content: core.UndefinedOr[str] = core.UNDEFINED,
-        embeds: core.UndefinedOr[list[messages.SendableEmbed]] = core.UNDEFINED,
-    ) -> messages.Message:
+        embeds: core.UndefinedOr[list[SendableEmbed]] = core.UNDEFINED,
+    ) -> Message:
         """|coro|
 
         Edits the message that you've previously sent.
@@ -819,7 +865,7 @@ class HTTPClient:
             The message.
         content: :class:`str` | None
             New content.
-        embeds: :class:`list`[:class:`messages.SendableEmbed`] | None
+        embeds: :class:`list`[:class:`SendableEmbed`] | None
             New embeds.
         """
         j: raw.DataEditMessage = {}
@@ -839,7 +885,7 @@ class HTTPClient:
 
     async def get_message(
         self, channel: core.ResolvableULID, message: core.ResolvableULID
-    ) -> messages.Message:
+    ) -> Message:
         """|coro|
 
         Retrieves a message.
@@ -861,7 +907,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`messages.Message`
+        :class:`Message`
             The retrieved message.
         """
         return self.state.parser.parse_message(
@@ -880,13 +926,13 @@ class HTTPClient:
         limit: int | None = None,
         before: core.ResolvableULID | None = None,
         after: core.ResolvableULID | None = None,
-        sort: messages.MessageSort | None = None,
+        sort: MessageSort | None = None,
         nearby: core.ResolvableULID | None = None,
         populate_users: bool | None = None,
-    ) -> list[messages.Message]:
+    ) -> list[Message]:
         """|coro|
 
-        Get multiple messages.
+        Get multiple
         https://developers.revolt.chat/api/#tag/Messaging/operation/message_query_req
 
         Parameters
@@ -899,7 +945,7 @@ class HTTPClient:
             Message id before which messages should be fetched.
         after: :class:`core.ResolvableULID` | None
             Message after which messages should be fetched.
-        sort: :class:`messages.MessageSort` | None
+        sort: :class:`MessageSort` | None
             Message sort direction.
         nearby: :class:`core.ResolvableULID`
             Message id to search around. Specifying 'nearby' ignores 'before', 'after' and 'sort'. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
@@ -908,13 +954,13 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`list`[:class:`messages.Message`]
+        :class:`list`[:class:`Message`]
             The messages retrieved.
 
         Raises
         ------
         :class:`Forbidden`
-            You do not have permissions to get messages.
+            You do not have permissions to get
         :class:`APIError`
             Getting messages failed.
         """
@@ -944,7 +990,7 @@ class HTTPClient:
         self,
         channel: core.ResolvableULID,
         message: core.ResolvableULID,
-        emoji: emojis.ResolvableEmoji,
+        emoji: ResolvableEmoji,
     ) -> None:
         """|coro|
 
@@ -971,7 +1017,7 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_REACT.compile(
                 channel_id=core.resolve_ulid(channel),
                 message_id=core.resolve_ulid(message),
-                emoji=emojis.resolve_emoji(emoji),
+                emoji=resolve_emoji(emoji),
             )
         )
 
@@ -983,9 +1029,9 @@ class HTTPClient:
         limit: int | None = None,
         before: core.ResolvableULID | None = None,
         after: core.ResolvableULID | None = None,
-        sort: messages.MessageSort | None = None,
+        sort: MessageSort | None = None,
         populate_users: bool | None = None,
-    ) -> list[messages.Message]:
+    ) -> list[Message]:
         """|coro|
 
         Searches for messages within the given parameters.
@@ -1006,20 +1052,20 @@ class HTTPClient:
             Message ID before which messages should be fetched.
         after: :class:`core.ResolvableULID`
             Message ID after which messages should be fetched.
-        sort: :class:`messages.MessageSort`
-            Sort used for retrieving messages.
+        sort: :class:`MessageSort`
+            Sort used for retrieving
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
 
         Returns
         -------
-        :class:`list`[:class:`messages.Message`]
+        :class:`list`[:class:`Message`]
             The messages matched.
 
         Raises
         ------
         :class:`Forbidden`
-            You do not have permissions to search messages.
+            You do not have permissions to search
         :class:`APIError`
             Searching messages failed.
         """
@@ -1062,7 +1108,7 @@ class HTTPClient:
         Raises
         ------
         Forbidden
-            You do not have permissions to pin messages.
+            You do not have permissions to pin
         APIError
             Pinning the message failed.
         """
@@ -1080,12 +1126,12 @@ class HTTPClient:
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[messages.Reply | core.ResolvableULID] | None = None,
-        embeds: list[messages.SendableEmbed] | None = None,
-        masquerade: messages.Masquerade | None = None,
-        interactions: messages.Interactions | None = None,
+        replies: list[Reply | core.ResolvableULID] | None = None,
+        embeds: list[SendableEmbed] | None = None,
+        masquerade: Masquerade | None = None,
+        interactions: Interactions | None = None,
         silent: bool | None = None,
-    ) -> messages.Message:
+    ) -> Message:
         """|coro|
 
         Sends a message to the given channel.
@@ -1121,7 +1167,7 @@ class HTTPClient:
         Raises
         ------
         Forbidden
-            You do not have permissions to send messages.
+            You do not have permissions to send
         APIError
             Sending the message failed.
         """
@@ -1137,7 +1183,7 @@ class HTTPClient:
             j["replies"] = [
                 (
                     reply.build()
-                    if isinstance(reply, messages.Reply)
+                    if isinstance(reply, Reply)
                     else {"id": core.resolve_ulid(reply), "mention": False}
                 )
                 for reply in replies
@@ -1153,7 +1199,7 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                flags |= messages.MessageFlags.SUPPRESS_NOTIFICATIONS.value
+                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
 
         if flags is not None:
             j["flags"] = flags
@@ -1189,7 +1235,7 @@ class HTTPClient:
         Raises
         ------
         Forbidden
-            You do not have permissions to unpin messages.
+            You do not have permissions to unpin
         APIError
             Unpinning the message failed.
         """
@@ -1204,7 +1250,7 @@ class HTTPClient:
         self,
         channel: core.ResolvableULID,
         message: core.ResolvableULID,
-        emoji: emojis.ResolvableEmoji,
+        emoji: ResolvableEmoji,
         /,
         *,
         user: core.ResolvableULID | None = None,
@@ -1246,7 +1292,7 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_UNREACT.compile(
                 channel_id=core.resolve_ulid(channel),
                 message_id=core.resolve_ulid(message),
-                emoji=emojis.resolve_emoji(emoji),
+                emoji=resolve_emoji(emoji),
             ),
             params=p,
         )
@@ -1257,9 +1303,9 @@ class HTTPClient:
         role: core.ResolvableULID,
         /,
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
-    ) -> channels.Channel:
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
+    ) -> Channel:
         """|coro|
 
         Sets permissions for the specified role in this channel.
@@ -1296,9 +1342,9 @@ class HTTPClient:
     async def set_default_channel_permissions(
         self,
         channel: core.ResolvableULID,
-        permissions: permissions_.Permissions | permissions_.PermissionOverride,
+        permissions: Permissions | PermissionOverride,
         /,
-    ) -> channels.Channel:
+    ) -> Channel:
         """|coro|
 
         Sets permissions for the default role in this channel.
@@ -1315,7 +1361,7 @@ class HTTPClient:
         j: raw.DataDefaultChannelPermissions = {
             "permissions": (
                 permissions.build()
-                if isinstance(permissions, permissions_.PermissionOverride)
+                if isinstance(permissions, PermissionOverride)
                 else int(permissions)
             )
         }
@@ -1364,10 +1410,10 @@ class HTTPClient:
         *,
         name: str,
         avatar: cdn.ResolvableResource | None = None,
-    ) -> webhooks.Webhook:
+    ) -> Webhook:
         """|coro|
 
-        Creates a webhook which 3rd party platforms can use to send messages.
+        Creates a webhook which 3rd party platforms can use to send
         https://developers.revolt.chat/api/#tag/Webhooks/operation/webhook_create_req
 
         Parameters
@@ -1398,7 +1444,7 @@ class HTTPClient:
 
     async def get_channel_webhooks(
         self, channel: core.ResolvableULID, /
-    ) -> list[webhooks.Webhook]:
+    ) -> list[Webhook]:
         """|coro|
 
         Gets all webhooks inside the channel.
@@ -1429,7 +1475,7 @@ class HTTPClient:
         *,
         name: str,
         nsfw: bool | None = None,
-    ) -> emojis.ServerEmoji:
+    ) -> ServerEmoji:
         """|coro|
 
         Create an emoji on the server.
@@ -1479,7 +1525,7 @@ class HTTPClient:
             routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=core.resolve_ulid(emoji))
         )
 
-    async def get_emoji(self, emoji: core.ResolvableULID, /) -> emojis.Emoji:
+    async def get_emoji(self, emoji: core.ResolvableULID, /) -> Emoji:
         """|coro|
 
         Get an emoji.
@@ -1517,7 +1563,7 @@ class HTTPClient:
             routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code)
         )
 
-    async def get_invite(self, invite_code: str, /) -> invites.BaseInvite:
+    async def get_invite(self, invite_code: str, /) -> BaseInvite:
         """|coro|
 
         Get an invite.
@@ -1538,9 +1584,7 @@ class HTTPClient:
             )
         )
 
-    async def accept_invite(
-        self, invite_code: str, /
-    ) -> servers.Server | channels.GroupChannel:
+    async def accept_invite(self, invite_code: str, /) -> Server | GroupChannel:
         """|coro|
 
         Accept an invite.
@@ -1574,7 +1618,7 @@ class HTTPClient:
             raise NotImplemented
 
     # Onboarding control
-    async def complete_onboarding(self, username: str, /) -> users.User:
+    async def complete_onboarding(self, username: str, /) -> User:
         """|coro|
 
         Set a new username, complete onboarding and allow a user to start using Revolt.
@@ -1623,7 +1667,7 @@ class HTTPClient:
     async def report_message(
         self,
         message: core.ResolvableULID,
-        reason: safety_reports.ContentReportReason,
+        reason: ContentReportReason,
         *,
         additional_context: str | None = None,
     ) -> None:
@@ -1654,7 +1698,7 @@ class HTTPClient:
     async def report_server(
         self,
         server: core.ResolvableULID,
-        reason: safety_reports.ContentReportReason,
+        reason: ContentReportReason,
         /,
         *,
         additional_context: str | None = None,
@@ -1686,7 +1730,7 @@ class HTTPClient:
     async def report_user(
         self,
         user: core.ResolvableULID,
-        reason: safety_reports.UserReportReason,
+        reason: UserReportReason,
         /,
         *,
         additional_context: str | None = None,
@@ -1728,7 +1772,7 @@ class HTTPClient:
         /,
         *,
         reason: str | None = None,
-    ) -> servers.Ban:
+    ) -> Ban:
         """|coro|
 
         Ban a user by their ID.
@@ -1757,7 +1801,7 @@ class HTTPClient:
             {},
         )
 
-    async def get_bans(self, server: core.ResolvableULID, /) -> list[servers.Ban]:
+    async def get_bans(self, server: core.ResolvableULID, /) -> list[Ban]:
         """|coro|
 
         Get all bans on a server.
@@ -1795,11 +1839,11 @@ class HTTPClient:
         server: core.ResolvableULID,
         /,
         *,
-        type: channels.ChannelType | None = None,
+        type: ChannelType | None = None,
         name: str,
         description: str | None = None,
         nsfw: bool | None = None,
-    ) -> channels.ServerChannel:
+    ) -> ServerChannel:
         """|coro|
 
         Create a new text or voice channel within server.
@@ -1827,12 +1871,10 @@ class HTTPClient:
                 json=j,
             )
         )
-        assert isinstance(channel, channels.ServerChannel)
+        assert isinstance(channel, ServerChannel)
         return channel
 
-    async def get_server_emojis(
-        self, server: core.ResolvableULID
-    ) -> list[emojis.ServerEmoji]:
+    async def get_server_emojis(self, server: core.ResolvableULID) -> list[ServerEmoji]:
         """|coro|
 
         Get all emojis on a server.
@@ -1844,9 +1886,7 @@ class HTTPClient:
             )
         ]
 
-    async def get_invites(
-        self, server: core.ResolvableULID, /
-    ) -> list[invites.ServerInvite]:
+    async def get_invites(self, server: core.ResolvableULID, /) -> list[ServerInvite]:
         """|coro|
 
         Get all server invites.
@@ -1878,7 +1918,7 @@ class HTTPClient:
         timeout: core.UndefinedOr[
             datetime | timedelta | float | int | None
         ] = core.UNDEFINED,
-    ) -> servers.Member:
+    ) -> Member:
         j: raw.DataMemberEdit = {}
         r: list[raw.FieldsMember] = []
         if core.is_defined(nickname):
@@ -1919,7 +1959,7 @@ class HTTPClient:
 
     async def query_members_by_name(
         self, server: core.ResolvableULID, query: str, /
-    ) -> list[servers.Member]:
+    ) -> list[Member]:
         """|coro|
 
         Query members by a given name, this API is not stable and will be removed in the future.
@@ -1939,7 +1979,7 @@ class HTTPClient:
 
     async def get_member(
         self, server: core.ResolvableULID, member: core.ResolvableULID, /
-    ) -> servers.Member:
+    ) -> Member:
         """|coro|
 
         Retrieve a member.
@@ -1956,7 +1996,7 @@ class HTTPClient:
 
     async def get_members(
         self, server: core.ResolvableULID, /, *, exclude_offline: bool | None = None
-    ) -> list[servers.Member]:
+    ) -> list[Member]:
         """|coro|
 
         Retrieve all server members.
@@ -1981,7 +2021,7 @@ class HTTPClient:
 
     async def get_member_list(
         self, server: core.ResolvableULID, /, *, exclude_offline: bool | None = None
-    ) -> servers.MemberList:
+    ) -> MemberList:
         """|coro|
 
         Retrieve server members list.
@@ -2031,9 +2071,9 @@ class HTTPClient:
         role: core.ResolvableULID,
         /,
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
-    ) -> servers.Server:
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
+    ) -> Server:
         """|coro|
 
         Sets permissions for the specified role in the server.
@@ -2072,9 +2112,9 @@ class HTTPClient:
     async def set_default_role_permissions(
         self,
         server: core.ResolvableULID,
-        permissions: permissions_.Permissions | permissions_.PermissionOverride,
+        permissions: Permissions | PermissionOverride,
         /,
-    ) -> servers.Server:
+    ) -> Server:
         """|coro|
 
         Sets permissions for the default role in this server.
@@ -2090,7 +2130,7 @@ class HTTPClient:
         j: raw.DataDefaultChannelPermissions = {
             "permissions": (
                 permissions.build()
-                if isinstance(permissions, permissions_.PermissionOverride)
+                if isinstance(permissions, PermissionOverride)
                 else int(permissions)
             )
         }
@@ -2106,7 +2146,7 @@ class HTTPClient:
 
     async def create_role(
         self, server: core.ResolvableULID, /, *, name: str, rank: int | None = None
-    ) -> servers.Role:
+    ) -> Role:
         """|coro|
 
         Creates a new server role.
@@ -2168,7 +2208,7 @@ class HTTPClient:
         colour: core.UndefinedOr[str | None] = core.UNDEFINED,
         hoist: core.UndefinedOr[bool] = core.UNDEFINED,
         rank: core.UndefinedOr[int] = core.UNDEFINED,
-    ) -> servers.Role:
+    ) -> Role:
         """|coro|
 
         Edit a role.
@@ -2227,7 +2267,7 @@ class HTTPClient:
         server: core.ResolvableULID,
         role: core.ResolvableULID,
         /,
-    ) -> servers.Role:
+    ) -> Role:
         """|coro|
 
         Get a server role.
@@ -2263,7 +2303,7 @@ class HTTPClient:
 
     async def create_server(
         self, name: str, /, *, description: str | None = None, nsfw: bool | None = None
-    ) -> servers.Server:
+    ) -> Server:
         """|coro|
 
         Create a new server.
@@ -2332,14 +2372,14 @@ class HTTPClient:
         description: core.UndefinedOr[str | None] = core.UNDEFINED,
         icon: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
         banner: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        categories: core.UndefinedOr[list[servers.Category] | None] = core.UNDEFINED,
+        categories: core.UndefinedOr[list[Category] | None] = core.UNDEFINED,
         system_messages: core.UndefinedOr[
-            servers.SystemMessageChannels | None
+            SystemMessageChannels | None
         ] = core.UNDEFINED,
-        flags: core.UndefinedOr[servers.ServerFlags] = core.UNDEFINED,
+        flags: core.UndefinedOr[ServerFlags] = core.UNDEFINED,
         discoverable: core.UndefinedOr[bool] = core.UNDEFINED,
         analytics: core.UndefinedOr[bool] = core.UNDEFINED,
-    ) -> servers.Server:
+    ) -> Server:
         """|coro|
 
         Edit a server.
@@ -2423,7 +2463,7 @@ class HTTPClient:
 
     async def get_server(
         self, server: core.ResolvableULID, /, *, populate_channels: bool | None = None
-    ) -> servers.Server:
+    ) -> Server:
         """|coro|
 
         Get a server.
@@ -2432,7 +2472,7 @@ class HTTPClient:
         Parameters
         ----------
         populate_channels: :class:`bool`
-            Whether to include channels.
+            Whether to include
         """
         p: raw.OptionsFetchServer = {}
         if populate_channels is not None:
@@ -2446,7 +2486,7 @@ class HTTPClient:
         )
 
     # Sync control
-    async def get_user_settings(self, keys: list[str], /) -> user_settings.UserSettings:
+    async def get_user_settings(self, keys: list[str], /) -> UserSettings:
         """|coro|
 
         Get user settings from server filtered by keys.
@@ -2462,10 +2502,10 @@ class HTTPClient:
             await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j),
         )
 
-    async def get_unreads(self) -> list[read_state.ReadState]:
+    async def get_unreads(self) -> list[ReadState]:
         """|coro|
 
-        Get information about unread state on channels.
+        Get information about unread state on
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2498,7 +2538,7 @@ class HTTPClient:
         await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j, params=p)
 
     # Users control
-    async def accept_friend_request(self, user: core.ResolvableULID, /) -> users.User:
+    async def accept_friend_request(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Accept another user's friend request.
@@ -2513,7 +2553,7 @@ class HTTPClient:
             )
         )
 
-    async def block_user(self, user: core.ResolvableULID, /) -> users.User:
+    async def block_user(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Block another user by their ID.
@@ -2528,7 +2568,7 @@ class HTTPClient:
             )
         )
 
-    async def change_username(self, username: str, /, *, password: str) -> users.User:
+    async def change_username(self, username: str, /, *, password: str) -> User:
         """|coro|
 
         Change your username.
@@ -2552,11 +2592,11 @@ class HTTPClient:
         *,
         display_name: core.UndefinedOr[str | None] = core.UNDEFINED,
         avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[users.UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[users.UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[users.UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[users.UserFlags] = core.UNDEFINED,
-    ) -> users.User:
+        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
+        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
+        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
+        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+    ) -> User:
         j: raw.DataEditUser = {}
         r: list[raw.FieldsUser] = []
         if core.is_defined(display_name):
@@ -2583,18 +2623,19 @@ class HTTPClient:
             j["flags"] = int(flags)
         if len(r) > 0:
             j["remove"] = r
-        return self.state.parser.parse_user(await self.request(route, json=j))
+        d: raw.User = await self.request(route, json=j)
+        return self.state.parser.parse_user(d)
 
     async def edit_self_user(
         self,
         *,
         display_name: core.UndefinedOr[str] = core.UNDEFINED,
         avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[users.UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[users.UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[users.UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[users.UserFlags] = core.UNDEFINED,
-    ) -> users.User:
+        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
+        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
+        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
+        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+    ) -> SelfUser:
         """|coro|
 
         Edits the user.
@@ -2606,13 +2647,13 @@ class HTTPClient:
             New display name. Pass ``None`` to remove it.
         avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableULID`] | None
             New avatar. Pass ``None`` to remove it.
-        status: :class:`core.UndefinedOr`[:class:`users.UserStatusEdit`]
+        status: :class:`core.UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`core.UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`core.UndefinedOr`[:class:`users.UserBadges`]
+        badges: :class:`core.UndefinedOr`[:class:`UserBadges`]
             Bitfield of new user badges.
-        flags: :class:`core.UndefinedOr`[:class:`users.UserFlags`]
+        flags: :class:`core.UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
 
         Raises
@@ -2620,7 +2661,7 @@ class HTTPClient:
         :class:`APIError`
             Editing the user failed.
         """
-        return await self._edit_user(
+        user = await self._edit_user(
             routes.USERS_EDIT_SELF_USER.compile(),
             display_name=display_name,
             avatar=avatar,
@@ -2629,6 +2670,7 @@ class HTTPClient:
             badges=badges,
             flags=flags,
         )
+        return user  # type: ignore
 
     async def edit_user(
         self,
@@ -2637,11 +2679,11 @@ class HTTPClient:
         *,
         display_name: core.UndefinedOr[str] = core.UNDEFINED,
         avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[users.UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[users.UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[users.UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[users.UserFlags] = core.UNDEFINED,
-    ) -> users.User:
+        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
+        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
+        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
+        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+    ) -> User:
         """|coro|
 
         Edits the user.
@@ -2653,13 +2695,13 @@ class HTTPClient:
             New display name. Pass ``None`` to remove it.
         avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource`] | None
             New avatar. Pass ``None`` to remove it.
-        status: :class:`core.UndefinedOr`[:class:`users.UserStatusEdit`]
+        status: :class:`core.UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`core.UndefinedOr`[:class:`users.UserProfileEdit`]
+        profile: :class:`core.UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`core.UndefinedOr`[:class:`users.UserBadges`]
+        badges: :class:`core.UndefinedOr`[:class:`UserBadges`]
             Bitfield of new user badges.
-        flags: :class:`core.UndefinedOr`[:class:`users.UserFlags`]
+        flags: :class:`core.UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
 
 
@@ -2682,7 +2724,7 @@ class HTTPClient:
 
     async def get_direct_message_channels(
         self,
-    ) -> list[channels.DMChannel | channels.GroupChannel]:
+    ) -> list[DMChannel | GroupChannel]:
         """|coro|
 
         Get all DMs and groups conversations.
@@ -2693,7 +2735,7 @@ class HTTPClient:
             for e in await self.request(routes.USERS_FETCH_DMS.compile())
         ]  # type: ignore # The returned channels are always DM/Groups
 
-    async def get_user_profile(self, user: core.ResolvableULID, /) -> users.UserProfile:
+    async def get_user_profile(self, user: core.ResolvableULID, /) -> UserProfile:
         """|coro|
 
         Retrieve a user's profile data.
@@ -2705,7 +2747,7 @@ class HTTPClient:
             await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
         )._stateful(self.state, user_id)
 
-    async def get_self_user(self) -> users.User:
+    async def get_self_user(self) -> User:
         """|coro|
 
         Retrieve your user information.
@@ -2720,7 +2762,7 @@ class HTTPClient:
             await self.request(routes.USERS_FETCH_SELF.compile())
         )
 
-    async def get_user(self, user: core.ResolvableULID, /) -> users.User:
+    async def get_user(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Retrieve a user's information.
@@ -2742,13 +2784,13 @@ class HTTPClient:
             )
         )
 
-    async def get_user_flags(self, user: core.ResolvableULID, /) -> users.UserFlags:
+    async def get_user_flags(self, user: core.ResolvableULID, /) -> UserFlags:
         """|coro|
 
         Retrieve a user's flags.
         https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_user_flags_fetch_user_flags
         """
-        return users.UserFlags(
+        return UserFlags(
             (
                 await self.request(
                     routes.USERS_FETCH_USER_FLAGS.compile(
@@ -2760,7 +2802,7 @@ class HTTPClient:
 
     async def get_mutual_friends_and_servers(
         self, user: core.ResolvableULID, /
-    ) -> users.Mutuals:
+    ) -> Mutuals:
         """|coro|
 
         Retrieve a list of mutual friends and servers with another user.
@@ -2793,7 +2835,7 @@ class HTTPClient:
 
     async def open_dm(
         self, user: core.ResolvableULID, /
-    ) -> channels.SavedMessagesChannel | channels.DMChannel:
+    ) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
         Open a DM with another user. If the target is oneself, a saved messages channel is returned.
@@ -2810,10 +2852,10 @@ class HTTPClient:
                 routes.USERS_OPEN_DM.compile(user_id=core.resolve_ulid(user))
             )
         )
-        assert isinstance(channel, (channels.SavedMessagesChannel, channels.DMChannel))
+        assert isinstance(channel, (SavedMessagesChannel, DMChannel))
         return channel
 
-    async def deny_friend_request(self, user: core.ResolvableULID, /) -> users.User:
+    async def deny_friend_request(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Denies another user's friend request.
@@ -2832,7 +2874,7 @@ class HTTPClient:
             )
         )
 
-    async def remove_friend(self, user: core.ResolvableULID, /) -> users.User:
+    async def remove_friend(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Removes an existing friend.
@@ -2853,7 +2895,7 @@ class HTTPClient:
 
     async def send_friend_request(
         self, username: str, discriminator: str | None = None, /
-    ) -> users.User:
+    ) -> User:
         """|coro|
 
         Send a friend request to another user.
@@ -2884,7 +2926,7 @@ class HTTPClient:
             )
         )
 
-    async def unblock_user(self, user: core.ResolvableULID, /) -> users.User:
+    async def unblock_user(self, user: core.ResolvableULID, /) -> User:
         """|coro|
 
         Unblock another user by their ID.
@@ -2943,8 +2985,8 @@ class HTTPClient:
         token: str | None = None,
         name: core.UndefinedOr[str] = core.UNDEFINED,
         avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        permissions: core.UndefinedOr[permissions_.Permissions] = core.UNDEFINED,
-    ) -> webhooks.Webhook:
+        permissions: core.UndefinedOr[Permissions] = core.UNDEFINED,
+    ) -> Webhook:
         """|coro|
 
         Edits a webhook. If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
@@ -2955,7 +2997,7 @@ class HTTPClient:
             New webhook name. Should be between 1 and 32 chars long.
         avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource` | None]
             New webhook avatar.
-        permissions: :class:`core.UndefinedOr`[:class:`permissions_.Permissions` | None]
+        permissions: :class:`core.UndefinedOr`[:class:`Permissions` | None]
             New webhook permissions.
 
         Raises
@@ -3006,18 +3048,18 @@ class HTTPClient:
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[messages.Reply | core.ResolvableULID] | None = None,
-        embeds: list[messages.SendableEmbed] | None = None,
-        masquerade: messages.Masquerade | None = None,
-        interactions: messages.Interactions | None = None,
-    ) -> messages.Message:
+        replies: list[Reply | core.ResolvableULID] | None = None,
+        embeds: list[SendableEmbed] | None = None,
+        masquerade: Masquerade | None = None,
+        interactions: Interactions | None = None,
+    ) -> Message:
         """|coro|
 
         Executes a webhook and returns a message.
 
         Returns
         -------
-        :class:`messages.Message`
+        :class:`Message`
             The message sent.
         """
         j: raw.DataMessageSend = {}
@@ -3032,7 +3074,7 @@ class HTTPClient:
             j["replies"] = [
                 (
                     reply.build()
-                    if isinstance(reply, messages.Reply)
+                    if isinstance(reply, Reply)
                     else {"id": core.resolve_ulid(reply), "mention": False}
                 )
                 for reply in replies
@@ -3063,7 +3105,7 @@ class HTTPClient:
         /,
         *,
         token: str | None = None,
-    ) -> webhooks.Webhook:
+    ) -> Webhook:
         """|coro|
 
         Gets a webhook. If webhook token wasn't given, the library will attempt get webhook with bot/user token.
@@ -3282,7 +3324,7 @@ class HTTPClient:
             routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa
         )
 
-    async def get_account(self) -> auth.PartialAccount:
+    async def get_account(self) -> PartialAccount:
         """|coro|
 
         Get account information from the current session.
@@ -3386,7 +3428,7 @@ class HTTPClient:
             json=j,
         )
 
-    async def verify_email(self, code: str, /) -> auth.MFATicket | None:
+    async def verify_email(self, code: str, /) -> MFATicket | None:
         """|coro|
 
         Verify an email address.
@@ -3410,12 +3452,12 @@ class HTTPClient:
             return None
 
     # MFA authentication control
-    async def _create_mfa_ticket(self, j: raw.a.MFAResponse, /) -> auth.MFATicket:
+    async def _create_mfa_ticket(self, j: raw.a.MFAResponse, /) -> MFATicket:
         return self.state.parser.parse_mfa_ticket(
             await self.request(routes.AUTH_MFA_CREATE_TICKET.compile(), json=j)
         )
 
-    async def create_password_ticket(self, password: str, /) -> auth.MFATicket:
+    async def create_password_ticket(self, password: str, /) -> MFATicket:
         """|coro|
 
         Create a new MFA ticket or validate an existing one.
@@ -3423,9 +3465,7 @@ class HTTPClient:
         j: raw.a.PasswordMFAResponse = {"password": password}
         return await self._create_mfa_ticket(j)
 
-    async def create_recovery_code_ticket(
-        self, recovery_code: str, /
-    ) -> auth.MFATicket:
+    async def create_recovery_code_ticket(self, recovery_code: str, /) -> MFATicket:
         """|coro|
 
         Create a new MFA ticket or validate an existing one.
@@ -3433,7 +3473,7 @@ class HTTPClient:
         j: raw.a.RecoveryMFAResponse = {"recovery_code": recovery_code}
         return await self._create_mfa_ticket(j)
 
-    async def create_totp_ticket(self, totp_code: str, /) -> auth.MFATicket:
+    async def create_totp_ticket(self, totp_code: str, /) -> MFATicket:
         """|coro|
 
         Create a new MFA ticket or validate an existing one.
@@ -3448,7 +3488,7 @@ class HTTPClient:
         """
         return await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile())
 
-    async def mfa_status(self) -> auth.MFAStatus:
+    async def mfa_status(self) -> MFAStatus:
         """|coro|
 
         Gets MFA status of an account.
@@ -3466,13 +3506,13 @@ class HTTPClient:
             routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket
         )
 
-    async def get_mfa_methods(self) -> list[auth.MFAMethod]:
+    async def get_mfa_methods(self) -> list[MFAMethod]:
         """|coro|
 
         Gets available MFA methods.
         """
         return [
-            auth.MFAMethod(mm)
+            MFAMethod(mm)
             for mm in await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile())
         ]
 
@@ -3486,7 +3526,7 @@ class HTTPClient:
             mfa_ticket=mfa_ticket,
         )
 
-    async def enable_totp_2fa(self, response: auth.MFAResponse, /) -> None:
+    async def enable_totp_2fa(self, response: MFAResponse, /) -> None:
         """|coro|
 
         Enables TOTP 2FA for an account.
@@ -3509,7 +3549,7 @@ class HTTPClient:
 
     async def edit_session(
         self, session: core.ResolvableULID, *, friendly_name: str
-    ) -> auth.PartialSession:
+    ) -> PartialSession:
         """|coro|
 
         Edit session information.
@@ -3523,7 +3563,7 @@ class HTTPClient:
             )
         )
 
-    async def get_all_sessions(self) -> list[auth.PartialSession]:
+    async def get_all_sessions(self) -> list[PartialSession]:
         """|coro|
 
         Get all sessions associated with this account.
@@ -3535,7 +3575,7 @@ class HTTPClient:
 
     async def login_with_email(
         self, email: str, password: str, /, *, friendly_name: str | None = None
-    ) -> auth.LoginResult:
+    ) -> LoginResult:
         """|coro|
 
         Login to an account.
@@ -3553,11 +3593,11 @@ class HTTPClient:
     async def login_with_mfa(
         self,
         ticket: str,
-        by: auth.MFAResponse | None,
+        by: MFAResponse | None,
         /,
         *,
         friendly_name: str | None = None,
-    ) -> auth.Session | auth.AccountDisabled:
+    ) -> Session | AccountDisabled:
         """|coro|
 
         Login to an account.
@@ -3571,7 +3611,7 @@ class HTTPClient:
             routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=j
         )
         p = self.state.parser.parse_response_login(d, friendly_name)
-        assert not isinstance(p, auth.MFARequired), "Recursion detected"
+        assert not isinstance(p, MFARequired), "Recursion detected"
         return p
 
     async def logout(self) -> None:

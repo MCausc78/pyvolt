@@ -5,25 +5,33 @@ from copy import copy
 import typing as t
 
 from . import (
-    auth,
     cache as caching,
-    channel as channels,
     core,
-    emoji as emojis,
-    message as messages,
-    server as servers,
-    shard as sharding,
-    user as users,
-    webhook as webhooks,
 )
 
+from .auth import Session
+from .channel import (
+    PartialChannel,
+    DMChannel,
+    GroupChannel,
+    PrivateChannel,
+    ServerTextChannel,
+    ServerChannel,
+    Channel,
+)
+from .emoji import ServerEmoji, DetachedEmoji
+from .message import PartialMessage, MessageAppendData, Message
 from .read_state import ReadState
+from .server import PartialRole, Role, PartialServer, Server, PartialMember, Member
+from .shard import Shard
 from .user_settings import UserSettings
+from .user import UserFlags, RelationshipStatus, PartialUser, User, SelfUser
+from .webhook import Webhook, PartialWebhook
 
 
 @define(slots=True)
 class BaseEvent:
-    shard: sharding.Shard = field(repr=True, hash=True, kw_only=True, eq=True)
+    shard: Shard = field(repr=True, hash=True, kw_only=True, eq=True)
     is_cancelled: bool = field(
         default=False, repr=True, hash=True, kw_only=True, eq=True
     )
@@ -50,17 +58,13 @@ class BaseEvent:
 
 @define(slots=True)
 class ReadyEvent(BaseEvent):
-    users: list[users.User] = field(repr=True, hash=True, kw_only=True, eq=True)
-    servers: list[servers.Server] = field(repr=True, hash=True, kw_only=True, eq=True)
-    channels: list[channels.Channel] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    members: list[servers.Member] = field(repr=True, hash=True, kw_only=True, eq=True)
-    emojis: list[emojis.ServerEmoji] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
+    servers: list[Server] = field(repr=True, hash=True, kw_only=True, eq=True)
+    channels: list[Channel] = field(repr=True, hash=True, kw_only=True, eq=True)
+    members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
+    emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    me: users.SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    me: SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
     settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
     read_states: list[ReadState] = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -100,7 +104,7 @@ class ReadyEvent(BaseEvent):
 
 @define(slots=True)
 class BaseChannelCreateEvent(BaseEvent):
-    def _process(self, channel: channels.Channel) -> bool:
+    def _process(self, channel: Channel) -> bool:
         cache = self.shard.state.cache
         if not cache:
             return False
@@ -110,9 +114,7 @@ class BaseChannelCreateEvent(BaseEvent):
 
 @define(slots=True)
 class PrivateChannelCreateEvent(BaseChannelCreateEvent):
-    channel: channels.PrivateChannel = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    channel: PrivateChannel = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         return self._process(self.channel)
@@ -120,7 +122,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
 
 @define(slots=True)
 class ServerChannelCreateEvent(BaseChannelCreateEvent):
-    channel: channels.ServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: ServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         return self._process(self.channel)
@@ -131,12 +133,10 @@ ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
 
 @define(slots=True)
 class ChannelUpdateEvent(BaseEvent):
-    channel: channels.PartialChannel = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    channel: PartialChannel = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: channels.Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: channels.Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -163,9 +163,7 @@ class ChannelUpdateEvent(BaseEvent):
 class ChannelDeleteEvent(BaseEvent):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    channel: channels.Channel | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    channel: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -186,16 +184,14 @@ class GroupRecipientAddEvent(BaseEvent):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    group: channels.GroupChannel | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
         group = cache.get_channel(self.channel_id, caching._CHANNEL_GROUP_JOIN)
-        if not isinstance(group, channels.GroupChannel):
+        if not isinstance(group, GroupChannel):
             return
         self.group = group
 
@@ -211,16 +207,14 @@ class GroupRecipientRemoveEvent(BaseEvent):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    group: channels.GroupChannel | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
         group = cache.get_channel(self.channel_id, caching._CHANNEL_GROUP_LEAVE)
-        if not isinstance(group, channels.GroupChannel):
+        if not isinstance(group, GroupChannel):
             return
         self.group = group
 
@@ -274,7 +268,7 @@ class MessageAckEvent(BaseEvent):
 
 @define(slots=True)
 class MessageCreateEvent(BaseEvent):
-    message: messages.Message = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -282,11 +276,11 @@ class MessageCreateEvent(BaseEvent):
             return False
 
         author = self.message._author
-        if isinstance(author, servers.Member):
-            if isinstance(author._user, users.User):
+        if isinstance(author, Member):
+            if isinstance(author._user, User):
                 cache.store_user(author._user, caching._MESSAGE_CREATE)
             cache.store_server_member(author, caching._MESSAGE_CREATE)
-        elif isinstance(author, users.User):
+        elif isinstance(author, User):
             cache.store_user(author, caching._MESSAGE_CREATE)
 
         read_state = cache.get_read_state(
@@ -303,7 +297,7 @@ class MessageCreateEvent(BaseEvent):
         channel = cache.get_channel(self.message.channel_id, caching._MESSAGE_CREATE)
         if channel and isinstance(
             channel,
-            (channels.DMChannel, channels.GroupChannel, channels.ServerTextChannel),
+            (DMChannel, GroupChannel, ServerTextChannel),
         ):
             channel.last_message_id = self.message.id
 
@@ -312,19 +306,15 @@ class MessageCreateEvent(BaseEvent):
 
 @define(slots=True)
 class MessageUpdateEvent(BaseEvent):
-    message: messages.PartialMessage = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    message: PartialMessage = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: messages.Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: messages.Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class MessageAppendEvent(BaseEvent):
-    data: messages.MessageAppendData = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    data: MessageAppendData = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
@@ -370,10 +360,8 @@ class BulkMessageDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerCreateEvent(BaseEvent):
-    server: servers.Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    emojis: list[emojis.ServerEmoji] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
+    emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -387,7 +375,7 @@ class ServerCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiCreateEvent(BaseEvent):
-    emoji: emojis.ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -399,9 +387,7 @@ class ServerEmojiCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiDeleteEvent(BaseEvent):
-    emoji: emojis.ServerEmoji | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    emoji: ServerEmoji | None = field(repr=True, hash=True, kw_only=True, eq=True)
     server_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
     emoji_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -410,7 +396,7 @@ class ServerEmojiDeleteEvent(BaseEvent):
         if not cache:
             return
         emoji = cache.get_emoji(self.emoji_id, caching._EMOJI_DELETE)
-        if not isinstance(emoji, emojis.DetachedEmoji):
+        if not isinstance(emoji, DetachedEmoji):
             self.emoji = emoji
 
     def process(self) -> bool:
@@ -423,10 +409,10 @@ class ServerEmojiDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerUpdateEvent(BaseEvent):
-    server: servers.PartialServer = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: PartialServer = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: servers.Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: servers.Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -452,7 +438,7 @@ class ServerUpdateEvent(BaseEvent):
 @define(slots=True)
 class ServerDeleteEvent(BaseEvent):
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    server: servers.Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -470,7 +456,7 @@ class ServerDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberJoinEvent(BaseEvent):
-    member: servers.Member = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -482,10 +468,10 @@ class ServerMemberJoinEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberUpdateEvent(BaseEvent):
-    member: servers.PartialMember = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: PartialMember = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: servers.Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: servers.Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -515,7 +501,7 @@ class ServerMemberLeaveEvent(BaseEvent):
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    member: servers.Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -544,12 +530,12 @@ class ServerMemberLeaveEvent(BaseEvent):
 
 @define(slots=True)
 class RawServerRoleUpdateEvent(BaseEvent):
-    role: servers.PartialRole = field(repr=True, hash=True, kw_only=True, eq=True)
+    role: PartialRole = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    old_role: servers.Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    new_role: servers.Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    old_role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    new_role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    server: servers.Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_process(self) -> None:
         self.new_role = self.role.into_full()
@@ -576,8 +562,8 @@ class ServerRoleDeleteEvent(BaseEvent):
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     role_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    server: servers.Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    role: servers.Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -603,10 +589,10 @@ class ServerRoleDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class UserUpdateEvent(BaseEvent):
-    user: users.PartialUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: PartialUser = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: users.User | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: users.User | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    after: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -634,16 +620,16 @@ class UserRelationshipUpdateEvent(BaseEvent):
     current_user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current user ID."""
 
-    old_user: users.User | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    new_user: users.User = field(repr=True, hash=True, kw_only=True, eq=True)
+    old_user: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    new_user: User = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: users.RelationshipStatus | None = field(
+    before: RelationshipStatus | None = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """Old relationship found in cache."""
 
     @property
-    def after(self) -> users.RelationshipStatus:
+    def after(self) -> RelationshipStatus:
         """New relationship with the user."""
         return self.new_user.relationship
 
@@ -699,26 +685,22 @@ class UserPlatformWipeEvent(BaseEvent):
     """
 
     user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    flags: users.UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class WebhookCreateEvent(BaseEvent):
-    webhook: webhooks.Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class WebhookUpdateEvent(BaseEvent):
-    webhook: webhooks.PartialWebhook = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    new_webhook: PartialWebhook = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class WebhookDeleteEvent(BaseEvent):
-    webhook: webhooks.Webhook | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    webhook: Webhook | None = field(repr=True, hash=True, kw_only=True, eq=True)
     webhook_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
@@ -729,7 +711,7 @@ class AuthifierEvent(BaseEvent):
 
 @define(slots=True)
 class SessionCreateEvent(AuthifierEvent):
-    session: auth.Session = field(repr=True, hash=True, kw_only=True, eq=True)
+    session: Session = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)

@@ -4,6 +4,7 @@ from datetime import datetime
 import logging
 import typing as t
 
+from . import cdn, core, discovery
 from .auth import (
     PartialAccount,
     MFATicket,
@@ -97,8 +98,6 @@ from .events import (
     SessionDeleteAllEvent,
     LogoutEvent,
 )
-
-from . import cdn, core, discovery
 from .invite import (
     BaseInvite,
     ServerPublicInvite,
@@ -125,7 +124,6 @@ from .server import (
     Member,
     MemberList,
 )
-
 from .user_settings import UserSettings
 from .user import (
     Presence,
@@ -144,7 +142,6 @@ from .user import (
     User,
     SelfUser,
 )
-
 from .webhook import PartialWebhook, Webhook
 
 if t.TYPE_CHECKING:
@@ -1873,7 +1870,7 @@ class Parser:
 
         return WebhookUpdateEvent(
             shard=shard,
-            webhook=PartialWebhook(
+            new_webhook=PartialWebhook(
                 state=self.state,
                 id=self.parse_id(d["id"]),
                 name=data.get("name") or core.UNDEFINED,
