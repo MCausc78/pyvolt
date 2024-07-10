@@ -7,7 +7,8 @@ from enum import StrEnum
 import logging
 import typing as t
 
-from . import core, errors, utils
+from . import core, utils
+from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -126,7 +127,7 @@ class Shard:
     async def close(self) -> None:
         if self._ws:
             if self._closed:
-                raise errors.ShardError("Already closed")
+                raise ShardError("Already closed")
             self._closing_future = None
             self._closed = True
             await self._ws.close(code=1000)
@@ -269,11 +270,11 @@ class Shard:
                 _L.debug("connection failed on try=%i: %s", i, exc)
                 if self.connect_delay is not None:
                     await asyncio.sleep(self.connect_delay)
-        raise errors.ConnectError(self.retries, es)
+        raise ConnectError(self.retries, es)
 
     async def _connect(self) -> None:
         if self._ws:
-            raise errors.PyvoltError("The connection is already open.")
+            raise PyvoltError("The connection is already open.")
         self._closing_future = asyncio.Future()
         self._last_close_code = None
         while not self._closed:
@@ -284,7 +285,7 @@ class Shard:
 
             message = await self.recv()
             if message is None or message["type"] != "Authenticated":
-                raise errors.AuthenticationError(message)
+                raise AuthenticationError(message)
             self.logged_out = False
             await self._handle(message)
             message = None

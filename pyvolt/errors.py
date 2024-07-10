@@ -1,6 +1,7 @@
-from typing import Any
+from __future__ import annotations
 
 import aiohttp
+import typing as t
 
 Response = aiohttp.ClientResponse
 
@@ -24,7 +25,7 @@ class APIError(PyvoltError):
     def __init__(
         self,
         response: Response,
-        data: dict[str, Any] | str,
+        data: dict[str, t.Any] | str,
         *,
         message: str | None = None,
     ) -> None:
@@ -106,7 +107,7 @@ class ShardError(PyvoltError):
 
 
 class AuthenticationError(ShardError):
-    def __init__(self, a: Any) -> None:
+    def __init__(self, a: t.Any) -> None:
         super().__init__("Failed to connect shard", a)
 
 

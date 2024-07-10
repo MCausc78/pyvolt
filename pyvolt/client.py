@@ -32,7 +32,9 @@ def _session_factory(_) -> aiohttp.ClientSession:
     return aiohttp.ClientSession()
 
 
-class _ClientHandler(EventHandler):
+class ClientEventHandler(EventHandler):
+    """The default event handler for the client."""
+
     __slots__ = ("_client", "_state", "dispatch", "_handlers")
 
     def __init__(self, client: Client) -> None:
@@ -429,7 +431,7 @@ class Client:
                     else Shard(
                         token,
                         base=websocket_base,
-                        handler=_ClientHandler(self),
+                        handler=ClientEventHandler(self),
                         session=_session_factory,
                         state=state,
                     )
@@ -553,4 +555,7 @@ class Client:
         await self._state.shard.connect()
 
 
-__all__ = ("Client",)
+__all__ = (
+    "ClientEventHandler",
+    "Client",
+)

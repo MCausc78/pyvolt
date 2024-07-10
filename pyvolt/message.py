@@ -6,18 +6,15 @@ from datetime import datetime
 from enum import IntFlag, StrEnum
 import typing as t
 
-from . import (
-    base,
-    cache as caching,
-    cdn,
-    channel as channels,
-    core,
-    embed,
-    emoji as emojis,
-    safety_reports,
-    server as servers,
-    user as users,
-)
+from .base import Base
+from .channel import TextChannel, ServerChannel
+from .embed import StatelessEmbed, Embed
+from .emoji import ResolvableEmoji
+from .safety_reports import ContentReportReason
+from .server import Member
+from .user import User
+
+from . import cache as caching, cdn, core
 
 
 if t.TYPE_CHECKING:
@@ -38,7 +35,7 @@ class Reply:
         self.id = core.resolve_ulid(id)
         self.mention = mention
 
-    def build(self) -> t.Any:
+    def build(self) -> raw.ReplyIntent:
         return {
             "id": str(self.id),
             "mention": self.mention,
@@ -187,24 +184,26 @@ class MessageWebhook:
 
 
 @define(slots=True)
-class BaseMessage(base.Base):
+class BaseMessage(Base):
     """Base representation of message in channel on Revolt."""
 
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the channel this message was sent in."""
 
     @property
-    def channel(self) -> channels.TextChannel:
+    def channel(self) -> TextChannel:
         """The channel this message was sent in."""
 
         cache = self.state.cache
         if not cache:
-            return channels.TextChannel(state=self.state, id=self.channel_id)
+            return TextChannel(state=self.state, id=self.channel_id)
         channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
         if channel:
-            assert isinstance(channel, channels.TextChannel)
+            assert isinstance(
+                channel, TextChannel
+            ), "Cache returned non textable channel"
             return channel
-        return channels.TextChannel(state=self.state, id=self.channel_id)
+        return TextChannel(state=self.state, id=self.channel_id)
 
     async def acknowledge(self) -> None:
         """|coro|
@@ -287,7 +286,7 @@ class BaseMessage(base.Base):
 
     async def react(
         self,
-        emoji: emojis.ResolvableEmoji,
+        emoji: ResolvableEmoji,
     ) -> None:
         """|coro|
 
@@ -356,7 +355,7 @@ class BaseMessage(base.Base):
 
     async def report(
         self,
-        reason: safety_reports.ContentReportReason,
+        reason: ContentReportReason,
         *,
         additional_context: str | None = None,
     ) -> None:
@@ -393,7 +392,7 @@ class BaseMessage(base.Base):
 
     async def unreact(
         self,
-        emoji: emojis.ResolvableEmoji,
+        emoji: ResolvableEmoji,
         *,
         user: core.ResolvableULID | None = None,
         remove_all: bool | None = None,
@@ -434,7 +433,7 @@ class PartialMessage(BaseMessage):
     )
     """When message was edited."""
 
-    internal_embeds: core.UndefinedOr[list[embed.StatelessEmbed]] = field(
+    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """New message embeds."""
@@ -445,7 +444,7 @@ class PartialMessage(BaseMessage):
     """New message reactions."""
 
     @property
-    def embeds(self) -> core.UndefinedOr[list[embed.Embed]]:
+    def embeds(self) -> core.UndefinedOr[list[Embed]]:
         """New message embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
@@ -458,13 +457,13 @@ class PartialMessage(BaseMessage):
 class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
-    internal_embeds: core.UndefinedOr[list[embed.StatelessEmbed]] = field(
+    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """New message appended stateless embeds."""
 
     @property
-    def embeds(self) -> core.UndefinedOr[list[embed.Embed]]:
+    def embeds(self) -> core.UndefinedOr[list[Embed]]:
         """New message appended embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
@@ -474,18 +473,18 @@ class MessageAppendData(BaseMessage):
 
 
 @define(slots=True)
-class SystemEvent(abc.ABC):
+class BaseSystemEvent(abc.ABC):
     """Representation of system event within message."""
 
 
 @define(slots=True)
-class TextSystemEvent(SystemEvent):
+class TextSystemEvent(BaseSystemEvent):
     content: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Event contents."""
 
 
 @define(slots=True)
-class UserAddedSystemEvent(SystemEvent):
+class UserAddedSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was added."""
 
@@ -494,7 +493,7 @@ class UserAddedSystemEvent(SystemEvent):
 
 
 @define(slots=True)
-class UserRemovedSystemEvent(SystemEvent):
+class UserRemovedSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was removed."""
 
@@ -503,54 +502,68 @@ class UserRemovedSystemEvent(SystemEvent):
 
 
 @define(slots=True)
-class UserJoinedSystemEvent(SystemEvent):
+class UserJoinedSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that joined this server/group."""
 
 
 @define(slots=True)
-class UserLeftSystemEvent(SystemEvent):
+class UserLeftSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that left this server/group."""
 
 
 @define(slots=True)
-class UserKickedSystemEvent(SystemEvent):
+class UserKickedSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was kicked from this server."""
 
 
 @define(slots=True)
-class UserBannedSystemEvent(SystemEvent):
+class UserBannedSystemEvent(BaseSystemEvent):
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was banned from this server."""
 
 
 @define(slots=True)
-class ChannelRenamedSystemEvent(SystemEvent):
+class ChannelRenamedSystemEvent(BaseSystemEvent):
     by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that renamed this group."""
 
 
 @define(slots=True)
-class ChannelDescriptionChangedSystemEvent(SystemEvent):
+class ChannelDescriptionChangedSystemEvent(BaseSystemEvent):
     by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that changed description of this group."""
 
 
 @define(slots=True)
-class ChannelIconChangedSystemEvent(SystemEvent):
+class ChannelIconChangedSystemEvent(BaseSystemEvent):
     by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that changed icon of this group."""
 
 
 @define(slots=True)
-class ChannelOwnershipChangedSystemEvent(SystemEvent):
+class ChannelOwnershipChangedSystemEvent(BaseSystemEvent):
     from_: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was previous owner of this group."""
 
     to: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that became owner of this group."""
+
+
+SystemEvent = (
+    TextSystemEvent
+    | UserAddedSystemEvent
+    | UserRemovedSystemEvent
+    | UserJoinedSystemEvent
+    | UserLeftSystemEvent
+    | UserKickedSystemEvent
+    | UserBannedSystemEvent
+    | ChannelDescriptionChangedSystemEvent
+    | ChannelIconChangedSystemEvent
+    | ChannelOwnershipChangedSystemEvent
+)
 
 
 class MessageFlags(IntFlag):
@@ -568,7 +581,7 @@ class Message(BaseMessage):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the channel this message was sent in."""
 
-    _author: users.User | servers.Member | core.ULID = field(
+    _author: User | Member | core.ULID = field(
         repr=False, hash=True, kw_only=True, eq=True, alias="internal_author"
     )
 
@@ -591,7 +604,7 @@ class Message(BaseMessage):
     edited_at: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Timestamp at which this message was last edited."""
 
-    internal_embeds: list[embed.StatelessEmbed] = field(
+    internal_embeds: list[StatelessEmbed] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The attached stateless embeds to this message."""
@@ -656,15 +669,15 @@ class Message(BaseMessage):
     def _clear(self, emoji: str) -> None:
         self.reactions.pop(emoji, None)
 
-    def get_author(self) -> users.User | servers.Member | None:
-        if isinstance(self._author, (users.User, servers.Member)):
+    def get_author(self) -> User | Member | None:
+        if isinstance(self._author, (User, Member)):
             return self._author
         if not self.state.cache:
             return None
 
         cache = self.state.cache
-        channel = self.get_channel()
-        if channel is None or not isinstance(channel, channels.ServerChannel):
+        channel = self.channel
+        if not isinstance(channel, ServerChannel):
             return cache.get_user(
                 self._author,
                 # PROVIDE_CTX: caching.MessageContext(type=caching.ContextType.MESSAGE, message=self),
@@ -677,18 +690,6 @@ class Message(BaseMessage):
             caching._UNDEFINED,
         )
 
-    def get_channel(self) -> channels.TextChannel | None:
-        cache = self.state.cache
-        if not cache:
-            return None
-        channel = cache.get_channel(
-            self.channel_id,
-            caching.MessageContext(type=caching.ContextType.MESSAGE, message=self),
-        )
-        if channel is None or not isinstance(channel, channels.TextChannel):
-            return None
-        return channel
-
     @property
     def attachments(self) -> list[cdn.Asset]:
         """The attachments on this message."""
@@ -697,7 +698,7 @@ class Message(BaseMessage):
         ]
 
     @property
-    def author(self) -> users.User | servers.Member:
+    def author(self) -> User | Member:
         author = self.get_author()
         if not author:
             raise TypeError("No author was found in cache.")
@@ -706,12 +707,12 @@ class Message(BaseMessage):
     @property
     def author_id(self) -> core.ULID:
         """The ID of the user or webhook that sent this message."""
-        if isinstance(self._author, (users.User, servers.Member)):
+        if isinstance(self._author, (User, Member)):
             return self._author.id
         return self._author
 
     @property
-    def embeds(self) -> list[embed.Embed]:
+    def embeds(self) -> list[Embed]:
         """The attached embeds to this message."""
         return [e._stateful(self.state) for e in self.internal_embeds]
 
@@ -726,7 +727,7 @@ __all__ = (
     "BaseMessage",
     "PartialMessage",
     "MessageAppendData",
-    "SystemEvent",
+    "BaseSystemEvent",
     "TextSystemEvent",
     "UserAddedSystemEvent",
     "UserRemovedSystemEvent",
@@ -738,6 +739,7 @@ __all__ = (
     "ChannelDescriptionChangedSystemEvent",
     "ChannelIconChangedSystemEvent",
     "ChannelOwnershipChangedSystemEvent",
+    "SystemEvent",
     "MessageFlags",
     "Message",
 )

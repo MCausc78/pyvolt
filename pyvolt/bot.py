@@ -3,8 +3,9 @@ from __future__ import annotations
 from attrs import define, field
 from enum import IntFlag
 
-
-from . import base, core, user as users
+from . import core
+from .base import Base
+from .user import User
 
 
 class BotFlags(IntFlag):
@@ -16,7 +17,7 @@ class BotFlags(IntFlag):
 
 
 @define(slots=True)
-class BaseBot(base.Base):
+class BaseBot(Base):
     """Base representation of a bot on Revolt."""
 
     async def delete(self) -> None:
@@ -50,7 +51,7 @@ class BaseBot(base.Base):
 
 
 @define(slots=True)
-class Bot(base.Base):
+class Bot(BaseBot):
     """Partial representation of a bot on Revolt."""
 
     owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -82,7 +83,7 @@ class Bot(base.Base):
     flags: BotFlags = field(repr=True, hash=True, kw_only=True, eq=True)
     """Enum of bot flags."""
 
-    user: users.User = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: User = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user associated with this bot."""
 
 

@@ -4,20 +4,15 @@ from attrs import define, field
 from enum import IntFlag, StrEnum
 import typing as t
 
-from . import (
-    base,
-    cdn,
-    core,
-    permissions as permissions_,
-    safety_reports,
-)
+from . import cdn, core
+from .base import Base
+from .permissions import UserPermissions
+from .safety_reports import UserReportReason
 
 
 if t.TYPE_CHECKING:
-    from . import (
-        channel as channels,
-        raw,
-    )
+    from . import raw
+    from .channel import SavedMessagesChannel, DMChannel
     from .state import State
 
 
@@ -281,7 +276,7 @@ class RelationshipStatus(StrEnum):
 class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """Other user's ID."""
 
     status: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -299,7 +294,7 @@ class Mutuals:
     """Array of mutual server IDs that both users are in."""
 
 
-class BaseUser(base.Base):
+class BaseUser(Base):
     """Represents a user on Revolt."""
 
     @property
@@ -333,7 +328,7 @@ class BaseUser(base.Base):
     ) -> User:
         """|coro|
 
-        Edit this user.
+        Edits the user.
 
         Parameters
         ----------
@@ -390,7 +385,7 @@ class BaseUser(base.Base):
         """
         return await self.state.http.get_mutual_friends_and_servers(self.id)
 
-    async def open_dm(self) -> channels.SavedMessagesChannel | channels.DMChannel:
+    async def open_dm(self) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
         Open a DM with another user. If the target is oneself, a saved messages channel is returned.
@@ -406,7 +401,7 @@ class BaseUser(base.Base):
 
     async def report(
         self,
-        reason: safety_reports.UserReportReason,
+        reason: UserReportReason,
         *,
         additional_context: str | None = None,
         message_context: core.ResolvableULID,
@@ -535,28 +530,28 @@ def _calculate_user_permissions(
     *,
     perspective_id: core.ULID,
     perspective_bot: BotUserInfo | None,
-) -> permissions_.UserPermissions:
+) -> UserPermissions:
     if (
         user_privileged
         or user_id == perspective_id
         or user_relationship == RelationshipStatus.FRIEND
     ):
-        return permissions_.UserPermissions.ALL
+        return UserPermissions.ALL
 
     if user_relationship in (
         RelationshipStatus.BLOCKED,
         RelationshipStatus.BLOCKED_OTHER,
     ):
-        return permissions_.UserPermissions.ACCESS
+        return UserPermissions.ACCESS
 
     result = 0
     if user_relationship in (RelationshipStatus.INCOMING, RelationshipStatus.OUTGOING):
-        result |= permissions_.UserPermissions.ACCESS.value
+        result |= UserPermissions.ACCESS.value
 
     if user_bot or perspective_bot:
-        result |= permissions_.UserPermissions.SEND_MESSAGE.value
+        result |= UserPermissions.SEND_MESSAGE.value
 
-    return permissions_.UserPermissions(result)
+    return UserPermissions(result)
 
 
 @define(slots=True)
@@ -631,8 +626,10 @@ class User(DisplayUser):
 class SelfUser(User):
     """Representation of a user on Revolt."""
 
-    relations: list[Relationship] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Relationships with other users."""
+    relations: dict[core.ULID, Relationship] = field(
+        repr=True, hash=True, kw_only=True, eq=True
+    )
+    """The dictionary of relationships with other users."""
 
     async def edit(
         self,
@@ -646,7 +643,7 @@ class SelfUser(User):
     ) -> User:
         """|coro|
 
-        Edit user.
+        Edits the user.
 
         Parameters
         ----------
@@ -679,6 +676,7 @@ __all__ = (
     "UserStatusEdit",
     "StatelessUserProfile",
     "UserProfile",
+    "PartialUserProfile",
     "UserProfileEdit",
     "UserBadges",
     "UserFlags",

@@ -301,6 +301,7 @@ __all__ = (
     "ImageEmbed",
     "VideoEmbed",
     "WebsiteEmbed",
+    "StatelessTextEmbed",
     "TextEmbed",
     "NoneEmbed",
     "_NONE_EMBED",

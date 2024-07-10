@@ -2,17 +2,14 @@ from __future__ import annotations
 
 from attrs import define, field
 
-from . import (
-    base,
-    cdn,
-    core,
-    message as messages,
-    permissions as permissions_,
-)
+from . import cdn, core
+from .base import Base
+from .message import Reply, Interactions, Masquerade, SendableEmbed, Message
+from .permissions import Permissions
 
 
 @define(slots=True)
-class BaseWebhook(base.Base):
+class BaseWebhook(Base):
     """Representation of Revolt webhook."""
 
     def _token(self) -> str | None:
@@ -43,7 +40,7 @@ class BaseWebhook(base.Base):
         by_token: bool = False,
         name: core.UndefinedOr[str] = core.UNDEFINED,
         avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        permissions: core.UndefinedOr[permissions_.Permissions] = core.UNDEFINED,
+        permissions: core.UndefinedOr[Permissions] = core.UNDEFINED,
     ) -> Webhook:
         """|coro|
 
@@ -55,7 +52,7 @@ class BaseWebhook(base.Base):
             New webhook name. Should be between 1 and 32 chars long.
         avatar: :class:`UndefinedOr`[:class:`str` | `None`]
             New webhook avatar. Pass attachment ID given by Autumn.
-        permissions: :class:`UndefinedOr`[:class:`permission.Permissions`]
+        permissions: :class:`UndefinedOr`[:class:`Permissions`]
             New webhook permissions.
 
         Raises
@@ -87,11 +84,11 @@ class BaseWebhook(base.Base):
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[messages.Reply | core.ResolvableULID] | None = None,
-        embeds: list[messages.SendableEmbed] | None = None,
-        masquerade: messages.Masquerade | None = None,
-        interactions: messages.Interactions | None = None,
-    ) -> messages.Message:
+        replies: list[Reply | core.ResolvableULID] | None = None,
+        embeds: list[SendableEmbed] | None = None,
+        masquerade: Masquerade | None = None,
+        interactions: Interactions | None = None,
+    ) -> Message:
         """|coro|
 
         Executes a webhook and returns a message.
@@ -126,7 +123,7 @@ class PartialWebhook(BaseWebhook):
     )
     """The new stateless avatar of the webhook."""
 
-    permissions: core.UndefinedOr[permissions_.Permissions] = field(
+    permissions: core.UndefinedOr[Permissions] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The new permissions for the webhook."""
@@ -152,9 +149,7 @@ class Webhook(BaseWebhook):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """The channel this webhook belongs to."""
 
-    permissions: permissions_.Permissions = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)
     """The permissions for the webhook."""
 
     token: str | None = field(repr=True, hash=True, kw_only=True, eq=True)

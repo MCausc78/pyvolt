@@ -6,16 +6,13 @@ from enum import StrEnum
 import logging
 import typing as t
 
-from . import (
-    bot as bots,
-    cdn,
-    core,
-    errors,
-    server as servers,
-    user as users,
-    utils,
-)
+from . import cdn, core, utils
+
+from .bot import BaseBot
+from .errors import DiscoveryError
+from .server import ServerFlags, BaseServer, Server
 from .state import State
+from .user import StatelessUserProfile, UserProfile
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -35,7 +32,7 @@ class ServerActivity(StrEnum):
 
 
 @define(slots=True)
-class DiscoveryServer(servers.BaseServer):
+class DiscoveryServer(BaseServer):
     """Representation of a server on Revolt Discovery. The ID is a invite code."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -54,7 +51,7 @@ class DiscoveryServer(servers.BaseServer):
     )
     """The stateless server banner."""
 
-    flags: servers.ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server flags."""
 
     tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -83,7 +80,7 @@ class DiscoveryServer(servers.BaseServer):
             self.state, "banners"
         )
 
-    async def join(self) -> servers.Server:
+    async def join(self) -> Server:
         """|coro|
 
         Joins the server.
@@ -96,8 +93,7 @@ class DiscoveryServer(servers.BaseServer):
             Accepting the invite failed.
         """
         server = await self.state.http.accept_invite(self.invite_code)
-        assert isinstance(server, servers.Server)
-        return server
+        return server  # type: ignore
 
 
 @define(slots=True)
@@ -116,7 +112,7 @@ class BotUsage(StrEnum):
 
 
 @define(slots=True)
-class DiscoveryBot(bots.BaseBot):
+class DiscoveryBot(BaseBot):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The bot's name."""
 
@@ -125,7 +121,7 @@ class DiscoveryBot(bots.BaseBot):
     )
     """The stateless bot's avatar."""
 
-    internal_profile: users.StatelessUserProfile = field(
+    internal_profile: StatelessUserProfile = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The stateless bot's profile."""
@@ -152,7 +148,7 @@ class DiscoveryBot(bots.BaseBot):
         return self.internal_profile.content or ""
 
     @property
-    def profile(self) -> users.UserProfile:
+    def profile(self) -> UserProfile:
         """The bot's profile."""
         return self.internal_profile._stateful(self.state, self.id)
 
@@ -301,7 +297,7 @@ class DiscoveryClient:
             method, self._base + path.lstrip("/"), headers=headers, **kwargs
         )
         if response.status >= 400:
-            raise errors.DiscoveryError(
+            raise DiscoveryError(
                 response, response.status, await utils._json_or_text(response)
             )
         return response

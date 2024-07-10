@@ -52,7 +52,7 @@ class BaseChannel(base.Base, abc.ABC):
     """Representation of channel on Revolt."""
 
     def message(self, message: core.ResolvableULID) -> messages.BaseMessage:
-        from . import messages
+        from .message import BaseMessage
 
         return messages.BaseMessage(
             state=self.state, id=core.resolve_ulid(message), channel_id=self.id

@@ -1,8 +1,13 @@
-import typing as t
+from __future__ import annotations
 
 from attrs import define, field
+import typing as t
 
-from . import cdn, channel as channels, core, server as servers
+
+from . import cdn, core
+
+from .channel import GroupChannel
+from .server import ServerFlags, Server
 from .state import State
 
 
@@ -16,7 +21,7 @@ class BaseInvite:
     code: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The invite code."""
 
-    async def accept(self) -> "servers.Server | channels.GroupChannel":
+    async def accept(self) -> Server | GroupChannel:
         """|coro|
 
         Accept this invite.
@@ -82,9 +87,7 @@ class ServerPublicInvite(BaseInvite):
     )
     """The stateless banner of the server."""
 
-    flags: servers.ServerFlags | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    flags: ServerFlags | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server flags."""
 
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -119,7 +122,7 @@ class ServerPublicInvite(BaseInvite):
             self.state, "banners"
         )
 
-    async def accept(self) -> servers.Server:
+    async def accept(self) -> Server:
         """|coro|
 
         Accept this invite.
@@ -134,9 +137,8 @@ class ServerPublicInvite(BaseInvite):
         :class:`APIError`
             Accepting the invite failed.
         """
-        response = await super().accept()
-        assert isinstance(response, servers.Server)
-        return response
+        server = await super().accept()
+        return server  # type: ignore
 
 
 @define(slots=True)
@@ -167,7 +169,7 @@ class GroupPublicInvite(BaseInvite):
             self.state, "avatars"
         )
 
-    async def accept(self) -> channels.GroupChannel:
+    async def accept(self) -> GroupChannel:
         """|coro|
 
         Accept this invite.
@@ -182,9 +184,8 @@ class GroupPublicInvite(BaseInvite):
         :class:`APIError`
             Accepting the invite failed.
         """
-        response = await super().accept()
-        assert isinstance(response, channels.GroupChannel)
-        return response
+        group = await super().accept()
+        return group  # type: ignore
 
 
 @define(slots=True)
@@ -208,7 +209,7 @@ class GroupInvite(PrivateBaseInvite):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server/group channel this invite points to."""
 
-    async def accept(self) -> channels.GroupChannel:
+    async def accept(self) -> GroupChannel:
         """|coro|
 
         Accept this invite.
@@ -223,9 +224,8 @@ class GroupInvite(PrivateBaseInvite):
         :class:`APIError`
             Accepting the invite failed.
         """
-        response = await super().accept()
-        assert isinstance(response, channels.GroupChannel)
-        return response
+        group = await super().accept()
+        return group  # type: ignore
 
 
 @define(slots=True)
@@ -238,7 +238,7 @@ class ServerInvite(PrivateBaseInvite):
     channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server channel this invite points to."""
 
-    async def accept(self) -> servers.Server:
+    async def accept(self) -> Server:
         """|coro|
 
         Accept this invite.
@@ -253,9 +253,8 @@ class ServerInvite(PrivateBaseInvite):
         :class:`APIError`
             Accepting the invite failed.
         """
-        response = await super().accept()
-        assert isinstance(response, servers.Server)
-        return response
+        server = await super().accept()
+        return server  # type: ignore
 
 
 Invite = GroupInvite | ServerInvite

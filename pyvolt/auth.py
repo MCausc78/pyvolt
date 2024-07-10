@@ -4,7 +4,8 @@ from attrs import define, field
 from enum import StrEnum
 import typing as t
 
-from . import base, core
+from . import core
+from .base import Base
 from .state import State
 
 if t.TYPE_CHECKING:
@@ -53,7 +54,7 @@ class WebPushSubscription:
 
 
 @define(slots=True)
-class PartialSession(base.Base):
+class PartialSession(Base):
     """Partially represents Revolt auth session."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -138,7 +139,7 @@ class AccountDisabled:
 
 
 @define(slots=True)
-class MultiFactorStatus:
+class MFAStatus:
     totp_mfa: bool = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether the account has MFA TOTP enabled."""
 
@@ -193,7 +194,7 @@ __all__ = (
     "MFAMethod",
     "MFARequired",
     "AccountDisabled",
-    "MultiFactorStatus",
+    "MFAStatus",
     "BaseMFAResponse",
     "ByPassword",
     "ByRecoveryCode",

@@ -5,24 +5,23 @@ from datetime import datetime
 from enum import IntFlag
 import typing as t
 
+from .base import Base
+from .errors import NoData
+from .permissions import Permissions, PermissionOverride
+from .safety_reports import ContentReportReason
+from .state import State
+from .user import DisplayUser, User
+
 from . import (
-    base,
     cache as caching,
     cdn,
     core,
-    errors,
-    permissions as permissions_,
-    safety_reports,
-    state,
-    user as users,
     utils,
 )
 
 if t.TYPE_CHECKING:
-    from . import (
-        channel as channels,
-        raw,
-    )
+    from .channel import ChannelType, ServerTextChannel, VoiceChannel, ServerChannel
+    from . import raw
 
 
 class ServerFlags(IntFlag):
@@ -117,7 +116,7 @@ class SystemMessageChannels:
 
 
 @define()
-class BaseRole(base.Base):
+class BaseRole(Base):
     """Base representation of a server role."""
 
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -173,8 +172,8 @@ class BaseRole(base.Base):
     async def set_permissions(
         self,
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
     ) -> Server:
         """|coro|
 
@@ -182,9 +181,9 @@ class BaseRole(base.Base):
 
         Parameters
         ----------
-        allow: :class:`permissions_.Permissions`
+        allow: :class:`Permissions`
             New allow bit flags.
-        deny: :class:`permissions_.Permissions`
+        deny: :class:`Permissions`
             New disallow bit flags.
 
         Raises
@@ -206,7 +205,7 @@ class PartialRole(BaseRole):
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new role name."""
 
-    permissions: core.UndefinedOr[permissions_.PermissionOverride] = field(
+    permissions: core.UndefinedOr[PermissionOverride] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The permissions available to this role."""
@@ -250,9 +249,7 @@ class Role(BaseRole):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Role name."""
 
-    permissions: permissions_.PermissionOverride = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: PermissionOverride = field(repr=True, hash=True, kw_only=True, eq=True)
     """Permissions available to this role."""
 
     colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -278,7 +275,7 @@ class Role(BaseRole):
 
 
 @define(slots=True)
-class BaseServer(base.Base):
+class BaseServer(Base):
     """Base representation of a server on Revolt."""
 
     async def add_bot(
@@ -294,11 +291,11 @@ class BaseServer(base.Base):
     async def create_channel(
         self,
         *,
-        type: channels.ChannelType | None = None,
+        type: ChannelType | None = None,
         name: str,
         description: str | None = None,
         nsfw: bool | None = None,
-    ) -> channels.ServerChannel:
+    ) -> ServerChannel:
         """|coro|
 
         Create a new text or voice channel within this server.
@@ -316,7 +313,7 @@ class BaseServer(base.Base):
 
     async def create_text_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
-    ) -> channels.ServerTextChannel:
+    ) -> ServerTextChannel:
         """|coro|
 
         Create a new text channel within this server.
@@ -331,11 +328,14 @@ class BaseServer(base.Base):
         from .channel import ChannelType
 
         type = ChannelType.TEXT
-        return await self.create_channel(type=type, name=name, description=description, nsfw=nsfw)  # type: ignore
+        channel = await self.create_channel(
+            type=type, name=name, description=description, nsfw=nsfw
+        )
+        return channel  # type: ignore
 
     async def create_voice_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
-    ) -> channels.VoiceChannel:
+    ) -> VoiceChannel:
         """|coro|
 
         Create a new voice channel within this server.
@@ -350,7 +350,10 @@ class BaseServer(base.Base):
         from .channel import ChannelType
 
         type = ChannelType.VOICE
-        return await self.create_channel(type=type, name=name, description=description, nsfw=nsfw)  # type: ignore
+        channel = await self.create_channel(
+            type=type, name=name, description=description, nsfw=nsfw
+        )
+        return channel  # type: ignore
 
     async def create_role(self, *, name: str, rank: int | None = None) -> Role:
         """|coro|
@@ -463,7 +466,7 @@ class BaseServer(base.Base):
 
     async def report(
         self,
-        reason: safety_reports.ContentReportReason,
+        reason: ContentReportReason,
         *,
         additional_context: str | None = None,
     ) -> None:
@@ -487,8 +490,8 @@ class BaseServer(base.Base):
         self,
         role: core.ResolvableULID,
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
     ) -> Server:
         """|coro|
 
@@ -496,9 +499,9 @@ class BaseServer(base.Base):
 
         Parameters
         ----------
-        allow: :class:`permissions_.Permissions`
+        allow: :class:`Permissions`
             New allow bit flags.
-        deny: :class:`permissions_.Permissions`
+        deny: :class:`Permissions`
             New deny bit flags.
 
         Raises
@@ -513,7 +516,7 @@ class BaseServer(base.Base):
         )
 
     async def set_default_permissions(
-        self, permissions: permissions_.Permissions | permissions_.PermissionOverride, /
+        self, permissions: Permissions | PermissionOverride, /
     ) -> Server:
         """|coro|
 
@@ -556,7 +559,7 @@ class PartialServer(BaseServer):
     system_messages: core.UndefinedOr[SystemMessageChannels | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    default_permissions: core.UndefinedOr[permissions_.Permissions] = field(
+    default_permissions: core.UndefinedOr[Permissions] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(
@@ -606,15 +609,15 @@ def _sort_roles(
             reverse=True,
         )
     except KeyError as ke:
-        raise errors.NoData(ke.args[0], "role")
+        raise NoData(ke.args[0], "role")
 
 
 def _calculate_server_permissions(
     roles: list[Role],
     target_timeout: datetime | None,
     *,
-    default_permissions: permissions_.Permissions,
-) -> permissions_.Permissions:
+    default_permissions: Permissions,
+) -> Permissions:
     result = default_permissions.value
 
     for role in roles:
@@ -622,9 +625,9 @@ def _calculate_server_permissions(
         result &= ~role.permissions.deny.value
 
     if target_timeout is not None and target_timeout > utils.utcnow():
-        result &= ~permissions_.Permissions.SEND_MESSAGE.value
+        result &= ~Permissions.SEND_MESSAGE.value
 
-    return permissions_.Permissions(result)
+    return Permissions(result)
 
 
 @define(slots=True)
@@ -642,7 +645,7 @@ class Server(BaseServer):
 
     internal_channels: (
         tuple[t.Literal[True], list[core.ULID]]
-        | tuple[t.Literal[False], list[channels.ServerChannel]]
+        | tuple[t.Literal[False], list[ServerChannel]]
     ) = field(repr=True, hash=True, kw_only=True, eq=True)
 
     categories: list[Category] | None = field(
@@ -658,7 +661,7 @@ class Server(BaseServer):
     roles: dict[core.ULID, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The roles for this server."""
 
-    default_permissions: permissions_.Permissions = field(
+    default_permissions: Permissions = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The default set of server and channel permissions."""
@@ -752,17 +755,24 @@ class Server(BaseServer):
         """The channels within this server."""
 
         if not self.internal_channels[0]:
-            return t.cast("list[channels.ServerChannel]", self.internal_channels[1])
+            return self.internal_channels[1]  # type: ignore
         cache = self.state.cache
         if not cache:
             return []
         channels = []
         for channel_id in self.internal_channels[1]:
-            channel = t.cast(
-                "channels.ServerChannel | None",
-                cache.get_channel(t.cast(core.ULID, channel_id), caching._USER_REQUEST),
+            channel = cache.get_channel(
+                t.cast(core.ULID, channel_id), caching._USER_REQUEST
             )
+
             if channel:
+                if channel.__class__ not in (
+                    ServerTextChannel,
+                    VoiceChannel,
+                ) or not isinstance(channel, (ServerTextChannel, VoiceChannel)):
+                    raise TypeError(
+                        f"Cache have given us incorrect channel type: {channel.__class__!r}"
+                    )
                 channels.append(channel)
         return channels
 
@@ -788,11 +798,11 @@ class Server(BaseServer):
         /,
         *,
         safe: bool = True,
-    ) -> permissions_.Permissions:
+    ) -> Permissions:
         """Calculate permissions for given member."""
 
         if member.id == self.owner_id:
-            return permissions_.Permissions.ALL
+            return Permissions.ALL
 
         return _calculate_server_permissions(
             _sort_roles(member.roles, safe=safe, server_roles=self.roles),
@@ -818,9 +828,7 @@ class Ban:
     reason: str | None = field(repr=False, hash=False, kw_only=True, eq=False)
     """Reason for ban creation."""
 
-    user: users.DisplayUser | None = field(
-        repr=False, hash=False, kw_only=True, eq=False
-    )
+    user: DisplayUser | None = field(repr=False, hash=False, kw_only=True, eq=False)
     """The user that was banned."""
 
 
@@ -828,20 +836,20 @@ class Ban:
 class BaseMember:
     """Base representation of a member of a server on Revolt."""
 
-    state: state.State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     """State that controls this member."""
 
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server that member is on."""
 
-    _user: users.User | core.ULID = field(
+    _user: User | core.ULID = field(
         repr=True, hash=True, kw_only=True, eq=True, alias="_user"
     )
 
     @property
     def id(self) -> core.ULID:
         """The member's user ID."""
-        return self._user.id if isinstance(self._user, users.User) else self._user
+        return self._user.id if isinstance(self._user, User) else self._user
 
 
 @define(slots=True)
@@ -944,7 +952,7 @@ class MemberList:
     """A member list of a server."""
 
     members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
-    users: list[users.User] = field(repr=True, hash=True, kw_only=True, eq=True)
+    users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 __all__ = (
@@ -963,4 +971,5 @@ __all__ = (
     "BaseMember",
     "PartialMember",
     "Member",
+    "MemberList",
 )

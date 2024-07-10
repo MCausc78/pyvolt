@@ -469,6 +469,18 @@ class ServerDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
+class ServerMemberJoinEvent(BaseEvent):
+    member: servers.Member = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+        if not cache:
+            return False
+        cache.store_server_member(self.member, caching._SERVER_MEMBER_CREATE)
+        return True
+
+
+@define(slots=True)
 class ServerMemberUpdateEvent(BaseEvent):
     member: servers.PartialMember = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -495,18 +507,6 @@ class ServerMemberUpdateEvent(BaseEvent):
         if not cache or not self.after:
             return False
         cache.store_server_member(self.after, caching._SERVER_MEMBER_UPDATE)
-        return True
-
-
-@define(slots=True)
-class ServerMemberJoinEvent(BaseEvent):
-    member: servers.Member = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    def process(self) -> bool:
-        cache = self.shard.state.cache
-        if not cache:
-            return False
-        cache.store_server_member(self.member, caching._SERVER_MEMBER_CREATE)
         return True
 
 
@@ -749,3 +749,50 @@ class SessionDeleteAllEvent(AuthifierEvent):
 @define(slots=True)
 class LogoutEvent(BaseEvent):
     pass
+
+
+__all__ = (
+    "BaseEvent",
+    "ReadyEvent",
+    "BaseChannelCreateEvent",
+    "PrivateChannelCreateEvent",
+    "ServerChannelCreateEvent",
+    "ChannelCreateEvent",
+    "ChannelUpdateEvent",
+    "ChannelDeleteEvent",
+    "GroupRecipientAddEvent",
+    "GroupRecipientRemoveEvent",
+    "ChannelStartTypingEvent",
+    "ChannelStopTypingEvent",
+    "MessageAckEvent",
+    "MessageCreateEvent",
+    "MessageUpdateEvent",
+    "MessageAppendEvent",
+    "MessageDeleteEvent",
+    "MessageReactEvent",
+    "MessageUnreactEvent",
+    "MessageClearReactionEvent",
+    "BulkMessageDeleteEvent",
+    "ServerCreateEvent",
+    "ServerEmojiCreateEvent",
+    "ServerEmojiDeleteEvent",
+    "ServerUpdateEvent",
+    "ServerDeleteEvent",
+    "ServerMemberJoinEvent",
+    "ServerMemberUpdateEvent",
+    "ServerMemberLeaveEvent",
+    "RawServerRoleUpdateEvent",
+    "ServerRoleDeleteEvent",
+    "UserUpdateEvent",
+    "UserRelationshipUpdateEvent",
+    "UserSettingsUpdateEvent",
+    "UserPlatformWipeEvent",
+    "WebhookCreateEvent",
+    "WebhookUpdateEvent",
+    "WebhookDeleteEvent",
+    "AuthifierEvent",
+    "SessionCreateEvent",
+    "SessionDeleteEvent",
+    "SessionDeleteAllEvent",
+    "LogoutEvent",
+)

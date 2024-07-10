@@ -3448,7 +3448,7 @@ class HTTPClient:
         """
         return await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile())
 
-    async def mfa_status(self) -> auth.MultiFactorStatus:
+    async def mfa_status(self) -> auth.MFAStatus:
         """|coro|
 
         Gets MFA status of an account.
