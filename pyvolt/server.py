@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from datetime import datetime
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import typing as t
 
 from .base import Base
@@ -955,6 +955,12 @@ class MemberList:
     users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
+class MemberRemovalIntention(StrEnum):
+    LEAVE = "Leave"
+    KICK = "Kick"
+    BAN = "Ban"
+
+
 __all__ = (
     "ServerFlags",
     "Category",
@@ -972,4 +978,5 @@ __all__ = (
     "PartialMember",
     "Member",
     "MemberList",
+    "MemberRemovalIntention",
 )

@@ -22,7 +22,13 @@ from .channels import (
 from .emojis import ServerEmoji
 from .messages import Message, PartialMessage, AppendMessage
 from .safety_reports import CreatedReport
-from .server_members import Member, PartialMember, MemberCompositeKey, FieldsMember
+from .server_members import (
+    Member,
+    PartialMember,
+    MemberCompositeKey,
+    FieldsMember,
+    RemovalIntention,
+)
 from .servers import Server, PartialServer, PartialRole, FieldsServer, FieldsRole
 from .user_settings import UserSettings
 from .users import User, PartialUser, FieldsUser
@@ -151,6 +157,7 @@ class ClientServerMemberLeaveEvent(t.TypedDict):
     type: t.Literal["ServerMemberLeave"]
     id: str
     user: str
+    reason: RemovalIntention
 
 
 class ClientServerRoleUpdateEvent(t.TypedDict):

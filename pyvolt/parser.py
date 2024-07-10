@@ -82,7 +82,7 @@ from .events import (
     ServerDeleteEvent,
     ServerMemberJoinEvent,
     ServerMemberUpdateEvent,
-    ServerMemberLeaveEvent,
+    ServerMemberRemoveEvent,
     RawServerRoleUpdateEvent,
     ServerRoleDeleteEvent,
     UserUpdateEvent,
@@ -107,8 +107,27 @@ from .invite import (
     ServerInvite,
     Invite,
 )
-from . import message as messages
-
+from .message import (
+    Interactions,
+    Masquerade,
+    MessageWebhook,
+    PartialMessage,
+    MessageAppendData,
+    TextSystemEvent,
+    UserAddedSystemEvent,
+    UserRemovedSystemEvent,
+    UserJoinedSystemEvent,
+    UserLeftSystemEvent,
+    UserKickedSystemEvent,
+    UserBannedSystemEvent,
+    ChannelRenamedSystemEvent,
+    ChannelDescriptionChangedSystemEvent,
+    ChannelIconChangedSystemEvent,
+    ChannelOwnershipChangedSystemEvent,
+    SystemEvent,
+    MessageFlags,
+    Message,
+)
 from .permissions import Permissions, PermissionOverride
 from .read_state import ReadState
 from .server import (
@@ -123,6 +142,7 @@ from .server import (
     PartialMember,
     Member,
     MemberList,
+    MemberRemovalIntention,
 )
 from .user_settings import UserSettings
 from .user import (
@@ -752,7 +772,7 @@ class Parser:
         *,
         members: dict[core.ULID, Member] = {},
         users: dict[core.ULID, User] = {},
-    ) -> messages.Message:
+    ) -> Message:
         author_id = self.parse_id(d["author"])
         webhook = d.get("webhook")
         system = d.get("system")
@@ -773,7 +793,7 @@ class Parser:
         else:
             author = members.get(author_id) or users.get(author_id) or author_id
 
-        return messages.Message(
+        return Message(
             state=self.state,
             id=self.parse_id(d["_id"]),
             nonce=d.get("nonce"),
@@ -800,7 +820,7 @@ class Parser:
                 self.parse_message_masquerade(masquerade) if masquerade else None
             ),
             pinned=d.get("pinned") or False,
-            flags=messages.MessageFlags(d.get("flags", 0)),
+            flags=MessageFlags(d.get("flags", 0)),
         )
 
     def parse_message_append_event(
@@ -811,7 +831,7 @@ class Parser:
 
         return MessageAppendEvent(
             shard=shard,
-            data=messages.MessageAppendData(
+            data=MessageAppendData(
                 state=self.state,
                 id=self.parse_id(d["id"]),
                 channel_id=self.parse_id(d["channel"]),
@@ -825,25 +845,25 @@ class Parser:
 
     def parse_message_channel_description_changed_system_event(
         self, d: raw.ChannelDescriptionChangedSystemMessage
-    ) -> messages.ChannelDescriptionChangedSystemEvent:
-        return messages.ChannelDescriptionChangedSystemEvent(by=self.parse_id(d["by"]))
+    ) -> ChannelDescriptionChangedSystemEvent:
+        return ChannelDescriptionChangedSystemEvent(by=self.parse_id(d["by"]))
 
     def parse_message_channel_icon_changed_system_event(
         self, d: raw.ChannelIconChangedSystemMessage
-    ) -> messages.ChannelIconChangedSystemEvent:
-        return messages.ChannelIconChangedSystemEvent(by=self.parse_id(d["by"]))
+    ) -> ChannelIconChangedSystemEvent:
+        return ChannelIconChangedSystemEvent(by=self.parse_id(d["by"]))
 
     def parse_message_channel_renamed_system_event(
         self, d: raw.ChannelRenamedSystemMessage
-    ) -> messages.ChannelRenamedSystemEvent:
-        return messages.ChannelRenamedSystemEvent(
+    ) -> ChannelRenamedSystemEvent:
+        return ChannelRenamedSystemEvent(
             by=self.parse_id(d["by"]),
         )
 
     def parse_message_channel_ownership_changed_system_event(
         self, d: raw.ChannelOwnershipChangedSystemMessage
-    ) -> messages.ChannelOwnershipChangedSystemEvent:
-        return messages.ChannelOwnershipChangedSystemEvent(
+    ) -> ChannelOwnershipChangedSystemEvent:
+        return ChannelOwnershipChangedSystemEvent(
             from_=self.parse_id(d["from"]),
             to=self.parse_id(d["to"]),
         )
@@ -862,14 +882,14 @@ class Parser:
     ) -> MessageCreateEvent:
         return MessageCreateEvent(shard=shard, message=self.parse_message(d))
 
-    def parse_message_interactions(self, d: raw.Interactions) -> messages.Interactions:
-        return messages.Interactions(
+    def parse_message_interactions(self, d: raw.Interactions) -> Interactions:
+        return Interactions(
             reactions=d.get("reactions", []),
             restrict_reactions=d.get("restrict_reactions", False),
         )
 
-    def parse_message_masquerade(self, d: raw.Masquerade) -> messages.Masquerade:
-        return messages.Masquerade(
+    def parse_message_masquerade(self, d: raw.Masquerade) -> Masquerade:
+        return Masquerade(
             name=d.get("name"), avatar=d.get("avatar"), colour=d.get("colour")
         )
 
@@ -894,7 +914,7 @@ class Parser:
             emoji=d["emoji_id"],
         )
 
-    def parse_message_system_event(self, d: raw.SystemMessage) -> messages.SystemEvent:
+    def parse_message_system_event(self, d: raw.SystemMessage) -> SystemEvent:
         return {
             "text": self.parse_message_text_system_event,
             "user_added": self.parse_message_user_added_system_event,
@@ -911,8 +931,8 @@ class Parser:
 
     def parse_message_text_system_event(
         self, d: raw.TextSystemMessage
-    ) -> messages.TextSystemEvent:
-        return messages.TextSystemEvent(content=d["content"])
+    ) -> TextSystemEvent:
+        return TextSystemEvent(content=d["content"])
 
     def parse_message_unreact_event(
         self, shard: Shard, d: raw.ClientMessageUnreactEvent
@@ -937,7 +957,7 @@ class Parser:
 
         return MessageUpdateEvent(
             shard=shard,
-            message=messages.PartialMessage(
+            message=PartialMessage(
                 state=self.state,
                 id=self.parse_id(d["id"]),
                 channel_id=self.parse_id(d["channel"]),
@@ -965,45 +985,45 @@ class Parser:
 
     def parse_message_user_added_system_event(
         self, d: raw.UserAddedSystemMessage
-    ) -> messages.UserAddedSystemEvent:
-        return messages.UserAddedSystemEvent(
+    ) -> UserAddedSystemEvent:
+        return UserAddedSystemEvent(
             id=self.parse_id(d["id"]), by=self.parse_id(d["by"])
         )
 
     def parse_message_user_banned_system_event(
         self, d: raw.UserBannedSystemMessage
-    ) -> messages.UserBannedSystemEvent:
-        return messages.UserBannedSystemEvent(id=self.parse_id(d["id"]))
+    ) -> UserBannedSystemEvent:
+        return UserBannedSystemEvent(id=self.parse_id(d["id"]))
 
     def parse_message_user_joined_system_event(
         self, d: raw.UserJoinedSystemMessage
-    ) -> messages.UserJoinedSystemEvent:
-        return messages.UserJoinedSystemEvent(id=self.parse_id(d["id"]))
+    ) -> UserJoinedSystemEvent:
+        return UserJoinedSystemEvent(id=self.parse_id(d["id"]))
 
     def parse_message_user_kicked_system_event(
         self, d: raw.UserKickedSystemMessage
-    ) -> messages.UserKickedSystemEvent:
-        return messages.UserKickedSystemEvent(id=self.parse_id(d["id"]))
+    ) -> UserKickedSystemEvent:
+        return UserKickedSystemEvent(id=self.parse_id(d["id"]))
 
     def parse_message_user_left_system_event(
         self, d: raw.UserLeftSystemMessage
-    ) -> messages.UserLeftSystemEvent:
-        return messages.UserLeftSystemEvent(id=self.parse_id(d["id"]))
+    ) -> UserLeftSystemEvent:
+        return UserLeftSystemEvent(id=self.parse_id(d["id"]))
 
     def parse_message_user_remove_system_event(
         self, d: raw.UserRemoveSystemMessage
-    ) -> messages.UserRemovedSystemEvent:
-        return messages.UserRemovedSystemEvent(
+    ) -> UserRemovedSystemEvent:
+        return UserRemovedSystemEvent(
             id=self.parse_id(d["id"]), by=self.parse_id(d["by"])
         )
 
-    def parse_message_webhook(self, d: raw.MessageWebhook) -> messages.MessageWebhook:
-        return messages.MessageWebhook(
+    def parse_message_webhook(self, d: raw.MessageWebhook) -> MessageWebhook:
+        return MessageWebhook(
             name=d["name"],
             avatar=d.get("avatar"),
         )
 
-    def parse_messages(self, d: raw.BulkMessageResponse) -> list[messages.Message]:
+    def parse_messages(self, d: raw.BulkMessageResponse) -> list[Message]:
         if isinstance(d, list):
             return [self.parse_message(e) for e in d]
         elif isinstance(d, dict):
@@ -1371,12 +1391,13 @@ class Parser:
 
     def parse_server_member_leave_event(
         self, shard: Shard, d: raw.ClientServerMemberLeaveEvent
-    ) -> ServerMemberLeaveEvent:
-        return ServerMemberLeaveEvent(
+    ) -> ServerMemberRemoveEvent:
+        return ServerMemberRemoveEvent(
             shard=shard,
             server_id=self.parse_id(d["id"]),
             user_id=self.parse_id(d["user"]),
             member=None,
+            reason=MemberRemovalIntention(d["reason"]),
         )
 
     def parse_server_member_update_event(

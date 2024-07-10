@@ -22,7 +22,15 @@ from .channel import (
 from .emoji import ServerEmoji, DetachedEmoji
 from .message import PartialMessage, MessageAppendData, Message
 from .read_state import ReadState
-from .server import PartialRole, Role, PartialServer, Server, PartialMember, Member
+from .server import (
+    PartialRole,
+    Role,
+    PartialServer,
+    Server,
+    PartialMember,
+    Member,
+    MemberRemovalIntention,
+)
 from .shard import Shard
 from .user_settings import UserSettings
 from .user import UserFlags, RelationshipStatus, PartialUser, User, SelfUser
@@ -497,11 +505,12 @@ class ServerMemberUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerMemberLeaveEvent(BaseEvent):
+class ServerMemberRemoveEvent(BaseEvent):
     server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
 
     member: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    reason: MemberRemovalIntention = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -762,7 +771,7 @@ __all__ = (
     "ServerDeleteEvent",
     "ServerMemberJoinEvent",
     "ServerMemberUpdateEvent",
-    "ServerMemberLeaveEvent",
+    "ServerMemberRemoveEvent",
     "RawServerRoleUpdateEvent",
     "ServerRoleDeleteEvent",
     "UserUpdateEvent",

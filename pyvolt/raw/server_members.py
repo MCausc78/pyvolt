@@ -29,6 +29,7 @@ class MemberCompositeKey(t.TypedDict):
 
 
 FieldsMember = t.Literal["Nickname", "Avatar", "Roles", "Timeout"]
+RemovalIntention = t.Literal["Leave", "Kick", "Ban"]
 
 
 class OptionsFetchAllMembers(t.TypedDict):
@@ -53,6 +54,7 @@ __all__ = (
     "PartialMember",
     "MemberCompositeKey",
     "FieldsMember",
+    "RemovalIntention",
     "OptionsFetchAllMembers",
     "AllMemberResponse",
     "DataMemberEdit",
