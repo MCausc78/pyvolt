@@ -552,6 +552,10 @@ class Client:
         return self._state.settings
 
     async def start(self) -> None:
+        """|coro|
+
+        Starts up the bot.
+        """
         await self._state.shard.connect()
 
 

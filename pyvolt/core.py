@@ -1,4 +1,5 @@
-from collections.abc import MutableMapping
+from __future__ import annotations
+
 import datetime
 import typing as t
 import ulid
@@ -28,8 +29,6 @@ def is_defined(x: UndefinedOr[T]) -> t.TypeGuard[T]:
 
 
 class ULID(str):
-    EPOCH: int = 1420070400000
-
     @property
     def timestamp(self) -> float:
         return ulid.parse(self).timestamp().timestamp
@@ -54,6 +53,9 @@ def resolve_ulid(resolvable: ResolvableULID) -> ULID:
     return resolvable.id
 
 
+# zero ID
+Z = ULID("00000000000000000000000000")
+
 __version__: str = "1.0.0"
 
 __all__ = (
@@ -67,4 +69,5 @@ __all__ = (
     "ResolvableULID",
     "resolve_ulid",
     "__version__",
+    "Z",
 )

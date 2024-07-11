@@ -3641,4 +3641,4 @@ class HTTPClient:
         await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), params=p)
 
 
-__all__ = ("DEFAULT_HTTP_USER_AGENT", "HTTPClient")
+__all__ = ("DEFAULT_HTTP_USER_AGENT", "_STATUS_TO_ERRORS", "HTTPClient")

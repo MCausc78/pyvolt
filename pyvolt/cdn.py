@@ -9,7 +9,9 @@ import logging
 import typing as t
 from urllib.parse import quote
 
-from . import core, errors, utils
+from . import core, utils
+from .errors import APIError
+from .http import _STATUS_TO_ERRORS
 
 if t.TYPE_CHECKING:
     from .state import State
@@ -109,15 +111,47 @@ class StatelessAsset:
 
 @define(slots=True)
 class Asset(StatelessAsset):
-    state: "State" = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     tag: Tag = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    def url(self) -> str:
+    def url(
+        self,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> str:
         """:class:`str`: The asset URL."""
         url = f"{self.state.cdn_client.base}/{quote(self.tag)}/{quote(self.id)}"
+
+        params = []
+
+        if size is not None:
+            params.append(f"size={size}")
+
+        if width is not None:
+            params.append(f"width={width}")
+
+        if height is not None:
+            params.append(f"height={height}")
+
+        if max_side is not None:
+            params.append(f"max_side={max_side}")
+
+        if params:
+            url += "?" + "&".join(params)
+
         return url
 
-    async def read(self) -> bytes:
+    async def read(
+        self,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> bytes:
         """|coro|
 
         Read asset contents.
@@ -127,7 +161,9 @@ class Asset(StatelessAsset):
         :class:`bytes`
             The asset contents.
         """
-        return await self.state.cdn_client.read(self.tag, self.id)
+        return await self.state.cdn_client.read(
+            self.tag, self.id, size=size, width=width, height=height, max_side=max_side
+        )
 
 
 class Resource(abc.ABC):
@@ -204,7 +240,7 @@ class Upload(Resource):
     def icon(cls, content: Content, *, filename: str) -> te.Self:
         return cls(content, tag="icons", filename=filename)
 
-    async def upload(self, cdn_client: "CDNClient", tag: Tag, /) -> str:
+    async def upload(self, cdn_client: CDNClient, tag: Tag, /) -> str:
         form = aiohttp.FormData()
         form.add_field("file", self.content, filename=self.filename)
 
@@ -297,21 +333,34 @@ class CDNClient:
                 description = error.get("description")
                 j["type"] = "Rocket error"
                 j["err"] = f"{code} {reason}: {description}"
-            raise {
-                401: errors.Unauthorized,
-                403: errors.Forbidden,
-                404: errors.NotFound,
-                429: errors.Ratelimited,
-                500: errors.InternalServerError,
-            }.get(response.status, errors.APIError)(response, j)
+            raise _STATUS_TO_ERRORS.get(response.status, APIError)(response, j)
         return response
 
     async def read(
         self,
         tag: Tag,
         id: str,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
     ) -> bytes:
-        response = await self.request("GET", f"/{quote(tag)}/{quote(id)}")
+        params = {}
+
+        if size is not None:
+            params["size"] = size
+
+        if width is not None:
+            params["width"] = width
+
+        if height is not None:
+            params["height"] = height
+
+        if max_side is not None:
+            params["max_side"] = max_side
+
+        response = await self.request("GET", f"/{tag}/{quote(id)}", params=params)
         data = await response.read()
         response.close()
         return data
@@ -321,8 +370,8 @@ class CDNClient:
         tag: Tag,
         data: t.Any,
     ) -> str:
-        response = await self.request("POST", f"/{quote(tag)}", data=data)
-        data = await response.json()
+        response = await self.request("POST", f"/{tag}", data=data)
+        data = await response.json(loads=utils.from_json)
         response.close()
         return data["id"]
 

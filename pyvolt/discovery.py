@@ -297,9 +297,8 @@ class DiscoveryClient:
             method, self._base + path.lstrip("/"), headers=headers, **kwargs
         )
         if response.status >= 400:
-            raise DiscoveryError(
-                response, response.status, await utils._json_or_text(response)
-            )
+            body = await utils._json_or_text(response)
+            raise DiscoveryError(response, response.status, body)
         return response
 
     async def request(self, method: str, path: str, **kwargs) -> t.Any:
