@@ -257,11 +257,11 @@ class Shard:
                     headers=self._headers(),
                     params={
                         "version": "1",
-                        "format": "json",
+                        "format": self.format.value,
                     },
                 )
             except OSError as exc:
-                # TODO: 10053
+                # TODO: Handle 10053?
                 if exc.errno in (54, 10054):  # Connection reset by peer
                     await asyncio.sleep(1.5)
                     continue

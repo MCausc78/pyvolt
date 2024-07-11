@@ -198,7 +198,7 @@ class HTTPClient:
                     **kwargs,
                 )
             except OSError as exc:
-                # TODO: 10053
+                # TODO: Handle 10053?
                 if exc.errno in (54, 10054):  # Connection reset by peer
                     await asyncio.sleep(1.5)
                     continue
@@ -2514,13 +2514,43 @@ class HTTPClient:
             self.state.parser.parse_read_state(rs)
             for rs in await self.request(routes.SYNC_GET_UNREADS.compile())
         ]
-
-    async def set_user_settings(
+    
+    @t.overload
+    async def edit_user_settings(
         self,
-        timestamp: datetime | int | None = None,
-        dict_settings: dict[str, str] = {},
+        timestamp: datetime | int | None = ...,
+        dict_settings: dict[str, str] = ...,
         /,
         **kw_settings: str,
+    ) -> None:
+        ...
+    
+    @t.overload
+    async def edit_user_settings(
+        self,
+        dict_settings: dict[str, str] = ...,
+        timestamp: datetime | int | None = ...,
+        /,
+        **kw_settings: str,
+    ) -> None:
+        ...
+
+    @t.overload
+    async def edit_user_settings(
+        self,
+        a1: dict[str, str] | datetime | int | None = ...,
+        a2: dict[str, str] | datetime | int | None = ...,
+        /,
+        **kwargs: str,
+    ) -> None:
+        ...
+
+    async def edit_user_settings(
+        self,
+        a1: dict[str, str] | datetime | int | None = None,
+        a2: dict[str, str] | datetime | int | None = {},
+        /,
+        **kwargs: str,
     ) -> None:
         """|coro|
 
@@ -2529,8 +2559,30 @@ class HTTPClient:
         .. note::
             This can only be used by non-bot accounts.
         """
-        j: raw.DataSetSettings = dict_settings | kw_settings
+
         p: raw.OptionsSetSettings = {}
+
+        # probably JavaScript way
+        if isinstance(a1, dict):
+            if isinstance(a2, dict):
+                j: raw.DataSetSettings = a1 | a2
+                timestamp: datetime | int | None = None
+            else:
+                j = a1
+                timestamp = a2
+        elif isinstance(a2, dict):
+            j = a2
+            timestamp = a1
+        else:
+            j = {}
+            if a1 is None or isinstance(a1, (datetime, int)):
+                timestamp = a1
+            elif a2 is None or isinstance(a2, (datetime, int)):
+                timestamp = a2
+            else:
+                timestamp = None
+
+        j |= kwargs
         if timestamp is not None:
             if isinstance(timestamp, datetime):
                 timestamp = int(timestamp.timestamp())

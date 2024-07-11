@@ -191,7 +191,7 @@ class DiscoveryTheme:
     css: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme CSS."""
 
-    # TODO: `apply` method
+    # TODO: Add `Theme.apply` method.
     # The `theme` user setting has following JSON payload:
     # - `appearance:theme:overrides` object, containing `Theme.variables` value
     # - [Optional, if `Theme.css` is not none] `appearance:theme:css` object, containing `Theme.css` value
@@ -203,6 +203,7 @@ class DiscoveryTheme:
     # if theme.css is not None:
     #   setting["appearance:theme:css"] = theme.css
     # payload = {"theme": to_json(setting)} # "Modify User Settings" payload
+    # await http.set_user_settings(payload)
 
 
 @define(slots=True)

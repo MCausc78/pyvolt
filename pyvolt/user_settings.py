@@ -40,10 +40,10 @@ class UserSettings:
 
     async def edit(
         self,
-        timestamp: datetime | int | None = None,
-        dict_settings: dict[str, str] = {},
+        a1: dict[str, str] | datetime | int | None = None,
+        a2: dict[str, str] | datetime | int | None = {},
         /,
-        **kw_settings: str,
+        **kwargs: str,
     ) -> None:
         """|coro|
 
@@ -52,9 +52,8 @@ class UserSettings:
         .. note::
             This can only be used by non-bot accounts.
         """
-        return await self.state.http.set_user_settings(
-            timestamp, dict_settings, **kw_settings
+        return await self.state.http.edit_user_settings(
+            a1, a2, **kwargs
         )
-
 
 __all__ = ("UserSettings",)

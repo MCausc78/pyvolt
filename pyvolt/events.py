@@ -33,7 +33,7 @@ from .server import (
 )
 from .shard import Shard
 from .user_settings import UserSettings
-from .user import UserFlags, RelationshipStatus, PartialUser, User, SelfUser
+from .user import UserFlags, RelationshipStatus, Relationship, PartialUser, User, SelfUser
 from .webhook import Webhook, PartialWebhook
 
 
@@ -258,7 +258,7 @@ class MessageAckEvent(BaseEvent):
 
         read_state = cache.get_read_state(self.channel_id, caching._MESSAGE_ACK)
         if read_state:
-            # TODO: Still think what we should do in case of mentions.
+            # TODO: What we should do in case of mentions? This solution sucks.
             if (
                 read_state.last_message_id
                 and self.message_id >= read_state.last_message_id
@@ -654,6 +654,16 @@ class UserRelationshipUpdateEvent(BaseEvent):
             self.before = self.old_user.relationship
 
     def process(self) -> bool:
+        me = self.shard.state.me
+
+        if me:
+            relation = me.relations.get(self.new_user.id)
+
+            if relation:
+                me.relations[self.new_user.id].status = self.new_user.relationship
+            else:
+                me.relations[self.new_user.id] = Relationship(id=self.new_user.id, status=self.new_user.relationship)
+
         cache = self.shard.state.cache
         if not cache:
             return False
