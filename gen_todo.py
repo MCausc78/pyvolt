@@ -47,7 +47,8 @@ def main():
                 span = item[1]
                 fragment = f"L{item[0]}C{span[0]}-L{item[0]}C{span[1]}"
                 todo_md.write(
-                    f"- https://github.com/MCausc78/pyvolt/blob/{branch}/{file}#{fragment} {item[2]}\n"
+                    f"- {item[2]}\n"
+                    f"  Source: https://github.com/MCausc78/pyvolt/blob/{branch}/{file}#{fragment}\n"
                 )
 
 
