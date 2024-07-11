@@ -2514,7 +2514,7 @@ class HTTPClient:
             self.state.parser.parse_read_state(rs)
             for rs in await self.request(routes.SYNC_GET_UNREADS.compile())
         ]
-    
+
     @t.overload
     async def edit_user_settings(
         self,
@@ -2522,9 +2522,8 @@ class HTTPClient:
         dict_settings: dict[str, str] = ...,
         /,
         **kw_settings: str,
-    ) -> None:
-        ...
-    
+    ) -> None: ...
+
     @t.overload
     async def edit_user_settings(
         self,
@@ -2532,8 +2531,7 @@ class HTTPClient:
         timestamp: datetime | int | None = ...,
         /,
         **kw_settings: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @t.overload
     async def edit_user_settings(
@@ -2542,8 +2540,7 @@ class HTTPClient:
         a2: dict[str, str] | datetime | int | None = ...,
         /,
         **kwargs: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     async def edit_user_settings(
         self,

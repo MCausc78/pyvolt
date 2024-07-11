@@ -52,8 +52,7 @@ class UserSettings:
         .. note::
             This can only be used by non-bot accounts.
         """
-        return await self.state.http.edit_user_settings(
-            a1, a2, **kwargs
-        )
+        return await self.state.http.edit_user_settings(a1, a2, **kwargs)
+
 
 __all__ = ("UserSettings",)

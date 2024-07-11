@@ -1149,7 +1149,7 @@ class Parser:
         )
 
     def parse_ready_event(self, shard: Shard, d: raw.ClientReadyEvent) -> ReadyEvent:
-        read_states = [self.parse_read_state(rs) for rs in d["unreads"]]
+        read_states = [self.parse_read_state(rs) for rs in d.get("unreads", [])]
 
         return ReadyEvent(
             shard=shard,
@@ -1161,9 +1161,9 @@ class Parser:
             channels=[self.parse_channel(c) for c in d["channels"]],
             members=[self.parse_member(m) for m in d["members"]],
             emojis=[self.parse_server_emoji(e) for e in d["emojis"]],
-            me=self.parse_self_user(d["me"]),
-            settings=self.parse_user_settings(d["settings"]),
-            read_states=[self.parse_read_state(rs) for rs in d["unreads"]],
+            me=self.parse_self_user(d.get("me", d["users"][-1])),
+            settings=self.parse_user_settings(d.get("settings", {})),
+            read_states=read_states,
         )
 
     def parse_relationship(self, d: raw.Relationship) -> Relationship:

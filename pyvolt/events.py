@@ -33,7 +33,14 @@ from .server import (
 )
 from .shard import Shard
 from .user_settings import UserSettings
-from .user import UserFlags, RelationshipStatus, Relationship, PartialUser, User, SelfUser
+from .user import (
+    UserFlags,
+    RelationshipStatus,
+    Relationship,
+    PartialUser,
+    User,
+    SelfUser,
+)
 from .webhook import Webhook, PartialWebhook
 
 
@@ -662,7 +669,9 @@ class UserRelationshipUpdateEvent(BaseEvent):
             if relation:
                 me.relations[self.new_user.id].status = self.new_user.relationship
             else:
-                me.relations[self.new_user.id] = Relationship(id=self.new_user.id, status=self.new_user.relationship)
+                me.relations[self.new_user.id] = Relationship(
+                    id=self.new_user.id, status=self.new_user.relationship
+                )
 
         cache = self.shard.state.cache
         if not cache:
