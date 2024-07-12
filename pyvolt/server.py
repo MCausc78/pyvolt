@@ -19,8 +19,8 @@ from .state import State
 from .user import DisplayUser, User
 
 if t.TYPE_CHECKING:
-    from .channel import ChannelType, ServerTextChannel, VoiceChannel, ServerChannel
     from . import raw
+    from .channel import ChannelType, ServerTextChannel, VoiceChannel, ServerChannel
 
 
 class ServerFlags(IntFlag):
@@ -442,6 +442,23 @@ class BaseServer(Base):
             analytics=analytics,
         )
 
+    async def join(self) -> Server:
+        """|coro|
+
+        Joins the server.
+
+        Raises
+        ------
+        Forbidden
+            You're banned.
+        NotFound
+            Either server is not discoverable, or it does not exist at all.
+        APIError
+            Accepting the invite failed.
+        """
+        server = await self.state.http.accept_invite(self.id)
+        return server  # type: ignore
+
     async def leave(self, *, leave_silently: bool | None = None) -> None:
         """|coro|
 
@@ -750,7 +767,7 @@ class Server(BaseServer):
             return [channel.id for channel in self.internal_channels[1]]  # type: ignore
 
     @property
-    def channels(self) -> list[channels.ServerChannel]:
+    def channels(self) -> list[ServerChannel]:
         """The channels within this server."""
 
         if not self.internal_channels[0]:
@@ -760,9 +777,8 @@ class Server(BaseServer):
             return []
         channels = []
         for channel_id in self.internal_channels[1]:
-            channel = cache.get_channel(
-                t.cast(core.ULID, channel_id), caching._USER_REQUEST
-            )
+            id: core.ULID = channel_id  # type: ignore
+            channel = cache.get_channel(id, caching._USER_REQUEST)
 
             if channel:
                 if channel.__class__ not in (
@@ -783,12 +799,20 @@ class Server(BaseServer):
             return []
         return cache.get_all_server_members_of(self.id, caching._USER_REQUEST) or []
 
+    @property
+    def members_mapping(self) -> dict[core.ULID, Member]:
+        """The members mapping of this server."""
+        cache = self.state.cache
+        if not cache:
+            return {}
+        return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
+
     def is_verified(self) -> bool:
-        """Whether the server is verified."""
+        """:class:`bool`: Whether the server is verified."""
         return ServerFlags.VERIFIED in self.flags
 
     def is_official(self) -> bool:
-        """Whether the server is ran by Revolt team."""
+        """:class:`bool`: Whether the server is ran by Revolt team."""
         return ServerFlags.OFFICIAL in self.flags
 
     def permissions_for(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from datetime import datetime
 import logging
 import typing as t
@@ -1749,11 +1750,22 @@ class Parser:
     def parse_user_settings_update_event(
         self, shard: Shard, d: raw.ClientUserSettingsUpdateEvent
     ) -> UserSettingsUpdateEvent:
+        partial = self.parse_user_settings(d["update"])
+        before = shard.state.settings
+
+        if not before.fake:
+            before = copy(before)
+            after = copy(before)
+            after.value.update(partial.value)
+        else:
+            after = before
+
         return UserSettingsUpdateEvent(
             shard=shard,
             current_user_id=self.parse_id(d["id"]),
-            before=self.state.settings,
-            after=self.parse_user_settings(d["update"]),
+            partial=partial,
+            before=before,
+            after=after,
         )
 
     def parse_user_status(self, d: raw.UserStatus) -> UserStatus:

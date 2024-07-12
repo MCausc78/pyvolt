@@ -687,6 +687,8 @@ class UserSettingsUpdateEvent(BaseEvent):
     current_user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current user ID."""
 
+    partial: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+
     before: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
     after: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
 

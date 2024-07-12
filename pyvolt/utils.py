@@ -62,7 +62,7 @@ _TRUE: t.Literal["true"] = "true"
 _FALSE: t.Literal["false"] = "false"
 
 
-def _bool(b: bool) -> raw.Bool:
+def _bool(b: bool) -> t.Literal["true", "false"]:
     return _TRUE if b else _FALSE
 
 

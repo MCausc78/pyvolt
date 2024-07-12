@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import IntFlag, StrEnum
 import typing as t
 
+from . import cache as caching, cdn, core
 from .base import Base
 from .channel import TextChannel, ServerChannel
 from .embed import StatelessEmbed, Embed
@@ -13,9 +14,6 @@ from .emoji import ResolvableEmoji
 from .safety_reports import ContentReportReason
 from .server import Member
 from .user import User
-
-from . import cache as caching, cdn, core
-
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -715,6 +713,10 @@ class Message(BaseMessage):
     def embeds(self) -> list[Embed]:
         """The attached embeds to this message."""
         return [e._stateful(self.state) for e in self.internal_embeds]
+
+    def is_silent(self) -> bool:
+        """:class:`bool`: Whether the message is silent."""
+        return MessageFlags.SUPPRESS_NOTIFICATIONS in self.flags
 
 
 __all__ = (

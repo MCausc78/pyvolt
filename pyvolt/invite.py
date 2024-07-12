@@ -6,9 +6,11 @@ import typing as t
 
 from . import cdn, core
 
-from .channel import GroupChannel
 from .server import ServerFlags, Server
 from .state import State
+
+if t.TYPE_CHECKING:
+    from .channel import GroupChannel
 
 
 @define(slots=True)

@@ -4,13 +4,17 @@ import aiohttp
 import asyncio
 import builtins
 from collections import abc as ca
+import inspect
+from functools import wraps
 import logging
 import sys
 import typing as t
 
+from . import core, utils
 from .cache import Cache, MapCache
 from .cdn import CDNClient
 from .channel import SavedMessagesChannel
+from .events import BaseEvent
 from .http import HTTPClient
 from .parser import Parser
 from .server import Server
@@ -19,7 +23,6 @@ from .state import State
 from .user_settings import UserSettings
 from .user import SelfUser
 
-from . import core, events, utils
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -316,11 +319,13 @@ class ClientEventHandler(EventHandler):
         return await self._handle(shard, d)
 
 
-EventT = t.TypeVar("EventT", bound="events.BaseEvent")
+# OOP in Python sucks.
+ClientT = t.TypeVar("ClientT", bound="Client")
+EventT = t.TypeVar("EventT", bound="BaseEvent")
 
 
-def _parents_of(type: type[events.BaseEvent]) -> tuple[type[events.BaseEvent], ...]:
-    if type is events.BaseEvent:
+def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
+    if type is BaseEvent:
         return ()
     tmp: t.Any = type.__mro__[:-2]
     return tmp
@@ -378,13 +383,11 @@ class Client:
     ) -> None:
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
         self._handlers: dict[
-            type[events.BaseEvent],
-            list[utils.MaybeAwaitableFunc[[events.BaseEvent], None]],
+            type[BaseEvent],
+            list[utils.MaybeAwaitableFunc[[BaseEvent], None]],
         ] = {}
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
-        self._types: dict[
-            type[events.BaseEvent], tuple[type[events.BaseEvent], ...]
-        ] = {}
+        self._types: dict[type[BaseEvent], tuple[type[BaseEvent], ...]] = {}
         self._i = 0
 
         self.extra = {}
@@ -437,12 +440,13 @@ class Client:
                     )
                 )
             )
+        self._subscribe_methods()
 
     def _get_i(self) -> int:
         self._i += 1
         return self._i
 
-    async def on_error(self, event: events.BaseEvent) -> None:
+    async def on_error(self, event: BaseEvent) -> None:
         _, exc, _ = sys.exc_info()
         _L.exception(
             "one of %s handlers raised an exception",
@@ -478,7 +482,7 @@ class Client:
         else:
             _L.debug("%s processing was cancelled", event.__class__.__name__)
 
-    def dispatch(self, event: events.BaseEvent) -> None:
+    def dispatch(self, event: BaseEvent) -> None:
         """Dispatches a event."""
 
         et = builtins.type(event)
@@ -517,12 +521,35 @@ class Client:
         utils.MaybeAwaitableFunc[[EventT], None],
     ]:
         def decorator(
-            callback: utils.MaybeAwaitableFunc[[EventT], None]
+            handler: utils.MaybeAwaitableFunc[[EventT], None]
         ) -> utils.MaybeAwaitableFunc[[EventT], None]:
-            self.subscribe(event, callback)
+            self.subscribe(event, handler)
+            return handler
+
+        return decorator
+
+    @staticmethod
+    def listens_on(event: type[EventT]) -> ca.Callable[
+        [utils.MaybeAwaitableFunc[[ClientT, EventT], None]],
+        utils.MaybeAwaitableFunc[[ClientT, EventT], None],
+    ]:
+        def decorator(
+            handler: utils.MaybeAwaitableFunc[[ClientT, EventT], None]
+        ) -> utils.MaybeAwaitableFunc[[ClientT, EventT], None]:
+            @wraps(handler)
+            def callback(*args, **kwargs) -> utils.MaybeAwaitable[None]:
+                return handler(*args, **kwargs)
+
+            callback.__pyvolt_handles__ = event  # type: ignore
             return callback
 
         return decorator
+
+    def _subscribe_methods(self) -> None:
+        for _, callback in inspect.getmembers(
+            self, lambda func: hasattr(func, "__pyvolt_handles__")
+        ):
+            self.subscribe(callback.__pyvolt_handles__, callback)
 
     @property
     def me(self) -> SelfUser | None:

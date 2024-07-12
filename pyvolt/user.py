@@ -609,6 +609,68 @@ class User(DisplayUser):
         if core.is_defined(data.online):
             self.online = data.online
 
+    # flags
+    def is_suspended(self) -> bool:
+        """:class:`bool`: Whether this user has been suspended from the platform."""
+        return UserFlags.SUSPENDED in self.flags
+
+    def is_deleted(self) -> bool:
+        """:class:`bool`: Whether this user is deleted his account."""
+        return UserFlags.DELETED in self.flags
+
+    def is_banned(self) -> bool:
+        """:class:`bool`: Whether this user is banned off the platform."""
+        return UserFlags.BANNED in self.flags
+
+    def is_spammer(self) -> bool:
+        """:class:`bool`: Whether this user was marked as spam and removed from platform."""
+        return UserFlags.SPAM in self.flags
+
+    # badges
+    def is_developer(self) -> bool:
+        """:class:`bool`: Whether this user is Revolt developer."""
+        return UserBadges.DEVELOPER in self.badges
+
+    def is_translator(self) -> bool:
+        """:class:`bool`: Whether this user helped translate Revolt."""
+        return UserBadges.TRANSLATOR in self.badges
+
+    def is_supporter(self) -> bool:
+        """:class:`bool`: Whether this user monetarily supported Revolt."""
+        return UserBadges.SUPPORTER in self.badges
+
+    def is_responsible_disclosure(self) -> bool:
+        """:class:`bool`: Whether this user responsibly disclosed a security issue."""
+        return UserBadges.RESPONSIBLE_DISCLOSURE in self.badges
+
+    def is_founder(self) -> bool:
+        """:class:`bool`: Whether this user is Revolt founder."""
+        return UserBadges.FOUNDER in self.badges
+
+    def is_platform_moderator(self) -> bool:
+        """:class:`bool`: Whether this user is platform moderator."""
+        return UserBadges.PLATFORM_MODERATION in self.badges
+
+    def is_active_supporter(self) -> bool:
+        """:class:`bool`: Whether this user is active monetary supporter."""
+        return UserBadges.ACTIVE_SUPPORTER in self.badges
+
+    def is_paw(self) -> bool:
+        """:class:`bool`: Whether this user is fox/raccoon (🦊🦝)."""
+        return UserBadges.PAW in self.badges
+
+    def is_early_adopter(self) -> bool:
+        """:class:`bool`: Whether this user have joined Revolt as one of the first 1000 users in 2021."""
+        return UserBadges.EARLY_ADOPTER in self.badges
+
+    def is_relevant_joke_1(self) -> bool:
+        """:class:`bool`: Whether this user have given funny joke (Called "sus", displayed as Amogus in Revite)."""
+        return UserBadges.RESERVED_RELEVANT_JOKE_BADGE_1 in self.badges
+
+    def is_relevant_joke_2(self) -> bool:
+        """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
+        return UserBadges.RESERVED_RELEVANT_JOKE_BADGE_2 in self.badges
+
     async def profile(self) -> UserProfile:
         """|coro|
 

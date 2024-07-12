@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 from attrs import define, field
 
-from . import base, core
+from . import core
+from .base import Base
 
 
 @define(slots=True)
-class BaseEmoji(base.Base):
+class BaseEmoji(Base):
     """Representation of an emoji on Revolt."""
 
     id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)

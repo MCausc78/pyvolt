@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 from attrs import define, field
 from enum import StrEnum
@@ -14,7 +16,7 @@ class _BaseEmbed(abc.ABC):
     """The message embed."""
 
     @abc.abstractmethod
-    def _stateful(self, state: "State") -> "Embed": ...
+    def _stateful(self, state: State) -> Embed: ...
 
 
 class EmbedSpecial(abc.ABC):
@@ -156,7 +158,7 @@ class ImageEmbed(_BaseEmbed):
     size: ImageSize = field(repr=True, hash=True, kw_only=True, eq=True)
     """The positioning and size of the image."""
 
-    def _stateful(self, state: "State") -> "Embed":
+    def _stateful(self, state: State) -> Embed:
         return self
 
 
@@ -173,7 +175,7 @@ class VideoEmbed(_BaseEmbed):
     height: int = field(repr=True, hash=True, kw_only=True, eq=True)
     """The height of the video."""
 
-    def _stateful(self, state: "State") -> "Embed":
+    def _stateful(self, state: State) -> Embed:
         return self
 
 
@@ -211,7 +213,7 @@ class WebsiteEmbed(_BaseEmbed):
     colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The CSS colour of this embed."""
 
-    def _stateful(self, state: "State") -> "Embed":
+    def _stateful(self, state: State) -> Embed:
         return self
 
 
@@ -239,7 +241,7 @@ class StatelessTextEmbed(_BaseEmbed):
     colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The CSS colour of this embed."""
 
-    def _stateful(self, state: "State") -> "Embed":
+    def _stateful(self, state: State) -> Embed:
         return TextEmbed(
             icon_url=self.icon_url,
             url=self.url,
@@ -255,7 +257,7 @@ class StatelessTextEmbed(_BaseEmbed):
 class TextEmbed(StatelessTextEmbed):
     """Representation of text embed within Revolt message."""
 
-    state: "State" = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     @property
     def media(self) -> cdn.Asset | None:
@@ -270,7 +272,7 @@ class TextEmbed(StatelessTextEmbed):
 class NoneEmbed(_BaseEmbed):
     """Embed that holds nothing."""
 
-    def _stateful(self, state: "State") -> "Embed":
+    def _stateful(self, state: State) -> Embed:
         return self
 
 

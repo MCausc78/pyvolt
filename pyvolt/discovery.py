@@ -80,21 +80,6 @@ class DiscoveryServer(BaseServer):
             self.state, "banners"
         )
 
-    async def join(self) -> Server:
-        """|coro|
-
-        Joins the server.
-
-        Raises
-        ------
-        :class:`Forbidden`
-            You're banned.
-        :class:`APIError`
-            Accepting the invite failed.
-        """
-        server = await self.state.http.accept_invite(self.invite_code)
-        return server  # type: ignore
-
 
 @define(slots=True)
 class DiscoveryServersPage:
