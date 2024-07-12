@@ -2499,7 +2499,7 @@ class HTTPClient:
         # Sync endpoints aren't meant to be used with bot accounts
         j: raw.OptionsFetchSettings = {"keys": keys}
         return self.state.parser.parse_user_settings(
-            await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j),
+            await self.request(routes.SYNC_GET_SETTINGS.compile(), json=j),
         )
 
     async def get_unreads(self) -> list[ReadState]:
