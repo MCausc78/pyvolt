@@ -3,11 +3,11 @@ from __future__ import annotations
 import abc
 import aiohttp
 import asyncio
-from enum import StrEnum
 import logging
 import typing as t
 
 from . import core, utils
+from .enums import Enum
 from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
 if t.TYPE_CHECKING:
@@ -44,9 +44,9 @@ DEFAULT_SHARD_USER_AGENT = (
 )
 
 
-class ShardFormat(StrEnum):
-    JSON = "json"
-    MSGPACK = "msgpack"
+class ShardFormat(Enum):
+    json = "json"
+    msgpack = "msgpack"
 
 
 class Shard:
@@ -83,7 +83,7 @@ class Shard:
         base: str | None = None,
         bot: bool = True,
         connect_delay: int | float | None = 2,
-        format: ShardFormat = ShardFormat.JSON,
+        format: ShardFormat = ShardFormat.json,
         handler: EventHandler | None = None,
         reconnect_on_timeout: bool = True,
         retries: int | None = None,
@@ -94,7 +94,7 @@ class Shard:
         state: State,
         user_agent: str | None = None,
     ) -> None:
-        if format is ShardFormat.MSGPACK and not _HAS_MSGPACK:
+        if format == ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError("Cannot use msgpack format without dependency")
 
         self._closed = False
@@ -117,10 +117,10 @@ class Shard:
         self.user_agent = user_agent or DEFAULT_SHARD_USER_AGENT
 
         self.recv = (
-            self._recv_json if format is ShardFormat.JSON else self._recv_msgpack
+            self._recv_json if format == ShardFormat.json else self._recv_msgpack
         )
         self.send = (
-            self._send_json if format is ShardFormat.JSON else self._send_msgpack
+            self._send_json if format == ShardFormat.json else self._send_msgpack
         )
 
     def is_closed(self) -> bool:

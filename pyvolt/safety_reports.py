@@ -1,74 +1,74 @@
-from enum import StrEnum
+from .enums import Enum
 
 
-class ContentReportReason(StrEnum):
+class ContentReportReason(Enum):
     """The reason for reporting content (message or server)."""
 
-    NONE = "NoneSpecified"
+    none = "NoneSpecified"
     """No reason has been specified."""
 
-    ILLEGAL = "Illegal"
+    illegal = "Illegal"
     """Illegal content catch-all reason."""
 
-    ILLEGAL_GOODS = "IllegalGoods"
+    illegal_goods = "IllegalGoods"
     """Selling or facilitating use of drugs or other illegal goods."""
 
-    ILLEGAL_EXTORTION = "IllegalExtortion"
+    illegal_extortion = "IllegalExtortion"
     """Extortion or blackmail."""
 
-    ILLEGAL_PORNOGRAPHY = "IllegalPornography"
+    illegal_pornography = "IllegalPornography"
     """Revenge or child pornography."""
 
-    ILLEGAL_HACKING = "IllegalHacking"
+    illegal_hacking = "IllegalHacking"
     """Illegal hacking activity."""
 
-    EXTREME_VIOLENCE = "ExtremeViolence"
+    extreme_violence = "ExtremeViolence"
     """Extreme violence, gore, or animal cruelty. With exception to violence potrayed in media / creative arts."""
 
-    PROMOTES_HARM = "PromotesHarm"
+    promotes_harm = "PromotesHarm"
     """Content that promotes harm to others / self."""
 
-    UNSOLICITED_SPAM = "UnsolicitedSpam"
+    unsolicited_spam = "UnsolicitedSpam"
     """Unsolicited advertisements."""
 
-    RAID = "Raid"
+    raid = "Raid"
     """This is a raid."""
 
-    SPAM_ABUSE = "SpamAbuse"
+    spam_abuse = "SpamAbuse"
     """Spam or platform abuse."""
 
-    SCAMS_FRAUD = "ScamsFraud"
+    scams_fraud = "ScamsFraud"
     """Scams or fraud."""
 
-    MALWARE = "Malware"
+    malware = "Malware"
     """Distribution of malware or malicious links."""
 
-    HARASSMENT = "Harassment"
+    harassment = "Harassment"
     """Harassment or abuse targeted at another user."""
 
 
-class UserReportReason(StrEnum):
+class UserReportReason(Enum):
     """Reason for reporting a user."""
 
-    NONE = "NoneSpecified"
+    none = "NoneSpecified"
     """No reason has been specified."""
 
-    UNSOLICITED_SPAM = "UnsolicitedSpam"
+    unsolicited_spam = "UnsolicitedSpam"
     """Unsolicited advertisements."""
 
-    SPAM_ABUSE = "SpamAbuse"
+    spam_abuse = "SpamAbuse"
     """User is sending spam or otherwise abusing the platform."""
 
-    INAPPROPRIATE_PROFILE = "InappropriateProfile"
+    inappropriate_profile = "InappropriateProfile"
     """User's profile contains inappropriate content for a general audience."""
 
-    IMPERSONATION = "Impersonation"
+    impersonation = "Impersonation"
     """User is impersonating another user."""
 
-    BAN_EVASION = "BanEvasion"
+    ban_evasion = "BanEvasion"
     """User is evading a ban."""
 
-    UNDERAGE = "Underage"
+    underage = "Underage"
     """User is not of minimum age to use the platform."""
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from attrs import define, field
 from datetime import datetime
-from enum import IntFlag, StrEnum
+from enum import IntFlag
 import typing as t
 
 from . import cache as caching, cdn, core
@@ -11,6 +11,7 @@ from .base import Base
 from .channel import TextChannel, ServerChannel
 from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
+from .enums import Enum
 from .safety_reports import ContentReportReason
 from .server import Member
 from .user import BaseUser, User
@@ -164,10 +165,10 @@ class SendableEmbed:
         return j
 
 
-class MessageSort(StrEnum):
-    RELEVANCE = "Relevance"
-    LATEST = "Latest"
-    OLDEST = "Oldest"
+class MessageSort(Enum):
+    relevance = "Relevance"
+    latest = "Latest"
+    oldest = "Oldest"
 
 
 @define(slots=True)

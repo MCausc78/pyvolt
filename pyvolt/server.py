@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from datetime import datetime
-from enum import IntFlag, StrEnum
+from enum import IntFlag
 import typing as t
 
 from . import (
@@ -13,6 +13,7 @@ from . import (
 )
 from .base import Base
 from .bot import BaseBot
+from .enums import Enum
 from .errors import NoData
 from .permissions import Permissions, PermissionOverride
 from .safety_reports import ContentReportReason
@@ -327,9 +328,8 @@ class BaseServer(Base):
         """
         from .channel import ChannelType
 
-        type = ChannelType.TEXT
         channel = await self.create_channel(
-            type=type, name=name, description=description, nsfw=nsfw
+            type=ChannelType.text, name=name, description=description, nsfw=nsfw
         )
         return channel  # type: ignore
 
@@ -349,9 +349,8 @@ class BaseServer(Base):
         """
         from .channel import ChannelType
 
-        type = ChannelType.VOICE
         channel = await self.create_channel(
-            type=type, name=name, description=description, nsfw=nsfw
+            type=ChannelType.voice, name=name, description=description, nsfw=nsfw
         )
         return channel  # type: ignore
 
@@ -974,10 +973,12 @@ class MemberList:
     users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
-class MemberRemovalIntention(StrEnum):
-    LEAVE = "Leave"
-    KICK = "Kick"
-    BAN = "Ban"
+class MemberRemovalIntention(Enum):
+    """Reason why member was removed from server."""
+
+    leave = "Leave"
+    kick = "Kick"
+    ban = "Ban"
 
 
 __all__ = (

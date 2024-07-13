@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from attrs import define, field
-from enum import IntFlag, StrEnum
+from enum import IntFlag
 import typing as t
 
 from . import cdn, core
 from .base import Base
+from .enums import Enum
 from .permissions import UserPermissions
 from .safety_reports import UserReportReason
 
@@ -17,20 +18,20 @@ if t.TYPE_CHECKING:
     from .state import State
 
 
-class Presence(StrEnum):
-    ONLINE = "Online"
+class Presence(Enum):
+    online = "Online"
     """User is online."""
 
-    IDLE = "Idle"
+    idle = "Idle"
     """User is not currently available."""
 
-    FOCUS = "Focus"
+    focus = "Focus"
     """User is focusing / will only receive mentions."""
 
-    BUSY = "Busy"
+    busy = "Busy"
     """User is busy / will not receive any notifications."""
 
-    INVISIBLE = "Invisible"
+    invisible = "Invisible"
     """User appears to be offline."""
 
 
@@ -248,28 +249,28 @@ class UserFlags(IntFlag):
     """User was marked as spam and removed from platform."""
 
 
-class RelationshipStatus(StrEnum):
+class RelationshipStatus(Enum):
     """User's relationship with another user (or themselves)."""
 
-    NONE = "None"
+    none = "None"
     """No relationship with other user."""
 
-    USER = "User"
+    user = "User"
     """Other user is us."""
 
-    FRIEND = "Friend"
+    friend = "Friend"
     """Friends with the other user."""
 
-    OUTGOING = "Outgoing"
+    outgoing = "Outgoing"
     """Pending friend request to user."""
 
-    INCOMING = "Incoming"
+    incoming = "Incoming"
     """Incoming friend request from user."""
 
-    BLOCKED = "Blocked"
+    blocked = "Blocked"
     """Blocked this user."""
 
-    BLOCKED_OTHER = "BlockedOther"
+    blocked_other = "BlockedOther"
     """Blocked by this user."""
 
 
@@ -535,18 +536,18 @@ def _calculate_user_permissions(
     if (
         user_privileged
         or user_id == perspective_id
-        or user_relationship == RelationshipStatus.FRIEND
+        or user_relationship == RelationshipStatus.friend
     ):
         return UserPermissions.ALL
 
     if user_relationship in (
-        RelationshipStatus.BLOCKED,
-        RelationshipStatus.BLOCKED_OTHER,
+        RelationshipStatus.blocked,
+        RelationshipStatus.blocked_other,
     ):
         return UserPermissions.ACCESS
 
     result = 0
-    if user_relationship in (RelationshipStatus.INCOMING, RelationshipStatus.OUTGOING):
+    if user_relationship in (RelationshipStatus.incoming, RelationshipStatus.outgoing):
         result |= UserPermissions.ACCESS.value
 
     if user_bot or perspective_bot:

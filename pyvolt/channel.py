@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 from attrs import define, field
 import contextlib
-from enum import StrEnum
 import typing as t
 
 from . import (
@@ -14,6 +13,7 @@ from . import (
 
 from .base import Base
 from .bot import BaseBot
+from .enums import Enum
 from .invite import Invite
 from .permissions import (
     Permissions,
@@ -39,11 +39,11 @@ if t.TYPE_CHECKING:
     from .shard import Shard
 
 
-class ChannelType(StrEnum):
-    TEXT = "Text"
+class ChannelType(Enum):
+    text = "Text"
     """Text channel."""
 
-    VOICE = "Voice"
+    voice = "Voice"
     """Voice channel."""
 
 

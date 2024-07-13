@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import aiohttp
 from attrs import define, field
-from enum import StrEnum
 import logging
 import typing as t
 
 from . import cdn, core, utils
-
 from .bot import BaseBot
+from .enums import Enum
 from .errors import DiscoveryError
 from .server import ServerFlags, BaseServer, Server
 from .state import State
@@ -24,11 +23,11 @@ DEFAULT_DISCOVERY_USER_AGENT = (
 )
 
 
-class ServerActivity(StrEnum):
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
-    NO = "no"
+class ServerActivity(Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
+    no = "no"
 
 
 @define(slots=True)
@@ -90,10 +89,10 @@ class DiscoveryServersPage:
     """Popular tags used in discovery servers."""
 
 
-class BotUsage(StrEnum):
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
+class BotUsage(Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
 
 
 @define(slots=True)

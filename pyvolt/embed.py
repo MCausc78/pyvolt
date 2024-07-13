@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import abc
 from attrs import define, field
-from enum import StrEnum
 import typing as t
 
 from . import cdn
+from .enums import Enum
 
 if t.TYPE_CHECKING:
     from .state import State
@@ -48,10 +48,10 @@ class YouTubeEmbedSpecial(EmbedSpecial):
     """The video timestamp."""
 
 
-class LightspeedContentType(StrEnum):
+class LightspeedContentType(Enum):
     """Type of remote Lightspeed.tv content."""
 
-    CHANNEL = "Channel"
+    channel = "Channel"
 
 
 @define(slots=True)
@@ -67,12 +67,12 @@ class LightspeedEmbedSpecial(EmbedSpecial):
     """The Lightspeed.tv stream ID."""
 
 
-class TwitchContentType(StrEnum):
+class TwitchContentType(Enum):
     """Type of remote Twitch content."""
 
-    CHANNEL = "Channel"
-    VIDEO = "Video"
-    CLIP = "Clip"
+    channel = "Channel"
+    video = "Video"
+    clip = "Clip"
 
 
 @define(slots=True)
@@ -104,11 +104,11 @@ class SoundcloudEmbedSpecial(EmbedSpecial):
 _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 
 
-class BandcampContentType(StrEnum):
+class BandcampContentType(Enum):
     """Type of remote Bandcamp content."""
 
-    ALBUM = "Album"
-    TRACK = "Track"
+    album = "Album"
+    track = "Track"
 
 
 @define(slots=True)
@@ -132,13 +132,13 @@ class StreamableEmbedSpecial(EmbedSpecial):
     """The video ID."""
 
 
-class ImageSize(StrEnum):
+class ImageSize(Enum):
     """Controls image positioning and size."""
 
-    LARGE = "Large"
+    large = "Large"
     """Show large preview at the bottom of the embed."""
 
-    PREVIEW = "Preview"
+    preview = "Preview"
     """Show small preview to the side of the embed."""
 
 

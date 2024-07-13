@@ -7,7 +7,7 @@ import logging
 import typing as t
 
 
-from . import core, emoji as emojis, user as users
+from . import emoji as emojis, user as users
 
 if t.TYPE_CHECKING:
     from .channel import ServerChannel, Channel

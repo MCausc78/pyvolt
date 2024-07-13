@@ -8,6 +8,7 @@ from .client import *
 from .core import *
 from .discovery import *
 from .emoji import *
+from .enums import *
 from .errors import *
 from .events import *
 from .http import *

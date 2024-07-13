@@ -280,7 +280,7 @@ class Parser:
             interactions_url=d.get("interactions_url"),
             terms_of_service_url=d.get("terms_of_service_url"),
             privacy_policy_url=d.get("privacy_policy_url"),
-            flags=BotFlags(d.get("flags") or 0),
+            flags=BotFlags(d.get("flags", 0)),
             user=user,
         )
 
@@ -1176,7 +1176,7 @@ class Parser:
                     id=avatar,
                     filename="",
                     metadata=AssetMetadata(
-                        type=AssetMetadataType.IMAGE,
+                        type=AssetMetadataType.image,
                         width=None,
                         height=None,
                     ),

@@ -3,13 +3,13 @@ from __future__ import annotations
 import abc
 import aiohttp
 from attrs import define, field
-from enum import StrEnum
 import io
 import logging
 import typing as t
 from urllib.parse import quote
 
 from . import core, utils
+from .enums import Enum
 from .errors import APIError
 
 if t.TYPE_CHECKING:
@@ -20,20 +20,20 @@ if t.TYPE_CHECKING:
 _L = logging.getLogger(__name__)
 
 
-class AssetMetadataType(StrEnum):
-    FILE = "File"
+class AssetMetadataType(Enum):
+    file = "File"
     """File is just a generic uncategorised file."""
 
-    TEXT = "Text"
+    text = "Text"
     """File contains textual data and should be displayed as such."""
 
-    IMAGE = "Image"
+    image = "Image"
     """File is an image with specific dimensions."""
 
-    VIDEO = "Video"
+    video = "Video"
     """File is a video with specific dimensions."""
 
-    AUDIO = "Audio"
+    audio = "Audio"
     """File is audio."""
 
 

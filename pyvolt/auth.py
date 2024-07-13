@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from attrs import define, field
-from enum import StrEnum
 import typing as t
 
 from . import core
 from .base import Base
+from .enums import Enum
 from .state import State
 
 if t.TYPE_CHECKING:
@@ -96,10 +96,10 @@ class Session(PartialSession):
     """The Web Push subscription."""
 
 
-class MFAMethod(StrEnum):
-    PASSWORD = "Password"
-    RECOVERY = "Recovery"
-    TOTP = "Totp"
+class MFAMethod(Enum):
+    password = "Password"
+    recovery = "Recovery"
+    totp = "Totp"
 
 
 @define(slots=True)
