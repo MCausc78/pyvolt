@@ -10,13 +10,11 @@ import typing as t
 from . import core, emoji as emojis, user as users
 
 if t.TYPE_CHECKING:
-    from . import (
-        channel as channels,
-        message as messages,
-        read_state as read_states,
-        server as servers,
-        user as users,
-    )
+    from .channel import ServerChannel, Channel
+    from .message import Message
+    from .read_state import ReadState
+    from .server import Server, Member
+    from .user import User
 
 _L = logging.getLogger(__name__)
 
@@ -81,7 +79,7 @@ class BaseContext:
 
 @define(slots=True)
 class MessageContext(BaseContext):
-    message: messages.Message = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 _UNDEFINED = BaseContext(type=ContextType.UNDEFINED)
@@ -122,75 +120,69 @@ class Cache(abc.ABC):
     ############
 
     @abc.abstractmethod
-    def get_channel(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> channels.Channel | None: ...
+    def get_channel(self, channel_id: str, ctx: BaseContext, /) -> Channel | None: ...
 
-    def get_all_channels(self, ctx: BaseContext, /) -> list[channels.Channel]:
+    def get_all_channels(self, ctx: BaseContext, /) -> list[Channel]:
         return list(self.get_channels_mapping().values())
 
     @abc.abstractmethod
-    def get_channels_mapping(self) -> dict[core.ULID, channels.Channel]: ...
+    def get_channels_mapping(self) -> dict[str, Channel]: ...
 
     @abc.abstractmethod
-    def store_channel(self, channel: channels.Channel, ctx: BaseContext, /) -> None: ...
+    def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
-    def delete_channel(self, channel_id: core.ULID, ctx: BaseContext, /) -> None: ...
+    def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None: ...
 
     ###############
     # Read States #
     ###############
     @abc.abstractmethod
     def get_read_state(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> read_states.ReadState | None: ...
+        self, channel_id: str, ctx: BaseContext, /
+    ) -> ReadState | None: ...
 
-    def get_all_read_states(self, ctx: BaseContext, /) -> list[read_states.ReadState]:
+    def get_all_read_states(self, ctx: BaseContext, /) -> list[ReadState]:
         return list(self.get_read_states_mapping().values())
 
     @abc.abstractmethod
-    def get_read_states_mapping(self) -> dict[core.ULID, read_states.ReadState]: ...
+    def get_read_states_mapping(self) -> dict[str, ReadState]: ...
 
     @abc.abstractmethod
-    def store_read_state(
-        self, read_state: read_states.ReadState, ctx: BaseContext, /
-    ) -> None: ...
+    def store_read_state(self, read_state: ReadState, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
-    def delete_read_state(self, channel_id: core.ULID, ctx: BaseContext, /) -> None: ...
+    def delete_read_state(self, channel_id: str, ctx: BaseContext, /) -> None: ...
 
     ##########
     # Emojis #
     ##########
 
     @abc.abstractmethod
-    def get_emoji(
-        self, emoji_id: core.ULID, ctx: BaseContext, /
-    ) -> emojis.Emoji | None: ...
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None: ...
 
     def get_all_emojis(self, ctx: BaseContext, /) -> list[emojis.Emoji]:
         return list(self.get_emojis_mapping().values())
 
     @abc.abstractmethod
-    def get_emojis_mapping(self) -> dict[core.ULID, emojis.Emoji]: ...
+    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]: ...
 
     @abc.abstractmethod
     def get_server_emojis_mapping(
         self,
-    ) -> dict[core.ULID, dict[core.ULID, emojis.ServerEmoji]]: ...
+    ) -> dict[str, dict[str, emojis.ServerEmoji]]: ...
 
     @abc.abstractmethod
     def get_server_emojis_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, emojis.ServerEmoji] | None: ...
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, emojis.ServerEmoji] | None: ...
 
     @abc.abstractmethod
     def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
     def delete_emoji(
-        self, emoji_id: core.ULID, server_id: core.ULID | None, ctx: BaseContext, /
+        self, emoji_id: str, server_id: str | None, ctx: BaseContext, /
     ) -> None: ...
 
     ###########
@@ -198,33 +190,31 @@ class Cache(abc.ABC):
     ###########
 
     @abc.abstractmethod
-    def get_server(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Server | None: ...
+    def get_server(self, server_id: str, ctx: BaseContext, /) -> Server | None: ...
 
-    def get_all_servers(self, ctx: BaseContext, /) -> list[servers.Server]:
+    def get_all_servers(self, ctx: BaseContext, /) -> list[Server]:
         return list(self.get_servers_mapping().values())
 
     @abc.abstractmethod
-    def get_servers_mapping(self) -> dict[core.ULID, servers.Server]: ...
+    def get_servers_mapping(self) -> dict[str, Server]: ...
 
     @abc.abstractmethod
-    def store_server(self, server: servers.Server, ctx: BaseContext, /) -> None: ...
+    def store_server(self, server: Server, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
-    def delete_server(self, server_id: core.ULID, ctx: BaseContext, /) -> None: ...
+    def delete_server(self, server_id: str, ctx: BaseContext, /) -> None: ...
 
     ##################
     # Server Members #
     ##################
     @abc.abstractmethod
     def get_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Member | None: ...
+        self, server_id: str, user_id: str, ctx: BaseContext, /
+    ) -> Member | None: ...
 
     def get_all_server_members_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> list[servers.Member] | None:
+        self, server_id: str, ctx: BaseContext, /
+    ) -> list[Member] | None:
         ms = self.get_server_members_mapping_of(server_id, ctx)
         if ms is None:
             return None
@@ -232,14 +222,14 @@ class Cache(abc.ABC):
 
     @abc.abstractmethod
     def get_server_members_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, servers.Member] | None: ...
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, Member] | None: ...
 
     @abc.abstractmethod
     def bulk_store_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None: ...
@@ -247,20 +237,18 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def overwrite_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None: ...
 
     @abc.abstractmethod
-    def store_server_member(
-        self, member: servers.Member, ctx: BaseContext, /
-    ) -> None: ...
+    def store_server_member(self, member: Member, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
     def delete_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
+        self, server_id: str, user_id: str, ctx: BaseContext, /
     ) -> None: ...
 
     #########
@@ -268,23 +256,19 @@ class Cache(abc.ABC):
     #########
 
     @abc.abstractmethod
-    def get_user(
-        self, user_id: core.ULID, ctx: BaseContext, /
-    ) -> users.User | None: ...
+    def get_user(self, user_id: str, ctx: BaseContext, /) -> User | None: ...
 
-    def get_all_users(self, ctx: BaseContext, /) -> list[users.User]:
+    def get_all_users(self, ctx: BaseContext, /) -> list[User]:
         return list(self.get_users_mapping().values())
 
     @abc.abstractmethod
-    def get_users_mapping(self) -> dict[core.ULID, users.User]: ...
+    def get_users_mapping(self) -> dict[str, User]: ...
 
     @abc.abstractmethod
-    def store_user(self, user: users.User, ctx: BaseContext, /) -> None: ...
+    def store_user(self, user: User, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
-    def bulk_store_users(
-        self, users: dict[core.ULID, users.User], ctx: BaseContext, /
-    ) -> None: ...
+    def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None: ...
 
 
 class EmptyCache(Cache):
@@ -292,66 +276,58 @@ class EmptyCache(Cache):
     # Channels #
     ############
 
-    def get_channel(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> channels.Channel | None:
+    def get_channel(self, channel_id: str, ctx: BaseContext, /) -> Channel | None:
         return None
 
-    def get_channels_mapping(self) -> dict[core.ULID, channels.Channel]:
+    def get_channels_mapping(self) -> dict[str, Channel]:
         return {}
 
-    def store_channel(self, channel: channels.Channel, ctx: BaseContext, /) -> None:
+    def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
         pass
 
-    def delete_channel(self, channel_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
         pass
 
     ###############
     # Read States #
     ###############
-    def get_read_state(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> read_states.ReadState | None:
+    def get_read_state(self, channel_id: str, ctx: BaseContext, /) -> ReadState | None:
         return None
 
-    def get_read_states_mapping(self) -> dict[core.ULID, read_states.ReadState]:
+    def get_read_states_mapping(self) -> dict[str, ReadState]:
         return {}
 
-    def store_read_state(
-        self, read_state: read_states.ReadState, ctx: BaseContext, /
-    ) -> None:
+    def store_read_state(self, read_state: ReadState, ctx: BaseContext, /) -> None:
         pass
 
-    def delete_read_state(self, channel_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_read_state(self, channel_id: str, ctx: BaseContext, /) -> None:
         pass
 
     ##########
     # Emojis #
     ##########
 
-    def get_emoji(
-        self, emoji_id: core.ULID, ctx: BaseContext, /
-    ) -> emojis.Emoji | None:
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None:
         return None
 
-    def get_emojis_mapping(self) -> dict[core.ULID, emojis.Emoji]:
+    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]:
         return {}
 
     def get_server_emojis_mapping(
         self,
-    ) -> dict[core.ULID, dict[core.ULID, emojis.ServerEmoji]]:
+    ) -> dict[str, dict[str, emojis.ServerEmoji]]:
         return {}
 
     def get_server_emojis_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, emojis.ServerEmoji] | None:
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, emojis.ServerEmoji] | None:
         return None
 
     def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None:
         pass
 
     def delete_emoji(
-        self, emoji_id: core.ULID, server_id: core.ULID | None, ctx: BaseContext, /
+        self, emoji_id: str, server_id: str | None, ctx: BaseContext, /
     ) -> None:
         pass
 
@@ -359,37 +335,35 @@ class EmptyCache(Cache):
     # Servers #
     ###########
 
-    def get_server(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Server | None:
+    def get_server(self, server_id: str, ctx: BaseContext, /) -> Server | None:
         return None
 
-    def get_servers_mapping(self) -> dict[core.ULID, servers.Server]:
+    def get_servers_mapping(self) -> dict[str, Server]:
         return {}
 
-    def store_server(self, server: servers.Server, ctx: BaseContext, /) -> None:
+    def store_server(self, server: Server, ctx: BaseContext, /) -> None:
         pass
 
-    def delete_server(self, server_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_server(self, server_id: str, ctx: BaseContext, /) -> None:
         pass
 
     ##################
     # Server Members #
     ##################
     def get_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Member | None:
+        self, server_id: str, user_id: str, ctx: BaseContext, /
+    ) -> Member | None:
         return None
 
     def get_server_members_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, servers.Member] | None:
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, Member] | None:
         return None
 
     def bulk_store_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None:
@@ -397,18 +371,18 @@ class EmptyCache(Cache):
 
     def overwrite_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None:
         pass
 
-    def store_server_member(self, member: servers.Member, ctx: BaseContext, /) -> None:
+    def store_server_member(self, member: Member, ctx: BaseContext, /) -> None:
         pass
 
     def delete_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
+        self, server_id: str, user_id: str, ctx: BaseContext, /
     ) -> None:
         pass
 
@@ -416,27 +390,23 @@ class EmptyCache(Cache):
     # Users #
     #########
 
-    def get_user(self, user_id: core.ULID, ctx: BaseContext, /) -> users.User | None:
+    def get_user(self, user_id: str, ctx: BaseContext, /) -> User | None:
         return None
 
-    def get_users_mapping(self) -> dict[core.ULID, users.User]:
+    def get_users_mapping(self) -> dict[str, User]:
         return {}
 
-    def store_user(self, user: users.User, ctx: BaseContext, /) -> None:
+    def store_user(self, user: User, ctx: BaseContext, /) -> None:
         return None
 
-    def bulk_store_users(
-        self, users: dict[core.ULID, users.User], ctx: BaseContext, /
-    ) -> None:
+    def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None:
         pass
 
 
 V = t.TypeVar("V")
 
 
-def _put0(
-    d: dict[core.ULID, V], k: core.ULID, max_size: int, required_keys: int = 1
-) -> bool:
+def _put0(d: dict[str, V], k: str, max_size: int, required_keys: int = 1) -> bool:
     if max_size == 0:
         return False
     map_size = len(d)
@@ -453,25 +423,25 @@ def _put0(
     return True
 
 
-def _put1(d: dict[core.ULID, V], k: core.ULID, v: V, max_size: int) -> None:
+def _put1(d: dict[str, V], k: str, v: V, max_size: int) -> None:
     if _put0(d, k, max_size):
         d[k] = v
 
 
 class MapCache(Cache):
-    _channels: dict[core.ULID, channels.Channel]
+    _channels: dict[str, Channel]
     _channels_max_size: int
-    _read_states: dict[core.ULID, read_states.ReadState]
+    _read_states: dict[str, ReadState]
     _read_states_max_size: int
-    _emojis: dict[core.ULID, emojis.Emoji]
+    _emojis: dict[str, emojis.Emoji]
     _emojis_max_size: int
-    _server_emojis: dict[core.ULID, dict[core.ULID, emojis.ServerEmoji]]
+    _server_emojis: dict[str, dict[str, emojis.ServerEmoji]]
     _server_emojis_max_size: int
-    _servers: dict[core.ULID, servers.Server]
+    _servers: dict[str, Server]
     _servers_max_size: int
-    _server_members: dict[core.ULID, dict[core.ULID, servers.Member]]
+    _server_members: dict[str, dict[str, Member]]
     _server_members_max_size: int
-    _users: dict[core.ULID, users.User]
+    _users: dict[str, User]
     _users_max_size: int
 
     __slots__ = (
@@ -521,28 +491,26 @@ class MapCache(Cache):
     # Channels #
     ############
 
-    def get_channel(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> channels.Channel | None:
+    def get_channel(self, channel_id: str, ctx: BaseContext, /) -> Channel | None:
         return self._channels.get(channel_id)
 
-    def get_channels_mapping(self) -> dict[core.ULID, channels.Channel]:
+    def get_channels_mapping(self) -> dict[str, Channel]:
         return self._channels
 
-    def store_channel(self, channel: channels.Channel, ctx: BaseContext, /) -> None:
+    def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
         from . import channel as channels
 
-        if isinstance(channel, channels.ServerChannel):
+        if isinstance(channel, ServerChannel):
             server = channel.get_server()
             if server:
                 server.internal_channels[1].append(channel.id)  # type: ignore # Cached servers always have IDs instead
         _put1(self._channels, channel.id, channel, self._channels_max_size)
 
-    def delete_channel(self, channel_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
         from . import channel as channels
 
         channel = self._channels.get(channel_id)
-        if isinstance(channel, channels.ServerChannel):
+        if isinstance(channel, ServerChannel):
             server = channel.get_server()
             if server:
                 for i, server_channel in enumerate(server.internal_channels[1]):
@@ -554,17 +522,13 @@ class MapCache(Cache):
     ###############
     # Read States #
     ###############
-    def get_read_state(
-        self, channel_id: core.ULID, ctx: BaseContext, /
-    ) -> read_states.ReadState | None:
+    def get_read_state(self, channel_id: str, ctx: BaseContext, /) -> ReadState | None:
         return self._read_states.get(channel_id)
 
-    def get_read_states_mapping(self) -> dict[core.ULID, read_states.ReadState]:
+    def get_read_states_mapping(self) -> dict[str, ReadState]:
         return self._read_states
 
-    def store_read_state(
-        self, read_state: read_states.ReadState, ctx: BaseContext, /
-    ) -> None:
+    def store_read_state(self, read_state: ReadState, ctx: BaseContext, /) -> None:
         _put1(
             self._read_states,
             read_state.channel_id,
@@ -572,29 +536,27 @@ class MapCache(Cache):
             self._read_states_max_size,
         )
 
-    def delete_read_state(self, channel_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_read_state(self, channel_id: str, ctx: BaseContext, /) -> None:
         del self._read_states[channel_id]
 
     ##########
     # Emojis #
     ##########
 
-    def get_emoji(
-        self, emoji_id: core.ULID, ctx: BaseContext, /
-    ) -> emojis.Emoji | None:
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None:
         return self._emojis.get(emoji_id)
 
-    def get_emojis_mapping(self) -> dict[core.ULID, emojis.Emoji]:
+    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]:
         return self._emojis
 
     def get_server_emojis_mapping(
         self,
-    ) -> dict[core.ULID, dict[core.ULID, emojis.ServerEmoji]]:
+    ) -> dict[str, dict[str, emojis.ServerEmoji]]:
         return self._server_emojis
 
     def get_server_emojis_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, emojis.ServerEmoji] | None:
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, emojis.ServerEmoji] | None:
         return self._server_emojis.get(server_id)
 
     def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None:
@@ -608,7 +570,7 @@ class MapCache(Cache):
         _put1(self._emojis, emoji.id, emoji, self._emojis_max_size)
 
     def delete_emoji(
-        self, emoji_id: core.ULID, server_id: core.ULID | None, ctx: BaseContext, /
+        self, emoji_id: str, server_id: str | None, ctx: BaseContext, /
     ) -> None:
         emoji = self._emojis.get(emoji_id)
 
@@ -617,7 +579,7 @@ class MapCache(Cache):
         except KeyError:
             pass
 
-        server_ids: tuple[core.ULID, ...] = ()
+        server_ids: tuple[str, ...] = ()
         if isinstance(emoji, emojis.ServerEmoji):
             if server_id:
                 server_ids = (server_id, emoji.server_id)
@@ -635,15 +597,13 @@ class MapCache(Cache):
     # Servers #
     ###########
 
-    def get_server(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Server | None:
+    def get_server(self, server_id: str, ctx: BaseContext, /) -> Server | None:
         return self._servers.get(server_id)
 
-    def get_servers_mapping(self) -> dict[core.ULID, servers.Server]:
+    def get_servers_mapping(self) -> dict[str, Server]:
         return self._servers
 
-    def store_server(self, server: servers.Server, ctx: BaseContext, /) -> None:
+    def store_server(self, server: Server, ctx: BaseContext, /) -> None:
         _put1(self._server_emojis, server.id, {}, self._server_emojis_max_size)
         if (
             _put0(self._server_members, server.id, self._server_members_max_size)
@@ -653,29 +613,29 @@ class MapCache(Cache):
         server._ensure_cached()
         _put1(self._servers, server.id, server, self._servers_max_size)
 
-    def delete_server(self, server_id: core.ULID, ctx: BaseContext, /) -> None:
+    def delete_server(self, server_id: str, ctx: BaseContext, /) -> None:
         del self._servers[server_id]
 
     ##################
     # Server Members #
     ##################
     def get_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
-    ) -> servers.Member | None:
+        self, server_id: str, user_id: str, ctx: BaseContext, /
+    ) -> Member | None:
         d = self._server_members.get(server_id)
         if d is None:
             return None
         return d.get(user_id)
 
     def get_server_members_mapping_of(
-        self, server_id: core.ULID, ctx: BaseContext, /
-    ) -> dict[core.ULID, servers.Member] | None:
+        self, server_id: str, ctx: BaseContext, /
+    ) -> dict[str, Member] | None:
         return self._server_members.get(server_id)
 
     def bulk_store_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None:
@@ -687,15 +647,15 @@ class MapCache(Cache):
 
     def overwrite_server_members(
         self,
-        server_id: core.ULID,
-        members: dict[core.ULID, servers.Member],
+        server_id: str,
+        members: dict[str, Member],
         ctx: BaseContext,
         /,
     ) -> None:
         self._server_members[server_id] = members
 
-    def store_server_member(self, member: servers.Member, ctx: BaseContext, /) -> None:
-        if isinstance(member._user, users.User):
+    def store_server_member(self, member: Member, ctx: BaseContext, /) -> None:
+        if isinstance(member._user, User):
             self.store_user(member._user, ctx)
             member._user = member._user.id
         d = self._server_members.get(member.server_id)
@@ -705,7 +665,7 @@ class MapCache(Cache):
             d[member.id] = member
 
     def delete_server_member(
-        self, server_id: core.ULID, user_id: core.ULID, ctx: BaseContext, /
+        self, server_id: str, user_id: str, ctx: BaseContext, /
     ) -> None:
         members = self._server_members.get(server_id)
         if members:
@@ -715,18 +675,16 @@ class MapCache(Cache):
     # Users #
     #########
 
-    def get_user(self, user_id: core.ULID, ctx: BaseContext, /) -> users.User | None:
+    def get_user(self, user_id: str, ctx: BaseContext, /) -> User | None:
         return self._users.get(user_id)
 
-    def get_users_mapping(self) -> dict[core.ULID, users.User]:
+    def get_users_mapping(self) -> dict[str, User]:
         return self._users
 
-    def store_user(self, user: users.User, ctx: BaseContext, /) -> None:
+    def store_user(self, user: User, ctx: BaseContext, /) -> None:
         _put1(self._users, user.id, user, self._users_max_size)
 
-    def bulk_store_users(
-        self, users: dict[core.ULID, users.User], ctx: BaseContext, /
-    ) -> None:
+    def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None:
         self._users.update(users)
 
 

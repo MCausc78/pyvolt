@@ -13,7 +13,7 @@ from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
 from .safety_reports import ContentReportReason
 from .server import Member
-from .user import User
+from .user import BaseUser, User
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -21,7 +21,7 @@ if t.TYPE_CHECKING:
 
 
 class Reply:
-    id: core.ULID
+    id: str
     """The message ID reply to."""
 
     mention: bool
@@ -29,13 +29,13 @@ class Reply:
 
     __slots__ = ("id", "mention")
 
-    def __init__(self, id: core.ResolvableULID, mention: bool = False) -> None:
-        self.id = core.resolve_ulid(id)
+    def __init__(self, id: core.ULIDOr[BaseMessage], mention: bool = False) -> None:
+        self.id = core.resolve_id(id)
         self.mention = mention
 
     def build(self) -> raw.ReplyIntent:
         return {
-            "id": str(self.id),
+            "id": self.id,
             "mention": self.mention,
         }
 
@@ -185,7 +185,7 @@ class MessageWebhook:
 class BaseMessage(Base):
     """Base representation of message in channel on Revolt."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the channel this message was sent in."""
 
     @property
@@ -392,7 +392,7 @@ class BaseMessage(Base):
         self,
         emoji: ResolvableEmoji,
         *,
-        user: core.ResolvableULID | None = None,
+        user: core.ULIDOr[BaseUser] | None = None,
         remove_all: bool | None = None,
     ) -> None:
         """|coro|
@@ -436,7 +436,7 @@ class PartialMessage(BaseMessage):
     )
     """New message embeds."""
 
-    reactions: core.UndefinedOr[dict[str, tuple[core.ULID, ...]]] = field(
+    reactions: core.UndefinedOr[dict[str, tuple[str, ...]]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """New message reactions."""
@@ -483,70 +483,70 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserAddedSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was added."""
 
-    by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that added this user."""
 
 
 @define(slots=True)
 class UserRemovedSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was removed."""
 
-    by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that removed this user."""
 
 
 @define(slots=True)
 class UserJoinedSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that joined this server/group."""
 
 
 @define(slots=True)
 class UserLeftSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that left this server/group."""
 
 
 @define(slots=True)
 class UserKickedSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was kicked from this server."""
 
 
 @define(slots=True)
 class UserBannedSystemEvent(BaseSystemEvent):
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was banned from this server."""
 
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(BaseSystemEvent):
-    by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that renamed this group."""
 
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(BaseSystemEvent):
-    by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that changed description of this group."""
 
 
 @define(slots=True)
 class ChannelIconChangedSystemEvent(BaseSystemEvent):
-    by: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that changed icon of this group."""
 
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(BaseSystemEvent):
-    from_: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    from_: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was previous owner of this group."""
 
-    to: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    to: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that became owner of this group."""
 
 
@@ -576,10 +576,10 @@ class Message(BaseMessage):
     nonce: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Unique value generated by client sending this message."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the channel this message was sent in."""
 
-    _author: User | Member | core.ULID = field(
+    _author: User | Member | str = field(
         repr=False, hash=True, kw_only=True, eq=True, alias="internal_author"
     )
 
@@ -607,13 +607,13 @@ class Message(BaseMessage):
     )
     """The attached stateless embeds to this message."""
 
-    mention_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    mention_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The list of user IDs mentioned in this message."""
 
-    replies: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    replies: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The list of message ID this message is replying to."""
 
-    reactions: dict[str, tuple[core.ULID, ...]] = field(
+    reactions: dict[str, tuple[str, ...]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """Mapping of emojis to array of user IDs."""
@@ -646,7 +646,7 @@ class Message(BaseMessage):
         if core.is_defined(data.reactions):
             self.reactions = data.reactions
 
-    def _react(self, user_id: core.ULID, emoji: str) -> None:
+    def _react(self, user_id: str, emoji: str) -> None:
         try:
             reaction = self.reactions[emoji]
         except KeyError:
@@ -654,7 +654,7 @@ class Message(BaseMessage):
         else:
             self.reactions[emoji] = (*reaction, user_id)
 
-    def _unreact(self, user_id: core.ULID, emoji: str) -> None:
+    def _unreact(self, user_id: str, emoji: str) -> None:
         try:
             reaction = self.reactions[emoji]
         except KeyError:
@@ -703,7 +703,7 @@ class Message(BaseMessage):
         return author
 
     @property
-    def author_id(self) -> core.ULID:
+    def author_id(self) -> str:
         """The ID of the user or webhook that sent this message."""
         if isinstance(self._author, (User, Member)):
             return self._author.id

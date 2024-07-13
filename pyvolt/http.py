@@ -20,16 +20,19 @@ from .auth import (
     MFAResponse,
     LoginResult,
 )
-from .bot import Bot, PublicBot
+from .bot import BaseBot, Bot, PublicBot
 from .channel import (
     ChannelType,
+    BaseChannel,
+    TextChannel,
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    VoiceChannel,
     ServerChannel,
     Channel,
 )
-from .emoji import ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
+from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .errors import (
     APIError,
     Unauthorized,
@@ -46,6 +49,7 @@ from .message import (
     Masquerade,
     SendableEmbed,
     MessageSort,
+    BaseMessage,
     MessageFlags,
     Message,
 )
@@ -56,9 +60,12 @@ from .server import (
     ServerFlags,
     Category,
     SystemMessageChannels,
+    BaseRole,
     Role,
+    BaseServer,
     Server,
     Ban,
+    BaseMember,
     Member,
     MemberList,
 )
@@ -70,10 +77,11 @@ from .user import (
     UserBadges,
     UserFlags,
     Mutuals,
+    BaseUser,
     User,
     SelfUser,
 )
-from .webhook import Webhook
+from .webhook import BaseWebhook, Webhook
 
 _L = logging.getLogger(__name__)
 
@@ -282,7 +290,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_bot(d, d["user"])
 
-    async def delete_bot(self, bot: core.ResolvableULID) -> None:
+    async def delete_bot(self, bot: core.ULIDOr[BaseBot]) -> None:
         """|coro|
 
         Delete a bot.
@@ -291,11 +299,11 @@ class HTTPClient:
         .. note::
             This can only be used by non-bot accounts.
         """
-        await self.request(routes.BOTS_DELETE.compile(bot_id=core.resolve_ulid(bot)))
+        await self.request(routes.BOTS_DELETE.compile(bot_id=core.resolve_id(bot)))
 
     async def edit_bot(
         self,
-        bot: core.ResolvableULID,
+        bot: core.ULIDOr[BaseBot],
         *,
         name: core.UndefinedOr[str] = core.UNDEFINED,
         public: core.UndefinedOr[bool] = core.UNDEFINED,
@@ -326,14 +334,14 @@ class HTTPClient:
             j["remove"] = r
 
         d: raw.BotWithUserResponse = await self.request(
-            routes.BOTS_EDIT.compile(bot_id=core.resolve_ulid(bot)), json=j
+            routes.BOTS_EDIT.compile(bot_id=core.resolve_id(bot)), json=j
         )
         return self.state.parser.parse_bot(
             d,
             d["user"],
         )
 
-    async def get_bot(self, bot: core.ResolvableULID) -> Bot:
+    async def get_bot(self, bot: core.ULIDOr[BaseBot]) -> Bot:
         """|coro|
 
         Get details of a bot you own.
@@ -343,7 +351,7 @@ class HTTPClient:
             This can only be used by non-bot accounts.
         """
         d: raw.FetchBotResponse = await self.request(
-            routes.BOTS_FETCH.compile(bot_id=core.resolve_ulid(bot))
+            routes.BOTS_FETCH.compile(bot_id=core.resolve_id(bot))
         )
         return self.state.parser.parse_bot(d["bot"], d["user"])
 
@@ -360,7 +368,7 @@ class HTTPClient:
             await self.request(routes.BOTS_FETCH_OWNED.compile())
         )
 
-    async def get_public_bot(self, bot: core.ResolvableULID) -> PublicBot:
+    async def get_public_bot(self, bot: core.ULIDOr[BaseBot]) -> PublicBot:
         """|coro|
 
         Get details of a public (or owned) bot.
@@ -371,16 +379,16 @@ class HTTPClient:
         """
         return self.state.parser.parse_public_bot(
             await self.request(
-                routes.BOTS_FETCH_PUBLIC.compile(bot_id=core.resolve_ulid(bot))
+                routes.BOTS_FETCH_PUBLIC.compile(bot_id=core.resolve_id(bot))
             )
         )
 
     async def invite_bot(
         self,
-        bot: core.ResolvableULID,
+        bot: core.ULIDOr[BaseBot | BaseUser],
         *,
-        server: core.ResolvableULID | None = None,
-        group: core.ResolvableULID | None = None,
+        server: core.ULIDOr[BaseServer] | None = None,
+        group: core.ULIDOr[GroupChannel] | None = None,
     ) -> None:
         """|coro|
 
@@ -398,19 +406,19 @@ class HTTPClient:
 
         j: raw.InviteBotDestination
         if server:
-            j = {"server": core.resolve_ulid(server)}
+            j = {"server": core.resolve_id(server)}
         elif group:
-            j = {"group": core.resolve_ulid(group)}
+            j = {"group": core.resolve_id(group)}
         else:
             raise RuntimeError("Unreachable")
 
         await self.request(
-            routes.BOTS_INVITE.compile(bot_id=core.resolve_ulid(bot)), json=j
+            routes.BOTS_INVITE.compile(bot_id=core.resolve_id(bot)), json=j
         )
 
     # Channels control
     async def acknowledge_message(
-        self, channel: core.ResolvableULID, message: core.ResolvableULID
+        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
     ) -> None:
         """|coro|
 
@@ -436,13 +444,13 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_CHANNEL_ACK.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
             )
         )
 
     async def close_channel(
-        self, channel: core.ResolvableULID, silent: bool | None = None
+        self, channel: core.ULIDOr[BaseChannel], silent: bool | None = None
     ) -> None:
         """|coro|
 
@@ -467,19 +475,17 @@ class HTTPClient:
         if silent is not None:
             p["leave_silently"] = utils._bool(silent)
         await self.request(
-            routes.CHANNELS_CHANNEL_DELETE.compile(
-                channel_id=core.resolve_ulid(channel)
-            ),
+            routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=core.resolve_id(channel)),
             params=p,
         )
 
     async def edit_channel(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[BaseChannel],
         *,
         name: core.UndefinedOr[str] = core.UNDEFINED,
         description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        owner: core.UndefinedOr[core.ResolvableULID] = core.UNDEFINED,
+        owner: core.UndefinedOr[core.ULIDOr[BaseUser]] = core.UNDEFINED,
         icon: core.UndefinedOr[str | None] = core.UNDEFINED,
         nsfw: core.UndefinedOr[bool] = core.UNDEFINED,
         archived: core.UndefinedOr[bool] = core.UNDEFINED,
@@ -512,7 +518,7 @@ class HTTPClient:
             else:
                 j["description"] = description
         if core.is_defined(owner):
-            j["owner"] = core.resolve_ulid(owner)
+            j["owner"] = core.resolve_id(owner)
         if core.is_defined(icon):
             if icon is None:
                 r.append("Icon")
@@ -529,13 +535,13 @@ class HTTPClient:
         return self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_CHANNEL_EDIT.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 json=j,
             )
         )
 
-    async def get_channel(self, channel: core.ResolvableULID) -> Channel:
+    async def get_channel(self, channel: core.ULIDOr[BaseChannel]) -> Channel:
         """|coro|
 
         Gets the channel.
@@ -551,12 +557,14 @@ class HTTPClient:
         return self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_CHANNEL_FETCH.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 )
             )
         )
 
-    async def get_channel_pins(self, channel: core.ResolvableULID) -> list[Message]:
+    async def get_channel_pins(
+        self, channel: core.ULIDOr[TextChannel]
+    ) -> list[Message]:
         """|coro|
 
         Retrieves all messages that are currently pinned in the channel.
@@ -575,15 +583,15 @@ class HTTPClient:
             self.state.parser.parse_message(m)
             for m in await self.request(
                 routes.CHANNELS_CHANNEL_PINS.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 )
             )
         ]
 
-    async def add_member_to_group(
+    async def add_recipient_to_group(
         self,
-        channel: core.ResolvableULID,
-        user: core.ResolvableULID,
+        channel: core.ULIDOr[GroupChannel],
+        user: core.ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
@@ -595,9 +603,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`core.ULIDOr`[:class:`GroupChannel`]
             The group.
-        user: :class:`core.ResolvableULID`
+        user: :class:`core.ULIDOr`[:class:`BaseUser`]
             The user to add.
 
         Raises
@@ -609,7 +617,7 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_GROUP_ADD_MEMBER.compile(
-                channel_id=core.resolve_ulid(channel), user_id=core.resolve_ulid(user)
+                channel_id=core.resolve_id(channel), user_id=core.resolve_id(user)
             )
         )
 
@@ -618,7 +626,7 @@ class HTTPClient:
         name: str,
         *,
         description: str | None = None,
-        users: list[core.ResolvableULID] | None = None,
+        users: list[core.ULIDOr[BaseUser]] | None = None,
         nsfw: bool | None = None,
     ) -> GroupChannel:
         """|coro|
@@ -635,7 +643,7 @@ class HTTPClient:
             Group name.
         description: :class:`str` | None
             Group description.
-        users: :class:`list`[`:class:`core.ResolvableULID`] | None
+        users: :class:`list`[`:class:`core.ULIDOr`[:class:`BaseUser`]] | None
             List of users to add to the group. Must be friends with these users.
         nsfw: :class:`bool` | None
             Whether this group should be age-restricted.
@@ -649,7 +657,7 @@ class HTTPClient:
         if description is not None:
             j["description"] = description
         if users is not None:
-            j["users"] = [core.resolve_ulid(user) for user in users]
+            j["users"] = [core.resolve_id(user) for user in users]
         if nsfw is not None:
             j["nsfw"] = nsfw
         return self.state.parser.parse_group_channel(
@@ -659,8 +667,8 @@ class HTTPClient:
 
     async def remove_member_from_group(
         self,
-        channel: core.ResolvableULID,
-        member: core.ResolvableULID,
+        channel: core.ULIDOr[GroupChannel],
+        member: core.ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
@@ -686,12 +694,14 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_GROUP_REMOVE_MEMBER.compile(
-                channel_id=core.resolve_ulid(channel),
-                member_id=core.resolve_ulid(member),
+                channel_id=core.resolve_id(channel),
+                member_id=core.resolve_id(member),
             )
         )
 
-    async def create_invite(self, channel: core.ResolvableULID) -> Invite:
+    async def create_invite(
+        self, channel: core.ULIDOr[GroupChannel | ServerChannel]
+    ) -> Invite:
         """|coro|
 
         Creates an invite to channel.
@@ -703,7 +713,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`core.ULIDOr`[:class:`GroupChannel` | :class:`ServerChannel`]
             The invite destination channel.
 
         Raises
@@ -716,14 +726,14 @@ class HTTPClient:
         return self.state.parser.parse_invite(
             await self.request(
                 routes.CHANNELS_INVITE_CREATE.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 )
             )
         )
 
-    async def get_group_members(
+    async def get_group_recipients(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[GroupChannel],
     ) -> list[User]:
         """|coro|
 
@@ -732,27 +742,27 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`core.ULIDOr`[:class:`GroupChannel`]
             The group channel.
 
         Raises
         ------
         APIError
-            Getting group members failed.
+            Getting group recipients failed.
         """
         return [
             self.state.parser.parse_user(user)
             for user in await self.request(
                 routes.CHANNELS_MEMBERS_FETCH.compile(
-                    channel_id=core.resolve_ulid(channel),
+                    channel_id=core.resolve_id(channel),
                 )
             )
         ]
 
     async def bulk_delete_messages(
         self,
-        channel: core.ResolvableULID,
-        messages: t.Sequence[core.ResolvableULID],
+        channel: core.ULIDOr[TextChannel],
+        messages: t.Sequence[core.ULIDOr[BaseMessage]],
     ) -> None:
         """|coro|
 
@@ -763,10 +773,10 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
-            Channel to messages were sent.
-        messages: :class:`t.Sequence`[`:class:`core.ResolvableULID`]
-            Messages to delete.
+        channel: :class:`core.ULIDOr`[:class:`TextChannel`]
+            The channel.
+        messages: :class:`t.Sequence`[:class:`core.ULIDOr`[:class:`BaseMessage`]]
+            The messages to delete.
 
         Forbidden
             You do not have permissions to delete
@@ -774,19 +784,19 @@ class HTTPClient:
             Deleting messages failed.
         """
         j: raw.OptionsBulkDelete = {
-            "ids": [core.resolve_ulid(message) for message in messages]
+            "ids": [core.resolve_id(message) for message in messages]
         }
         await self.request(
             routes.CHANNELS_MESSAGE_BULK_DELETE.compile(
-                channel_id=core.resolve_ulid(channel)
+                channel_id=core.resolve_id(channel)
             ),
             json=j,
         )
 
     async def remove_all_reactions_from_message(
         self,
-        channel: core.ResolvableULID,
-        message: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
+        message: core.ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -810,13 +820,13 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_MESSAGE_CLEAR_REACTIONS.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
             )
         )
 
     async def delete_message(
-        self, channel: core.ResolvableULID, message: core.ResolvableULID
+        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
     ) -> None:
         """|coro|
 
@@ -839,15 +849,15 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_MESSAGE_DELETE.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
             )
         )
 
     async def edit_message(
         self,
-        channel: core.ResolvableULID,
-        message: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
+        message: core.ULIDOr[BaseMessage],
         *,
         content: core.UndefinedOr[str] = core.UNDEFINED,
         embeds: core.UndefinedOr[list[SendableEmbed]] = core.UNDEFINED,
@@ -876,15 +886,15 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_EDIT.compile(
-                    channel_id=core.resolve_ulid(channel),
-                    message_id=core.resolve_ulid(message),
+                    channel_id=core.resolve_id(channel),
+                    message_id=core.resolve_id(message),
                 ),
                 json=j,
             )
         )
 
     async def get_message(
-        self, channel: core.ResolvableULID, message: core.ResolvableULID
+        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
     ) -> Message:
         """|coro|
 
@@ -913,21 +923,21 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_FETCH.compile(
-                    channel_id=core.resolve_ulid(channel),
-                    message_id=core.resolve_ulid(message),
+                    channel_id=core.resolve_id(channel),
+                    message_id=core.resolve_id(message),
                 )
             )
         )
 
     async def get_messages(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
         *,
         limit: int | None = None,
-        before: core.ResolvableULID | None = None,
-        after: core.ResolvableULID | None = None,
+        before: core.ULIDOr[BaseMessage] | None = None,
+        after: core.ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
-        nearby: core.ResolvableULID | None = None,
+        nearby: core.ULIDOr[BaseMessage] | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
         """|coro|
@@ -968,19 +978,19 @@ class HTTPClient:
         if limit is not None:
             p["limit"] = limit
         if before is not None:
-            p["before"] = core.resolve_ulid(before)
+            p["before"] = core.resolve_id(before)
         if after is not None:
-            p["after"] = core.resolve_ulid(after)
+            p["after"] = core.resolve_id(after)
         if sort is not None:
             p["sort"] = sort.value
         if nearby is not None:
-            p["nearby"] = core.resolve_ulid(nearby)
+            p["nearby"] = core.resolve_id(nearby)
         if populate_users is not None:
             p["include_users"] = utils._bool(populate_users)
         return self.state.parser.parse_messages(
             await self.request(
                 routes.CHANNELS_MESSAGE_QUERY.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 params=p,
             )
@@ -988,8 +998,8 @@ class HTTPClient:
 
     async def add_reaction_to_message(
         self,
-        channel: core.ResolvableULID,
-        message: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
+        message: core.ULIDOr[BaseMessage],
         emoji: ResolvableEmoji,
     ) -> None:
         """|coro|
@@ -1015,20 +1025,20 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_MESSAGE_REACT.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
                 emoji=resolve_emoji(emoji),
             )
         )
 
     async def search_for_messages(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
         query: str,
         *,
         limit: int | None = None,
-        before: core.ResolvableULID | None = None,
-        after: core.ResolvableULID | None = None,
+        before: core.ULIDOr[BaseMessage] | None = None,
+        after: core.ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
@@ -1073,9 +1083,9 @@ class HTTPClient:
         if limit is not None:
             j["limit"] = limit
         if before is not None:
-            j["before"] = core.resolve_ulid(before)
+            j["before"] = core.resolve_id(before)
         if after is not None:
-            j["after"] = core.resolve_ulid(after)
+            j["after"] = core.resolve_id(after)
         if sort is not None:
             j["sort"] = sort.value
         if populate_users is not None:
@@ -1084,14 +1094,14 @@ class HTTPClient:
         return self.state.parser.parse_messages(
             await self.request(
                 routes.CHANNELS_MESSAGE_SEARCH.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 json=j,
             )
         )
 
     async def pin_message(
-        self, channel: core.ResolvableULID, message: core.ResolvableULID, /
+        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage], /
     ) -> None:
         """|coro|
 
@@ -1114,19 +1124,19 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_MESSAGE_PIN.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
             )
         )
 
     async def send_message(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
         content: str | None = None,
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ResolvableULID] | None = None,
+        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -1184,7 +1194,7 @@ class HTTPClient:
                 (
                     reply.build()
                     if isinstance(reply, Reply)
-                    else {"id": core.resolve_ulid(reply), "mention": False}
+                    else {"id": core.resolve_id(reply), "mention": False}
                 )
                 for reply in replies
             ]
@@ -1210,7 +1220,7 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_SEND.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 json=j,
                 headers=headers,
@@ -1218,7 +1228,7 @@ class HTTPClient:
         )
 
     async def unpin_message(
-        self, channel: core.ResolvableULID, message: core.ResolvableULID, /
+        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage], /
     ) -> None:
         """|coro|
 
@@ -1241,19 +1251,19 @@ class HTTPClient:
         """
         await self.request(
             routes.CHANNELS_MESSAGE_PIN.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
             )
         )
 
     async def remove_reactions_from_message(
         self,
-        channel: core.ResolvableULID,
-        message: core.ResolvableULID,
+        channel: core.ULIDOr[TextChannel],
+        message: core.ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
         /,
         *,
-        user: core.ResolvableULID | None = None,
+        user: core.ULIDOr[BaseUser] | None = None,
         remove_all: bool | None = None,
     ) -> None:
         """|coro|
@@ -1285,13 +1295,13 @@ class HTTPClient:
         """
         p: raw.OptionsUnreact = {}
         if user is not None:
-            p["user_id"] = core.resolve_ulid(user)
+            p["user_id"] = core.resolve_id(user)
         if remove_all is not None:
             p["remove_all"] = utils._bool(remove_all)
         await self.request(
             routes.CHANNELS_MESSAGE_UNREACT.compile(
-                channel_id=core.resolve_ulid(channel),
-                message_id=core.resolve_ulid(message),
+                channel_id=core.resolve_id(channel),
+                message_id=core.resolve_id(message),
                 emoji=resolve_emoji(emoji),
             ),
             params=p,
@@ -1299,8 +1309,8 @@ class HTTPClient:
 
     async def set_role_channel_permissions(
         self,
-        channel: core.ResolvableULID,
-        role: core.ResolvableULID,
+        channel: core.ULIDOr[ServerChannel],
+        role: core.ULIDOr[BaseRole],
         /,
         *,
         allow: Permissions = Permissions.NONE,
@@ -1332,8 +1342,8 @@ class HTTPClient:
         return self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET.compile(
-                    channel_id=core.resolve_ulid(channel),
-                    role_id=core.resolve_ulid(role),
+                    channel_id=core.resolve_id(channel),
+                    role_id=core.resolve_id(role),
                 ),
                 json=j,
             )
@@ -1341,7 +1351,7 @@ class HTTPClient:
 
     async def set_default_channel_permissions(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[GroupChannel | ServerChannel],
         permissions: Permissions | PermissionOverride,
         /,
     ) -> Channel:
@@ -1368,13 +1378,15 @@ class HTTPClient:
         return self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 json=j,
             )
         )
 
-    async def join_call(self, channel: core.ResolvableULID) -> str:
+    async def join_call(
+        self, channel: core.ULIDOr[DMChannel | GroupChannel | VoiceChannel]
+    ) -> str:
         """|coro|
 
         Asks the voice server for a token to join the call.
@@ -1397,15 +1409,13 @@ class HTTPClient:
         """
         return (
             await self.request(
-                routes.CHANNELS_VOICE_JOIN.compile(
-                    channel_id=core.resolve_ulid(channel)
-                )
+                routes.CHANNELS_VOICE_JOIN.compile(channel_id=core.resolve_id(channel))
             )
         )["token"]
 
     async def create_webhook(
         self,
-        channel: core.ResolvableULID,
+        channel: core.ULIDOr[ServerChannel],
         /,
         *,
         name: str,
@@ -1436,14 +1446,14 @@ class HTTPClient:
         return self.state.parser.parse_webhook(
             await self.request(
                 routes.CHANNELS_WEBHOOK_CREATE.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 ),
                 json=j,
             )
         )
 
     async def get_channel_webhooks(
-        self, channel: core.ResolvableULID, /
+        self, channel: core.ULIDOr[ServerChannel], /
     ) -> list[Webhook]:
         """|coro|
 
@@ -1461,7 +1471,7 @@ class HTTPClient:
             self.state.parser.parse_webhook(e)
             for e in await self.request(
                 routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(
-                    channel_id=core.resolve_ulid(channel)
+                    channel_id=core.resolve_id(channel)
                 )
             )
         ]
@@ -1469,7 +1479,7 @@ class HTTPClient:
     # Customization control (emojis)
     async def create_emoji(
         self,
-        server_id: core.ResolvableULID,
+        server_id: core.ULIDOr[BaseServer],
         data: cdn.ResolvableResource,
         /,
         *,
@@ -1493,7 +1503,7 @@ class HTTPClient:
         """
         j: raw.DataCreateEmoji = {
             "name": name,
-            "parent": {"type": "Server", "id": core.resolve_ulid(server_id)},
+            "parent": {"type": "Server", "id": core.resolve_id(server_id)},
         }
         if nsfw is not None:
             j["nsfw"] = nsfw
@@ -1508,7 +1518,7 @@ class HTTPClient:
             )
         )
 
-    async def delete_emoji(self, emoji: core.ResolvableULID, /) -> None:
+    async def delete_emoji(self, emoji: core.ULIDOr[ServerEmoji], /) -> None:
         """|coro|
 
         Delete an emoji.
@@ -1522,10 +1532,10 @@ class HTTPClient:
             Deleting the emoji failed.
         """
         await self.request(
-            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=core.resolve_ulid(emoji))
+            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=core.resolve_id(emoji))
         )
 
-    async def get_emoji(self, emoji: core.ResolvableULID, /) -> Emoji:
+    async def get_emoji(self, emoji: core.ULIDOr[BaseEmoji], /) -> Emoji:
         """|coro|
 
         Get an emoji.
@@ -1540,7 +1550,7 @@ class HTTPClient:
         return self.state.parser.parse_emoji(
             await self.request(
                 routes.CUSTOMISATION_EMOJI_FETCH.compile(
-                    emoji_id=core.resolve_ulid(emoji)
+                    emoji_id=core.resolve_id(emoji)
                 )
             )
         )
@@ -1666,7 +1676,7 @@ class HTTPClient:
 
     async def report_message(
         self,
-        message: core.ResolvableULID,
+        message: core.ULIDOr[BaseMessage],
         reason: ContentReportReason,
         *,
         additional_context: str | None = None,
@@ -1687,7 +1697,7 @@ class HTTPClient:
         j: raw.DataReportContent = {
             "content": {
                 "type": "Message",
-                "id": core.resolve_ulid(message),
+                "id": core.resolve_id(message),
                 "report_reason": reason.value,
             }
         }
@@ -1697,7 +1707,7 @@ class HTTPClient:
 
     async def report_server(
         self,
-        server: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
         reason: ContentReportReason,
         /,
         *,
@@ -1719,7 +1729,7 @@ class HTTPClient:
         j: raw.DataReportContent = {
             "content": {
                 "type": "Server",
-                "id": core.resolve_ulid(server),
+                "id": core.resolve_id(server),
                 "report_reason": reason.value,
             }
         }
@@ -1729,12 +1739,12 @@ class HTTPClient:
 
     async def report_user(
         self,
-        user: core.ResolvableULID,
+        user: core.ULIDOr[BaseUser],
         reason: UserReportReason,
         /,
         *,
         additional_context: str | None = None,
-        message_context: core.ResolvableULID,
+        message_context: core.ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -1751,12 +1761,12 @@ class HTTPClient:
         """
         content: raw.UserReportedContent = {
             "type": "User",
-            "id": core.resolve_ulid(user),
+            "id": core.resolve_id(user),
             "report_reason": reason.value,
         }
 
         if message_context is not None:
-            content["message_id"] = core.resolve_ulid(message_context)
+            content["message_id"] = core.resolve_id(message_context)
 
         j: raw.DataReportContent = {"content": content}
         if additional_context is not None:
@@ -1767,8 +1777,8 @@ class HTTPClient:
     # Servers control
     async def ban_user(
         self,
-        server: core.ResolvableULID,
-        user: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
+        user: str | BaseUser | BaseMember,
         /,
         *,
         reason: str | None = None,
@@ -1794,14 +1804,14 @@ class HTTPClient:
         return self.state.parser.parse_ban(
             await self.request(
                 routes.SERVERS_BAN_CREATE.compile(
-                    server_id=core.resolve_ulid(server), user_id=core.resolve_ulid(user)
+                    server_id=core.resolve_id(server), user_id=core.resolve_id(user)
                 ),
                 json=j,
             ),
             {},
         )
 
-    async def get_bans(self, server: core.ResolvableULID, /) -> list[Ban]:
+    async def get_bans(self, server: core.ULIDOr[BaseServer], /) -> list[Ban]:
         """|coro|
 
         Get all bans on a server.
@@ -1809,12 +1819,12 @@ class HTTPClient:
         """
         return self.state.parser.parse_bans(
             await self.request(
-                routes.SERVERS_BAN_LIST.compile(server_id=core.resolve_ulid(server))
+                routes.SERVERS_BAN_LIST.compile(server_id=core.resolve_id(server))
             )
         )
 
     async def unban_user(
-        self, server: core.ResolvableULID, user: core.ResolvableULID
+        self, server: core.ULIDOr[BaseServer], user: core.ULIDOr[BaseUser]
     ) -> None:
         """|coro|
 
@@ -1830,13 +1840,13 @@ class HTTPClient:
         """
         await self.request(
             routes.SERVERS_BAN_REMOVE.compile(
-                server_id=core.resolve_ulid(server), user_id=core.resolve_ulid(user)
+                server_id=core.resolve_id(server), user_id=core.resolve_id(user)
             ),
         )
 
     async def create_channel(
         self,
-        server: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
         /,
         *,
         type: ChannelType | None = None,
@@ -1866,7 +1876,7 @@ class HTTPClient:
         channel = self.state.parser.parse_channel(
             await self.request(
                 routes.SERVERS_CHANNEL_CREATE.compile(
-                    server_id=core.resolve_ulid(server)
+                    server_id=core.resolve_id(server)
                 ),
                 json=j,
             )
@@ -1874,7 +1884,9 @@ class HTTPClient:
         assert isinstance(channel, ServerChannel)
         return channel
 
-    async def get_server_emojis(self, server: core.ResolvableULID) -> list[ServerEmoji]:
+    async def get_server_emojis(
+        self, server: core.ULIDOr[BaseServer]
+    ) -> list[ServerEmoji]:
         """|coro|
 
         Get all emojis on a server.
@@ -1882,11 +1894,13 @@ class HTTPClient:
         return [
             self.state.parser.parse_server_emoji(e)
             for e in await self.request(
-                routes.SERVERS_EMOJI_LIST.compile(server_id=core.resolve_ulid(server))
+                routes.SERVERS_EMOJI_LIST.compile(server_id=core.resolve_id(server))
             )
         ]
 
-    async def get_invites(self, server: core.ResolvableULID, /) -> list[ServerInvite]:
+    async def get_server_invites(
+        self, server: core.ULIDOr[ServerChannel], /
+    ) -> list[ServerInvite]:
         """|coro|
 
         Get all server invites.
@@ -1901,24 +1915,32 @@ class HTTPClient:
         return [
             self.state.parser.parse_server_invite(i)
             for i in await self.request(
-                routes.SERVERS_INVITES_FETCH.compile(
-                    server_id=core.resolve_ulid(server)
-                )
+                routes.SERVERS_INVITES_FETCH.compile(server_id=core.resolve_id(server))
             )
         ]
 
     async def edit_member(
         self,
-        server: core.ResolvableULID,
-        member: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
+        member: str | BaseUser | BaseMember,
         /,
+        *,
         nickname: core.UndefinedOr[str | None] = core.UNDEFINED,
         avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        roles: core.UndefinedOr[list[core.ResolvableULID] | None] = core.UNDEFINED,
+        roles: core.UndefinedOr[list[core.ULIDOr[BaseRole]] | None] = core.UNDEFINED,
         timeout: core.UndefinedOr[
             datetime | timedelta | float | int | None
         ] = core.UNDEFINED,
     ) -> Member:
+        """|coro|
+
+        Edits the member.
+
+        Returns
+        -------
+        :class:`Member`
+            The updated member.
+        """
         j: raw.DataMemberEdit = {}
         r: list[raw.FieldsMember] = []
         if core.is_defined(nickname):
@@ -1933,7 +1955,7 @@ class HTTPClient:
                 r.append("Avatar")
         if core.is_defined(roles):
             if roles is not None:
-                j["roles"] = [core.resolve_ulid(e) for e in roles]
+                j["roles"] = [core.resolve_id(e) for e in roles]
             else:
                 r.append("Roles")
         if core.is_defined(timeout):
@@ -1950,15 +1972,15 @@ class HTTPClient:
         return self.state.parser.parse_member(
             await self.request(
                 routes.SERVERS_MEMBER_EDIT.compile(
-                    server_id=core.resolve_ulid(server),
-                    member_id=core.resolve_ulid(member),
+                    server_id=core.resolve_id(server),
+                    member_id=core.resolve_id(member),
                 ),
                 json=j,
             )
         )
 
     async def query_members_by_name(
-        self, server: core.ResolvableULID, query: str, /
+        self, server: core.ULIDOr[BaseServer], query: str, /
     ) -> list[Member]:
         """|coro|
 
@@ -1968,7 +1990,7 @@ class HTTPClient:
         return self.state.parser.parse_members_with_users(
             await self.request(
                 routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(
-                    server_id=core.resolve_ulid(server)
+                    server_id=core.resolve_id(server)
                 ),
                 params={
                     "query": query,
@@ -1978,7 +2000,10 @@ class HTTPClient:
         )
 
     async def get_member(
-        self, server: core.ResolvableULID, member: core.ResolvableULID, /
+        self,
+        server: core.ULIDOr[BaseServer],
+        member: str | BaseUser | BaseMember,
+        /,
     ) -> Member:
         """|coro|
 
@@ -1988,14 +2013,14 @@ class HTTPClient:
         return self.state.parser.parse_member(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH.compile(
-                    server_id=core.resolve_ulid(server),
-                    member_id=core.resolve_ulid(member),
+                    server_id=core.resolve_id(server),
+                    member_id=core.resolve_id(member),
                 )
             )
         )
 
     async def get_members(
-        self, server: core.ResolvableULID, /, *, exclude_offline: bool | None = None
+        self, server: core.ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
     ) -> list[Member]:
         """|coro|
 
@@ -2013,14 +2038,14 @@ class HTTPClient:
         return self.state.parser.parse_members_with_users(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH_ALL.compile(
-                    server_id=core.resolve_ulid(server)
+                    server_id=core.resolve_id(server)
                 ),
                 params=p,
             )
         )
 
     async def get_member_list(
-        self, server: core.ResolvableULID, /, *, exclude_offline: bool | None = None
+        self, server: core.ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
     ) -> MemberList:
         """|coro|
 
@@ -2038,14 +2063,14 @@ class HTTPClient:
         return self.state.parser.parse_member_list(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH_ALL.compile(
-                    server_id=core.resolve_ulid(server)
+                    server_id=core.resolve_id(server)
                 ),
                 params=p,
             )
         )
 
     async def kick_member(
-        self, server: core.ResolvableULID, member: core.ResolvableULID, /
+        self, server: core.ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /
     ) -> None:
         """|coro|
 
@@ -2061,14 +2086,14 @@ class HTTPClient:
         """
         await self.request(
             routes.SERVERS_MEMBER_REMOVE.compile(
-                server_id=core.resolve_ulid(server), member_id=core.resolve_ulid(member)
+                server_id=core.resolve_id(server), member_id=core.resolve_id(member)
             )
         )
 
     async def set_role_server_permissions(
         self,
-        server: core.ResolvableULID,
-        role: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
+        role: core.ULIDOr[BaseRole],
         /,
         *,
         allow: Permissions = Permissions.NONE,
@@ -2098,7 +2123,7 @@ class HTTPClient:
         }
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET.compile(
-                server_id=core.resolve_ulid(server), role_id=core.resolve_ulid(role)
+                server_id=core.resolve_id(server), role_id=core.resolve_id(role)
             ),
             json=j,
         )
@@ -2111,7 +2136,7 @@ class HTTPClient:
 
     async def set_default_role_permissions(
         self,
-        server: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
         permissions: Permissions | PermissionOverride,
         /,
     ) -> Server:
@@ -2136,7 +2161,7 @@ class HTTPClient:
         }
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(
-                server_id=core.resolve_ulid(server)
+                server_id=core.resolve_id(server)
             ),
             json=j,
         )
@@ -2145,7 +2170,7 @@ class HTTPClient:
         )
 
     async def create_role(
-        self, server: core.ResolvableULID, /, *, name: str, rank: int | None = None
+        self, server: core.ULIDOr[BaseServer], /, *, name: str, rank: int | None = None
     ) -> Role:
         """|coro|
 
@@ -2167,7 +2192,7 @@ class HTTPClient:
         APIError
             Creating the role failed.
         """
-        server_id = core.resolve_ulid(server)
+        server_id = core.resolve_id(server)
         j: raw.DataCreateRole = {"name": name, "rank": rank}
         d: raw.NewRoleResponse = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
@@ -2178,7 +2203,7 @@ class HTTPClient:
         )
 
     async def delete_role(
-        self, server: core.ResolvableULID, role: core.ResolvableULID, /
+        self, server: core.ULIDOr[BaseServer], role: core.ULIDOr[BaseRole], /
     ) -> None:
         """|coro|
 
@@ -2194,14 +2219,14 @@ class HTTPClient:
         """
         await self.request(
             routes.SERVERS_ROLES_DELETE.compile(
-                server_id=core.resolve_ulid(server), role_id=core.resolve_ulid(role)
+                server_id=core.resolve_id(server), role_id=core.resolve_id(role)
             )
         )
 
     async def edit_role(
         self,
-        server: core.ResolvableULID,
-        role: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
+        role: core.ULIDOr[BaseRole],
         /,
         *,
         name: core.UndefinedOr[str] = core.UNDEFINED,
@@ -2248,13 +2273,13 @@ class HTTPClient:
         if len(r) > 0:
             j["remove"] = r
 
-        server_id = core.resolve_ulid(server)
-        role_id = core.resolve_ulid(role)
+        server_id = core.resolve_id(server)
+        role_id = core.resolve_id(role)
 
         return self.state.parser.parse_role(
             await self.request(
                 routes.SERVERS_ROLES_EDIT.compile(
-                    server_id=core.resolve_ulid(server), role_id=core.resolve_ulid(role)
+                    server_id=core.resolve_id(server), role_id=core.resolve_id(role)
                 ),
                 json=j,
             ),
@@ -2264,8 +2289,8 @@ class HTTPClient:
 
     async def get_role(
         self,
-        server: core.ResolvableULID,
-        role: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
+        role: core.ULIDOr[BaseRole],
         /,
     ) -> Role:
         """|coro|
@@ -2277,8 +2302,8 @@ class HTTPClient:
         APIError
             Getting the role failed.
         """
-        server_id = core.resolve_ulid(server)
-        role_id = core.resolve_ulid(role)
+        server_id = core.resolve_id(server)
+        role_id = core.resolve_id(role)
 
         return self.state.parser.parse_role(
             await self.request(
@@ -2288,7 +2313,7 @@ class HTTPClient:
             server_id,
         )
 
-    async def mark_server_as_read(self, server: core.ResolvableULID, /) -> None:
+    async def mark_server_as_read(self, server: core.ULIDOr[BaseServer], /) -> None:
         """|coro|
 
         Mark all channels in a server as read.
@@ -2298,7 +2323,7 @@ class HTTPClient:
             This can only be used by non-bot accounts.
         """
         await self.request(
-            routes.SERVERS_SERVER_ACK.compile(server_id=core.resolve_ulid(server))
+            routes.SERVERS_SERVER_ACK.compile(server_id=core.resolve_id(server))
         )
 
     async def create_server(
@@ -2332,18 +2357,18 @@ class HTTPClient:
             (False, d["channels"]),
         )
 
-    async def delete_server(self, server: core.ResolvableULID, /) -> None:
+    async def delete_server(self, server: core.ULIDOr[BaseServer], /) -> None:
         """|coro|
 
         Deletes a server if owner otherwise leaves.
         https://developers.revolt.chat/api/#tag/Server-Information/operation/server_delete_req
         """
         await self.request(
-            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_ulid(server))
+            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_id(server))
         )
 
     async def leave_server(
-        self, server: core.ResolvableULID, /, *, silent: bool | None = None
+        self, server: core.ULIDOr[BaseServer], /, *, silent: bool | None = None
     ) -> None:
         """|coro|
 
@@ -2359,13 +2384,13 @@ class HTTPClient:
         if silent is not None:
             p["leave_silently"] = utils._bool(silent)
         await self.request(
-            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_ulid(server)),
+            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_id(server)),
             params=p,
         )
 
     async def edit_server(
         self,
-        server: core.ResolvableULID,
+        server: core.ULIDOr[BaseServer],
         /,
         *,
         name: core.UndefinedOr[str] = core.UNDEFINED,
@@ -2454,7 +2479,7 @@ class HTTPClient:
             j["remove"] = r
 
         d: raw.Server = await self.request(
-            routes.SERVERS_SERVER_EDIT.compile(server_id=core.resolve_ulid(server)),
+            routes.SERVERS_SERVER_EDIT.compile(server_id=core.resolve_id(server)),
             json=j,
         )
         return self.state.parser.parse_server(
@@ -2462,7 +2487,11 @@ class HTTPClient:
         )
 
     async def get_server(
-        self, server: core.ResolvableULID, /, *, populate_channels: bool | None = None
+        self,
+        server: core.ULIDOr[BaseServer],
+        /,
+        *,
+        populate_channels: bool | None = None,
     ) -> Server:
         """|coro|
 
@@ -2478,7 +2507,7 @@ class HTTPClient:
         if populate_channels is not None:
             p["include_channels"] = utils._bool(populate_channels)
         d: raw.FetchServerResponse = await self.request(
-            routes.SERVERS_SERVER_FETCH.compile(server_id=core.resolve_ulid(server))
+            routes.SERVERS_SERVER_FETCH.compile(server_id=core.resolve_id(server))
         )
         return self.state.parser.parse_server(
             d,  # type: ignore
@@ -2587,7 +2616,7 @@ class HTTPClient:
         await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j, params=p)
 
     # Users control
-    async def accept_friend_request(self, user: core.ResolvableULID, /) -> User:
+    async def accept_friend_request(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Accept another user's friend request.
@@ -2598,11 +2627,11 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_ADD_FRIEND.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_ADD_FRIEND.compile(user_id=core.resolve_id(user))
             )
         )
 
-    async def block_user(self, user: core.ResolvableULID, /) -> User:
+    async def block_user(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Block another user by their ID.
@@ -2613,7 +2642,7 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_BLOCK_USER.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_BLOCK_USER.compile(user_id=core.resolve_id(user))
             )
         )
 
@@ -2723,7 +2752,7 @@ class HTTPClient:
 
     async def edit_user(
         self,
-        user: core.ResolvableULID,
+        user: core.ULIDOr[BaseUser],
         /,
         *,
         display_name: core.UndefinedOr[str] = core.UNDEFINED,
@@ -2762,7 +2791,7 @@ class HTTPClient:
             Editing the user failed.
         """
         return await self._edit_user(
-            routes.USERS_EDIT_USER.compile(user_id=core.resolve_ulid(user)),
+            routes.USERS_EDIT_USER.compile(user_id=core.resolve_id(user)),
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -2784,14 +2813,14 @@ class HTTPClient:
             for e in await self.request(routes.USERS_FETCH_DMS.compile())
         ]  # type: ignore # The returned channels are always DM/Groups
 
-    async def get_user_profile(self, user: core.ResolvableULID, /) -> UserProfile:
+    async def get_user_profile(self, user: core.ULIDOr[BaseUser], /) -> UserProfile:
         """|coro|
 
         Retrieve a user's profile data.
         Will fail if you do not have permission to access the other user's profile.
         https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_profile_req
         """
-        user_id = core.resolve_ulid(user)
+        user_id = core.resolve_id(user)
         return self.state.parser.parse_user_profile(
             await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
         )._stateful(self.state, user_id)
@@ -2811,7 +2840,7 @@ class HTTPClient:
             await self.request(routes.USERS_FETCH_SELF.compile())
         )
 
-    async def get_user(self, user: core.ResolvableULID, /) -> User:
+    async def get_user(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Retrieve a user's information.
@@ -2829,11 +2858,11 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_FETCH_USER.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_FETCH_USER.compile(user_id=core.resolve_id(user))
             )
         )
 
-    async def get_user_flags(self, user: core.ResolvableULID, /) -> UserFlags:
+    async def get_user_flags(self, user: core.ULIDOr[BaseUser], /) -> UserFlags:
         """|coro|
 
         Retrieve a user's flags.
@@ -2842,15 +2871,13 @@ class HTTPClient:
         return UserFlags(
             (
                 await self.request(
-                    routes.USERS_FETCH_USER_FLAGS.compile(
-                        user_id=core.resolve_ulid(user)
-                    )
+                    routes.USERS_FETCH_USER_FLAGS.compile(user_id=core.resolve_id(user))
                 )
             )["flags"]
         )
 
     async def get_mutual_friends_and_servers(
-        self, user: core.ResolvableULID, /
+        self, user: core.ULIDOr[BaseUser], /
     ) -> Mutuals:
         """|coro|
 
@@ -2864,18 +2891,18 @@ class HTTPClient:
         """
         return self.state.parser.parse_mutuals(
             await self.request(
-                routes.USERS_FIND_MUTUAL.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_FIND_MUTUAL.compile(user_id=core.resolve_id(user))
             )
         )
 
-    async def get_default_avatar(self, user: core.ResolvableULID, /) -> bytes:
+    async def get_default_avatar(self, user: core.ULIDOr[BaseUser], /) -> bytes:
         """|coro|
 
         This returns a default avatar based on the given ID.
         https://developers.revolt.chat/api/#tag/User-Information/operation/get_default_avatar_req
         """
         response = await self._request(
-            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=core.resolve_ulid(user))
+            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=core.resolve_id(user))
         )
         avatar = await response.read()
         if not response.closed:
@@ -2883,7 +2910,7 @@ class HTTPClient:
         return avatar
 
     async def open_dm(
-        self, user: core.ResolvableULID, /
+        self, user: core.ULIDOr[BaseUser], /
     ) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
@@ -2898,13 +2925,13 @@ class HTTPClient:
         """
         channel = self.state.parser.parse_channel(
             await self.request(
-                routes.USERS_OPEN_DM.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_OPEN_DM.compile(user_id=core.resolve_id(user))
             )
         )
         assert isinstance(channel, (SavedMessagesChannel, DMChannel))
         return channel
 
-    async def deny_friend_request(self, user: core.ResolvableULID, /) -> User:
+    async def deny_friend_request(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Denies another user's friend request.
@@ -2919,11 +2946,11 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_id(user))
             )
         )
 
-    async def remove_friend(self, user: core.ResolvableULID, /) -> User:
+    async def remove_friend(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Removes an existing friend.
@@ -2934,11 +2961,11 @@ class HTTPClient:
         Raises
         ------
         APIError
-            Removing the friend request failed.
+            Removing the friend failed.
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_id(user))
             )
         )
 
@@ -2975,7 +3002,7 @@ class HTTPClient:
             )
         )
 
-    async def unblock_user(self, user: core.ResolvableULID, /) -> User:
+    async def unblock_user(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Unblock another user by their ID.
@@ -2993,13 +3020,13 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_UNBLOCK_USER.compile(user_id=core.resolve_ulid(user))
+                routes.USERS_UNBLOCK_USER.compile(user_id=core.resolve_id(user))
             )
         )
 
     # Webhooks control
     async def delete_webhook(
-        self, webhook: core.ResolvableULID, /, *, token: str | None = None
+        self, webhook: core.ULIDOr[BaseWebhook], /, *, token: str | None = None
     ) -> None:
         """|coro|
 
@@ -3015,20 +3042,20 @@ class HTTPClient:
         if token is None:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE.compile(
-                    webhook_id=core.resolve_ulid(webhook)
+                    webhook_id=core.resolve_id(webhook)
                 )
             )
         else:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(
-                    webhook_id=core.resolve_ulid(webhook), webhook_token=token
+                    webhook_id=core.resolve_id(webhook), webhook_token=token
                 ),
                 authenticated=False,
             )
 
     async def edit_webhook(
         self,
-        webhook: core.ResolvableULID,
+        webhook: core.ULIDOr[BaseWebhook],
         /,
         *,
         token: str | None = None,
@@ -3074,14 +3101,14 @@ class HTTPClient:
         return self.state.parser.parse_webhook(
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT.compile(
-                    webhook_id=core.resolve_ulid(webhook)
+                    webhook_id=core.resolve_id(webhook)
                 ),
                 json=j,
             )
             if token is None
             else await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(
-                    webhook_id=core.resolve_ulid(webhook), webhook_token=token
+                    webhook_id=core.resolve_id(webhook), webhook_token=token
                 ),
                 json=j,
                 authenticated=False,
@@ -3090,14 +3117,14 @@ class HTTPClient:
 
     async def execute_webhook(
         self,
-        webhook: core.ResolvableULID,
+        webhook: core.ULIDOr[BaseWebhook],
         token: str,
         /,
         content: str | None = None,
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ResolvableULID] | None = None,
+        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -3124,7 +3151,7 @@ class HTTPClient:
                 (
                     reply.build()
                     if isinstance(reply, Reply)
-                    else {"id": core.resolve_ulid(reply), "mention": False}
+                    else {"id": core.resolve_id(reply), "mention": False}
                 )
                 for reply in replies
             ]
@@ -3140,7 +3167,7 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(
-                    webhook_id=core.resolve_ulid(webhook), webhook_token=token
+                    webhook_id=core.resolve_id(webhook), webhook_token=token
                 ),
                 json=j,
                 headers=headers,
@@ -3150,7 +3177,7 @@ class HTTPClient:
 
     async def get_webhook(
         self,
-        webhook: core.ResolvableULID,
+        webhook: core.ULIDOr[BaseWebhook],
         /,
         *,
         token: str | None = None,
@@ -3174,13 +3201,13 @@ class HTTPClient:
             await (
                 self.request(
                     routes.WEBHOOKS_WEBHOOK_FETCH.compile(
-                        webhook_id=core.resolve_ulid(webhook)
+                        webhook_id=core.resolve_id(webhook)
                     )
                 )
                 if token is None
                 else self.request(
                     routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(
-                        webhook_id=core.resolve_ulid(webhook), webhook_token=token
+                        webhook_id=core.resolve_id(webhook), webhook_token=token
                     ),
                     authenticated=False,
                 )
@@ -3597,7 +3624,7 @@ class HTTPClient:
         return d["secret"]
 
     async def edit_session(
-        self, session: core.ResolvableULID, *, friendly_name: str
+        self, session: core.ULIDOr[PartialSession], *, friendly_name: str
     ) -> PartialSession:
         """|coro|
 
@@ -3607,7 +3634,7 @@ class HTTPClient:
         return self.state.parser.parse_partial_session(
             await self.request(
                 routes.AUTH_SESSION_EDIT.compile(
-                    session_id=core.resolve_ulid(session), json=j
+                    session_id=core.resolve_id(session), json=j
                 )
             )
         )
@@ -3670,13 +3697,13 @@ class HTTPClient:
         """
         await self.request(routes.AUTH_SESSION_LOGOUT.compile())
 
-    async def revoke_session(self, session_id: core.ResolvableULID, /) -> None:
+    async def revoke_session(self, session_id: core.ULIDOr[PartialSession], /) -> None:
         """|coro|
 
         Delete a specific active session.
         """
         await self.request(
-            routes.AUTH_SESSION_REVOKE.compile(session_id=core.resolve_ulid(session_id))
+            routes.AUTH_SESSION_REVOKE.compile(session_id=core.resolve_id(session_id))
         )
 
     async def revoke_all_sessions(self, *, revoke_self: bool | None = None) -> None:

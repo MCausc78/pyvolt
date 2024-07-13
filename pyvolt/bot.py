@@ -54,7 +54,7 @@ class BaseBot(Base):
 class Bot(BaseBot):
     """Partial representation of a bot on Revolt."""
 
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user ID of the bot owner."""
 
     token: str = field(repr=False, hash=True, eq=True)

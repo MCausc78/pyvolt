@@ -567,7 +567,7 @@ class Client:
         return self._state.http
 
     @property
-    def servers(self) -> ca.Mapping[core.ULID, Server]:
+    def servers(self) -> ca.Mapping[str, Server]:
         cache = self._state.cache
         if cache:
             return cache.get_servers_mapping()

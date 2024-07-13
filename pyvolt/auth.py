@@ -14,7 +14,7 @@ if t.TYPE_CHECKING:
 
 @define(slots=True)
 class PartialAccount:
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The unique account ID."""
 
     email: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -25,10 +25,10 @@ class PartialAccount:
 class MFATicket:
     """The Multi-factor authentication ticket."""
 
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The unique ticket ID."""
 
-    account_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    account_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The associated account ID."""
 
     token: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -84,7 +84,7 @@ class PartialSession(Base):
 class Session(PartialSession):
     """The session information."""
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of associated user."""
 
     token: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -134,7 +134,7 @@ class MFARequired:
 class AccountDisabled:
     """The password/MFA are valid, but account is disabled."""
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of the disabled user account."""
 
 

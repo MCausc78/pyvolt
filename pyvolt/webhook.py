@@ -4,7 +4,14 @@ from attrs import define, field
 
 from . import cdn, core
 from .base import Base
-from .message import Reply, Interactions, Masquerade, SendableEmbed, Message
+from .message import (
+    Reply,
+    Interactions,
+    Masquerade,
+    SendableEmbed,
+    BaseMessage,
+    Message,
+)
 from .permissions import Permissions
 
 
@@ -84,7 +91,7 @@ class BaseWebhook(Base):
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ResolvableULID] | None = None,
+        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -146,7 +153,7 @@ class Webhook(BaseWebhook):
     )
     """The stateless avatar of the webhook."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The channel this webhook belongs to."""
 
     permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)

@@ -182,8 +182,8 @@ class Parser:
 
     # basic start
 
-    def parse_id(self, d: t.Any) -> core.ULID:
-        return core.ULID(d)
+    def parse_id(self, d: t.Any) -> str:
+        return d
 
     def parse_asset_metadata(self, d: raw.Metadata) -> cdn.AssetMetadata:
         return cdn.AssetMetadata(
@@ -247,7 +247,7 @@ class Parser:
 
     # internals end
 
-    def parse_ban(self, d: raw.ServerBan, users: dict[core.ULID, DisplayUser]) -> Ban:
+    def parse_ban(self, d: raw.ServerBan, users: dict[str, DisplayUser]) -> Ban:
         id = d["_id"]
         user_id = self.parse_id(id["user"])
 
@@ -472,7 +472,7 @@ class Parser:
     def parse_disabled_response_login(
         self, d: raw.a.DisabledResponseLogin
     ) -> AccountDisabled:
-        return AccountDisabled(user_id=core.resolve_ulid(d["user_id"]))
+        return AccountDisabled(user_id=core.resolve_id(d["user_id"]))
 
     def parse_direct_message_channel(self, d: raw.DirectMessageChannel) -> DMChannel:
         recipient_ids = d["recipients"]
@@ -654,8 +654,7 @@ class Parser:
         self,
         d: raw.GroupChannel,
         recipients: (
-            tuple[t.Literal[True], list[core.ULID]]
-            | tuple[t.Literal[False], list[User]]
+            tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[User]]
         ),
     ) -> GroupChannel:
         icon = d.get("icon")
@@ -731,7 +730,7 @@ class Parser:
         d: raw.Member,
         *,
         user: User | None = None,
-        users: dict[core.ULID, User] | None = None,
+        users: dict[str, User] | None = None,
     ) -> Member:
         if user and users:
             raise ValueError("Cannot specify both user and users")
@@ -771,8 +770,8 @@ class Parser:
         self,
         d: raw.Message,
         *,
-        members: dict[core.ULID, Member] = {},
-        users: dict[core.ULID, User] = {},
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
     ) -> Message:
         author_id = self.parse_id(d["author"])
         webhook = d.get("webhook")
@@ -1219,7 +1218,7 @@ class Parser:
             token=None,
         )
 
-    def parse_role(self, d: raw.Role, role_id: core.ULID, server_id: core.ULID) -> Role:
+    def parse_role(self, d: raw.Role, role_id: str, server_id: str) -> Role:
         return Role(
             state=self.state,
             id=role_id,
@@ -1271,7 +1270,7 @@ class Parser:
         self,
         d: raw.Server,
         channels: (
-            tuple[t.Literal[True], list[core.ULID]]
+            tuple[t.Literal[True], list[str]]
             | tuple[t.Literal[False], list[ServerChannel]]
         ),
     ) -> Server:
@@ -1323,10 +1322,10 @@ class Parser:
         ),
     ) -> Server:
         internal_channels: (
-            tuple[t.Literal[True], list[core.ULID]]
+            tuple[t.Literal[True], list[str]]
             | tuple[t.Literal[False], list[ServerChannel]]
         ) = (
-            (True, [core.ULID(i) for i in channels[1]])
+            (True, [str(i) for i in channels[1]])
             if channels[0]
             else (False, [self.parse_channel(c) for c in channels[1]])  # type: ignore
         )

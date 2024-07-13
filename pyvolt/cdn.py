@@ -77,16 +77,16 @@ class StatelessAsset:
     reported: bool = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether this file was reported."""
 
-    message_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the message this file is associated with."""
 
-    user_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user this file is associated with."""
 
-    server_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server this file is associated with."""
 
-    object_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    object_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the object this file is associated with."""
 
     def _stateful(self, state: State, tag: Tag) -> Asset:

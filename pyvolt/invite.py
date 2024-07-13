@@ -73,7 +73,7 @@ class BaseInvite:
 class ServerPublicInvite(BaseInvite):
     """Server channel invite."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of the server."""
 
     server_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -92,7 +92,7 @@ class ServerPublicInvite(BaseInvite):
     flags: ServerFlags | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server flags."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of destination channel."""
 
     channel_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -147,7 +147,7 @@ class ServerPublicInvite(BaseInvite):
 class GroupPublicInvite(BaseInvite):
     """Group channel invite."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of the destination channel."""
 
     channel_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -200,7 +200,7 @@ class UnknownPublicInvite(BaseInvite):
 class PrivateBaseInvite(BaseInvite):
     """Representation of a invite on Revolt."""
 
-    creator_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The ID of the user who created this invite."""
 
 
@@ -208,7 +208,7 @@ class PrivateBaseInvite(BaseInvite):
 class GroupInvite(PrivateBaseInvite):
     """Representation of a group invite on Revolt."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server/group channel this invite points to."""
 
     async def accept(self) -> GroupChannel:
@@ -234,10 +234,10 @@ class GroupInvite(PrivateBaseInvite):
 class ServerInvite(PrivateBaseInvite):
     """Representation of a server invite on Revolt."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server this invite points to."""
 
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server channel this invite points to."""
 
     async def accept(self) -> Server:

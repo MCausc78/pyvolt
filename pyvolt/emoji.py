@@ -10,10 +10,10 @@ from .base import Base
 class BaseEmoji(Base):
     """Representation of an emoji on Revolt."""
 
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Unique emoji ID."""
 
-    creator_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Uploader user ID."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -30,7 +30,7 @@ class BaseEmoji(Base):
 class ServerEmoji(BaseEmoji):
     """Representation of an emoji in server on Revolt."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """What server owns this emoji."""
 
 

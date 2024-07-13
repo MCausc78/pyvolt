@@ -176,7 +176,7 @@ class ChannelUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelDeleteEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     channel: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -196,8 +196,8 @@ class ChannelDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientAddEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -219,8 +219,8 @@ class GroupRecipientAddEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientRemoveEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
@@ -242,21 +242,21 @@ class GroupRecipientRemoveEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelStartTypingEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class ChannelStopTypingEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class MessageAckEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -334,15 +334,15 @@ class MessageAppendEvent(BaseEvent):
 
 @define(slots=True)
 class MessageDeleteEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class MessageReactEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """May be either ULID or Unicode."""
@@ -350,9 +350,9 @@ class MessageReactEvent(BaseEvent):
 
 @define(slots=True)
 class MessageUnreactEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """May be either ULID or Unicode."""
@@ -360,8 +360,8 @@ class MessageUnreactEvent(BaseEvent):
 
 @define(slots=True)
 class MessageClearReactionEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """May be either ULID or Unicode."""
@@ -369,8 +369,8 @@ class MessageClearReactionEvent(BaseEvent):
 
 @define(slots=True)
 class BulkMessageDeleteEvent(BaseEvent):
-    channel_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
@@ -403,8 +403,8 @@ class ServerEmojiCreateEvent(BaseEvent):
 @define(slots=True)
 class ServerEmojiDeleteEvent(BaseEvent):
     emoji: ServerEmoji | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    server_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    emoji_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -452,7 +452,7 @@ class ServerUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerDeleteEvent(BaseEvent):
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_process(self) -> None:
@@ -513,8 +513,8 @@ class ServerMemberUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberRemoveEvent(BaseEvent):
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     member: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
     reason: MemberRemovalIntention = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -575,8 +575,8 @@ class RawServerRoleUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerRoleDeleteEvent(BaseEvent):
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    role_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    role_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
     role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -633,7 +633,7 @@ class UserUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class UserRelationshipUpdateEvent(BaseEvent):
-    current_user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    current_user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current user ID."""
 
     old_user: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -684,7 +684,7 @@ class UserRelationshipUpdateEvent(BaseEvent):
 class UserSettingsUpdateEvent(BaseEvent):
     """User settings were updated remotely."""
 
-    current_user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    current_user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current user ID."""
 
     partial: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -714,7 +714,7 @@ class UserPlatformWipeEvent(BaseEvent):
     User flags are specified to explain why a wipe is occurring though not all reasons will necessarily ever appear.
     """
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
@@ -731,7 +731,7 @@ class WebhookUpdateEvent(BaseEvent):
 @define(slots=True)
 class WebhookDeleteEvent(BaseEvent):
     webhook: Webhook | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    webhook_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
@@ -746,16 +746,14 @@ class SessionCreateEvent(AuthifierEvent):
 
 @define(slots=True)
 class SessionDeleteEvent(AuthifierEvent):
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    session_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    session_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class SessionDeleteAllEvent(AuthifierEvent):
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    exclude_session_id: core.ULID | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    exclude_session_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 @define(slots=True)

@@ -12,15 +12,22 @@ from . import (
     utils,
 )
 from .base import Base
+from .bot import BaseBot
 from .errors import NoData
 from .permissions import Permissions, PermissionOverride
 from .safety_reports import ContentReportReason
 from .state import State
-from .user import DisplayUser, User
+from .user import BaseUser, DisplayUser, User
 
 if t.TYPE_CHECKING:
     from . import raw
-    from .channel import ChannelType, ServerTextChannel, VoiceChannel, ServerChannel
+    from .channel import (
+        ChannelType,
+        TextChannel,
+        ServerTextChannel,
+        VoiceChannel,
+        ServerChannel,
+    )
 
 
 class ServerFlags(IntFlag):
@@ -36,48 +43,48 @@ class ServerFlags(IntFlag):
 class Category:
     """Representation of channel category on Revolt server."""
 
-    id: core.ULID
+    id: str
     """Unique ID for this category."""
 
     title: str
     """Title for this category."""
 
-    channels: list[core.ULID]
+    channels: list[str]
     """Channel in this category."""
 
     __slots__ = ("id", "title", "channels")
 
     def __init__(
         self,
-        id: core.ResolvableULID,
+        id: core.ULIDOr[Category],
         title: str,
-        channels: list[core.ResolvableULID],
+        channels: list[core.ULIDOr[ServerChannel]],
     ) -> None:
-        self.id = core.resolve_ulid(id)
+        self.id = core.resolve_id(id)
         self.title = title
-        self.channels = [core.resolve_ulid(channel) for channel in channels]
+        self.channels = [core.resolve_id(channel) for channel in channels]
 
     def build(self) -> raw.Category:
         return {
             "id": self.id,
             "title": self.title,
-            "channels": self.channels,  # type: ignore
+            "channels": self.channels,
         }
 
 
 class SystemMessageChannels:
     """System message channel assignments."""
 
-    user_joined: core.ULID | None
+    user_joined: str | None
     """ID of channel to send user join messages in."""
 
-    user_left: core.ULID | None
+    user_left: str | None
     """ID of channel to send user left messages in."""
 
-    user_kicked: core.ULID | None
+    user_kicked: str | None
     """ID of channel to send user kicked messages in."""
 
-    user_banned: core.ULID | None
+    user_banned: str | None
     """ID of channel to send user banned messages in."""
 
     __slots__ = ("user_joined", "user_left", "user_kicked", "user_banned")
@@ -85,21 +92,15 @@ class SystemMessageChannels:
     def __init__(
         self,
         *,
-        user_joined: core.ResolvableULID | None = None,
-        user_left: core.ResolvableULID | None = None,
-        user_kicked: core.ResolvableULID | None = None,
-        user_banned: core.ResolvableULID | None = None,
+        user_joined: core.ULIDOr[TextChannel] | None = None,
+        user_left: core.ULIDOr[TextChannel] | None = None,
+        user_kicked: core.ULIDOr[TextChannel] | None = None,
+        user_banned: core.ULIDOr[TextChannel] | None = None,
     ) -> None:
-        self.user_joined = (
-            None if user_joined is None else core.resolve_ulid(user_joined)
-        )
-        self.user_left = None if user_left is None else core.resolve_ulid(user_left)
-        self.user_kicked = (
-            None if user_kicked is None else core.resolve_ulid(user_kicked)
-        )
-        self.user_banned = (
-            None if user_banned is None else core.resolve_ulid(user_banned)
-        )
+        self.user_joined = None if user_joined is None else core.resolve_id(user_joined)
+        self.user_left = None if user_left is None else core.resolve_id(user_left)
+        self.user_kicked = None if user_kicked is None else core.resolve_id(user_kicked)
+        self.user_banned = None if user_banned is None else core.resolve_id(user_banned)
 
     def build(self) -> raw.SystemMessageChannels:
         d: raw.SystemMessageChannels = {}
@@ -118,7 +119,7 @@ class SystemMessageChannels:
 class BaseRole(Base):
     """Base representation of a server role."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     async def delete(self) -> None:
         """|coro|
@@ -279,7 +280,7 @@ class BaseServer(Base):
 
     async def add_bot(
         self,
-        bot: core.ResolvableULID,
+        bot: core.ULIDOr[BaseBot | BaseUser],
     ) -> None:
         """|coro|
 
@@ -502,7 +503,7 @@ class BaseServer(Base):
 
     async def set_role_permissions(
         self,
-        role: core.ResolvableULID,
+        role: core.ULIDOr[BaseRole],
         *,
         allow: Permissions = Permissions.NONE,
         deny: Permissions = Permissions.NONE,
@@ -558,13 +559,11 @@ class PartialServer(BaseServer):
     """Partial representation of a server on Revolt."""
 
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: core.UndefinedOr[core.ULID] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    owner_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     description: core.UndefinedOr[str | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    channel_ids: core.UndefinedOr[list[core.ULID]] = field(
+    channel_ids: core.UndefinedOr[list[str]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     categories: core.UndefinedOr[list[Category] | None] = field(
@@ -604,11 +603,11 @@ class PartialServer(BaseServer):
 
 
 def _sort_roles(
-    target_roles: list[core.ULID],
+    target_roles: list[str],
     /,
     *,
     safe: bool,
-    server_roles: dict[core.ULID, Role],
+    server_roles: dict[str, Role],
 ) -> list[Role]:
     if not safe:
         return sorted(
@@ -648,7 +647,7 @@ def _calculate_server_permissions(
 class Server(BaseServer):
     """Representation of a server on Revolt."""
 
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user ID of the owner."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -658,8 +657,7 @@ class Server(BaseServer):
     """The description for the server."""
 
     internal_channels: (
-        tuple[t.Literal[True], list[core.ULID]]
-        | tuple[t.Literal[False], list[ServerChannel]]
+        tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[ServerChannel]]
     ) = field(repr=True, hash=True, kw_only=True, eq=True)
 
     categories: list[Category] | None = field(
@@ -672,7 +670,7 @@ class Server(BaseServer):
     )
     """The configuration for sending system event messages."""
 
-    roles: dict[core.ULID, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
+    roles: dict[str, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The roles for this server."""
 
     default_permissions: Permissions = field(
@@ -757,7 +755,7 @@ class Server(BaseServer):
         )
 
     @property
-    def channel_ids(self) -> list[core.ULID]:
+    def channel_ids(self) -> list[str]:
         """IDs of channels within this server."""
         if self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
@@ -775,7 +773,7 @@ class Server(BaseServer):
             return []
         channels = []
         for channel_id in self.internal_channels[1]:
-            id: core.ULID = channel_id  # type: ignore
+            id: str = channel_id  # type: ignore
             channel = cache.get_channel(id, caching._USER_REQUEST)
 
             if channel:
@@ -798,7 +796,7 @@ class Server(BaseServer):
         return cache.get_all_server_members_of(self.id, caching._USER_REQUEST) or []
 
     @property
-    def members_mapping(self) -> dict[core.ULID, Member]:
+    def members_mapping(self) -> dict[str, Member]:
         """The members mapping of this server."""
         cache = self.state.cache
         if not cache:
@@ -840,10 +838,10 @@ class Server(BaseServer):
 class Ban:
     """Representation of a server ban on Revolt."""
 
-    server_id: core.ULID = field(repr=False, hash=False, kw_only=True, eq=False)
+    server_id: str = field(repr=False, hash=False, kw_only=True, eq=False)
     """The server ID."""
 
-    user_id: core.ULID = field(repr=False, hash=False, kw_only=True, eq=False)
+    user_id: str = field(repr=False, hash=False, kw_only=True, eq=False)
     """The user ID that was banned."""
 
     reason: str | None = field(repr=False, hash=False, kw_only=True, eq=False)
@@ -860,15 +858,15 @@ class BaseMember:
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     """State that controls this member."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server that member is on."""
 
-    _user: User | core.ULID = field(
+    _user: User | str = field(
         repr=True, hash=True, kw_only=True, eq=True, alias="_user"
     )
 
     @property
-    def id(self) -> core.ULID:
+    def id(self) -> str:
         """The member's user ID."""
         return self._user.id if isinstance(self._user, User) else self._user
 
@@ -883,7 +881,7 @@ class PartialMember(BaseMember):
     internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    roles: core.UndefinedOr[list[core.ULID]] = field(
+    roles: core.UndefinedOr[list[str]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     timeout: core.UndefinedOr[datetime | None] = field(
@@ -911,7 +909,7 @@ class Member(BaseMember):
     )
     """The member's avatar on server."""
 
-    roles: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    roles: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's roles."""
 
     timeout: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)

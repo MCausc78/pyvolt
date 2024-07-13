@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import datetime
+from datetime import datetime, timezone
 import typing as t
-import ulid
+from .ulid import _ulid_timestamp
 
 
 class Undefined:
@@ -28,33 +28,30 @@ def is_defined(x: UndefinedOr[T]) -> t.TypeGuard[T]:
     return x is not UNDEFINED and not isinstance(x, Undefined)
 
 
-class ULID(str):
-    @property
-    def timestamp(self) -> float:
-        return ulid.parse(self).timestamp().timestamp
+def ulid_timestamp(val: str) -> float:
+    return _ulid_timestamp(val.encode("ascii"))
 
-    @property
-    def created_at(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.timestamp)
+
+def ulid_time(val: str) -> datetime:
+    return datetime.fromtimestamp(ulid_timestamp(val), timezone.utc)
 
 
 class HasID(t.Protocol):
-    id: ULID
+    id: str
 
 
-ResolvableULID = ULID | HasID | str
+U = t.TypeVar("U", bound="HasID")
+ULIDOr = str | U
 
 
-def resolve_ulid(resolvable: ResolvableULID) -> ULID:
-    if isinstance(resolvable, ULID):
-        return resolvable
+def resolve_id(resolvable: ULIDOr) -> str:
     if isinstance(resolvable, str):
-        return ULID(resolvable)
+        return resolvable
     return resolvable.id
 
 
 # zero ID
-Z = ULID("00000000000000000000000000")
+Z = "00000000000000000000000000"
 
 __version__: str = "1.0.0"
 
@@ -64,10 +61,9 @@ __all__ = (
     "T",
     "UndefinedOr",
     "is_defined",
-    "ULID",
     "HasID",
-    "ResolvableULID",
-    "resolve_ulid",
+    "ULIDOr",
+    "resolve_id",
     "__version__",
     "Z",
 )

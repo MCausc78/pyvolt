@@ -13,6 +13,7 @@ from .safety_reports import UserReportReason
 if t.TYPE_CHECKING:
     from . import raw
     from .channel import SavedMessagesChannel, DMChannel
+    from .message import BaseMessage
     from .state import State
 
 
@@ -100,7 +101,7 @@ class StatelessUserProfile:
     )
     """The stateless background visible on user's profile."""
 
-    def _stateful(self, state: State, user_id: core.ULID) -> UserProfile:
+    def _stateful(self, state: State, user_id: str) -> UserProfile:
         return UserProfile(
             content=self.content,
             internal_background=self.internal_background,
@@ -114,7 +115,7 @@ class UserProfile(StatelessUserProfile):
     """User's profile."""
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     @property
     def background(self) -> cdn.Asset | None:
@@ -276,7 +277,7 @@ class RelationshipStatus(StrEnum):
 class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Other user's ID."""
 
     status: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -287,10 +288,10 @@ class Relationship:
 class Mutuals:
     """Mutual friends and servers response."""
 
-    user_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Array of mutual user IDs that both users are friends with."""
 
-    server_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Array of mutual server IDs that both users are in."""
 
 
@@ -362,7 +363,7 @@ class BaseUser(Base):
         """
         return await self.state.http.deny_friend_request(self.id)
 
-    async def mutual_friend_ids(self) -> list[core.ULID]:
+    async def mutual_friend_ids(self) -> list[str]:
         """|coro|
 
         Retrieve a list of mutual friends with this user.
@@ -370,7 +371,7 @@ class BaseUser(Base):
         mutuals = await self.state.http.get_mutual_friends_and_servers(self.id)
         return mutuals.user_ids
 
-    async def mutual_server_ids(self) -> list[core.ULID]:
+    async def mutual_server_ids(self) -> list[str]:
         """|coro|
 
         Retrieve a list of mutual servers with this user.
@@ -404,7 +405,7 @@ class BaseUser(Base):
         reason: UserReportReason,
         *,
         additional_context: str | None = None,
-        message_context: core.ResolvableULID,
+        message_context: core.ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -518,17 +519,17 @@ class DisplayUser(BaseUser):
 
 @define(slots=True)
 class BotUserInfo:
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the owner of this bot."""
 
 
 def _calculate_user_permissions(
-    user_id: core.ULID,
+    user_id: str,
     user_privileged: bool,
     user_relationship: RelationshipStatus,
     user_bot: BotUserInfo | None,
     *,
-    perspective_id: core.ULID,
+    perspective_id: str,
     perspective_bot: BotUserInfo | None,
 ) -> UserPermissions:
     if (
@@ -688,7 +689,7 @@ class User(DisplayUser):
 class SelfUser(User):
     """Representation of a user on Revolt."""
 
-    relations: dict[core.ULID, Relationship] = field(
+    relations: dict[str, Relationship] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The dictionary of relationships with other users."""

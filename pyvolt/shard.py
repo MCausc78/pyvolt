@@ -12,6 +12,8 @@ from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
 if t.TYPE_CHECKING:
     from . import raw
+    from .channel import TextChannel
+    from .server import BaseServer
     from .state import State
 
 try:
@@ -138,14 +140,14 @@ class Shard:
             raise TypeError("No websocket")
         return self._ws
 
-    async def begin_typing(self, channel: core.ResolvableULID) -> None:
-        await self.send({"type": "BeginTyping", "channel": core.resolve_ulid(channel)})
+    async def begin_typing(self, channel: core.ULIDOr[TextChannel]) -> None:
+        await self.send({"type": "BeginTyping", "channel": core.resolve_id(channel)})
 
-    async def end_typing(self, channel: core.ResolvableULID) -> None:
-        await self.send({"type": "EndTyping", "channel": core.resolve_ulid(channel)})
+    async def end_typing(self, channel: core.ULIDOr[TextChannel]) -> None:
+        await self.send({"type": "EndTyping", "channel": core.resolve_id(channel)})
 
-    async def subscribe_to(self, server: core.ResolvableULID) -> None:
-        await self.send({"type": "Subscribe", "server_id": core.resolve_ulid(server)})
+    async def subscribe_to(self, server: core.ULIDOr[BaseServer]) -> None:
+        await self.send({"type": "Subscribe", "server_id": core.resolve_id(server)})
 
     async def _send_json(self, d: raw.ServerEvent) -> None:
         _L.debug("sending %s", d)

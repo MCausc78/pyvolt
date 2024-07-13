@@ -16,12 +16,12 @@ class Base:
     state: State = field(repr=False, hash=True, eq=True)
     """State that controls this entity."""
 
-    id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The unique ID of the entity."""
 
     @property
     def created_at(self) -> datetime:
-        return self.id.created_at
+        return core.ulid_time(self.id)
 
 
 __all__ = ("Base",)

@@ -13,6 +13,7 @@ from . import (
 )
 
 from .base import Base
+from .bot import BaseBot
 from .invite import Invite
 from .permissions import (
     Permissions,
@@ -22,8 +23,8 @@ from .permissions import (
     DEFAULT_SAVED_MESSAGES_PERMISSIONS,
     DEFAULT_DM_PERMISSIONS,
 )
-from .server import Role, Server, Member
-from .user import User
+from .server import BaseRole, Role, Server, Member
+from .user import BaseUser, User
 
 if t.TYPE_CHECKING:
     from .message import (
@@ -48,9 +49,9 @@ class ChannelType(StrEnum):
 
 class Typing(contextlib.AbstractAsyncContextManager):
     shard: Shard
-    channel_id: core.ULID
+    channel_id: str
 
-    def __init__(self, shard: Shard, channel_id: core.ULID) -> None:
+    def __init__(self, shard: Shard, channel_id: str) -> None:
         self.shard = shard
         self.channel_id = channel_id
 
@@ -68,11 +69,11 @@ class Typing(contextlib.AbstractAsyncContextManager):
 class BaseChannel(Base, abc.ABC):
     """Representation of channel on Revolt."""
 
-    def message(self, message: core.ResolvableULID) -> BaseMessage:
+    def message(self, message: core.ULIDOr[BaseMessage]) -> BaseMessage:
         from .message import BaseMessage
 
         return BaseMessage(
-            state=self.state, id=core.resolve_ulid(message), channel_id=self.id
+            state=self.state, id=core.resolve_id(message), channel_id=self.id
         )
 
     async def close(self, *, silent: bool | None = None) -> None:
@@ -99,7 +100,7 @@ class BaseChannel(Base, abc.ABC):
         *,
         name: core.UndefinedOr[str] = core.UNDEFINED,
         description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        owner: core.UndefinedOr[core.ResolvableULID] = core.UNDEFINED,
+        owner: core.UndefinedOr[core.ULIDOr[BaseUser]] = core.UNDEFINED,
         icon: core.UndefinedOr[str | None] = core.UNDEFINED,
         nsfw: core.UndefinedOr[bool] = core.UNDEFINED,
         archived: core.UndefinedOr[bool] = core.UNDEFINED,
@@ -150,9 +151,7 @@ class PartialChannel(BaseChannel):
     """Partial representation of a channel on Revolt."""
 
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: core.UndefinedOr[core.ULID] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    owner_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     description: core.UndefinedOr[str | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
@@ -164,19 +163,19 @@ class PartialChannel(BaseChannel):
     permissions: core.UndefinedOr[Permissions] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    role_permissions: core.UndefinedOr[dict[core.ULID, PermissionOverride]] = field(
+    role_permissions: core.UndefinedOr[dict[str, PermissionOverride]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     default_permissions: core.UndefinedOr[PermissionOverride | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    last_message_id: core.UndefinedOr[core.ULID] = field(
+    last_message_id: core.UndefinedOr[str] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
 
 
 def _calculate_saved_messages_channel_permissions(
-    perspective_id: core.ULID, user_id: core.ULID
+    perspective_id: str, user_id: str
 ) -> Permissions:
     if perspective_id == user_id:
         return DEFAULT_SAVED_MESSAGES_PERMISSIONS
@@ -192,11 +191,11 @@ def _calculate_dm_channel_permissions(
 
 
 def _calculate_group_channel_permissions(
-    perspective_id: core.ULID,
+    perspective_id: str,
     *,
-    group_owner_id: core.ULID,
+    group_owner_id: str,
     group_permissions: Permissions,
-    group_recipients: list[core.ULID],
+    group_recipients: list[str],
 ) -> Permissions:
     if perspective_id == group_owner_id:
         return Permissions.ALL
@@ -211,7 +210,7 @@ def _calculate_server_channel_permissions(
     /,
     *,
     default_permissions: PermissionOverride | None,
-    role_permissions: dict[core.ULID, PermissionOverride],
+    role_permissions: dict[str, PermissionOverride],
 ) -> Permissions:
     result = initial_permissions.value
 
@@ -267,8 +266,8 @@ class TextChannel(BaseChannel):
         query: str,
         *,
         limit: int | None = None,
-        before: core.ResolvableULID | None = None,
-        after: core.ResolvableULID | None = None,
+        before: core.ULIDOr[BaseMessage] | None = None,
+        after: core.ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
@@ -319,7 +318,7 @@ class TextChannel(BaseChannel):
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ResolvableULID] | None = None,
+        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -357,7 +356,7 @@ class TextChannel(BaseChannel):
 class SavedMessagesChannel(TextChannel):
     """Personal "Saved Notes" channel which allows users to save messages."""
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user this channel belongs to."""
 
     def _update(self, data: PartialChannel) -> None:
@@ -377,14 +376,10 @@ class DMChannel(TextChannel):
     active: bool = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether this DM channel is currently open on both sides."""
 
-    recipient_ids: tuple[core.ULID, core.ULID] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    recipient_ids: tuple[str, str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """2-tuple of user IDs participating in DM."""
 
-    last_message_id: core.ULID | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the last message sent in this channel."""
 
     def _update(self, data: PartialChannel) -> None:
@@ -401,14 +396,14 @@ class GroupChannel(TextChannel):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """Display name of the channel."""
 
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """User ID of the owner of the group."""
 
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Channel description."""
 
     _recipients: (
-        tuple[t.Literal[True], list[core.ULID]] | tuple[t.Literal[False], list[User]]
+        tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[User]]
     ) = field(repr=True, hash=True, eq=True, alias="internal_recipients")
 
     internal_icon: cdn.StatelessAsset | None = field(
@@ -416,9 +411,7 @@ class GroupChannel(TextChannel):
     )
     """The stateless group icon."""
 
-    last_message_id: core.ULID | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the last message sent in this channel."""
 
     permissions: Permissions | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -443,14 +436,14 @@ class GroupChannel(TextChannel):
         if core.is_defined(data.nsfw):
             self.nsfw = data.nsfw
 
-    def _join(self, user_id: core.ULID) -> None:
+    def _join(self, user_id: str) -> None:
         if self._recipients[0]:
             self._recipients[1].append(user_id)  # type: ignore # Pyright doesn't understand `if`
         else:
             self._recipients = (True, [u.id for u in self._recipients[1]])  # type: ignore
             self._recipients[1].append(user_id)
 
-    def _leave(self, user_id: core.ULID) -> None:
+    def _leave(self, user_id: str) -> None:
         if self._recipients[0]:
             try:
                 self._recipients[1].remove(user_id)  # type: ignore
@@ -465,7 +458,7 @@ class GroupChannel(TextChannel):
         return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
 
     @property
-    def recipient_ids(self) -> list[core.ULID]:
+    def recipient_ids(self) -> list[str]:
         """The IDs of users participating in channel."""
         if self._recipients[0]:
             return self._recipients[1]  # type: ignore
@@ -479,7 +472,7 @@ class GroupChannel(TextChannel):
             cache = self.state.cache
             if not cache:
                 return []
-            recipient_ids = t.cast("list[core.ULID]", self._recipients[1])
+            recipient_ids = t.cast("list[str]", self._recipients[1])
             recipients = []
             for recipient_id in recipient_ids:
                 user = cache.get_user(recipient_id, caching._USER_REQUEST)
@@ -491,7 +484,7 @@ class GroupChannel(TextChannel):
 
     async def add(
         self,
-        user: core.ResolvableULID,
+        user: core.ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
@@ -509,11 +502,11 @@ class GroupChannel(TextChannel):
         APIError
             Adding user to the group failed.
         """
-        return await self.state.http.add_member_to_group(self.id, user)
+        return await self.state.http.add_recipient_to_group(self.id, user)
 
     async def add_bot(
         self,
-        bot: core.ResolvableULID,
+        bot: core.ULIDOr[BaseBot | BaseUser],
     ) -> None:
         """|coro|
 
@@ -565,7 +558,7 @@ PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
 
 @define(slots=True)
 class BaseServerChannel(BaseChannel):
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server ID that channel belongs to."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -584,7 +577,7 @@ class BaseServerChannel(BaseChannel):
     )
     """Default permissions assigned to users in this channel."""
 
-    role_permissions: dict[core.ULID, PermissionOverride] = field(
+    role_permissions: dict[str, PermissionOverride] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """Permissions assigned based on role to this channel."""
@@ -656,7 +649,7 @@ class BaseServerChannel(BaseChannel):
 
     async def set_role_permissions(
         self,
-        role: core.ResolvableULID,
+        role: core.ULIDOr[BaseRole],
         *,
         allow: Permissions = Permissions.NONE,
         deny: Permissions = Permissions.NONE,
@@ -707,9 +700,7 @@ class BaseServerChannel(BaseChannel):
 class ServerTextChannel(BaseServerChannel, TextChannel):
     """Text channel belonging to a server."""
 
-    last_message_id: core.ULID | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the last message sent in this channel."""
 
     def _update(self, data: PartialChannel) -> None:
