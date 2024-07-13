@@ -51,12 +51,20 @@ class BaseEvent:
         default=False, repr=True, hash=True, kw_only=True, eq=True
     )
 
-    def set_cancel(self, value: bool, /) -> bool:
+    def set_cancelled(self, value: bool, /) -> bool:
         """Whether to cancel event processing (updating cache) or not."""
         if self.is_cancelled is value:
             return False
         self.is_cancelled = value
         return True
+
+    def cancel(self) -> bool:
+        """Cancels the event processing (updating cache)."""
+        return self.set_cancelled(True)
+
+    def uncancel(self, value: bool, /) -> bool:
+        """Uncancels the event processing (updating cache)."""
+        return self.set_cancelled(False)
 
     async def abefore_dispatch(self) -> None:
         pass

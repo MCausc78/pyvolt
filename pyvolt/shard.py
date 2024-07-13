@@ -176,14 +176,20 @@ class Shard:
             if self._closed:
                 raise Close
             else:
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
                 raise Reconnect
+
         if message.type is aiohttp.WSMsgType.ERROR:
-            _L.debug("received invalid websocket payload, reconnecting")
+            _L.debug("Received invalid websocket payload. Reconnecting.")
             raise Reconnect
 
         if message.type is not aiohttp.WSMsgType.TEXT:
-            return None
+            _L.debug(
+                "Received unknown message type: %s (expected TEXT). Reconnecting.",
+                message.type,
+            )
+            raise Reconnect
+
         k = utils.from_json(message.data)
         if k["type"] != "Ready":
             _L.debug("received %s", k)
@@ -201,18 +207,23 @@ class Shard:
         ):
             data = message.data
             self._last_close_code = data
-            _L.debug("websocket closed: %s", data)
+            _L.debug("Websocket closed: %s", data)
             if self._closed:
                 raise Close
             else:
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
                 raise Reconnect
         if message.type is aiohttp.WSMsgType.ERROR:
-            _L.debug("received invalid websocket payload, reconnecting")
+            _L.debug("Received invalid websocket payload, reconnecting")
             raise Reconnect
 
         if message.type is not aiohttp.WSMsgType.BINARY:
-            return None
+            _L.debug(
+                "Received unknown message type: %s (expected BINARY). Reconnecting.",
+                message.type,
+            )
+            raise Reconnect
+
         # `msgpack` wont be unbound here
         k = msgpack.unpackb(message.data, use_list=True)  # type: ignore
         if k["type"] != "Ready":

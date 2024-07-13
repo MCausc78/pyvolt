@@ -14,7 +14,7 @@ import voltage.internals
 
 async def bench_users():
     with open('./test/data/users/user.json', 'r') as fp:
-        payload: typing.Any = json.load(fp)
+        payload = json.load(fp)
 
     state = pyvolt.State()
     parser = pyvolt.Parser(state)
