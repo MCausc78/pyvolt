@@ -52,7 +52,7 @@ def _is_descriptor(obj):
 
 class EnumMeta(type):
     if t.TYPE_CHECKING:
-        __name__: t.ClassVar[str]
+        __name__: t.ClassVar[str]  # type: ignore
         _enum_member_names_: t.ClassVar[list[str]]
         _enum_member_map_: t.ClassVar[dict[str, t.Any]]
         _enum_value_map_: t.ClassVar[dict[t.Any, t.Any]]

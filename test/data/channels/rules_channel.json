@@ -1,0 +1,21 @@
+{
+	"channel_type": "TextChannel",
+	"_id": "01H0TPNRZ2CJK97Z33J45CF04Y",
+	"server": "01F7ZSBSFHQ8TA81725KQCSDDP",
+	"name": "Rules",
+	"last_message_id": "01H2TQ2VD2Y0CVDNXB3RKBX2PK",
+	"default_permissions": {
+		"a": 0,
+		"d": 4194304
+	},
+	"role_permissions": {
+		"01F9HFTSBWTNA2F4TMSV7VM3FG": {
+			"a": 4194304,
+			"d": 0
+		},
+		"01GDE9VX4AD3T3KBPYZE7932P9": {
+			"a": 4194304,
+			"d": 0
+		}
+	}
+}
