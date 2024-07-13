@@ -61,7 +61,7 @@ class Category:
         return {
             "id": self.id,
             "title": self.title,
-            "channels": t.cast("list[str]", self.channels),
+            "channels": self.channels,  # type: ignore
         }
 
 
@@ -127,9 +127,9 @@ class BaseRole(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the role.
-        :class:`APIError`
+        APIError
             Deleting the role failed.
         """
         return await self.state.http.delete_role(self.server_id, self.id)
@@ -144,7 +144,7 @@ class BaseRole(Base):
     ) -> Role:
         """|coro|
 
-        Edit a role.
+        Edits the role.
 
         Parameters
         ----------
@@ -159,9 +159,9 @@ class BaseRole(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the role.
-        :class:`APIError`
+        APIError
             Editing the role failed.
         """
         return await self.state.http.edit_role(
@@ -187,9 +187,9 @@ class BaseRole(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the server.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         return await self.state.http.set_role_server_permissions(
@@ -301,9 +301,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        APIError
             Creating the channel failed.
         """
         return await self.state.http.create_channel(
@@ -319,9 +319,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        APIError
             Creating the channel failed.
         """
         from .channel import ChannelType
@@ -341,9 +341,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        APIError
             Creating the channel failed.
         """
         from .channel import ChannelType
@@ -368,9 +368,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the role.
-        :class:`APIError`
+        APIError
             Creating the role failed.
         """
         return await self.state.http.create_role(self.id, name=name, rank=rank)
@@ -378,7 +378,7 @@ class BaseServer(Base):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Deletes the server if owner otherwise leaves.
         """
         return await self.state.http.delete_server(self.id)
 
@@ -424,9 +424,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the server.
-        :class:`APIError`
+        APIError
             Editing the server failed.
         """
         return await self.state.http.edit_server(
@@ -459,19 +459,17 @@ class BaseServer(Base):
         server = await self.state.http.accept_invite(self.id)
         return server  # type: ignore
 
-    async def leave(self, *, leave_silently: bool | None = None) -> None:
+    async def leave(self, *, silent: bool | None = None) -> None:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Leaves a server.
 
         Parameters
         ----------
-        leave_silently: :class:`bool`
+        silent: :class:`bool`
             Whether to not send a leave message.
         """
-        return await self.state.http.leave_server(
-            self.id, leave_silently=leave_silently
-        )
+        return await self.state.http.leave_server(self.id, silent=silent)
 
     async def mark_server_as_read(self) -> None:
         """|coro|
@@ -495,7 +493,7 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             You're trying to self-report, or reporting the server failed.
         """
         return await self.state.http.report_server(
@@ -522,9 +520,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the server.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         return await self.state.http.set_role_server_permissions(
@@ -540,9 +538,9 @@ class BaseServer(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set default permissions on the server.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         return await self.state.http.set_default_role_permissions(self.id, permissions)
@@ -948,9 +946,9 @@ class Member(BaseMember):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to ban the user.
-        :class:`APIError`
+        APIError
             Banning the user failed.
         """
         return await self.state.http.ban_user(self.server_id, self.id, reason=reason)
@@ -962,9 +960,9 @@ class Member(BaseMember):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to kick the member.
-        :class:`APIError`
+        APIError
             Kicking the member failed.
         """
         return await self.state.http.kick_member(self.server_id, self.id)

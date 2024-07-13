@@ -415,7 +415,7 @@ class BaseUser(Base):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             You're trying to self-report, or reporting the user failed.
         """
         return await self.state.http.report_user(

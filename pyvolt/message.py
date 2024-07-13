@@ -210,9 +210,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to see that message.
-        :class:`APIError`
+        APIError
             Acknowledging message failed.
         """
         return await self.state.http.acknowledge_message(self.channel_id, self.id)
@@ -224,9 +224,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to see that message.
-        :class:`APIError`
+        APIError
             Acknowledging message failed.
         """
         return await self.acknowledge()
@@ -238,9 +238,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete message.
-        :class:`APIError`
+        APIError
             Deleting the message failed.
         """
         return await self.state.http.delete_message(self.channel_id, self.id)
@@ -275,9 +275,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to pin messages.
-        :class:`APIError`
+        APIError
             Pinning the message failed.
         """
         return await self.state.http.pin_message(self.channel_id, self.id)
@@ -301,9 +301,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to react to message.
-        :class:`APIError`
+        APIError
             Reacting to message failed.
         """
         return await self.state.http.add_reaction_to_message(
@@ -366,7 +366,7 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Trying to self-report, or reporting the message failed.
         """
         return await self.state.http.report_message(
@@ -381,9 +381,9 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to unpin messages.
-        :class:`APIError`
+        APIError
             Unpinning the message failed.
         """
         return await self.state.http.unpin_message(self.channel_id, self.id)

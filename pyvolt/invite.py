@@ -33,9 +33,9 @@ class BaseInvite:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         return await self.state.http.accept_invite(self.code)
@@ -47,9 +47,9 @@ class BaseInvite:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        :class:`APIError`
+        APIError
             Deleting the invite failed.
         """
         await self.state.http.delete_invite(self.code)
@@ -61,9 +61,9 @@ class BaseInvite:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        :class:`APIError`
+        APIError
             Deleting the invite failed.
         """
         return await self.delete()
@@ -134,9 +134,9 @@ class ServerPublicInvite(BaseInvite):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         server = await super().accept()
@@ -181,9 +181,9 @@ class GroupPublicInvite(BaseInvite):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         group = await super().accept()
@@ -221,9 +221,9 @@ class GroupInvite(PrivateBaseInvite):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         group = await super().accept()
@@ -250,9 +250,9 @@ class ServerInvite(PrivateBaseInvite):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         server = await super().accept()

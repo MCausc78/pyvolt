@@ -87,9 +87,9 @@ class BaseChannel(Base, abc.ABC):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to close the channel.
-        :class:`APIError`
+        APIError
             Closing the channel failed.
         """
         return await self.state.http.close_channel(self.id, silent=silent)
@@ -111,9 +111,9 @@ class BaseChannel(Base, abc.ABC):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the channel.
-        :class:`APIError`
+        APIError
             Editing the channel failed.
         """
         return await self.state.http.edit_channel(
@@ -139,7 +139,7 @@ class BaseChannel(Base, abc.ABC):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Asking the token failed.
         """
         return await self.state.http.join_call(self.id)
@@ -257,7 +257,7 @@ class TextChannel(BaseChannel):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting channel pins failed.
         """
         return await self.state.http.get_channel_pins(self.id)
@@ -298,9 +298,9 @@ class TextChannel(BaseChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to search messages.
-        :class:`APIError`
+        APIError
             Searching messages failed.
         """
         return await self.state.http.search_for_messages(
@@ -335,9 +335,9 @@ class TextChannel(BaseChannel):
         :class:`Message`
             The message sent.
 
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to send messages.
-        :class:`APIError`
+        APIError
             Sending the message failed.
         """
         return await self.state.http.send_message(
@@ -504,9 +504,9 @@ class GroupChannel(TextChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        :class:`APIError`
+        APIError
             Adding user to the group failed.
         """
         return await self.state.http.add_member_to_group(self.id, user)
@@ -521,9 +521,9 @@ class GroupChannel(TextChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're bot, or lacking `InviteOthers` permission.
-        :class:`APIError`
+        APIError
             Adding bot to the group failed.
         """
         return await self.state.http.invite_bot(bot, group=self.id)
@@ -535,9 +535,9 @@ class GroupChannel(TextChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create invite in that channel.
-        :class:`APIError`
+        APIError
             Creating invite failed.
         """
         return await self.state.http.create_invite(self.id)
@@ -554,7 +554,7 @@ class GroupChannel(TextChannel):
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Leaving the group failed.
         """
         return await self.close(silent=silent)
@@ -633,9 +633,9 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create invite in that channel.
-        :class:`APIError`
+        APIError
             Creating invite failed.
         """
         return await self.state.http.create_invite(self.id)
@@ -647,9 +647,9 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the channel.
-        :class:`APIError`
+        APIError
             Deleting the channel failed.
         """
         return await self.close()
@@ -673,9 +673,9 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the channel.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         return await self.state.http.set_role_channel_permissions(
@@ -693,9 +693,9 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set default permissions on the channel.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         return await self.state.http.set_default_channel_permissions(

@@ -22,9 +22,9 @@ class BaseWebhook(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the webhook.
-        :class:`APIError`
+        APIError
             Deleting the webhook failed.
         """
 
@@ -57,9 +57,9 @@ class BaseWebhook(Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the webhook.
-        :class:`APIError`
+        APIError
             Editing the webhook failed.
         """
 

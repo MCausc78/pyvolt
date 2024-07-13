@@ -429,9 +429,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to see that message.
-        :class:`APIError`
+        APIError
             Acknowledging message failed.
         """
         await self.request(
@@ -458,9 +458,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to close the channel.
-        :class:`APIError`
+        APIError
             Closing the channel failed.
         """
         p: raw.OptionsChannelDelete = {}
@@ -497,9 +497,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the channel.
-        :class:`APIError`
+        APIError
             Editing the channel failed.
         """
         j: raw.DataEditChannel = {}
@@ -543,9 +543,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`NotFound`
+        NotFound
             Invalid Channel ID.
-        :class:`APIError`
+        APIError
             Getting the channel failed.
         """
         return self.state.parser.parse_channel(
@@ -563,7 +563,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting channel pins failed.
 
         Returns
@@ -602,9 +602,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        :class:`APIError`
+        APIError
             Adding user to the group failed.
         """
         await self.request(
@@ -642,7 +642,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Creating the group failed.
         """
         j: raw.DataCreateGroup = {"name": name}
@@ -679,9 +679,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're not owner of group.
-        :class:`APIError`
+        APIError
             Removing the member from group failed.
         """
         await self.request(
@@ -708,9 +708,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create invite in that channel.
-        :class:`APIError`
+        APIError
             Creating invite failed.
         """
         return self.state.parser.parse_invite(
@@ -737,7 +737,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting group members failed.
         """
         return [
@@ -768,9 +768,9 @@ class HTTPClient:
         messages: :class:`t.Sequence`[`:class:`core.ResolvableULID`]
             Messages to delete.
 
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete
-        :class:`APIError`
+        APIError
             Deleting messages failed.
         """
         j: raw.OptionsBulkDelete = {
@@ -803,9 +803,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to remove all reactions from message.
-        :class:`APIError`
+        APIError
             Removing reactions from message failed.
         """
         await self.request(
@@ -832,9 +832,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete message.
-        :class:`APIError`
+        APIError
             Deleting the message failed.
         """
         await self.request(
@@ -900,9 +900,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to get message.
-        :class:`APIError`
+        APIError
             Getting the message failed.
 
         Returns
@@ -959,9 +959,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to get
-        :class:`APIError`
+        APIError
             Getting messages failed.
         """
         p: raw.OptionsQueryMessages = {}
@@ -1064,9 +1064,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to search
-        :class:`APIError`
+        APIError
             Searching messages failed.
         """
         j: raw.DataMessageSearch = {"query": query}
@@ -1486,9 +1486,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create emoji.
-        :class:`APIError`
+        APIError
             Creating the emoji failed.
         """
         j: raw.DataCreateEmoji = {
@@ -1516,9 +1516,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete emojis.
-        :class:`APIError`
+        APIError
             Deleting the emoji failed.
         """
         await self.request(
@@ -1533,7 +1533,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting the emoji failed.
         """
 
@@ -1554,9 +1554,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        :class:`APIError`
+        APIError
             Deleting the invite failed.
         """
         await self.request(
@@ -1572,9 +1572,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`NotFound`
+        NotFound
             Invalid invite code.
-        :class:`APIError`
+        APIError
             Getting the invite failed.
         """
         return self.state.parser.parse_public_invite(
@@ -1595,9 +1595,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You're banned.
-        :class:`APIError`
+        APIError
             Accepting the invite failed.
         """
         d: raw.InviteJoinResponse = await self.request(
@@ -1681,7 +1681,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Trying to self-report, or reporting the message failed.
         """
         j: raw.DataReportContent = {
@@ -1713,7 +1713,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             You're trying to self-report, or reporting the server failed.
         """
         j: raw.DataReportContent = {
@@ -1746,7 +1746,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             You're trying to self-report, or reporting the user failed.
         """
         content: raw.UserReportedContent = {
@@ -1785,9 +1785,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to ban the user.
-        :class:`APIError`
+        APIError
             Banning the user failed.
         """
         j: raw.DataBanCreate = {"reason": reason}
@@ -1823,9 +1823,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to unban the user.
-        :class:`APIError`
+        APIError
             Unbanning the user failed.
         """
         await self.request(
@@ -1851,9 +1851,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        APIError
             Creating the channel failed.
         """
         j: raw.DataCreateServerChannel = {"name": name}
@@ -1893,9 +1893,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to manage the server.
-        :class:`APIError`
+        APIError
             Getting the invites failed.
         """
         return [
@@ -2054,9 +2054,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to kick the member.
-        :class:`APIError`
+        APIError
             Kicking the member failed.
         """
         await self.request(
@@ -2088,9 +2088,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the server.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         j: raw.DataSetRolePermissions = {
@@ -2122,9 +2122,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set default permissions on the server.
-        :class:`APIError`
+        APIError
             Setting permissions failed.
         """
         j: raw.DataDefaultChannelPermissions = {
@@ -2162,9 +2162,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the role.
-        :class:`APIError`
+        APIError
             Creating the role failed.
         """
         server_id = core.resolve_ulid(server)
@@ -2187,9 +2187,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the role.
-        :class:`APIError`
+        APIError
             Deleting the role failed.
         """
         await self.request(
@@ -2211,7 +2211,7 @@ class HTTPClient:
     ) -> Role:
         """|coro|
 
-        Edit a role.
+        Edits the role.
         https://developers.revolt.chat/api/#tag/Server-Permissions/operation/roles_edit_req
 
         Parameters
@@ -2227,9 +2227,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the role.
-        :class:`APIError`
+        APIError
             Editing the role failed.
         """
         j: raw.DataEditRole = {}
@@ -2274,7 +2274,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting the role failed.
         """
         server_id = core.resolve_ulid(server)
@@ -2343,11 +2343,11 @@ class HTTPClient:
         )
 
     async def leave_server(
-        self, server: core.ResolvableULID, /, *, leave_silently: bool | None = None
+        self, server: core.ResolvableULID, /, *, silent: bool | None = None
     ) -> None:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Leaves the server.
         https://developers.revolt.chat/api/#tag/Server-Information/operation/server_delete_req
 
         Parameters
@@ -2356,8 +2356,8 @@ class HTTPClient:
             Whether to not send a leave message.
         """
         p: raw.OptionsServerDelete = {}
-        if leave_silently is not None:
-            p["leave_silently"] = utils._bool(leave_silently)
+        if silent is not None:
+            p["leave_silently"] = utils._bool(silent)
         await self.request(
             routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_ulid(server)),
             params=p,
@@ -2382,7 +2382,7 @@ class HTTPClient:
     ) -> Server:
         """|coro|
 
-        Edit a server.
+        Edits the server.
         https://developers.revolt.chat/api/#tag/Server-Information/operation/server_edit_req
 
         Parameters
@@ -2408,9 +2408,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the server.
-        :class:`APIError`
+        APIError
             Editing the server failed.
         """
         j: raw.DataEditServer = {}
@@ -2707,7 +2707,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Editing the user failed.
         """
         user = await self._edit_user(
@@ -2756,9 +2756,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             Target user have blocked you.
-        :class:`APIError`
+        APIError
             Editing the user failed.
         """
         return await self._edit_user(
@@ -2859,7 +2859,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Finding mutual friends/servers failed.
         """
         return self.state.parser.parse_mutuals(
@@ -2893,7 +2893,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Opening DM failed.
         """
         channel = self.state.parser.parse_channel(
@@ -2914,7 +2914,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Denying the friend request failed.
         """
         return self.state.parser.parse_user(
@@ -2933,7 +2933,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Removing the friend request failed.
         """
         return self.state.parser.parse_user(
@@ -2960,9 +2960,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             Target user have blocked you.
-        :class:`APIError`
+        APIError
             Sending the friend request failed.
         """
         if discriminator is not None:
@@ -2986,9 +2986,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             Target user have blocked you.
-        :class:`APIError`
+        APIError
             Sending the friend request failed.
         """
         return self.state.parser.parse_user(
@@ -3007,9 +3007,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the webhook.
-        :class:`APIError`
+        APIError
             Deleting the webhook failed.
         """
         if token is None:
@@ -3051,9 +3051,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the webhook.
-        :class:`APIError`
+        APIError
             Editing the webhook failed.
         """
         j: raw.DataEditWebhook = {}
@@ -3164,9 +3164,9 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to get the webhook.
-        :class:`APIError`
+        APIError
             Getting the webhook failed.
         """
 
@@ -3210,7 +3210,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Changing the account password failed.
         """
         j: raw.a.DataChangeEmail = {
@@ -3244,7 +3244,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Changing the account password failed.
         """
         j: raw.a.DataChangePassword = {
@@ -3272,7 +3272,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Confirming the account deletion failed.
         """
         j: raw.a.DataAccountDeletion = {"token": token}
@@ -3308,7 +3308,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Registering the account failed.
         """
         j: raw.a.DataCreateAccount = {
@@ -3342,7 +3342,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Requesting the account to be deleted failed.
         """
         await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa)
@@ -3366,7 +3366,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Disabling the account failed.
         """
         await self.request(
@@ -3383,7 +3383,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Getting the account data failed.
         """
         return self.state.parser.parse_partial_account(
@@ -3408,7 +3408,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Sending the email failed.
         """
         j: raw.a.DataPasswordReset = {
@@ -3441,7 +3441,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Resending the verification mail failed.
         """
         j: raw.a.DataResendVerification = {"email": email, "captcha": captcha}
@@ -3467,7 +3467,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Sending the email failed.
         """
         j: raw.a.DataSendPasswordReset = {"email": email, "captcha": captcha}
@@ -3489,7 +3489,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`APIError`
+        APIError
             Verifying the email address failed.
         """
         response = await self.request(
