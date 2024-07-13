@@ -1,11 +1,15 @@
 import asyncio
 
+from .bench_channel import bench_channels
 from .bench_member import bench_members
 from .bench_message import bench_messages
 from .bench_server import bench_servers
 from .bench_user import bench_users
 
 async def main():
+    print('Benchmarking Channel parsing.')
+    await bench_channels()
+
     print('Benchmarking Member parsing.')
     await bench_members()
 
