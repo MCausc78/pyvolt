@@ -2128,10 +2128,9 @@ class HTTPClient:
             json=j,
         )
 
-        parser = self.state.parser
-
-        return parser.parse_server(
-            d, (True, [parser.parse_id(channel) for channel in d["channels"]])
+        return self.state.parser.parse_server(
+            d,
+            (True, d["channels"]),
         )
 
     async def set_default_role_permissions(
@@ -2166,7 +2165,8 @@ class HTTPClient:
             json=j,
         )
         return self.state.parser.parse_server(
-            d, (True, [self.state.parser.parse_id(c) for c in d["channels"]])
+            d,
+            (True, d["channels"]),
         )
 
     async def create_role(
@@ -2198,9 +2198,7 @@ class HTTPClient:
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
             json=j,
         )
-        return self.state.parser.parse_role(
-            d["role"], self.state.parser.parse_id(d["id"]), server_id
-        )
+        return self.state.parser.parse_role(d["role"], d["id"], server_id)
 
     async def delete_role(
         self, server: core.ULIDOr[BaseServer], role: core.ULIDOr[BaseRole], /
@@ -2483,7 +2481,8 @@ class HTTPClient:
             json=j,
         )
         return self.state.parser.parse_server(
-            d, (True, [self.state.parser.parse_id(c) for c in d["channels"]])
+            d,
+            (True, d["channels"]),
         )
 
     async def get_server(

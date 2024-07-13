@@ -182,9 +182,6 @@ class Parser:
 
     # basic start
 
-    def parse_id(self, d: t.Any) -> str:
-        return d
-
     def parse_asset_metadata(self, d: raw.Metadata) -> cdn.AssetMetadata:
         return cdn.AssetMetadata(
             type=cdn.AssetMetadataType(d["type"]),
@@ -197,17 +194,17 @@ class Parser:
         reported = d.get("reported")
 
         return cdn.StatelessAsset(
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             filename=d["filename"],
             metadata=self.parse_asset_metadata(d["metadata"]),
             content_type=d["content_type"],
             size=d["size"],
             deleted=deleted or False,
             reported=reported or False,
-            message_id=self.parse_id(d["message_id"]) if "message_id" in d else None,
-            user_id=self.parse_id(d["user_id"]) if "user_id" in d else None,
-            server_id=self.parse_id(d["server_id"]) if "server_id" in d else None,
-            object_id=self.parse_id(d["object_id"]) if "object_id" in d else None,
+            message_id=d.get("message_id"),
+            user_id=d.get("user_id"),
+            server_id=d.get("server_id"),
+            object_id=d.get("object_id"),
         )
 
     def parse_auth_event(self, shard: Shard, d: raw.ClientAuthEvent) -> AuthifierEvent:
@@ -219,17 +216,14 @@ class Parser:
         elif d["event_type"] == "DeleteSession":
             return SessionDeleteEvent(
                 shard=shard,
-                user_id=self.parse_id(d["user_id"]),
-                session_id=self.parse_id(d["session_id"]),
+                user_id=d["user_id"],
+                session_id=d["session_id"],
             )
         elif d["event_type"] == "DeleteAllSessions":
-            exclude_session_id = d.get("exclude_session_id")
             return SessionDeleteAllEvent(
                 shard=shard,
-                user_id=self.parse_id(d["user_id"]),
-                exclude_session_id=(
-                    self.parse_id(exclude_session_id) if exclude_session_id else None
-                ),
+                user_id=d["user_id"],
+                exclude_session_id=d.get("exclude_session_id"),
             )
         else:
             raise NotImplementedError("Unimplemented auth event type", d)
@@ -241,7 +235,7 @@ class Parser:
             d,
             (
                 True,
-                [self.parse_id(recipient_id) for recipient_id in d["recipients"]],
+                d["recipients"],
             ),
         )
 
@@ -249,10 +243,10 @@ class Parser:
 
     def parse_ban(self, d: raw.ServerBan, users: dict[str, DisplayUser]) -> Ban:
         id = d["_id"]
-        user_id = self.parse_id(id["user"])
+        user_id = id["user"]
 
         return Ban(
-            server_id=self.parse_id(id["server"]),
+            server_id=id["server"],
             user_id=user_id,
             reason=d["reason"],
             user=users.get(user_id),
@@ -275,8 +269,8 @@ class Parser:
     def _parse_bot(self, d: raw.Bot, user: User) -> Bot:
         return Bot(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            owner_id=self.parse_id(d["owner"]),
+            id=d["_id"],
+            owner_id=d["owner"],
             token=d["token"],
             public=d["public"],
             analytics=d.get("analytics", False),
@@ -292,7 +286,7 @@ class Parser:
         return self._parse_bot(d, self.parse_user(user))
 
     def parse_bot_user_info(self, d: raw.BotInformation) -> BotUserInfo:
-        return BotUserInfo(owner_id=self.parse_id(d["owner"]))
+        return BotUserInfo(owner_id=d["owner"])
 
     def parse_bots(self, d: raw.OwnedBotsResponse) -> list[Bot]:
         bots = d["bots"]
@@ -307,13 +301,13 @@ class Parser:
     ) -> BulkMessageDeleteEvent:
         return BulkMessageDeleteEvent(
             shard=shard,
-            channel_id=self.parse_id(d["channel"]),
-            message_ids=[self.parse_id(m) for m in d["ids"]],
+            channel_id=d["channel"],
+            message_ids=d["ids"],
         )
 
     def parse_category(self, d: raw.Category) -> Category:
         return Category(
-            id=self.parse_id(d["id"]),
+            id=d["id"],
             title=d["title"],
             channels=d["channels"],  # type: ignore
         )
@@ -323,9 +317,9 @@ class Parser:
     ) -> MessageAckEvent:
         return MessageAckEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
-            message_id=self.parse_id(d["message_id"]),
-            user_id=self.parse_id(d["user"]),
+            channel_id=d["id"],
+            message_id=d["message_id"],
+            user_id=d["user"],
         )
 
     def parse_channel_create_event(
@@ -345,7 +339,7 @@ class Parser:
     ) -> ChannelDeleteEvent:
         return ChannelDeleteEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
+            channel_id=d["id"],
             channel=None,
         )
 
@@ -354,8 +348,8 @@ class Parser:
     ) -> GroupRecipientAddEvent:
         return GroupRecipientAddEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user"]),
+            channel_id=d["id"],
+            user_id=d["user"],
             group=None,
         )
 
@@ -364,8 +358,8 @@ class Parser:
     ) -> GroupRecipientRemoveEvent:
         return GroupRecipientRemoveEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user"]),
+            channel_id=d["id"],
+            user_id=d["user"],
             group=None,
         )
 
@@ -374,8 +368,8 @@ class Parser:
     ) -> ChannelStartTypingEvent:
         return ChannelStartTypingEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user"]),
+            channel_id=d["id"],
+            user_id=d["user"],
         )
 
     def parse_channel_stop_typing_event(
@@ -383,8 +377,8 @@ class Parser:
     ) -> ChannelStopTypingEvent:
         return ChannelStopTypingEvent(
             shard=shard,
-            channel_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user"]),
+            channel_id=d["id"],
+            user_id=d["user"],
         )
 
     def parse_channel_update_event(
@@ -404,9 +398,9 @@ class Parser:
             shard=shard,
             channel=PartialChannel(
                 state=self.state,
-                id=self.parse_id(d["id"]),
+                id=d["id"],
                 name=data.get("name", core.UNDEFINED),
-                owner_id=self.parse_id(owner) if owner else core.UNDEFINED,
+                owner_id=owner if owner else core.UNDEFINED,
                 description=(
                     None
                     if "Description" in clear
@@ -426,7 +420,7 @@ class Parser:
                 ),
                 role_permissions=(
                     {
-                        self.parse_id(k): self.parse_permission_override_field(v)
+                        k: self.parse_permission_override_field(v)
                         for k, v in role_permissions.items()
                     }
                     if role_permissions is not None
@@ -437,11 +431,7 @@ class Parser:
                     if default_permissions is not None
                     else core.UNDEFINED
                 ),
-                last_message_id=(
-                    self.parse_id(last_message_id)
-                    if last_message_id
-                    else core.UNDEFINED
-                ),
+                last_message_id=last_message_id or core.UNDEFINED,
             ),
             before=None,
             after=None,
@@ -462,8 +452,8 @@ class Parser:
 
         return DetachedEmoji(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            creator_id=self.parse_id(d["creator_id"]),
+            id=d["_id"],
+            creator_id=d["creator_id"],
             name=d["name"],
             animated=animated or False,
             nsfw=nsfw or False,
@@ -476,17 +466,16 @@ class Parser:
 
     def parse_direct_message_channel(self, d: raw.DirectMessageChannel) -> DMChannel:
         recipient_ids = d["recipients"]
-        last_message_id = d.get("last_message_id")
 
         return DMChannel(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             active=d["active"],
             recipient_ids=(
-                self.parse_id(recipient_ids[0]),
-                self.parse_id(recipient_ids[1]),
+                recipient_ids[0],
+                recipient_ids[1],
             ),
-            last_message_id=self.parse_id(last_message_id) if last_message_id else None,
+            last_message_id=d.get("last_message_id"),
         )
 
     # Discovery
@@ -495,7 +484,7 @@ class Parser:
 
         return discovery.DiscoveryBot(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["username"],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             internal_profile=self.parse_user_profile(d["profile"]),
@@ -530,7 +519,7 @@ class Parser:
 
         return discovery.DiscoveryServer(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["name"],
             description=d.get("description"),
             internal_icon=self.parse_asset(icon) if icon else None,
@@ -595,7 +584,7 @@ class Parser:
 
         return DisplayUser(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["username"],
             discriminator=d["discriminator"],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
@@ -644,7 +633,7 @@ class Parser:
             shard=shard,
             emoji=None,
             server_id=None,
-            emoji_id=self.parse_id(d["id"]),
+            emoji_id=d["id"],
         )
 
     def parse_gif_embed_special(self, _: raw.GIFSpecial) -> GifEmbedSpecial:
@@ -664,13 +653,13 @@ class Parser:
 
         return GroupChannel(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["name"],
-            owner_id=self.parse_id(d["owner"]),
+            owner_id=d["owner"],
             description=d.get("description"),
             internal_recipients=recipients,
             internal_icon=self.parse_asset(icon) if icon else None,
-            last_message_id=self.parse_id(last_message_id) if last_message_id else None,
+            last_message_id=last_message_id if last_message_id else None,
             permissions=(None if permissions is None else Permissions(permissions)),
             nsfw=nsfw or False,
         )
@@ -679,8 +668,8 @@ class Parser:
         return GroupInvite(
             state=self.state,
             code=d["_id"],
-            creator_id=self.parse_id(d["creator"]),
-            channel_id=self.parse_id(d["channel"]),
+            creator_id=d["creator"],
+            channel_id=d["channel"],
         )
 
     def parse_group_public_invite(
@@ -691,7 +680,7 @@ class Parser:
         return GroupPublicInvite(
             state=self.state,
             code=d["code"],
-            channel_id=self.parse_id(d["channel_id"]),
+            channel_id=d["channel_id"],
             channel_name=d["channel_name"],
             channel_description=d.get("channel_description", None),
             user_name=d["user_name"],
@@ -736,7 +725,7 @@ class Parser:
             raise ValueError("Cannot specify both user and users")
 
         id = d["_id"]
-        user_id = self.parse_id(id["user"])
+        user_id = id["user"]
 
         if user:
             assert user.id == user_id, "IDs do not match"
@@ -747,11 +736,11 @@ class Parser:
         return Member(
             state=self.state,
             _user=user or (users or _EMPTY_DICT).get(user_id) or user_id,
-            server_id=self.parse_id(id["server"]),
+            server_id=id["server"],
             joined_at=datetime.fromisoformat(d["joined_at"]),
             nick=d.get("nickname"),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            roles=[self.parse_id(role_id) for role_id in d.get("roles") or []],
+            roles=d.get("roles") or [],
             timeout=datetime.fromisoformat(timeout) if timeout else None,
         )
 
@@ -773,7 +762,7 @@ class Parser:
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
     ) -> Message:
-        author_id = self.parse_id(d["author"])
+        author_id = d["author"]
         webhook = d.get("webhook")
         system = d.get("system")
         edited_at = d.get("edited")
@@ -795,9 +784,9 @@ class Parser:
 
         return Message(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             nonce=d.get("nonce"),
-            channel_id=self.parse_id(d["channel"]),
+            channel_id=d["channel"],
             internal_author=author,
             webhook=self.parse_message_webhook(webhook) if webhook else None,
             content=d.get("content") or "",
@@ -807,12 +796,9 @@ class Parser:
             ],
             edited_at=datetime.fromisoformat(edited_at) if edited_at else None,
             internal_embeds=[self.parse_embed(e) for e in d.get("embeds") or []],
-            mention_ids=[self.parse_id(m) for m in d.get("mentions") or []],
-            replies=[self.parse_id(r) for r in d.get("replies") or []],
-            reactions={
-                k: tuple(self.parse_id(u) for u in v)
-                for k, v in (d.get("reactions") or {}).items()
-            },
+            mention_ids=d.get("mentions") or [],
+            replies=d.get("replies") or [],
+            reactions={k: tuple(v) for k, v in (d.get("reactions") or {}).items()},
             interactions=(
                 self.parse_message_interactions(interactions) if interactions else None
             ),
@@ -833,8 +819,8 @@ class Parser:
             shard=shard,
             data=MessageAppendData(
                 state=self.state,
-                id=self.parse_id(d["id"]),
-                channel_id=self.parse_id(d["channel"]),
+                id=d["id"],
+                channel_id=d["channel"],
                 internal_embeds=(
                     [self.parse_embed(e) for e in embeds]
                     if embeds is not None
@@ -846,26 +832,26 @@ class Parser:
     def parse_message_channel_description_changed_system_event(
         self, d: raw.ChannelDescriptionChangedSystemMessage
     ) -> ChannelDescriptionChangedSystemEvent:
-        return ChannelDescriptionChangedSystemEvent(by=self.parse_id(d["by"]))
+        return ChannelDescriptionChangedSystemEvent(by=d["by"])
 
     def parse_message_channel_icon_changed_system_event(
         self, d: raw.ChannelIconChangedSystemMessage
     ) -> ChannelIconChangedSystemEvent:
-        return ChannelIconChangedSystemEvent(by=self.parse_id(d["by"]))
+        return ChannelIconChangedSystemEvent(by=d["by"])
 
     def parse_message_channel_renamed_system_event(
         self, d: raw.ChannelRenamedSystemMessage
     ) -> ChannelRenamedSystemEvent:
         return ChannelRenamedSystemEvent(
-            by=self.parse_id(d["by"]),
+            by=d["by"],
         )
 
     def parse_message_channel_ownership_changed_system_event(
         self, d: raw.ChannelOwnershipChangedSystemMessage
     ) -> ChannelOwnershipChangedSystemEvent:
         return ChannelOwnershipChangedSystemEvent(
-            from_=self.parse_id(d["from"]),
-            to=self.parse_id(d["to"]),
+            from_=d["from"],
+            to=d["to"],
         )
 
     def parse_message_delete_event(
@@ -873,8 +859,8 @@ class Parser:
     ) -> MessageDeleteEvent:
         return MessageDeleteEvent(
             shard=shard,
-            channel_id=self.parse_id(d["channel"]),
-            message_id=self.parse_id(d["id"]),
+            channel_id=d["channel"],
+            message_id=d["id"],
         )
 
     def parse_message_event(
@@ -898,9 +884,9 @@ class Parser:
     ) -> MessageReactEvent:
         return MessageReactEvent(
             shard=shard,
-            channel_id=self.parse_id(d["channel_id"]),
-            message_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user_id"]),
+            channel_id=d["channel_id"],
+            message_id=d["id"],
+            user_id=d["user_id"],
             emoji=d["emoji_id"],
         )
 
@@ -909,8 +895,8 @@ class Parser:
     ) -> MessageClearReactionEvent:
         return MessageClearReactionEvent(
             shard=shard,
-            channel_id=self.parse_id(d["channel_id"]),
-            message_id=self.parse_id(d["id"]),
+            channel_id=d["channel_id"],
+            message_id=d["id"],
             emoji=d["emoji_id"],
         )
 
@@ -939,9 +925,9 @@ class Parser:
     ) -> MessageUnreactEvent:
         return MessageUnreactEvent(
             shard=shard,
-            channel_id=self.parse_id(d["channel_id"]),
-            message_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user_id"]),
+            channel_id=d["channel_id"],
+            message_id=d["id"],
+            user_id=d["user_id"],
             emoji=d["emoji_id"],
         )
 
@@ -959,8 +945,8 @@ class Parser:
             shard=shard,
             message=PartialMessage(
                 state=self.state,
-                id=self.parse_id(d["id"]),
-                channel_id=self.parse_id(d["channel"]),
+                id=d["id"],
+                channel_id=d["channel"],
                 content=content if content is not None else core.UNDEFINED,
                 edited_at=(
                     datetime.fromisoformat(edited_at) if edited_at else core.UNDEFINED
@@ -971,10 +957,7 @@ class Parser:
                     else core.UNDEFINED
                 ),
                 reactions=(
-                    {
-                        k: tuple(self.parse_id(u) for u in v)
-                        for k, v in reactions.items()
-                    }
+                    {k: tuple(v) for k, v in reactions.items()}
                     if reactions is not None
                     else core.UNDEFINED
                 ),
@@ -986,35 +969,34 @@ class Parser:
     def parse_message_user_added_system_event(
         self, d: raw.UserAddedSystemMessage
     ) -> UserAddedSystemEvent:
-        return UserAddedSystemEvent(
-            id=self.parse_id(d["id"]), by=self.parse_id(d["by"])
-        )
+        return UserAddedSystemEvent(id=d["id"], by=d["by"])
 
     def parse_message_user_banned_system_event(
         self, d: raw.UserBannedSystemMessage
     ) -> UserBannedSystemEvent:
-        return UserBannedSystemEvent(id=self.parse_id(d["id"]))
+        return UserBannedSystemEvent(id=d["id"])
 
     def parse_message_user_joined_system_event(
         self, d: raw.UserJoinedSystemMessage
     ) -> UserJoinedSystemEvent:
-        return UserJoinedSystemEvent(id=self.parse_id(d["id"]))
+        return UserJoinedSystemEvent(id=d["id"])
 
     def parse_message_user_kicked_system_event(
         self, d: raw.UserKickedSystemMessage
     ) -> UserKickedSystemEvent:
-        return UserKickedSystemEvent(id=self.parse_id(d["id"]))
+        return UserKickedSystemEvent(id=d["id"])
 
     def parse_message_user_left_system_event(
         self, d: raw.UserLeftSystemMessage
     ) -> UserLeftSystemEvent:
-        return UserLeftSystemEvent(id=self.parse_id(d["id"]))
+        return UserLeftSystemEvent(id=d["id"])
 
     def parse_message_user_remove_system_event(
         self, d: raw.UserRemoveSystemMessage
     ) -> UserRemovedSystemEvent:
         return UserRemovedSystemEvent(
-            id=self.parse_id(d["id"]), by=self.parse_id(d["by"])
+            id=d["id"],
+            by=d["by"],
         )
 
     def parse_message_webhook(self, d: raw.MessageWebhook) -> MessageWebhook:
@@ -1054,8 +1036,8 @@ class Parser:
 
     def parse_mfa_ticket(self, d: raw.a.MFATicket) -> MFATicket:
         return MFATicket(
-            id=self.parse_id(d["_id"]),
-            account_id=self.parse_id(d["account_id"]),
+            id=d["_id"],
+            account_id=d["account_id"],
             token=d["token"],
             validated=d["validated"],
             authorised=d["authorised"],
@@ -1070,8 +1052,8 @@ class Parser:
 
     def parse_mutuals(self, d: raw.MutualResponse) -> Mutuals:
         return Mutuals(
-            user_ids=[self.parse_id(e) for e in d.get("users", [])],
-            server_ids=[self.parse_id(e) for e in d.get("servers", [])],
+            user_ids=d["users"],
+            server_ids=d["servers"],
         )
 
     def parse_none_embed(self, _: raw.NoneEmbed) -> NoneEmbed:
@@ -1081,12 +1063,10 @@ class Parser:
         return _NONE_EMBED_SPECIAL
 
     def parse_partial_account(self, d: raw.a.AccountInfo) -> PartialAccount:
-        return PartialAccount(id=self.parse_id(d["_id"]), email=d["email"])
+        return PartialAccount(id=d["_id"], email=d["email"])
 
     def parse_partial_session(self, d: raw.a.SessionInfo) -> PartialSession:
-        return PartialSession(
-            state=self.state, id=self.parse_id(d["_id"]), name=d["name"]
-        )
+        return PartialSession(state=self.state, id=d["_id"], name=d["name"])
 
     def parse_partial_user_profile(
         self, d: raw.UserProfile, clear: list[raw.FieldsUser]
@@ -1124,7 +1104,7 @@ class Parser:
     def parse_public_bot(self, d: raw.PublicBot) -> PublicBot:
         return PublicBot(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             username=d["username"],
             internal_avatar_id=d.get("avatar"),
             description=d.get("description") or "",
@@ -1142,10 +1122,10 @@ class Parser:
 
         return ReadState(
             state=self.state,
-            channel_id=self.parse_id(id["channel"]),
-            user_id=self.parse_id(id["user"]),
-            last_message_id=self.parse_id(last_id) if last_id else None,
-            mentioned_in=[self.parse_id(m) for m in d.get("mentions") or []],
+            channel_id=id["channel"],
+            user_id=id["user"],
+            last_message_id=last_id if last_id else None,
+            mentioned_in=d.get("mentions") or [],
         )
 
     def parse_ready_event(self, shard: Shard, d: raw.ClientReadyEvent) -> ReadyEvent:
@@ -1154,10 +1134,7 @@ class Parser:
         return ReadyEvent(
             shard=shard,
             users=[self.parse_user(u) for u in d["users"]],
-            servers=[
-                self.parse_server(s, (True, [self.parse_id(c) for c in s["channels"]]))
-                for s in d["servers"]
-            ],
+            servers=[self.parse_server(s, (True, s["channels"])) for s in d["servers"]],
             channels=[self.parse_channel(c) for c in d["channels"]],
             members=[self.parse_member(m) for m in d["members"]],
             emojis=[self.parse_server_emoji(e) for e in d["emojis"]],
@@ -1168,7 +1145,7 @@ class Parser:
 
     def parse_relationship(self, d: raw.Relationship) -> Relationship:
         return Relationship(
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             status=RelationshipStatus(d["status"]),
         )
 
@@ -1186,7 +1163,7 @@ class Parser:
 
     def parse_response_webhook(self, d: raw.ResponseWebhook) -> Webhook:
         avatar = d.get("avatar")
-        webhook_id = self.parse_id(d["id"])
+        webhook_id = d["id"]
 
         return Webhook(
             state=self.state,
@@ -1213,7 +1190,7 @@ class Parser:
                 if avatar
                 else None
             ),
-            channel_id=self.parse_id(d["channel_id"]),
+            channel_id=d["channel_id"],
             permissions=Permissions(d["permissions"]),
             token=None,
         )
@@ -1235,8 +1212,8 @@ class Parser:
     ) -> SavedMessagesChannel:
         return SavedMessagesChannel(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            user_id=self.parse_id(d["user"]),
+            id=d["_id"],
+            user_id=d["user"],
         )
 
     def parse_self_user(self, d: raw.User) -> SelfUser:
@@ -1250,7 +1227,7 @@ class Parser:
 
         return SelfUser(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["username"],
             discriminator=d["discriminator"],
             display_name=d.get("display_name"),
@@ -1274,14 +1251,14 @@ class Parser:
             | tuple[t.Literal[False], list[ServerChannel]]
         ),
     ) -> Server:
-        server_id = self.parse_id(d["_id"])
+        server_id = d["_id"]
 
         categories = d.get("categories") or []
         system_messages = d.get("system_messages")
 
         roles = {}
         for id, role_data in (d.get("roles") or {}).items():
-            role_id = self.parse_id(id)
+            role_id = id
             roles[role_id] = self.parse_role(role_data, role_id, server_id)
 
         icon = d.get("icon")
@@ -1293,7 +1270,7 @@ class Parser:
         return Server(
             state=self.state,
             id=server_id,
-            owner_id=self.parse_id(d["owner"]),
+            owner_id=d["owner"],
             name=d["name"],
             description=d.get("description"),
             internal_channels=channels,
@@ -1345,7 +1322,7 @@ class Parser:
     ) -> ServerDeleteEvent:
         return ServerDeleteEvent(
             shard=shard,
-            server_id=self.parse_id(d["id"]),
+            server_id=d["id"],
             server=None,
         )
 
@@ -1355,9 +1332,9 @@ class Parser:
 
         return ServerEmoji(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            server_id=self.parse_id(d["parent"]["id"]),
-            creator_id=self.parse_id(d["creator_id"]),
+            id=d["_id"],
+            server_id=d["parent"]["id"],
+            creator_id=d["creator_id"],
             name=d["name"],
             animated=animated or False,
             nsfw=nsfw or False,
@@ -1367,9 +1344,9 @@ class Parser:
         return ServerInvite(
             state=self.state,
             code=d["_id"],
-            creator_id=self.parse_id(d["creator"]),
-            server_id=self.parse_id(d["server"]),
-            channel_id=self.parse_id(d["channel"]),
+            creator_id=d["creator"],
+            server_id=d["server"],
+            channel_id=d["channel"],
         )
 
     def parse_server_member_join_event(
@@ -1379,8 +1356,8 @@ class Parser:
             shard=shard,
             member=Member(
                 state=self.state,
-                server_id=self.parse_id(d["id"]),
-                _user=self.parse_id(d["user"]),
+                server_id=d["id"],
+                _user=d["user"],
                 joined_at=joined_at,
                 nick=None,
                 internal_avatar=None,
@@ -1394,8 +1371,8 @@ class Parser:
     ) -> ServerMemberRemoveEvent:
         return ServerMemberRemoveEvent(
             shard=shard,
-            server_id=self.parse_id(d["id"]),
-            user_id=self.parse_id(d["user"]),
+            server_id=d["id"],
+            user_id=d["user"],
             member=None,
             reason=MemberRemovalIntention(d["reason"]),
         )
@@ -1415,8 +1392,8 @@ class Parser:
             shard=shard,
             member=PartialMember(
                 state=self.state,
-                server_id=self.parse_id(id["server"]),
-                _user=self.parse_id(id["user"]),
+                server_id=id["server"],
+                _user=id["user"],
                 nick=(
                     None
                     if "Nickname" in clear
@@ -1430,11 +1407,7 @@ class Parser:
                 roles=(
                     []
                     if "Roles" in clear
-                    else (
-                        [self.parse_id(role) for role in roles]
-                        if roles is not None
-                        else core.UNDEFINED
-                    )
+                    else (roles if roles is not None else core.UNDEFINED)
                 ),
                 timeout=(
                     None
@@ -1456,14 +1429,14 @@ class Parser:
         return ServerPublicInvite(
             state=self.state,
             code=d["code"],
-            server_id=self.parse_id(d["server_id"]),
+            server_id=d["server_id"],
             server_name=d["server_name"],
             internal_server_icon=self.parse_asset(server_icon) if server_icon else None,
             internal_server_banner=(
                 self.parse_asset(server_banner) if server_banner else None
             ),
             flags=ServerFlags(d.get("server_flags") or 0),
-            channel_id=self.parse_id(d["channel_id"]),
+            channel_id=d["channel_id"],
             channel_name=d["channel_name"],
             channel_description=d.get("channel_description", None),
             user_name=d["user_name"],
@@ -1476,8 +1449,8 @@ class Parser:
     ) -> ServerRoleDeleteEvent:
         return ServerRoleDeleteEvent(
             shard=shard,
-            server_id=self.parse_id(d["id"]),
-            role_id=self.parse_id(d["role_id"]),
+            server_id=d["id"],
+            role_id=d["role_id"],
             server=None,
             role=None,
         )
@@ -1496,8 +1469,8 @@ class Parser:
             shard=shard,
             role=PartialRole(
                 state=self.state,
-                id=self.parse_id(d["role_id"]),
-                server_id=self.parse_id(d["id"]),
+                id=d["role_id"],
+                server_id=d["id"],
                 name=data.get("name") or core.UNDEFINED,
                 permissions=(
                     self.parse_permission_override_field(permissions)
@@ -1537,21 +1510,15 @@ class Parser:
             shard=shard,
             server=PartialServer(
                 state=self.state,
-                id=self.parse_id(d["id"]),
-                owner_id=(
-                    self.parse_id(owner_id) if owner_id is not None else core.UNDEFINED
-                ),
+                id=d["id"],
+                owner_id=(owner_id if owner_id is not None else core.UNDEFINED),
                 name=data.get("name") or core.UNDEFINED,
                 description=(
                     None
                     if "Description" in clear
                     else description if description is not None else core.UNDEFINED
                 ),
-                channel_ids=(
-                    [self.parse_id(c) for c in channels]
-                    if channels is not None
-                    else core.UNDEFINED
-                ),
+                channel_ids=(channels if channels is not None else core.UNDEFINED),
                 categories=(
                     []
                     if "Categories" in clear
@@ -1600,9 +1567,9 @@ class Parser:
 
         return Session(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["name"],
-            user_id=self.parse_id(d["user_id"]),
+            user_id=d["user_id"],
             token=d["token"],
             subscription=(
                 self.parse_webpush_subscription(subscription) if subscription else None
@@ -1645,19 +1612,19 @@ class Parser:
 
         return ServerTextChannel(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            server_id=self.parse_id(d["server"]),
+            id=d["_id"],
+            server_id=d["server"],
             name=d["name"],
             description=d.get("description"),
             internal_icon=self.parse_asset(icon) if icon else None,
-            last_message_id=self.parse_id(last_message_id) if last_message_id else None,
+            last_message_id=last_message_id if last_message_id else None,
             default_permissions=(
                 None
                 if default_permissions is None
                 else self.parse_permission_override_field(default_permissions)
             ),
             role_permissions={
-                self.parse_id(k): self.parse_permission_override_field(v)
+                k: self.parse_permission_override_field(v)
                 for k, v in role_permissions.items()
             },
             nsfw=nsfw or False,
@@ -1696,7 +1663,7 @@ class Parser:
 
         return User(
             state=self.state,
-            id=self.parse_id(d["_id"]),
+            id=d["_id"],
             name=d["username"],
             discriminator=d["discriminator"],
             display_name=d.get("display_name"),
@@ -1716,7 +1683,7 @@ class Parser:
     ) -> UserPlatformWipeEvent:
         return UserPlatformWipeEvent(
             shard=shard,
-            user_id=self.parse_id(d["user_id"]),
+            user_id=d["user_id"],
             flags=UserFlags(d["flags"]),
         )
 
@@ -1733,7 +1700,7 @@ class Parser:
     ) -> UserRelationshipUpdateEvent:
         return UserRelationshipUpdateEvent(
             shard=shard,
-            current_user_id=self.parse_id(d["id"]),
+            current_user_id=d["id"],
             old_user=None,
             new_user=self.parse_user(d["user"]),
             before=None,
@@ -1761,7 +1728,7 @@ class Parser:
 
         return UserSettingsUpdateEvent(
             shard=shard,
-            current_user_id=self.parse_id(d["id"]),
+            current_user_id=d["id"],
             partial=partial,
             before=before,
             after=after,
@@ -1792,7 +1759,7 @@ class Parser:
     def parse_user_update_event(
         self, shard: Shard, d: raw.ClientUserUpdateEvent
     ) -> UserUpdateEvent:
-        user_id = self.parse_id(d["id"])
+        user_id = d["id"]
         data = d["data"]
         clear = d["clear"]
 
@@ -1853,8 +1820,8 @@ class Parser:
 
         return VoiceChannel(
             state=self.state,
-            id=self.parse_id(d["_id"]),
-            server_id=self.parse_id(d["server"]),
+            id=d["_id"],
+            server_id=d["server"],
             name=d["name"],
             description=d.get("description"),
             internal_icon=self.parse_asset(icon) if icon else None,
@@ -1864,7 +1831,7 @@ class Parser:
                 else self.parse_permission_override_field(default_permissions)
             ),
             role_permissions={
-                self.parse_id(k): self.parse_permission_override_field(v)
+                k: self.parse_permission_override_field(v)
                 for k, v in role_permissions.items()
             },
             nsfw=nsfw or False,
@@ -1875,10 +1842,10 @@ class Parser:
 
         return Webhook(
             state=self.state,
-            id=self.parse_id(d["id"]),
+            id=d["id"],
             name=d["name"],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            channel_id=self.parse_id(d["channel_id"]),
+            channel_id=d["channel_id"],
             permissions=Permissions(d["permissions"]),
             token=d.get("token"),
         )
@@ -1904,7 +1871,7 @@ class Parser:
             shard=shard,
             new_webhook=PartialWebhook(
                 state=self.state,
-                id=self.parse_id(d["id"]),
+                id=d["id"],
                 name=data.get("name") or core.UNDEFINED,
                 internal_avatar=(
                     None
@@ -1925,7 +1892,7 @@ class Parser:
         return WebhookDeleteEvent(
             shard=shard,
             webhook=None,
-            webhook_id=self.parse_id(d["id"]),
+            webhook_id=d["id"],
         )
 
     def parse_webpush_subscription(
