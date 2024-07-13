@@ -117,10 +117,10 @@ class Shard:
         self.user_agent = user_agent or DEFAULT_SHARD_USER_AGENT
 
         self.recv = (
-            self._recv_json if format == ShardFormat.json else self._recv_msgpack
+            self._recv_json if format is ShardFormat.json else self._recv_msgpack
         )
         self.send = (
-            self._send_json if format == ShardFormat.json else self._send_msgpack
+            self._send_json if format is ShardFormat.json else self._send_msgpack
         )
 
     def is_closed(self) -> bool:

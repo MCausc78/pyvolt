@@ -536,7 +536,7 @@ def _calculate_user_permissions(
     if (
         user_privileged
         or user_id == perspective_id
-        or user_relationship == RelationshipStatus.friend
+        or user_relationship is RelationshipStatus.friend
     ):
         return UserPermissions.ALL
 
