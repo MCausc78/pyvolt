@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 import typing as t
 
-from . import cdn, core, discovery
+from . import core, discovery
 from .auth import (
     PartialAccount,
     MFATicket,
@@ -19,6 +19,11 @@ from .auth import (
     LoginResult,
 )
 from .bot import BotFlags, Bot, PublicBot
+from .cdn import (
+    AssetMetadataType,
+    AssetMetadata,
+    StatelessAsset,
+)
 from .channel import (
     PartialChannel,
     SavedMessagesChannel,
@@ -182,25 +187,22 @@ class Parser:
 
     # basic start
 
-    def parse_asset_metadata(self, d: raw.Metadata) -> cdn.AssetMetadata:
-        return cdn.AssetMetadata(
-            type=cdn.AssetMetadataType(d["type"]),
+    def parse_asset_metadata(self, d: raw.Metadata) -> AssetMetadata:
+        return AssetMetadata(
+            type=AssetMetadataType(d["type"]),
             width=d.get("width"),
             height=d.get("height"),
         )
 
-    def parse_asset(self, d: raw.File) -> cdn.StatelessAsset:
-        deleted = d.get("deleted")
-        reported = d.get("reported")
-
-        return cdn.StatelessAsset(
+    def parse_asset(self, d: raw.File) -> StatelessAsset:
+        return StatelessAsset(
             id=d["_id"],
             filename=d["filename"],
             metadata=self.parse_asset_metadata(d["metadata"]),
             content_type=d["content_type"],
             size=d["size"],
-            deleted=deleted or False,
-            reported=reported or False,
+            deleted=d.get("deleted", False),
+            reported=d.get("reported", False),
             message_id=d.get("message_id"),
             user_id=d.get("user_id"),
             server_id=d.get("server_id"),
@@ -1030,8 +1032,8 @@ class Parser:
         return MFARequired(
             ticket=d["ticket"],
             allowed_methods=[MFAMethod(m) for m in d["allowed_methods"]],
-            internal_friendly_name=friendly_name,
             state=self.state,
+            internal_friendly_name=friendly_name,
         )
 
     def parse_mfa_ticket(self, d: raw.a.MFATicket) -> MFATicket:
@@ -1170,11 +1172,11 @@ class Parser:
             id=webhook_id,
             name=d["name"],
             internal_avatar=(
-                cdn.StatelessAsset(
+                StatelessAsset(
                     id=avatar,
                     filename="",
-                    metadata=cdn.AssetMetadata(
-                        type=cdn.AssetMetadataType.IMAGE,
+                    metadata=AssetMetadata(
+                        type=AssetMetadataType.IMAGE,
                         width=None,
                         height=None,
                     ),
