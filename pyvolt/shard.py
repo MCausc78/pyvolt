@@ -294,7 +294,11 @@ class Shard:
             ws = await self._ws_connect()
 
             self._ws = ws
-            await self.send({"type": "Authenticate", "token": self.token})
+            payload: raw.ServerAuthenticateEvent = {
+                "type": "Authenticate",
+                "token": self.token,
+            }
+            await self.send(payload)
 
             message = await self.recv()
             if message is None or message["type"] != "Authenticated":

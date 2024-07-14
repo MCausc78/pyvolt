@@ -4,10 +4,7 @@ from attrs import define, field
 from copy import copy
 import typing as t
 
-from . import (
-    cache as caching,
-    core,
-)
+from . import cache as caching
 
 from .auth import Session
 from .channel import (
@@ -198,6 +195,16 @@ class ChannelDeleteEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
+
+        if isinstance(self.channel, ServerChannel):
+            server = self.channel.get_server()
+            if server:
+                for i, server_channel in enumerate(server.internal_channels[1]):
+                    if server_channel == self.channel_id:
+                        del server.internal_channels[1][i]
+                        break
+                cache.store_server(server, caching._CHANNEL_DELETE)
+
         cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
         return True
 
@@ -769,6 +776,11 @@ class LogoutEvent(BaseEvent):
     pass
 
 
+@define(slots=True)
+class AuthenticatedEvent(BaseEvent):
+    pass
+
+
 __all__ = (
     "BaseEvent",
     "ReadyEvent",
@@ -813,4 +825,5 @@ __all__ = (
     "SessionDeleteEvent",
     "SessionDeleteAllEvent",
     "LogoutEvent",
+    "AuthenticatedEvent",
 )

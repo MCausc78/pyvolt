@@ -61,6 +61,8 @@ __all__ = (
     "T",
     "UndefinedOr",
     "is_defined",
+    "ulid_timestamp",
+    "ulid_time",
     "HasID",
     "ULIDOr",
     "resolve_id",

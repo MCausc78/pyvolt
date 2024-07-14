@@ -6,15 +6,14 @@ from enum import Enum, auto
 import logging
 import typing as t
 
-
-from . import emoji as emojis, user as users
+from .emoji import ServerEmoji, Emoji
+from .user import User
 
 if t.TYPE_CHECKING:
     from .channel import ServerChannel, Channel
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
-    from .user import User
 
 _L = logging.getLogger(__name__)
 
@@ -159,26 +158,26 @@ class Cache(abc.ABC):
     ##########
 
     @abc.abstractmethod
-    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None: ...
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> Emoji | None: ...
 
-    def get_all_emojis(self, ctx: BaseContext, /) -> list[emojis.Emoji]:
+    def get_all_emojis(self, ctx: BaseContext, /) -> list[Emoji]:
         return list(self.get_emojis_mapping().values())
 
     @abc.abstractmethod
-    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]: ...
+    def get_emojis_mapping(self) -> dict[str, Emoji]: ...
 
     @abc.abstractmethod
     def get_server_emojis_mapping(
         self,
-    ) -> dict[str, dict[str, emojis.ServerEmoji]]: ...
+    ) -> dict[str, dict[str, ServerEmoji]]: ...
 
     @abc.abstractmethod
     def get_server_emojis_mapping_of(
         self, server_id: str, ctx: BaseContext, /
-    ) -> dict[str, emojis.ServerEmoji] | None: ...
+    ) -> dict[str, ServerEmoji] | None: ...
 
     @abc.abstractmethod
-    def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None: ...
+    def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
     def delete_emoji(
@@ -307,23 +306,23 @@ class EmptyCache(Cache):
     # Emojis #
     ##########
 
-    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None:
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> Emoji | None:
         return None
 
-    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]:
+    def get_emojis_mapping(self) -> dict[str, Emoji]:
         return {}
 
     def get_server_emojis_mapping(
         self,
-    ) -> dict[str, dict[str, emojis.ServerEmoji]]:
+    ) -> dict[str, dict[str, ServerEmoji]]:
         return {}
 
     def get_server_emojis_mapping_of(
         self, server_id: str, ctx: BaseContext, /
-    ) -> dict[str, emojis.ServerEmoji] | None:
+    ) -> dict[str, ServerEmoji] | None:
         return None
 
-    def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None:
+    def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
         pass
 
     def delete_emoji(
@@ -433,9 +432,9 @@ class MapCache(Cache):
     _channels_max_size: int
     _read_states: dict[str, ReadState]
     _read_states_max_size: int
-    _emojis: dict[str, emojis.Emoji]
+    _emojis: dict[str, Emoji]
     _emojis_max_size: int
-    _server_emojis: dict[str, dict[str, emojis.ServerEmoji]]
+    _server_emojis: dict[str, dict[str, ServerEmoji]]
     _server_emojis_max_size: int
     _servers: dict[str, Server]
     _servers_max_size: int
@@ -498,7 +497,7 @@ class MapCache(Cache):
         return self._channels
 
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
-        from . import channel as channels
+        from .channel import ServerChannel
 
         if isinstance(channel, ServerChannel):
             server = channel.get_server()
@@ -543,24 +542,24 @@ class MapCache(Cache):
     # Emojis #
     ##########
 
-    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> emojis.Emoji | None:
+    def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> Emoji | None:
         return self._emojis.get(emoji_id)
 
-    def get_emojis_mapping(self) -> dict[str, emojis.Emoji]:
+    def get_emojis_mapping(self) -> dict[str, Emoji]:
         return self._emojis
 
     def get_server_emojis_mapping(
         self,
-    ) -> dict[str, dict[str, emojis.ServerEmoji]]:
+    ) -> dict[str, dict[str, ServerEmoji]]:
         return self._server_emojis
 
     def get_server_emojis_mapping_of(
         self, server_id: str, ctx: BaseContext, /
-    ) -> dict[str, emojis.ServerEmoji] | None:
+    ) -> dict[str, ServerEmoji] | None:
         return self._server_emojis.get(server_id)
 
-    def store_emoji(self, emoji: emojis.Emoji, ctx: BaseContext, /) -> None:
-        if isinstance(emoji, emojis.ServerEmoji):
+    def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
+        if isinstance(emoji, ServerEmoji):
             server_id = emoji.server_id
             if _put0(self._server_emojis, server_id, self._server_emojis_max_size):
                 self._server_emojis[server_id] = {
@@ -580,7 +579,7 @@ class MapCache(Cache):
             pass
 
         server_ids: tuple[str, ...] = ()
-        if isinstance(emoji, emojis.ServerEmoji):
+        if isinstance(emoji, ServerEmoji):
             if server_id:
                 server_ids = (server_id, emoji.server_id)
             else:
