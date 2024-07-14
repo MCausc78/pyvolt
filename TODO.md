@@ -6,7 +6,7 @@
 
 * TODO: What we should do in case of mentions? This solution sucks.
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L276C15-L276C80
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L283C15-L283C80
 
 * TODO: Handle 10053?
 
