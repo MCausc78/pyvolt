@@ -34,7 +34,7 @@ from .channel import (
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .errors import (
-    APIError,
+    HTTPException,
     Unauthorized,
     Forbidden,
     NotFound,
@@ -239,7 +239,7 @@ class HTTPClient:
                     description = error.get("description")
                     j["type"] = "RocketError"
                     j["err"] = f"{code} {reason}: {description}"
-                raise _STATUS_TO_ERRORS.get(response.status, APIError)(response, j)
+                raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
             return response
 
     async def request(

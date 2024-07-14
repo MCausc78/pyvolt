@@ -61,6 +61,7 @@ from .embed import (
     Embed,
 )
 from .emoji import ServerEmoji, DetachedEmoji, Emoji
+from .errors import NoData
 from .events import (
     ReadyEvent,
     PrivateChannelCreateEvent,
@@ -1133,17 +1134,34 @@ class Parser:
         )
 
     def parse_ready_event(self, shard: Shard, d: raw.ClientReadyEvent) -> ReadyEvent:
-        read_states = [self.parse_read_state(rs) for rs in d.get("unreads", [])]
+        users = [self.parse_user(u) for u in d.get("users", [])]
+        servers = [
+            self.parse_server(s, (True, s["channels"])) for s in d.get("servers", [])
+        ]
+        channels = [self.parse_channel(c) for c in d.get("channels", [])]
+        members = [self.parse_member(m) for m in d.get("members", [])]
+        emojis = [self.parse_server_emoji(e) for e in d.get("emojis", [])]
+        user_settings = self.parse_user_settings(d.get("user_settings", {}))
+        read_states = [self.parse_read_state(rs) for rs in d.get("channel_unreads", [])]
+
+        me = users[-1]
+        if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+            for user in users:
+                if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+                    me = user
+
+        if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+            raise TypeError("Unable to find self user")
 
         return ReadyEvent(
             shard=shard,
-            users=[self.parse_user(u) for u in d["users"]],
-            servers=[self.parse_server(s, (True, s["channels"])) for s in d["servers"]],
-            channels=[self.parse_channel(c) for c in d["channels"]],
-            members=[self.parse_member(m) for m in d["members"]],
-            emojis=[self.parse_server_emoji(e) for e in d["emojis"]],
-            me=self.parse_self_user(d.get("me", d["users"][-1])),
-            settings=self.parse_user_settings(d.get("settings", {})),
+            users=users,
+            servers=servers,
+            channels=channels,
+            members=members,
+            emojis=emojis,
+            me=me,  # type: ignore
+            user_settings=user_settings,
             read_states=read_states,
         )
 
@@ -1598,6 +1616,11 @@ class Parser:
         default_permissions = d.get("default_permissions")
         role_permissions = d.get("role_permissions", {})
 
+        try:
+            last_message_id = d["last_message_id"]  # type: ignore # I really hope that Eric will allow that
+        except KeyError:
+            last_message_id = None
+
         return ServerTextChannel(
             state=self.state,
             id=d["_id"],
@@ -1605,7 +1628,7 @@ class Parser:
             name=d["name"],
             description=d.get("description"),
             internal_icon=self.parse_asset(icon) if icon else None,
-            last_message_id=d.get("last_message_id"),
+            last_message_id=last_message_id,
             default_permissions=(
                 None
                 if default_permissions is None

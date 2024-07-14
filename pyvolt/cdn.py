@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 from . import core, utils
 from .enums import Enum
-from .errors import APIError
+from .errors import HTTPException
 
 if t.TYPE_CHECKING:
     from .state import State
@@ -335,7 +335,7 @@ class CDNClient:
 
             from .http import _STATUS_TO_ERRORS
 
-            raise _STATUS_TO_ERRORS.get(response.status, APIError)(response, j)
+            raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
         return response
 
     async def read(

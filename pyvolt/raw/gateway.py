@@ -49,14 +49,15 @@ class ClientLogoutEvent(t.TypedDict):
 
 class ClientReadyEvent(t.TypedDict):
     type: t.Literal["Ready"]
-    users: list[User]
-    servers: list[Server]
-    channels: list[Channel]
-    members: list[Member]
-    emojis: list[ServerEmoji]
-    me: User
-    settings: UserSettings
-    unreads: list[ChannelUnread]
+    users: t.NotRequired[list[User]]
+    servers: t.NotRequired[list[Server]]
+    channels: t.NotRequired[list[Channel]]
+    members: t.NotRequired[list[Member]]
+    emojis: t.NotRequired[list[ServerEmoji]]
+    # Insert please....
+    # me: User
+    user_settings: t.NotRequired[UserSettings]
+    channel_unreads: t.NotRequired[list[ChannelUnread]]
 
 
 Ping = list[int] | int

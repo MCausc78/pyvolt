@@ -7,10 +7,10 @@ Response = aiohttp.ClientResponse
 
 
 class PyvoltError(Exception):
-    pass
+    __slots__ = ()
 
 
-class APIError(PyvoltError):
+class HTTPException(PyvoltError):
     response: Response
     type: str
     retry_after: float | None
@@ -21,6 +21,20 @@ class APIError(PyvoltError):
     collection: str | None
     location: str | None
     with_: str | None
+
+    __slots__ = (
+        "response",
+        "data",
+        "type",
+        "retry_after",
+        "err",
+        "max",
+        "permission",
+        "operation",
+        "collection",
+        "location",
+        "with_",
+    )
 
     def __init__(
         self,
@@ -78,27 +92,27 @@ class APIError(PyvoltError):
         )
 
 
-class Unauthorized(APIError):
+class Unauthorized(HTTPException):
     pass
 
 
-class Forbidden(APIError):
+class Forbidden(HTTPException):
     pass
 
 
-class NotFound(APIError):
+class NotFound(HTTPException):
     pass
 
 
-class Ratelimited(APIError):
+class Ratelimited(HTTPException):
     pass
 
 
-class InternalServerError(APIError):
+class InternalServerError(HTTPException):
     pass
 
 
-class BadGateway(APIError):
+class BadGateway(HTTPException):
     pass
 
 
@@ -112,12 +126,16 @@ class AuthenticationError(ShardError):
 
 
 class ConnectError(ShardError):
+    __slots__ = ("errors",)
+
     def __init__(self, tries: int, errors: list[Exception]) -> None:
         self.errors = errors
         super().__init__(f"Giving up, after {tries} tries, last 3 errors:", errors[-3:])
 
 
 class DiscoveryError(PyvoltError):
+    __slots__ = ("response", "status", "data")
+
     def __init__(
         self,
         response: aiohttp.ClientResponse,
@@ -131,6 +149,8 @@ class DiscoveryError(PyvoltError):
 
 
 class NoData(PyvoltError):
+    __slots__ = ("what", "type")
+
     def __init__(self, what: str, type: str) -> None:
         self.what = what
         self.type = type
@@ -139,7 +159,7 @@ class NoData(PyvoltError):
 
 __all__ = (
     "PyvoltError",
-    "APIError",
+    "HTTPException",
     "Unauthorized",
     "Forbidden",
     "NotFound",

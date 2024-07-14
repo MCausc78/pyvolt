@@ -100,8 +100,8 @@ async def bench_group_channels():
         vpy_cache.add_user(me)
 
     with open('./test/data/users/mecha.json', 'r') as fp:
-        me = json.load(fp)
-        vpy_cache.add_user(me)
+        mecha = json.load(fp)
+        vpy_cache.add_user(mecha)
 
 
     def using_voltage():

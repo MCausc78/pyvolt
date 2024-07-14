@@ -85,14 +85,14 @@ class ReadyEvent(BaseEvent):
     emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     me: SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
-    settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
     read_states: list[ReadState] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
         state = self.shard.state
         state._me = self.me
-        state._settings = self.settings
+        state._settings = self.user_settings
 
     def process(self) -> bool:
         state = self.shard.state
