@@ -1,0 +1,26 @@
+{
+	"_id": "01FZB4GBHDVYY6KT8JH4RBX4KR",
+	"username": "Mecha",
+	"discriminator": "9862",
+	"avatar": {
+		"_id": "u4A-x_8pjkqjHnBBPo3bfT0o7Hwkr_45Ly8qS7LtPe",
+		"tag": "avatars",
+		"filename": "1C53F195-E56E-43E0-B12A-4F0F72F6A004.png",
+		"metadata": {
+			"type": "Image",
+			"width": 500,
+			"height": 500
+		},
+		"content_type": "image/png",
+		"size": 326253
+	},
+	"status": {
+		"text": "Watching 11096 users!",
+		"presence": "Online"
+	},
+	"bot": {
+		"owner": "01FZB2QAPRVT8PVMF11480GRCD"
+	},
+	"relationship": "None",
+	"online": false
+}
