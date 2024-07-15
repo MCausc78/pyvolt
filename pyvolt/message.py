@@ -6,12 +6,14 @@ from datetime import datetime
 from enum import IntFlag
 import typing as t
 
+
 from . import cache as caching, cdn, core
 from .base import Base
 from .channel import TextChannel, ServerChannel
 from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
 from .enums import Enum
+from .errors import NoData
 from .safety_reports import ContentReportReason
 from .server import Member
 from .user import BaseUser, User
@@ -669,6 +671,7 @@ class Message(BaseMessage):
         self.reactions.pop(emoji, None)
 
     def get_author(self) -> User | Member | None:
+        """Try get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
         if not self.state.cache:
@@ -700,7 +703,7 @@ class Message(BaseMessage):
     def author(self) -> User | Member:
         author = self.get_author()
         if not author:
-            raise TypeError("No author was found in cache.")
+            raise NoData(self.author_id, "message author")
         return author
 
     @property

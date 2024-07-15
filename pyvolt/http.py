@@ -2514,7 +2514,7 @@ class HTTPClient:
         )
 
     # Sync control
-    async def get_user_settings(self, keys: list[str], /) -> UserSettings:
+    async def get_user_settings(self, keys: list[str] = [], /) -> UserSettings:
         """|coro|
 
         Get user settings from server filtered by keys.
@@ -2533,7 +2533,7 @@ class HTTPClient:
     async def get_unreads(self) -> list[ReadState]:
         """|coro|
 
-        Get information about unread state on
+        Get information about unread state on channels.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2633,7 +2633,7 @@ class HTTPClient:
     async def block_user(self, user: core.ULIDOr[BaseUser], /) -> User:
         """|coro|
 
-        Block another user by their ID.
+        Block another user.
         https://developers.revolt.chat/api/#tag/Relationships/operation/block_user_req
 
         .. note::

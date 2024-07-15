@@ -18,7 +18,17 @@ from .errors import NoData
 from .permissions import Permissions, PermissionOverride
 from .safety_reports import ContentReportReason
 from .state import State
-from .user import BaseUser, DisplayUser, User
+from .user import (
+    UserStatus,
+    UserBadges,
+    UserFlags,
+    RelationshipStatus,
+    BaseUser,
+    DisplayUser,
+    BotUserInfo,
+    User,
+)
+
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -963,6 +973,93 @@ class Member(BaseMember):
             Kicking the member failed.
         """
         return await self.state.http.kick_member(self.server_id, self.id)
+
+    def get_user(self) -> User | None:
+        if isinstance(self._user, User):
+            return self._user
+        cache = self.state.cache
+        if not cache:
+            return None
+        return cache.get_user(self._user, caching._USER_REQUEST)
+
+    def user(self) -> User:
+        user = self.get_user()
+        if not user:
+            raise NoData(self.id, "member user")
+        return user
+
+    @property
+    def display_name(self) -> str | None:
+        user = self.get_user()
+        if user:
+            return user.display_name
+
+    @property
+    def badges(self) -> UserBadges:
+        user = self.get_user()
+        if user:
+            return user.badges
+        return UserBadges.NONE
+
+    @property
+    def status(self) -> UserStatus | None:
+        user = self.get_user()
+        if user:
+            return user.status
+
+    @property
+    def user_flags(self) -> UserFlags:
+        user = self.get_user()
+        if user:
+            return user.flags
+        return UserFlags.NONE
+
+    @property
+    def privileged(self) -> bool:
+        user = self.get_user()
+        if user:
+            return user.privileged
+        return False
+
+    @property
+    def bot(self) -> BotUserInfo | None:
+        user = self.get_user()
+        if user:
+            return user.bot
+
+    @property
+    def relationship(self) -> RelationshipStatus:
+        user = self.get_user()
+        if user:
+            return user.relationship
+        return RelationshipStatus.none
+
+    @property
+    def online(self) -> bool:
+        user = self.get_user()
+        if user:
+            return user.online
+        return False
+
+    """
+    display_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    badges: UserBadges = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    status: UserStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    privileged: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    bot: BotUserInfo | None = field(repr=True, hash=True, kw_only=True, eq=True)
+
+    relationship: RelationshipStatus = field(
+        repr=True, hash=True, kw_only=True, eq=True
+    )
+
+    online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    """
 
 
 @define(slots=True)

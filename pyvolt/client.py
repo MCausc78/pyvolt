@@ -14,8 +14,9 @@ from . import core, utils
 from .cache import Cache, MapCache
 from .cdn import CDNClient
 from .channel import SavedMessagesChannel
-from .events import BaseEvent
+from .events import BaseEvent, MessageCreateEvent
 from .http import HTTPClient
+from .message import Message
 from .parser import Parser
 from .server import Server
 from .shard import EventHandler, Shard
@@ -331,6 +332,14 @@ def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
     return tmp
 
 
+EventToModel = Message
+_COMMON_CONVERTERS: dict[type[EventToModel], ca.Callable] = {
+    Message: (
+        lambda callback: (MessageCreateEvent, lambda event: callback(event.message))
+    )
+}
+
+
 class Client:
     """A Revolt client."""
 
@@ -506,17 +515,24 @@ class Client:
             asyncio.create_task(self._dispatch(handlers, event, name), name=name)
 
     def subscribe(
-        self, event: type[EventT], callback: utils.MaybeAwaitableFunc[[EventT], None]
+        self,
+        event: type[EventT | EventToModel],
+        callback: utils.MaybeAwaitableFunc[[EventT], None],
     ) -> None:
         """Subscribes to event."""
-        tmp: t.Any = callback
+        ev: t.Any = event
+        try:
+            ev, converter = _COMMON_CONVERTERS[event](callback)  # type: ignore
+            tmp: t.Any = converter
+        except KeyError:
+            tmp: t.Any = callback
 
         try:
-            self._handlers[event].append(tmp)
+            self._handlers[ev].append(tmp)
         except KeyError:
-            self._handlers[event] = [tmp]
+            self._handlers[ev] = [tmp]
 
-    def on(self, event: type[EventT]) -> ca.Callable[
+    def on(self, event: type[EventT | EventToModel]) -> ca.Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
         utils.MaybeAwaitableFunc[[EventT], None],
     ]:
@@ -529,7 +545,7 @@ class Client:
         return decorator
 
     @staticmethod
-    def listens_on(event: type[EventT]) -> ca.Callable[
+    def listens_on(event: type[EventT | EventToModel]) -> ca.Callable[
         [utils.MaybeAwaitableFunc[[ClientT, EventT], None]],
         utils.MaybeAwaitableFunc[[ClientT, EventT], None],
     ]:
@@ -565,6 +581,11 @@ class Client:
     def http(self) -> HTTPClient:
         """:class:`HTTPClient`: The HTTP client."""
         return self._state.http
+
+    @property
+    def shard(self) -> Shard:
+        """:class:`Shard`: The Revolt WebSocket client."""
+        return self._state.shard
 
     @property
     def servers(self) -> ca.Mapping[str, Server]:

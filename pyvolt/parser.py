@@ -1145,12 +1145,12 @@ class Parser:
         read_states = [self.parse_read_state(rs) for rs in d.get("channel_unreads", [])]
 
         me = users[-1]
-        if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+        if me.__class__ is not SelfUser or not isinstance(me, SelfUser):
             for user in users:
                 if me.__class__ is not SelfUser or isinstance(me, SelfUser):
                     me = user
 
-        if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+        if me.__class__ is not SelfUser or not isinstance(me, SelfUser):
             raise TypeError("Unable to find self user")
 
         return ReadyEvent(
