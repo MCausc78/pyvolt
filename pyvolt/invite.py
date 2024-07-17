@@ -4,7 +4,7 @@ from attrs import define, field
 import typing as t
 
 
-from . import cdn, core
+from . import cdn
 
 from .server import ServerFlags, Server
 from .state import State

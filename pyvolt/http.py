@@ -261,8 +261,7 @@ class HTTPClient:
             **kwargs,
         )
         result = await utils._json_or_text(response)
-        if not response.closed:
-            response.close()
+        response.close()
         return result
 
     # Bots control

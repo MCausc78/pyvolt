@@ -160,7 +160,7 @@ class Shard:
         payload: bytes = msgpack.packb(d)  # type: ignore
         await self.ws.send_bytes(payload)
 
-    async def _recv_json(self) -> raw.ClientEvent | None:
+    async def _recv_json(self) -> raw.ClientEvent:
         try:
             message = await self.ws.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
@@ -172,7 +172,7 @@ class Shard:
         ):
             data = message.data
             self._last_close_code = data
-            _L.debug("websocket closed: %s", data)
+            _L.debug("Websocket closed: %s", data)
             if self._closed:
                 raise Close
             else:
@@ -192,10 +192,10 @@ class Shard:
 
         k = utils.from_json(message.data)
         if k["type"] != "Ready":
-            _L.debug("received %s", k)
+            _L.debug("Received %s", k)
         return k
 
-    async def _recv_msgpack(self) -> raw.ClientEvent | None:
+    async def _recv_msgpack(self) -> raw.ClientEvent:
         try:
             message = await self.ws.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
@@ -315,13 +315,10 @@ class Shard:
                         tmp = exc
                         exc = None
                         raise tmp
-                    while True:
-                        try:
-                            message = await self.recv()
-                            if message:
-                                break
-                        except (asyncio.CancelledError, KeyboardInterrupt):
-                            raise Close
+                    try:
+                        message = await self.recv()
+                    except (asyncio.CancelledError, KeyboardInterrupt):
+                        raise Close
                 except Close:
                     heartbeat_task.cancel()
                     await ws.close()

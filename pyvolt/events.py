@@ -128,6 +128,7 @@ class BaseChannelCreateEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
+
         cache.store_channel(channel, caching._CHANNEL_CREATE)
         return True
 
@@ -196,14 +197,16 @@ class ChannelDeleteEvent(BaseEvent):
         if not cache:
             return False
 
+        # TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
         if isinstance(self.channel, ServerChannel):
-            server = self.channel.get_server()
+            server = cache.get_server(self.channel.server_id, caching._CHANNEL_DELETE)
             if server:
-                for i, server_channel in enumerate(server.internal_channels[1]):
-                    if server_channel == self.channel_id:
-                        del server.internal_channels[1][i]
-                        break
-                cache.store_server(server, caching._CHANNEL_DELETE)
+                try:
+                    server.internal_channels[1].remove(self.channel.id)  # type: ignore # cached servers have only channel IDs internally
+                except ValueError:
+                    pass
+                else:
+                    cache.store_server(server, caching._CHANNEL_DELETE)
 
         cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
         return True

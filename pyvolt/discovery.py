@@ -287,9 +287,10 @@ class DiscoveryClient:
         return response
 
     async def request(self, method: str, path: str, **kwargs) -> t.Any:
-        async with await self._request(method, path, **kwargs) as response:
-            result = await utils._json_or_text(response)
+        response = await self._request(method, path, **kwargs)
+        result = await utils._json_or_text(response)
         _L.debug("received from %s %s: %s", method, path, result)
+        response.close()
         return result
 
     async def servers(self) -> DiscoveryServersPage:

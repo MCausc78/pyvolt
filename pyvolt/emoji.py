@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from attrs import define, field
 
-from . import core
 from .base import Base
 
 

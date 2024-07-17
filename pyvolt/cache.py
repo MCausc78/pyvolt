@@ -497,26 +497,13 @@ class MapCache(Cache):
         return self._channels
 
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
-        from .channel import ServerChannel
-
-        if isinstance(channel, ServerChannel):
-            server = channel.get_server()
-            if server:
-                server.internal_channels[1].append(channel.id)  # type: ignore # Cached servers always have IDs instead
         _put1(self._channels, channel.id, channel, self._channels_max_size)
 
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
-        from . import channel as channels
-
-        channel = self._channels.get(channel_id)
-        if isinstance(channel, ServerChannel):
-            server = channel.get_server()
-            if server:
-                for i, server_channel in enumerate(server.internal_channels[1]):
-                    if server_channel == channel_id:
-                        del server.internal_channels[1][i]
-                        break
-        del self._channels[channel_id]
+        try:
+            del self._channels[channel_id]
+        except KeyError:
+            pass
 
     ###############
     # Read States #
@@ -563,7 +550,7 @@ class MapCache(Cache):
             server_id = emoji.server_id
             if _put0(self._server_emojis, server_id, self._server_emojis_max_size):
                 self._server_emojis[server_id] = {
-                    **(self._server_emojis.get(server_id, {})),
+                    **self._server_emojis.get(server_id, {}),
                     emoji.id: emoji,
                 }
         _put1(self._emojis, emoji.id, emoji, self._emojis_max_size)
@@ -613,7 +600,10 @@ class MapCache(Cache):
         _put1(self._servers, server.id, server, self._servers_max_size)
 
     def delete_server(self, server_id: str, ctx: BaseContext, /) -> None:
-        del self._servers[server_id]
+        try:
+            del self._servers[server_id]
+        except KeyError:
+            pass
 
     ##################
     # Server Members #
@@ -668,7 +658,10 @@ class MapCache(Cache):
     ) -> None:
         members = self._server_members.get(server_id)
         if members:
-            del members[user_id]
+            try:
+                del members[user_id]
+            except KeyError:
+                pass
 
     #########
     # Users #

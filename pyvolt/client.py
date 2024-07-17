@@ -10,10 +10,11 @@ import logging
 import sys
 import typing as t
 
-from . import core, utils
+from . import core, cache as caching, utils
 from .cache import Cache, MapCache
 from .cdn import CDNClient
-from .channel import SavedMessagesChannel
+from .channel import SavedMessagesChannel, Channel
+from .emoji import Emoji
 from .events import BaseEvent, MessageCreateEvent
 from .http import HTTPClient
 from .message import Message
@@ -22,7 +23,7 @@ from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
 from .user_settings import UserSettings
-from .user import SelfUser
+from .user import User, SelfUser
 
 
 if t.TYPE_CHECKING:
@@ -326,9 +327,10 @@ EventT = t.TypeVar("EventT", bound="BaseEvent")
 
 
 def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
+    """Returns parents of BaseEvent, including BaseEvent itself."""
     if type is BaseEvent:
-        return ()
-    tmp: t.Any = type.__mro__[:-2]
+        return (BaseEvent,)
+    tmp: t.Any = type.__mro__[:-1]
     return tmp
 
 
@@ -588,11 +590,89 @@ class Client:
         return self._state.shard
 
     @property
+    def state(self) -> State:
+        """:class:`State`: The controller for all entities and managers."""
+        return self._state
+
+    @property
+    def channels(self) -> ca.Mapping[str, Channel]:
+        """:class:`ca.Mapping`[:class:`str`, :class:`Channel`]: Retrieves all cached channels."""
+        cache = self._state.cache
+        if cache:
+            return cache.get_channels_mapping()
+        return {}
+
+    @property
+    def emojis(self) -> ca.Mapping[str, Emoji]:
+        """:class:`ca.Mapping`[:class:`str`, :class:`Emoji`]: Retrieves all cached emojis."""
+        cache = self._state.cache
+        if cache:
+            return cache.get_emojis_mapping()
+        return {}
+
+    @property
     def servers(self) -> ca.Mapping[str, Server]:
+        """:class:`ca.Mapping`[:class:`str`, :class:`Server`]: Retrieves all cached servers."""
         cache = self._state.cache
         if cache:
             return cache.get_servers_mapping()
         return {}
+
+    @property
+    def users(self) -> ca.Mapping[str, User]:
+        """:class:`ca.Mapping`[:class:`str`, :class:`User`]: Retrieves all cached users."""
+        cache = self._state.cache
+        if cache:
+            return cache.get_users_mapping()
+        return {}
+
+    def get_channel(self, channel_id: str, /) -> Channel | None:
+        """Retrieves a channel from cache.
+
+        Returns
+        -------
+        :class:`Channel` | None
+            The channel or ``None`` if not found.
+        """
+        cache = self._state.cache
+        if cache:
+            return cache.get_channel(channel_id, caching._USER_REQUEST)
+
+    def get_emoji(self, emoji_id: str, /) -> Emoji | None:
+        """Retrieves a emoji from cache.
+
+        Returns
+        -------
+        :class:`Emoji` | None:
+            The emoji or ``None`` if not found.
+        """
+        cache = self._state.cache
+        if cache:
+            return cache.get_emoji(emoji_id, caching._USER_REQUEST)
+
+    def get_server(self, server_id: str) -> Server | None:
+        """Retrieves a server from cache.
+
+        Returns
+        -------
+        :class:`Server` | None:
+            The server or ``None`` if not found.
+        """
+        cache = self._state.cache
+        if cache:
+            return cache.get_server(server_id, caching._USER_REQUEST)
+
+    def get_user(self, user_id: str) -> User | None:
+        """Retrieves a user from cache.
+
+        Returns
+        -------
+        :class:`User` | None:
+            The user or ``None`` if not found.
+        """
+        cache = self._state.cache
+        if cache:
+            return cache.get_user(user_id, caching._USER_REQUEST)
 
     @property
     def settings(self) -> UserSettings:
