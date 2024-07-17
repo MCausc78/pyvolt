@@ -19,6 +19,7 @@ from .events import BaseEvent, MessageCreateEvent
 from .http import HTTPClient
 from .message import Message
 from .parser import Parser
+from .read_state import ReadState
 from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
@@ -649,6 +650,18 @@ class Client:
         cache = self._state.cache
         if cache:
             return cache.get_emoji(emoji_id, caching._USER_REQUEST)
+
+    def get_read_state(self, channel_id: str) -> ReadState | None:
+        """Retrieves a read state from cache.
+
+        Returns
+        -------
+        :class:`ReadState` | None:
+            The read state or ``None`` if not found.
+        """
+        cache = self._state.cache
+        if cache:
+            return cache.get_read_state(channel_id, caching._USER_REQUEST)
 
     def get_server(self, server_id: str) -> Server | None:
         """Retrieves a server from cache.

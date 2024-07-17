@@ -13,6 +13,7 @@ from . import (
 )
 from .base import Base
 from .bot import BaseBot
+from .emoji import ServerEmoji
 from .enums import Enum
 from .errors import NoData
 from .permissions import Permissions, PermissionOverride
@@ -372,9 +373,9 @@ class BaseServer(Base):
         Parameters
         ----------
         name: :class:`str` | `None`
-            Role name. Should be between 1 and 32 chars long.
+            The role name. Should be between 1 and 32 chars long.
         rank: :class:`int` | `None`
-            Ranking position. Smaller values take priority.
+            The ranking position. Smaller values take priority.
 
         Raises
         ------
@@ -797,12 +798,53 @@ class Server(BaseServer):
         return channels
 
     @property
-    def members(self) -> list[Member]:
-        """The members list of this server."""
+    def emojis(self) -> dict[str, ServerEmoji]:
+        """:class:`dict`[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        cache = self.state.cache
+        if cache:
+            return (
+                cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
+            )
+        return {}
+
+    @property
+    def members(self) -> dict[str, Member]:
+        """:class:`dict`[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        cache = self.state.cache
+        if cache:
+            return (
+                cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST)
+                or {}
+            )
+        return {}
+
+    def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
+        """Retrieves a server emoji from cache.
+
+        Returns
+        -------
+        :class:`ServerEmoji` | None:
+            The emoji or ``None`` if not found.
+        """
         cache = self.state.cache
         if not cache:
-            return []
-        return cache.get_all_server_members_of(self.id, caching._USER_REQUEST) or []
+            return
+        emoji = cache.get_emoji(emoji_id, caching._USER_REQUEST)
+        if emoji and isinstance(emoji, ServerEmoji) and emoji.server_id == self.id:
+            return emoji
+
+    def get_member(self, user_id: str, /) -> Member | None:
+        """Retrieves a server member from cache.
+
+        Returns
+        -------
+        :class:`Member` | None:
+            The member or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
 
     @property
     def members_mapping(self) -> dict[str, Member]:
@@ -1040,26 +1082,6 @@ class Member(BaseMember):
         if user:
             return user.online
         return False
-
-    """
-    display_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    badges: UserBadges = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    status: UserStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    privileged: bool = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    bot: BotUserInfo | None = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    relationship: RelationshipStatus = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-
-    online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
-    """
 
 
 @define(slots=True)
