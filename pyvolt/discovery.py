@@ -9,7 +9,7 @@ from . import cdn, core, utils
 from .bot import BaseBot
 from .enums import Enum
 from .errors import DiscoveryError
-from .server import ServerFlags, BaseServer, Server
+from .server import ServerFlags, BaseServer
 from .state import State
 from .user import StatelessUserProfile, UserProfile
 
@@ -276,7 +276,7 @@ class DiscoveryClient:
         self, method: str, path: str, **kwargs
     ) -> aiohttp.ClientResponse:
         _L.debug("sending %s to %s params=%s", method, path, kwargs.get("params"))
-        headers = {"User-Agent": DEFAULT_DISCOVERY_USER_AGENT}
+        headers = {"user-agent": DEFAULT_DISCOVERY_USER_AGENT}
         headers.update(kwargs.pop("headers", {}))
         response = await self.session.request(
             method, self._base + path.lstrip("/"), headers=headers, **kwargs
