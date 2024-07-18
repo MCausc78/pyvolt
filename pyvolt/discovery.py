@@ -261,6 +261,12 @@ class ThemeSearchResult:
 
 
 class DiscoveryClient:
+    __slots__ = (
+        "_base",
+        "session",
+        "state",
+    )
+
     def __init__(
         self, *, base: str | None = None, session: aiohttp.ClientSession, state: State
     ) -> None:

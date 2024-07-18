@@ -280,7 +280,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`bots.Bot`
+        :class:`~Bot`
             The created bot.
         """
         j: raw.DataCreateBot = {"name": name}
@@ -292,7 +292,7 @@ class HTTPClient:
     async def delete_bot(self, bot: core.ULIDOr[BaseBot]) -> None:
         """|coro|
 
-        Delete a bot.
+        Deletes the bot.
         https://developers.revolt.chat/api/#tag/Bots/operation/delete_delete_bot
 
         .. note::
@@ -313,6 +313,26 @@ class HTTPClient:
         """|coro|
 
         Edits the bot.
+
+        Parameters
+        ----------
+        bot: :class:`ULIDOr`[:class:`~BaseBot`]
+            The bot.
+        name: :class:`UndefinedOr`[:class:`str`]
+            The new bot name.
+        public: :class:`UndefinedOr`[:class:`bool`]
+            Whether the bot should be public (could be invited by anyone).
+        analytics: :class:`UndefinedOr`[:class:`bool`]
+            Whether to allow Revolt collect analytics about the bot.
+        interactions_url: :class:`UndefinedOr`[:class:`str`]
+            The new bot interactions URL. For now, this parameter is reserved and does not do anything.
+        reset_token: :class:`bool`
+            Whether to reset bot token. The new token can be accessed via ``bot.token``.
+
+        Returns
+        -------
+        :class:`~Bot`
+            The updated bot.
         """
         j: raw.DataEditBot = {}
         r: list[raw.FieldsBot] = []
@@ -343,11 +363,16 @@ class HTTPClient:
     async def get_bot(self, bot: core.ULIDOr[BaseBot]) -> Bot:
         """|coro|
 
-        Get details of a bot you own.
-        https://developers.revolt.chat/api/#tag/Bots/operation/fetch_fetch_bot
+        Retrieves the bot with the given ID.
+
+        The bot must be owned by you.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Returns
+        -------
+        :class:`~Bot`
         """
         d: raw.FetchBotResponse = await self.request(
             routes.BOTS_FETCH.compile(bot_id=core.resolve_id(bot))
@@ -357,11 +382,14 @@ class HTTPClient:
     async def get_owned_bots(self) -> list[Bot]:
         """|coro|
 
-        Get  all of the bots that you have control over.
-        https://developers.revolt.chat/api/#tag/Bots/operation/fetch_owned_fetch_owned_bots
+        Retrieves all bots owned by you.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Returns
+        -------
+        :class:`list`[:class:`~Bot`]
         """
         return self.state.parser.parse_bots(
             await self.request(routes.BOTS_FETCH_OWNED.compile())

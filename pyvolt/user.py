@@ -299,9 +299,13 @@ class Mutuals:
 class BaseUser(Base):
     """Represents a user on Revolt."""
 
+    def is_sentinel(self) -> bool:
+        """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""
+        return self is self.state.system
+
     @property
     def mention(self) -> str:
-        """The user mention."""
+        """:class:`str`: The user mention."""
         return f"<@{self.id}>"
 
     async def accept_friend_request(self) -> User:

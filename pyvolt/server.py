@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from attrs import define, field
+from collections import abc as ca
 from datetime import datetime
 from enum import IntFlag
 import typing as t
@@ -798,8 +799,8 @@ class Server(BaseServer):
         return channels
 
     @property
-    def emojis(self) -> dict[str, ServerEmoji]:
-        """:class:`dict`[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+    def emojis(self) -> ca.Mapping[str, ServerEmoji]:
+        """:class:`~ca.Mapping`[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
         cache = self.state.cache
         if cache:
             return (
@@ -808,8 +809,8 @@ class Server(BaseServer):
         return {}
 
     @property
-    def members(self) -> dict[str, Member]:
-        """:class:`dict`[:class:`str`, :class:`Member`]: Returns all members of this server."""
+    def members(self) -> ca.Mapping[str, Member]:
+        """:class:`~ca.Mapping`[:class:`str`, :class:`Member`]: Returns all members of this server."""
         cache = self.state.cache
         if cache:
             return (
@@ -818,8 +819,46 @@ class Server(BaseServer):
             )
         return {}
 
+    def get_channel(self, channel_id: str, /) -> ServerChannel | None:
+        """Retrieves a server channel from cache.
+
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID.
+
+        Returns
+        -------
+        :class:`~ServerChannel` | None:
+            The channel or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+
+        from .channel import ServerChannel
+
+        channel = cache.get_channel(channel_id, caching._USER_REQUEST)
+        if (
+            channel
+            and isinstance(channel, ServerChannel)
+            and channel.server_id == self.id
+        ):
+            return channel
+
+        if not self.internal_channels[0]:
+            for ch in self.internal_channels[1]:
+                t: ServerChannel = ch  # type: ignore
+                if t.id == channel_id:
+                    return t
+
     def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
         """Retrieves a server emoji from cache.
+
+        Parameters
+        ----------
+        emoji_id: :class:`str`
+            The emoji ID.
 
         Returns
         -------
@@ -836,6 +875,11 @@ class Server(BaseServer):
     def get_member(self, user_id: str, /) -> Member | None:
         """Retrieves a server member from cache.
 
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user ID.
+
         Returns
         -------
         :class:`Member` | None:
@@ -845,14 +889,6 @@ class Server(BaseServer):
         if not cache:
             return
         return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
-
-    @property
-    def members_mapping(self) -> dict[str, Member]:
-        """The members mapping of this server."""
-        cache = self.state.cache
-        if not cache:
-            return {}
-        return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
 
     def is_verified(self) -> bool:
         """:class:`bool`: Whether the server is verified."""

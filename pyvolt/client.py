@@ -630,6 +630,11 @@ class Client:
     def get_channel(self, channel_id: str, /) -> Channel | None:
         """Retrieves a channel from cache.
 
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID.
+
         Returns
         -------
         :class:`Channel` | None
@@ -642,41 +647,61 @@ class Client:
     def get_emoji(self, emoji_id: str, /) -> Emoji | None:
         """Retrieves a emoji from cache.
 
+        Parameters
+        ----------
+        emoji_id: :class:`str`
+            The emoji ID.
+
         Returns
         -------
-        :class:`Emoji` | None:
+        :class:`Emoji` | None
             The emoji or ``None`` if not found.
         """
         cache = self._state.cache
         if cache:
             return cache.get_emoji(emoji_id, caching._USER_REQUEST)
 
-    def get_read_state(self, channel_id: str) -> ReadState | None:
+    def get_read_state(self, channel_id: str, /) -> ReadState | None:
         """Retrieves a read state from cache.
+
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID of read state.
 
         Returns
         -------
-        :class:`ReadState` | None:
+        :class:`ReadState` | None
             The read state or ``None`` if not found.
         """
         cache = self._state.cache
         if cache:
             return cache.get_read_state(channel_id, caching._USER_REQUEST)
 
-    def get_server(self, server_id: str) -> Server | None:
+    def get_server(self, server_id: str, /) -> Server | None:
         """Retrieves a server from cache.
+
+        Parameters
+        ----------
+        server_id: :class:`str`
+            The server ID.
 
         Returns
         -------
-        :class:`Server` | None:
+        :class:`Server` | None
             The server or ``None`` if not found.
         """
         cache = self._state.cache
         if cache:
             return cache.get_server(server_id, caching._USER_REQUEST)
 
-    def get_user(self, user_id: str) -> User | None:
+    def get_user(self, user_id: str, /) -> User | None:
         """Retrieves a user from cache.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user ID.
 
         Returns
         -------
@@ -691,6 +716,11 @@ class Client:
     def settings(self) -> UserSettings:
         """:class:`UserSettings`: The current user settings."""
         return self._state.settings
+
+    @property
+    def system(self) -> User:
+        """:class:`User`: The Revolt sentinel user."""
+        return self._state.system
 
     async def start(self) -> None:
         """|coro|

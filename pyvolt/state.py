@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import typing as t
 
+from . import core
 from .user_settings import UserSettings
+from .user import UserBadges, UserFlags, RelationshipStatus, User
 
 if t.TYPE_CHECKING:
     from .cache import Cache
@@ -24,6 +26,7 @@ class State:
         "_me",
         "_saved_notes",
         "_settings",
+        "system",
     )
 
     def __init__(
@@ -43,6 +46,21 @@ class State:
         self._me: SelfUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None
         self._settings: UserSettings | None = None
+        self.system = User(
+            state=self,
+            id=core.Z,
+            name="Revolt",
+            discriminator="0000",
+            internal_avatar=None,
+            display_name=None,
+            badges=UserBadges.NONE,
+            status=None,
+            flags=UserFlags.NONE,
+            privileged=True,
+            bot=None,
+            relationship=RelationshipStatus.none,
+            online=False,
+        )
 
     def setup(
         self,
