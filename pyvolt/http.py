@@ -32,6 +32,15 @@ from .channel import (
     ServerChannel,
     Channel,
 )
+from .cdn import ResolvableResource, resolve_resource
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    is_defined,
+    ULIDOr,
+    resolve_id,
+    __version__ as version,
+)
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .errors import (
     HTTPException,
@@ -86,7 +95,7 @@ from .webhook import BaseWebhook, Webhook
 _L = logging.getLogger(__name__)
 
 
-from . import cdn, core, routes, utils
+from . import routes, utils
 
 if t.TYPE_CHECKING:
     from . import raw
@@ -94,7 +103,7 @@ if t.TYPE_CHECKING:
 
 
 DEFAULT_HTTP_USER_AGENT = (
-    f"pyvolt API client (https://github.com/MCausc78/pyvolt, {core.__version__})"
+    f"pyvolt API client (https://github.com/MCausc78/pyvolt, {version})"
 )
 
 
@@ -280,7 +289,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`~Bot`
+        :class:`Bot`
             The created bot.
         """
         j: raw.DataCreateBot = {"name": name}
@@ -289,25 +298,29 @@ class HTTPClient:
         )
         return self.state.parser.parse_bot(d, d["user"])
 
-    async def delete_bot(self, bot: core.ULIDOr[BaseBot]) -> None:
+    async def delete_bot(self, bot: ULIDOr[BaseBot]) -> None:
         """|coro|
 
         Deletes the bot.
-        https://developers.revolt.chat/api/#tag/Bots/operation/delete_delete_bot
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        bot: :class:`ULIDOr`[:class:`BaseBot`]
+            The bot to delete.
         """
-        await self.request(routes.BOTS_DELETE.compile(bot_id=core.resolve_id(bot)))
+        await self.request(routes.BOTS_DELETE.compile(bot_id=resolve_id(bot)))
 
     async def edit_bot(
         self,
-        bot: core.ULIDOr[BaseBot],
+        bot: ULIDOr[BaseBot],
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        public: core.UndefinedOr[bool] = core.UNDEFINED,
-        analytics: core.UndefinedOr[bool] = core.UNDEFINED,
-        interactions_url: core.UndefinedOr[str | None] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        public: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
+        interactions_url: UndefinedOr[str | None] = UNDEFINED,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -316,33 +329,33 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`~BaseBot`]
-            The bot.
+        bot: :class:`ULIDOr`[:class:`BaseBot`]
+            The bot to edit.
         name: :class:`UndefinedOr`[:class:`str`]
             The new bot name.
         public: :class:`UndefinedOr`[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
         analytics: :class:`UndefinedOr`[:class:`bool`]
             Whether to allow Revolt collect analytics about the bot.
-        interactions_url: :class:`UndefinedOr`[:class:`str`]
+        interactions_url: :class:`UndefinedOr`[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
 
         Returns
         -------
-        :class:`~Bot`
+        :class:`Bot`
             The updated bot.
         """
         j: raw.DataEditBot = {}
         r: list[raw.FieldsBot] = []
-        if core.is_defined(name):
+        if is_defined(name):
             j["name"] = name
-        if core.is_defined(public):
+        if is_defined(public):
             j["public"] = public
-        if core.is_defined(analytics):
+        if is_defined(analytics):
             j["analytics"] = analytics
-        if core.is_defined(interactions_url):
+        if is_defined(interactions_url):
             if interactions_url is None:
                 r.append("InteractionsURL")
             else:
@@ -353,14 +366,14 @@ class HTTPClient:
             j["remove"] = r
 
         d: raw.BotWithUserResponse = await self.request(
-            routes.BOTS_EDIT.compile(bot_id=core.resolve_id(bot)), json=j
+            routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=j
         )
         return self.state.parser.parse_bot(
             d,
             d["user"],
         )
 
-    async def get_bot(self, bot: core.ULIDOr[BaseBot]) -> Bot:
+    async def get_bot(self, bot: ULIDOr[BaseBot]) -> Bot:
         """|coro|
 
         Retrieves the bot with the given ID.
@@ -370,12 +383,18 @@ class HTTPClient:
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        bot: :class:`ULIDOr`[:class:`BaseBot`]
+            The ID of the bot.
+
         Returns
         -------
-        :class:`~Bot`
+        :class:`Bot`
+            The retrieved bot.
         """
         d: raw.FetchBotResponse = await self.request(
-            routes.BOTS_FETCH.compile(bot_id=core.resolve_id(bot))
+            routes.BOTS_FETCH.compile(bot_id=resolve_id(bot))
         )
         return self.state.parser.parse_bot(d["bot"], d["user"])
 
@@ -389,42 +408,80 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`list`[:class:`~Bot`]
+        List[:class:`Bot`]
+            The owned bots.
         """
         return self.state.parser.parse_bots(
             await self.request(routes.BOTS_FETCH_OWNED.compile())
         )
 
-    async def get_public_bot(self, bot: core.ULIDOr[BaseBot]) -> PublicBot:
+    async def get_public_bot(self, bot: ULIDOr[BaseBot]) -> PublicBot:
         """|coro|
 
-        Get details of a public (or owned) bot.
+        Retrieves the public bot with the given ID.
         https://developers.revolt.chat/api/#tag/Bots/operation/fetch_public_fetch_public_bot
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        bot: :class:`ULIDOr`[:class:`BaseBot`]
+            The ID of the bot.
+
+        Returns
+        -------
+        :class:`PublicBot`
+            The retrieved bot.
         """
         return self.state.parser.parse_public_bot(
-            await self.request(
-                routes.BOTS_FETCH_PUBLIC.compile(bot_id=core.resolve_id(bot))
-            )
+            await self.request(routes.BOTS_FETCH_PUBLIC.compile(bot_id=resolve_id(bot)))
         )
+
+    @t.overload
+    async def invite_bot(
+        self,
+        bot: ULIDOr[BaseBot | BaseUser],
+        *,
+        server: ULIDOr[BaseServer],
+    ) -> None: ...
+
+    @t.overload
+    async def invite_bot(
+        self,
+        bot: ULIDOr[BaseBot | BaseUser],
+        *,
+        group: ULIDOr[GroupChannel],
+    ) -> None: ...
 
     async def invite_bot(
         self,
-        bot: core.ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[BaseBot | BaseUser],
         *,
-        server: core.ULIDOr[BaseServer] | None = None,
-        group: core.ULIDOr[GroupChannel] | None = None,
+        server: ULIDOr[BaseServer] | None = None,
+        group: ULIDOr[GroupChannel] | None = None,
     ) -> None:
         """|coro|
 
-        Invite a bot to a server or group.
-        https://developers.revolt.chat/api/#tag/Bots/operation/invite_invite_bot
+        Invites a bot to a server or group.
+        **Specifying both ``server`` and ``group`` parameters (or no parameters at all) will lead to an exception.**
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        bot: :class:`ULIDOr`[:class:`BaseBot`]
+            The bot.
+        server: Optional[:class:`ULIDOr`[:class:`BaseServer`]]
+            The destination server.
+        group: Optional[:class:`ULIDOr`[:class:`GroupChannel`]]
+            The destination group.
+
+        Raises
+        ------
+        TypeError
+            You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
         if server and group:
             raise TypeError("Cannot pass both server and group")
@@ -433,218 +490,237 @@ class HTTPClient:
 
         j: raw.InviteBotDestination
         if server:
-            j = {"server": core.resolve_id(server)}
+            j = {"server": resolve_id(server)}
         elif group:
-            j = {"group": core.resolve_id(group)}
+            j = {"group": resolve_id(group)}
         else:
             raise RuntimeError("Unreachable")
 
-        await self.request(
-            routes.BOTS_INVITE.compile(bot_id=core.resolve_id(bot)), json=j
-        )
+        await self.request(routes.BOTS_INVITE.compile(bot_id=resolve_id(bot)), json=j)
 
     # Channels control
     async def acknowledge_message(
-        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
     ) -> None:
         """|coro|
 
-        Lets the server and all other clients know that we've seen this message in this channel.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/channel_ack_req
+        Marks this message as read.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
-            Channel message was sent to.
-        message: :class:`core.ResolvableULID`
-            Message to ack.
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
+            The channel.
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
+            The message.
 
         Raises
         ------
         Forbidden
             You do not have permissions to see that message.
-        APIError
-            Acknowledging message failed.
+        HTTPException
+            Acking message failed.
         """
         await self.request(
             routes.CHANNELS_CHANNEL_ACK.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
             )
         )
 
     async def close_channel(
-        self, channel: core.ULIDOr[BaseChannel], silent: bool | None = None
+        self, channel: ULIDOr[BaseChannel], silent: bool | None = None
     ) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
-        https://developers.revolt.chat/api/#tag/Channel-Information/operation/channel_delete_req
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
-            Channel to close.
-        silent: :class:`bool`
+        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+            The channel.
+        silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
         Raises
         ------
         Forbidden
             You do not have permissions to close the channel.
-        APIError
+        HTTPException
             Closing the channel failed.
         """
         p: raw.OptionsChannelDelete = {}
         if silent is not None:
             p["leave_silently"] = utils._bool(silent)
         await self.request(
-            routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=core.resolve_id(channel)),
+            routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
             params=p,
         )
 
     async def edit_channel(
         self,
-        channel: core.ULIDOr[BaseChannel],
+        channel: ULIDOr[BaseChannel],
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        owner: core.UndefinedOr[core.ULIDOr[BaseUser]] = core.UNDEFINED,
-        icon: core.UndefinedOr[str | None] = core.UNDEFINED,
-        nsfw: core.UndefinedOr[bool] = core.UNDEFINED,
-        archived: core.UndefinedOr[bool] = core.UNDEFINED,
-        default_permissions: core.UndefinedOr[None] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[str | None] = UNDEFINED,
+        owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
+        icon: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        nsfw: UndefinedOr[bool] = UNDEFINED,
+        archived: UndefinedOr[bool] = UNDEFINED,
+        default_permissions: UndefinedOr[None] = UNDEFINED,
     ) -> Channel:
         """|coro|
 
         Edits the channel.
-        https://developers.revolt.chat/api/#tag/Channel-Information/operation/channel_edit_req
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
-            Channel to edit.
+        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+            The channel.
+        name: :class:`UndefinedOr`[:class:`str`]
+            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        owner: :class:`UndefinedOr`[:clsas:`ULIDOr`[:class:`BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
+        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        nsfw: :class:`UndefinedOr`[:class:`bool`]
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        archived: :class:`UndefinedOr`[:class:`bool`]
+            To mark the channel as archived or not.
+        default_permissions: :class:`UndefinedOr`[None]
+            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
         ------
         Forbidden
             You do not have permissions to edit the channel.
-        APIError
+        HTTPException
             Editing the channel failed.
+
+        Returns
+        -------
+        :class:`Channel`
+            The newly updated channel.
         """
         j: raw.DataEditChannel = {}
         r: list[raw.FieldsChannel] = []
-        if core.is_defined(name):
+        if is_defined(name):
             j["name"] = name
-        if core.is_defined(description):
+        if is_defined(description):
             if description is None:
                 r.append("Description")
             else:
                 j["description"] = description
-        if core.is_defined(owner):
-            j["owner"] = core.resolve_id(owner)
-        if core.is_defined(icon):
+        if is_defined(owner):
+            j["owner"] = resolve_id(owner)
+        if is_defined(icon):
             if icon is None:
                 r.append("Icon")
             else:
-                j["icon"] = icon
-        if core.is_defined(nsfw):
+                j["icon"] = await resolve_resource(self.state, icon, tag="icons")
+        if is_defined(nsfw):
             j["nsfw"] = nsfw
-        if core.is_defined(archived):
+        if is_defined(archived):
             j["archived"] = archived
-        if core.is_defined(default_permissions):
+        if is_defined(default_permissions):
             r.append("DefaultPermissions")
         if len(r) > 0:
             j["remove"] = r
         return self.state.parser.parse_channel(
             await self.request(
-                routes.CHANNELS_CHANNEL_EDIT.compile(
-                    channel_id=core.resolve_id(channel)
-                ),
+                routes.CHANNELS_CHANNEL_EDIT.compile(channel_id=resolve_id(channel)),
                 json=j,
             )
         )
 
-    async def get_channel(self, channel: core.ULIDOr[BaseChannel]) -> Channel:
+    async def get_channel(self, channel: ULIDOr[BaseChannel]) -> Channel:
         """|coro|
 
-        Gets the channel.
-        https://developers.revolt.chat/api/#tag/Channel-Information/operation/channel_fetch_req
+        Retrieves a :class:`Channel` with the specified ID.
+
+        Parameters
+        ----------
+        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+            The ID of the channel.
 
         Raises
         ------
         NotFound
-            Invalid Channel ID.
-        APIError
+            The channel is not found.
+        HTTPException
             Getting the channel failed.
+
+        Returns
+        -------
+        :class:`Channel`
+            The retrieved channel.
         """
         return self.state.parser.parse_channel(
             await self.request(
-                routes.CHANNELS_CHANNEL_FETCH.compile(
-                    channel_id=core.resolve_id(channel)
-                )
+                routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel))
             )
         )
 
-    async def get_channel_pins(
-        self, channel: core.ULIDOr[TextChannel]
-    ) -> list[Message]:
+    async def get_channel_pins(self, channel: ULIDOr[TextChannel]) -> list[Message]:
         """|coro|
 
         Retrieves all messages that are currently pinned in the channel.
 
+        Parameters
+        ----------
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
+            The channel.
+
         Raises
         ------
-        APIError
+        HTTPException
             Getting channel pins failed.
 
         Returns
         -------
-        :class:`list`[:class:`Message`]
-            The pinned
+        List[:class:`Message`]
+            The pinned messages.
         """
         return [
             self.state.parser.parse_message(m)
             for m in await self.request(
-                routes.CHANNELS_CHANNEL_PINS.compile(
-                    channel_id=core.resolve_id(channel)
-                )
+                routes.CHANNELS_CHANNEL_PINS.compile(channel_id=resolve_id(channel))
             )
         ]
 
     async def add_recipient_to_group(
         self,
-        channel: core.ULIDOr[GroupChannel],
-        user: core.ULIDOr[BaseUser],
+        channel: ULIDOr[GroupChannel],
+        user: ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
         Adds another user to the group.
-        https://developers.revolt.chat/api/#tag/Groups/operation/group_add_member_req
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: :class:`core.ULIDOr`[:class:`GroupChannel`]
+        channel: :class:`ULIDOr`[:class:`GroupChannel`]
             The group.
-        user: :class:`core.ULIDOr`[:class:`BaseUser`]
+        user: :class:`ULIDOr`[:class:`BaseUser`]
             The user to add.
 
         Raises
         ------
         Forbidden
             You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        APIError
+        HTTPException
             Adding user to the group failed.
         """
         await self.request(
             routes.CHANNELS_GROUP_ADD_MEMBER.compile(
-                channel_id=core.resolve_id(channel), user_id=core.resolve_id(user)
+                channel_id=resolve_id(channel), user_id=resolve_id(user)
             )
         )
 
@@ -653,13 +729,12 @@ class HTTPClient:
         name: str,
         *,
         description: str | None = None,
-        users: list[core.ULIDOr[BaseUser]] | None = None,
+        users: list[ULIDOr[BaseUser]] | None = None,
         nsfw: bool | None = None,
     ) -> GroupChannel:
         """|coro|
 
         Creates the new group channel.
-        https://developers.revolt.chat/api/#tag/Groups/operation/group_create_req
 
         .. note::
             This can only be used by non-bot accounts.
@@ -667,24 +742,29 @@ class HTTPClient:
         Parameters
         ----------
         name: :class:`str`
-            Group name.
-        description: :class:`str` | None
-            Group description.
-        users: :class:`list`[`:class:`core.ULIDOr`[:class:`BaseUser`]] | None
+            The group name.
+        description: Optional[:class:`str`]
+            The group description.
+        users: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
             List of users to add to the group. Must be friends with these users.
-        nsfw: :class:`bool` | None
+        nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
 
         Raises
         ------
-        APIError
+        HTTPException
             Creating the group failed.
+
+        Returns
+        -------
+        :class:`GroupChannel`
+            The new group.
         """
         j: raw.DataCreateGroup = {"name": name}
         if description is not None:
             j["description"] = description
         if users is not None:
-            j["users"] = [core.resolve_id(user) for user in users]
+            j["users"] = [resolve_id(user) for user in users]
         if nsfw is not None:
             j["nsfw"] = nsfw
         return self.state.parser.parse_group_channel(
@@ -692,254 +772,265 @@ class HTTPClient:
             recipients=(True, []),
         )
 
-    async def remove_member_from_group(
+    async def remove_recipient_from_group(
         self,
-        channel: core.ULIDOr[GroupChannel],
-        member: core.ULIDOr[BaseUser],
+        channel: ULIDOr[GroupChannel],
+        user: ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
-        Removes a user from the group.
-        https://developers.revolt.chat/api/#tag/Groups/operation/group_remove_member_req
+        Removes a recipient from the group.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`GroupChannel`]
             The group.
-        member: :class:`core.ResolvableULID`
-            User to remove.
+        user: :class:`ULID`[:class:`BaseUser`]
+            The user to remove.
 
         Raises
         ------
         Forbidden
             You're not owner of group.
-        APIError
+        HTTPException
             Removing the member from group failed.
         """
         await self.request(
             routes.CHANNELS_GROUP_REMOVE_MEMBER.compile(
-                channel_id=core.resolve_id(channel),
-                member_id=core.resolve_id(member),
+                channel_id=resolve_id(channel),
+                user_id=resolve_id(user),
             )
         )
 
     async def create_invite(
-        self, channel: core.ULIDOr[GroupChannel | ServerChannel]
+        self, channel: ULIDOr[GroupChannel | ServerChannel]
     ) -> Invite:
         """|coro|
 
-        Creates an invite to channel.
-        Channel must be a group or server text channel.
-        https://developers.revolt.chat/api/#tag/Channel-Invites/operation/invite_create_req
+        Creates an invite to channel. The destination channel must be a group or server channel.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: :class:`core.ULIDOr`[:class:`GroupChannel` | :class:`ServerChannel`]
+        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The invite destination channel.
 
         Raises
         ------
         Forbidden
             You do not have permissions to create invite in that channel.
-        APIError
+        HTTPException
             Creating invite failed.
+
+        Returns
+        -------
+        :class:`Invite`
+            The invite that was created.
         """
         return self.state.parser.parse_invite(
             await self.request(
-                routes.CHANNELS_INVITE_CREATE.compile(
-                    channel_id=core.resolve_id(channel)
-                )
+                routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel))
             )
         )
 
     async def get_group_recipients(
         self,
-        channel: core.ULIDOr[GroupChannel],
+        channel: ULIDOr[GroupChannel],
     ) -> list[User]:
         """|coro|
 
-        Retrieves all users who are part of this group.
-        https://developers.revolt.chat/api/#tag/Groups/operation/members_fetch_req
+        Retrieves all recipients who are part of this group.
 
         Parameters
         ----------
-        channel: :class:`core.ULIDOr`[:class:`GroupChannel`]
+        channel: :class:`ULIDOr`[:class:`GroupChannel`]
             The group channel.
 
         Raises
         ------
-        APIError
+        HTTPException
             Getting group recipients failed.
+
+        Returns
+        -------
+        List[:class:`User`]
+            The group recipients.
         """
         return [
             self.state.parser.parse_user(user)
             for user in await self.request(
                 routes.CHANNELS_MEMBERS_FETCH.compile(
-                    channel_id=core.resolve_id(channel),
+                    channel_id=resolve_id(channel),
                 )
             )
         ]
 
     async def bulk_delete_messages(
         self,
-        channel: core.ULIDOr[TextChannel],
-        messages: t.Sequence[core.ULIDOr[BaseMessage]],
+        channel: ULIDOr[TextChannel],
+        messages: t.Sequence[ULIDOr[BaseMessage]],
     ) -> None:
         """|coro|
 
         Delete multiple messages you've sent or one you have permission to delete.
         This will always require `ManageMessages` permission regardless of whether you own the message or not.
         Messages must have been sent within the past 1 week.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_bulk_delete_req
 
         Parameters
         ----------
-        channel: :class:`core.ULIDOr`[:class:`TextChannel`]
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        messages: :class:`t.Sequence`[:class:`core.ULIDOr`[:class:`BaseMessage`]]
+        messages: :class:`t.Sequence`[:class:`ULIDOr`[:class:`BaseMessage`]]
             The messages to delete.
 
+        Raises
+        ------
         Forbidden
             You do not have permissions to delete
-        APIError
+        HTTPException
             Deleting messages failed.
         """
         j: raw.OptionsBulkDelete = {
-            "ids": [core.resolve_id(message) for message in messages]
+            "ids": [resolve_id(message) for message in messages]
         }
         await self.request(
-            routes.CHANNELS_MESSAGE_BULK_DELETE.compile(
-                channel_id=core.resolve_id(channel)
-            ),
+            routes.CHANNELS_MESSAGE_BULK_DELETE.compile(channel_id=resolve_id(channel)),
             json=j,
         )
 
     async def remove_all_reactions_from_message(
         self,
-        channel: core.ULIDOr[TextChannel],
-        message: core.ULIDOr[BaseMessage],
+        channel: ULIDOr[TextChannel],
+        message: ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
-        Remove your own, someone else's or all of a given reaction.
+        Removes your own, someone else's or all of a given reaction.
         Requires `ManageMessages` permission.
-        https://developers.revolt.chat/api/#tag/Interactions/operation/message_clear_reactions_clear_reactions
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
 
         Raises
         ------
         Forbidden
             You do not have permissions to remove all reactions from message.
-        APIError
+        HTTPException
             Removing reactions from message failed.
         """
         await self.request(
             routes.CHANNELS_MESSAGE_CLEAR_REACTIONS.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
             )
         )
 
     async def delete_message(
-        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
     ) -> None:
         """|coro|
 
-        Delete a message you've sent or one you have permission to delete.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_delete_req
+        Deletes a message you've sent or one you have permission to delete.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
 
         Raises
         ------
         Forbidden
             You do not have permissions to delete message.
-        APIError
+        HTTPException
             Deleting the message failed.
         """
         await self.request(
             routes.CHANNELS_MESSAGE_DELETE.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
             )
         )
 
     async def edit_message(
         self,
-        channel: core.ULIDOr[TextChannel],
-        message: core.ULIDOr[BaseMessage],
+        channel: ULIDOr[TextChannel],
+        message: ULIDOr[BaseMessage],
         *,
-        content: core.UndefinedOr[str] = core.UNDEFINED,
-        embeds: core.UndefinedOr[list[SendableEmbed]] = core.UNDEFINED,
+        content: UndefinedOr[str] = UNDEFINED,
+        embeds: UndefinedOr[list[SendableEmbed]] = UNDEFINED,
     ) -> Message:
         """|coro|
 
         Edits the message that you've previously sent.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_edit_req
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
-        content: :class:`str` | None
-            New content.
-        embeds: :class:`list`[:class:`SendableEmbed`] | None
-            New embeds.
+        content: :class:`UndefinedOr`[:class:`str`]
+            The new content to replace the message with.
+        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+            The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
+
+        Raises
+        ------
+        Forbidden
+            Tried to suppress a message without permissions or edited a message's content or embed that isn't yours.
+        HTTPException
+            Editing the message failed.
+
+        Returns
+        -------
+        :class:`Message`
+            The newly edited message.
         """
         j: raw.DataEditMessage = {}
-        if core.is_defined(content):
+        if is_defined(content):
             j["content"] = content
-        if core.is_defined(embeds):
+        if is_defined(embeds):
             j["embeds"] = [await embed.build(self.state) for embed in embeds]
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_EDIT.compile(
-                    channel_id=core.resolve_id(channel),
-                    message_id=core.resolve_id(message),
+                    channel_id=resolve_id(channel),
+                    message_id=resolve_id(message),
                 ),
                 json=j,
             )
         )
 
     async def get_message(
-        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage]
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
     ) -> Message:
         """|coro|
 
         Retrieves a message.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_fetch_req
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
 
         Raises
         ------
         Forbidden
             You do not have permissions to get message.
-        APIError
+        HTTPException
             Getting the message failed.
 
         Returns
@@ -950,169 +1041,164 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_FETCH.compile(
-                    channel_id=core.resolve_id(channel),
-                    message_id=core.resolve_id(message),
+                    channel_id=resolve_id(channel),
+                    message_id=resolve_id(message),
                 )
             )
         )
 
     async def get_messages(
         self,
-        channel: core.ULIDOr[TextChannel],
+        channel: ULIDOr[TextChannel],
         *,
         limit: int | None = None,
-        before: core.ULIDOr[BaseMessage] | None = None,
-        after: core.ULIDOr[BaseMessage] | None = None,
+        before: ULIDOr[BaseMessage] | None = None,
+        after: ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
-        nearby: core.ULIDOr[BaseMessage] | None = None,
+        nearby: ULIDOr[BaseMessage] | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
         """|coro|
 
-        Get multiple
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_query_req
+        Get multiple messages from the channel.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ResolvableULID`
             The channel.
-        limit: :class:`int` | None
-            Maximum number of messages to get. For getting nearby messages, this is `(limit + 1)`.
-        before: :class:`core.ResolvableULID` | None
-            Message id before which messages should be fetched.
-        after: :class:`core.ResolvableULID` | None
-            Message after which messages should be fetched.
-        sort: :class:`MessageSort` | None
-            Message sort direction.
-        nearby: :class:`core.ResolvableULID`
-            Message id to search around. Specifying 'nearby' ignores 'before', 'after' and 'sort'. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
+        limit: Optional[:class:`int`]
+            Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
+        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message before which messages should be fetched.
+        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message after which messages should be fetched.
+        sort: Optional[:class:`MessageSort`]
+            The message sort direction.
+        nearby: :class:`ResolvableULID`
+            The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
-
-        Returns
-        -------
-        :class:`list`[:class:`Message`]
-            The messages retrieved.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to get
-        APIError
+            You do not have permissions to get channel message history.
+        HTTPException
             Getting messages failed.
+
+        Returns
+        -------
+        List[:class:`Message`]
+            The messages retrieved.
         """
         p: raw.OptionsQueryMessages = {}
         if limit is not None:
             p["limit"] = limit
         if before is not None:
-            p["before"] = core.resolve_id(before)
+            p["before"] = resolve_id(before)
         if after is not None:
-            p["after"] = core.resolve_id(after)
+            p["after"] = resolve_id(after)
         if sort is not None:
             p["sort"] = sort.value
         if nearby is not None:
-            p["nearby"] = core.resolve_id(nearby)
+            p["nearby"] = resolve_id(nearby)
         if populate_users is not None:
             p["include_users"] = utils._bool(populate_users)
         return self.state.parser.parse_messages(
             await self.request(
-                routes.CHANNELS_MESSAGE_QUERY.compile(
-                    channel_id=core.resolve_id(channel)
-                ),
+                routes.CHANNELS_MESSAGE_QUERY.compile(channel_id=resolve_id(channel)),
                 params=p,
             )
         )
 
     async def add_reaction_to_message(
         self,
-        channel: core.ULIDOr[TextChannel],
-        message: core.ULIDOr[BaseMessage],
+        channel: ULIDOr[TextChannel],
+        message: ULIDOr[BaseMessage],
         emoji: ResolvableEmoji,
     ) -> None:
         """|coro|
 
         React to a given message.
-        https://developers.revolt.chat/api/#tag/Interactions/operation/message_react_react_message
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
-        emoji: :class:`emojis.ResolvableEmoji`
+        emoji: :class:`ResolvableEmoji`
             The emoji to react with.
 
         Raises
         ------
         Forbidden
             You do not have permissions to react to message.
-        APIError
+        HTTPException
             Reacting to message failed.
         """
         await self.request(
             routes.CHANNELS_MESSAGE_REACT.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
                 emoji=resolve_emoji(emoji),
             )
         )
 
     async def search_for_messages(
         self,
-        channel: core.ULIDOr[TextChannel],
+        channel: ULIDOr[TextChannel],
         query: str,
         *,
         limit: int | None = None,
-        before: core.ULIDOr[BaseMessage] | None = None,
-        after: core.ULIDOr[BaseMessage] | None = None,
+        before: ULIDOr[BaseMessage] | None = None,
+        after: ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
         """|coro|
 
-        Searches for messages within the given parameters.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_search_req
+        Searches for messages.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel to search in.
         query: :class:`str`
             Full-text search query. See [MongoDB documentation](https://docs.mongodb.com/manual/text-search/#-text-operator) for more information.
         limit: :class:`int`
             Maximum number of messages to fetch.
-        before: :class:`core.ResolvableULID`
-            Message ID before which messages should be fetched.
-        after: :class:`core.ResolvableULID`
-            Message ID after which messages should be fetched.
-        sort: :class:`MessageSort`
+        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message before which messages should be fetched.
+        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message after which messages should be fetched.
+        sort: Optional[:class:`MessageSort`]
             Sort used for retrieving
-        populate_users: :class:`bool`
+        populate_users: Optional[:class:`bool`]
             Whether to populate user (and member, if server channel) objects.
-
-        Returns
-        -------
-        :class:`list`[:class:`Message`]
-            The messages matched.
 
         Raises
         ------
         Forbidden
             You do not have permissions to search
-        APIError
+        HTTPException
             Searching messages failed.
+
+        Returns
+        -------
+        List[:class:`Message`]
+            The messages matched.
         """
         j: raw.DataMessageSearch = {"query": query}
         if limit is not None:
             j["limit"] = limit
         if before is not None:
-            j["before"] = core.resolve_id(before)
+            j["before"] = resolve_id(before)
         if after is not None:
-            j["after"] = core.resolve_id(after)
+            j["after"] = resolve_id(after)
         if sort is not None:
             j["sort"] = sort.value
         if populate_users is not None:
@@ -1120,15 +1206,13 @@ class HTTPClient:
 
         return self.state.parser.parse_messages(
             await self.request(
-                routes.CHANNELS_MESSAGE_SEARCH.compile(
-                    channel_id=core.resolve_id(channel)
-                ),
+                routes.CHANNELS_MESSAGE_SEARCH.compile(channel_id=resolve_id(channel)),
                 json=j,
             )
         )
 
     async def pin_message(
-        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage], /
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
     ) -> None:
         """|coro|
 
@@ -1137,33 +1221,33 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to pin
-        APIError
+            You do not have permissions to pin message.
+        HTTPException
             Pinning the message failed.
         """
         await self.request(
             routes.CHANNELS_MESSAGE_PIN.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
             )
         )
 
     async def send_message(
         self,
-        channel: core.ULIDOr[TextChannel],
+        channel: ULIDOr[TextChannel],
         content: str | None = None,
         *,
         nonce: str | None = None,
-        attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
+        attachments: list[ResolvableResource] | None = None,
+        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -1177,43 +1261,43 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`~ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        content: :class:`str` | None
+        content: Optional[:class:`str`]
             The message content.
-        nonce: :class:`str` | None
+        nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: :class:`list`[:class:`~ResolvableResource`] | None
+        attachments: Optional[List[:class:`ResolvableResource`]]
             The message attachments.
-        replies: :class:`list`[:class:`~Reply` | :class:`~ResolvableULID`] | None
+        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
             The message replies.
-        embeds: :class:`list`[:class:`~SendableEmbed`] | None
+        embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.
-        masquearde: :class:`~Masquerade` | None
+        masquearde: Optional[:class:`~Masquerade`]
             The message masquerade.
-        interactions: :class:`~Interactions` | None
+        interactions: Optional[:class:`~Interactions`]
             The message interactions.
-        silent: :class:`bool` | None
-            Whether to suppress notifications when fanning out event.
-
-        Returns
-        -------
-        :class:`~Message`
-            The message that was sent.
+        silent: Optional[:class:`bool`]
+            Whether to suppress notifications.
 
         Raises
         ------
         Forbidden
             You do not have permissions to send
-        APIError
+        HTTPException
             Sending the message failed.
+
+        Returns
+        -------
+        :class:`Message`
+            The message that was sent.
         """
         j: raw.DataMessageSend = {}
         if content is not None:
             j["content"] = content
         if attachments is not None:
             j["attachments"] = [
-                await cdn.resolve_resource(self.state, attachment, tag="attachments")
+                await resolve_resource(self.state, attachment, tag="attachments")
                 for attachment in attachments
             ]
         if replies is not None:
@@ -1221,7 +1305,7 @@ class HTTPClient:
                 (
                     reply.build()
                     if isinstance(reply, Reply)
-                    else {"id": core.resolve_id(reply), "mention": False}
+                    else {"id": resolve_id(reply), "mention": False}
                 )
                 for reply in replies
             ]
@@ -1246,16 +1330,14 @@ class HTTPClient:
             headers["Idempotency-Key"] = nonce
         return self.state.parser.parse_message(
             await self.request(
-                routes.CHANNELS_MESSAGE_SEND.compile(
-                    channel_id=core.resolve_id(channel)
-                ),
+                routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
                 json=j,
                 headers=headers,
             )
         )
 
     async def unpin_message(
-        self, channel: core.ULIDOr[TextChannel], message: core.ULIDOr[BaseMessage], /
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
     ) -> None:
         """|coro|
 
@@ -1264,71 +1346,69 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to unpin
-        APIError
+            You do not have permissions to unpin messages.
+        HTTPException
             Unpinning the message failed.
         """
         await self.request(
             routes.CHANNELS_MESSAGE_PIN.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
             )
         )
 
     async def remove_reactions_from_message(
         self,
-        channel: core.ULIDOr[TextChannel],
-        message: core.ULIDOr[BaseUser],
+        channel: ULIDOr[TextChannel],
+        message: ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
         /,
         *,
-        user: core.ULIDOr[BaseUser] | None = None,
+        user: ULIDOr[BaseUser] | None = None,
         remove_all: bool | None = None,
     ) -> None:
         """|coro|
 
         Remove your own, someone else's or all of a given reaction.
         Requires `ManageMessages` permission if changing other's reactions.
-        https://developers.revolt.chat/api/#tag/Interactions/operation/message_unreact_unreact_message
-
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ULIDOr`[:class:`BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
-            Emoji to remove.
-        user: :class:`core.ResolvableULID` | None
+            The emoji to remove.
+        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
             Remove reactions from this user. Requires `ManageMessages` permission if provided.
-        remove_all: :class:`bool` | None
+        remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. Requires `ManageMessages` permission if provided.
 
         Raises
         ------
         Forbidden
             You do not have permissions to remove reactions from message.
-        APIError
+        HTTPException
             Removing reactions from message failed.
         """
         p: raw.OptionsUnreact = {}
         if user is not None:
-            p["user_id"] = core.resolve_id(user)
+            p["user_id"] = resolve_id(user)
         if remove_all is not None:
             p["remove_all"] = utils._bool(remove_all)
         await self.request(
             routes.CHANNELS_MESSAGE_UNREACT.compile(
-                channel_id=core.resolve_id(channel),
-                message_id=core.resolve_id(message),
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
                 emoji=resolve_emoji(emoji),
             ),
             params=p,
@@ -1336,64 +1416,79 @@ class HTTPClient:
 
     async def set_role_channel_permissions(
         self,
-        channel: core.ULIDOr[ServerChannel],
-        role: core.ULIDOr[BaseRole],
+        channel: ULIDOr[ServerChannel],
+        role: ULIDOr[BaseRole],
         /,
         *,
         allow: Permissions = Permissions.NONE,
         deny: Permissions = Permissions.NONE,
-    ) -> Channel:
+    ) -> ServerChannel:
         """|coro|
 
-        Sets permissions for the specified role in this channel.
-        Channel must be a `TextChannel` or `VoiceChannel`.
-        https://developers.revolt.chat/api/#tag/Channel-Permissions/operation/permissions_set_req
+        Sets permissions for the specified role in a channel. Channel must be a :class:`ServerChannel`.
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`ServerChannel`]
             The channel.
-        role: :class:`core.ResolvableULID`
+        role: :class:`ULIDOr`[:class:`BaseRole`]
             The role.
 
         Raises
         ------
         Forbidden
             You do not have permissions to set role permissions on the channel.
-        APIError
+        HTTPException
             Setting permissions failed.
+
+        Returns
+        -------
+        :class:`ServerChannel`
+            The updated server channel with new permissions.
         """
         j: raw.DataSetRolePermissions = {
             "permissions": {"allow": int(allow), "deny": int(deny)}
         }
-        return self.state.parser.parse_channel(
+        r = self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET.compile(
-                    channel_id=core.resolve_id(channel),
-                    role_id=core.resolve_id(role),
+                    channel_id=resolve_id(channel),
+                    role_id=resolve_id(role),
                 ),
                 json=j,
             )
         )
+        return r  # type: ignore
 
     async def set_default_channel_permissions(
         self,
-        channel: core.ULIDOr[GroupChannel | ServerChannel],
+        channel: ULIDOr[GroupChannel | ServerChannel],
         permissions: Permissions | PermissionOverride,
         /,
-    ) -> Channel:
+    ) -> GroupChannel | ServerChannel:
         """|coro|
 
-        Sets permissions for the default role in this channel.
-        Channel must be a `Group`, `TextChannel` or `VoiceChannel`.
-        https://developers.revolt.chat/api/#tag/Channel-Permissions/operation/permissions_set_default_req
+        Sets permissions for the default role in a channel.
+        Channel must be a :class:`GroupChannel`, or :class:`ServerChannel`.
+
+        Parameters
+        ----------
+        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+            The channel.
+        permissions: Union[:class:`Permissions`, :class:`PermissionOverride`]
+            The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
 
         Raises
         ------
         Forbidden
             You do not have permissions to set default permissions on the channel.
-        APIError
+        HTTPException
             Setting permissions failed.
+
+        Returns
+        -------
+        Union[:class:`GroupChannel`, :class:`ServerChannel`]
+            The updated server channel with new permissions.
         """
         j: raw.DataDefaultChannelPermissions = {
             "permissions": (
@@ -1402,103 +1497,111 @@ class HTTPClient:
                 else int(permissions)
             )
         }
-        return self.state.parser.parse_channel(
+        r = self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(
-                    channel_id=core.resolve_id(channel)
+                    channel_id=resolve_id(channel)
                 ),
                 json=j,
             )
         )
+        return r  # type: ignore
 
     async def join_call(
-        self, channel: core.ULIDOr[DMChannel | GroupChannel | VoiceChannel]
+        self, channel: ULIDOr[DMChannel | GroupChannel | VoiceChannel]
     ) -> str:
         """|coro|
 
         Asks the voice server for a token to join the call.
-        https://developers.revolt.chat/api/#tag/Voice/operation/voice_join_req
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ULIDOr`[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
             The channel.
+
+        Raises
+        ------
+        HTTPException
+            Asking for the token failed.
 
         Returns
         -------
         :class:`str`
             Token for authenticating with the voice server.
 
-        Raises
-        ------
-        APIError
-            Asking for the token failed.
         """
-        return (
-            await self.request(
-                routes.CHANNELS_VOICE_JOIN.compile(channel_id=core.resolve_id(channel))
-            )
-        )["token"]
+        d: raw.LegacyCreateVoiceUserResponse = await self.request(
+            routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
+        )
+        return d["token"]
 
     async def create_webhook(
         self,
-        channel: core.ULIDOr[ServerChannel],
+        channel: ULIDOr[GroupChannel | TextChannel],
         /,
         *,
         name: str,
-        avatar: cdn.ResolvableResource | None = None,
+        avatar: ResolvableResource | None = None,
     ) -> Webhook:
         """|coro|
 
-        Creates a webhook which 3rd party platforms can use to send
-        https://developers.revolt.chat/api/#tag/Webhooks/operation/webhook_create_req
+        Creates a webhook which 3rd party platforms can use to send.
 
         Parameters
         ----------
+        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`TextChannel`]]
+            The channel to create webhook in.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
-        avatar: :class:`cdn.ResolvableResource` | None`
+        avatar: Optional[:class:`ResolvableResource`]
             The webhook avatar.
 
         Raises
         ------
         Forbidden
             You do not have permissions to create the webhook.
-        APIError
+        HTTPException
             Creating the webhook failed.
+
+        Returns
+        -------
+        :class:`Webhook`
+            The created webhook.
         """
         j: raw.CreateWebhookBody = {"name": name}
         if avatar is not None:
-            j["avatar"] = await cdn.resolve_resource(self.state, avatar, tag="avatars")
+            j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
         return self.state.parser.parse_webhook(
             await self.request(
-                routes.CHANNELS_WEBHOOK_CREATE.compile(
-                    channel_id=core.resolve_id(channel)
-                ),
+                routes.CHANNELS_WEBHOOK_CREATE.compile(channel_id=resolve_id(channel)),
                 json=j,
             )
         )
 
     async def get_channel_webhooks(
-        self, channel: core.ULIDOr[ServerChannel], /
+        self, channel: ULIDOr[ServerChannel], /
     ) -> list[Webhook]:
         """|coro|
 
-        Gets all webhooks inside the channel.
-        https://developers.revolt.chat/api/#tag/Webhooks/operation/webhook_fetch_all_req
+        Gets the list of webhooks from this channel.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to get channel webhooks.
-        APIError
+            You don't have permissions to get the webhooks.
+        HTTPException
             Getting channel webhooks failed.
+
+        Returns
+        -------
+        List[:class:`Webhook`]
+            The webhooks for this channel.
         """
         return [
             self.state.parser.parse_webhook(e)
             for e in await self.request(
                 routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(
-                    channel_id=core.resolve_id(channel)
+                    channel_id=resolve_id(channel)
                 )
             )
         ]
@@ -1506,8 +1609,8 @@ class HTTPClient:
     # Customization control (emojis)
     async def create_emoji(
         self,
-        server_id: core.ULIDOr[BaseServer],
-        data: cdn.ResolvableResource,
+        server: ULIDOr[BaseServer],
+        data: ResolvableResource,
         /,
         *,
         name: str,
@@ -1516,104 +1619,137 @@ class HTTPClient:
         """|coro|
 
         Create an emoji on the server.
-        https://developers.revolt.chat/api/#tag/Emojis/operation/emoji_create_create_emoji
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        data: :class:`ResolvableResource`
+            The emoji data.
+        name: :class:`str`
+            The emoji name. Must be at least 2 characters.
+        nsfw: Optional[:class:`bool`]
+            To mark the emoji as NSFW or not.
 
         Raises
         ------
         Forbidden
             You do not have permissions to create emoji.
-        APIError
+        HTTPException
             Creating the emoji failed.
+
+        Returns
+        -------
+        :class:`ServerEmoji`
+            The created emoji.
         """
         j: raw.DataCreateEmoji = {
             "name": name,
-            "parent": {"type": "Server", "id": core.resolve_id(server_id)},
+            "parent": {"type": "Server", "id": resolve_id(server)},
         }
         if nsfw is not None:
             j["nsfw"] = nsfw
         return self.state.parser.parse_server_emoji(
             await self.request(
                 routes.CUSTOMISATION_EMOJI_CREATE.compile(
-                    attachment_id=await cdn.resolve_resource(
-                        self.state, data, tag="emojis"
-                    )
+                    attachment_id=await resolve_resource(self.state, data, tag="emojis")
                 ),
                 json=j,
             )
         )
 
-    async def delete_emoji(self, emoji: core.ULIDOr[ServerEmoji], /) -> None:
+    async def delete_emoji(self, emoji: ULIDOr[ServerEmoji], /) -> None:
         """|coro|
 
-        Delete an emoji.
-        https://developers.revolt.chat/api/#tag/Emojis/operation/emoji_delete_delete_emoji
+        Deletes a emoji.
+
+        Parameters
+        ----------
+        emoji: :class:`ULIDOr`[:class:`ServerEmoji`]
+            The emoji to delete.
 
         Raises
         ------
         Forbidden
             You do not have permissions to delete emojis.
-        APIError
+        HTTPException
             Deleting the emoji failed.
         """
         await self.request(
-            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=core.resolve_id(emoji))
+            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji))
         )
 
-    async def get_emoji(self, emoji: core.ULIDOr[BaseEmoji], /) -> Emoji:
+    async def get_emoji(self, emoji: ULIDOr[BaseEmoji], /) -> Emoji:
         """|coro|
 
-        Get an emoji.
-        https://developers.revolt.chat/api/#tag/Emojis/operation/emoji_fetch_fetch_emoji
+        Retrieves a custom emoji.
+
+        Parameters
+        ----------
+        emoji: :class:`ULIDOr`[:class:`BaseEmoji`]
+            The emoji.
 
         Raises
         ------
-        APIError
-            Getting the emoji failed.
+        HTTPException
+            An error occurred fetching the emoji.
+
+        Returns
+        -------
+        :class:`Emoji`
+            The retrieved emoji.
         """
 
         return self.state.parser.parse_emoji(
             await self.request(
-                routes.CUSTOMISATION_EMOJI_FETCH.compile(
-                    emoji_id=core.resolve_id(emoji)
-                )
+                routes.CUSTOMISATION_EMOJI_FETCH.compile(emoji_id=resolve_id(emoji))
             )
         )
 
     # Invites control
-    async def delete_invite(self, invite_code: str, /) -> None:
+    async def delete_invite(self, code: str | BaseInvite, /) -> None:
         """|coro|
 
-        Delete an invite.
-        https://developers.revolt.chat/api/#tag/Invites/operation/invite_delete_req
+        Deletes a invite.
+
+        Parameters
+        ----------
+        code: Union[:class:`str`, :class:`BaseInvite`]
+            The invite code.
 
         Raises
         ------
         Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        APIError
+        HTTPException
             Deleting the invite failed.
         """
+        invite_code = code.code if isinstance(code, BaseInvite) else code
         await self.request(
             routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code)
         )
 
-    async def get_invite(self, invite_code: str, /) -> BaseInvite:
+    async def get_invite(self, code: str | BaseInvite, /) -> BaseInvite:
         """|coro|
 
-        Get an invite.
-        https://developers.revolt.chat/api/#tag/Invites/operation/invite_fetch_req
+        Gets an invite.
 
+        Parameters
+        ----------
+        code: Union[:class:`str`, :class:`BaseInvite`]
+            The invite code.
 
         Raises
         ------
         NotFound
-            Invalid invite code.
-        APIError
+            The invite is invalid.
+        HTTPException
             Getting the invite failed.
         """
+        invite_code = code.code if isinstance(code, BaseInvite) else code
         return self.state.parser.parse_public_invite(
             await self.request(
                 routes.INVITES_INVITE_FETCH.compile(invite_code=invite_code),
@@ -1621,22 +1757,32 @@ class HTTPClient:
             )
         )
 
-    async def accept_invite(self, invite_code: str, /) -> Server | GroupChannel:
+    async def accept_invite(self, code: str | BaseInvite, /) -> Server | GroupChannel:
         """|coro|
 
-        Accept an invite.
-        https://developers.revolt.chat/api/#tag/Invites/operation/invite_join_req
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        code: Union[:class:`str`, :class:`BaseInvite`]
+            The invite code.
 
         Raises
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
+
+        Returns
+        -------
+        Union[:class:`Server`, :class:`GroupChannel`]
+            The joined server or group.
         """
+        invite_code = code.code if isinstance(code, BaseInvite) else code
         d: raw.InviteJoinResponse = await self.request(
             routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code)
         )
@@ -1703,7 +1849,7 @@ class HTTPClient:
 
     async def report_message(
         self,
-        message: core.ULIDOr[BaseMessage],
+        message: ULIDOr[BaseMessage],
         reason: ContentReportReason,
         *,
         additional_context: str | None = None,
@@ -1718,13 +1864,13 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Trying to self-report, or reporting the message failed.
         """
         j: raw.DataReportContent = {
             "content": {
                 "type": "Message",
-                "id": core.resolve_id(message),
+                "id": resolve_id(message),
                 "report_reason": reason.value,
             }
         }
@@ -1734,7 +1880,7 @@ class HTTPClient:
 
     async def report_server(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         reason: ContentReportReason,
         /,
         *,
@@ -1750,13 +1896,13 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             You're trying to self-report, or reporting the server failed.
         """
         j: raw.DataReportContent = {
             "content": {
                 "type": "Server",
-                "id": core.resolve_id(server),
+                "id": resolve_id(server),
                 "report_reason": reason.value,
             }
         }
@@ -1766,12 +1912,12 @@ class HTTPClient:
 
     async def report_user(
         self,
-        user: core.ULIDOr[BaseUser],
+        user: ULIDOr[BaseUser],
         reason: UserReportReason,
         /,
         *,
         additional_context: str | None = None,
-        message_context: core.ULIDOr[BaseMessage],
+        message_context: ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -1783,17 +1929,17 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             You're trying to self-report, or reporting the user failed.
         """
         content: raw.UserReportedContent = {
             "type": "User",
-            "id": core.resolve_id(user),
+            "id": resolve_id(user),
             "report_reason": reason.value,
         }
 
         if message_context is not None:
-            content["message_id"] = core.resolve_id(message_context)
+            content["message_id"] = resolve_id(message_context)
 
         j: raw.DataReportContent = {"content": content}
         if additional_context is not None:
@@ -1804,7 +1950,7 @@ class HTTPClient:
     # Servers control
     async def ban_user(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         user: str | BaseUser | BaseMember,
         /,
         *,
@@ -1824,21 +1970,21 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to ban the user.
-        APIError
+        HTTPException
             Banning the user failed.
         """
         j: raw.DataBanCreate = {"reason": reason}
         return self.state.parser.parse_ban(
             await self.request(
                 routes.SERVERS_BAN_CREATE.compile(
-                    server_id=core.resolve_id(server), user_id=core.resolve_id(user)
+                    server_id=resolve_id(server), user_id=resolve_id(user)
                 ),
                 json=j,
             ),
             {},
         )
 
-    async def get_bans(self, server: core.ULIDOr[BaseServer], /) -> list[Ban]:
+    async def get_bans(self, server: ULIDOr[BaseServer], /) -> list[Ban]:
         """|coro|
 
         Get all bans on a server.
@@ -1846,12 +1992,12 @@ class HTTPClient:
         """
         return self.state.parser.parse_bans(
             await self.request(
-                routes.SERVERS_BAN_LIST.compile(server_id=core.resolve_id(server))
+                routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server))
             )
         )
 
     async def unban_user(
-        self, server: core.ULIDOr[BaseServer], user: core.ULIDOr[BaseUser]
+        self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]
     ) -> None:
         """|coro|
 
@@ -1862,18 +2008,18 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to unban the user.
-        APIError
+        HTTPException
             Unbanning the user failed.
         """
         await self.request(
             routes.SERVERS_BAN_REMOVE.compile(
-                server_id=core.resolve_id(server), user_id=core.resolve_id(user)
+                server_id=resolve_id(server), user_id=resolve_id(user)
             ),
         )
 
     async def create_channel(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         /,
         *,
         type: ChannelType | None = None,
@@ -1890,7 +2036,7 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to create the channel.
-        APIError
+        HTTPException
             Creating the channel failed.
         """
         j: raw.DataCreateServerChannel = {"name": name}
@@ -1902,18 +2048,14 @@ class HTTPClient:
             j["nsfw"] = nsfw
         channel = self.state.parser.parse_channel(
             await self.request(
-                routes.SERVERS_CHANNEL_CREATE.compile(
-                    server_id=core.resolve_id(server)
-                ),
+                routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
                 json=j,
             )
         )
         assert isinstance(channel, ServerChannel)
         return channel
 
-    async def get_server_emojis(
-        self, server: core.ULIDOr[BaseServer]
-    ) -> list[ServerEmoji]:
+    async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
         Get all emojis on a server.
@@ -1921,12 +2063,12 @@ class HTTPClient:
         return [
             self.state.parser.parse_server_emoji(e)
             for e in await self.request(
-                routes.SERVERS_EMOJI_LIST.compile(server_id=core.resolve_id(server))
+                routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server))
             )
         ]
 
     async def get_server_invites(
-        self, server: core.ULIDOr[ServerChannel], /
+        self, server: ULIDOr[ServerChannel], /
     ) -> list[ServerInvite]:
         """|coro|
 
@@ -1936,88 +2078,116 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to manage the server.
-        APIError
+        HTTPException
             Getting the invites failed.
         """
         return [
             self.state.parser.parse_server_invite(i)
             for i in await self.request(
-                routes.SERVERS_INVITES_FETCH.compile(server_id=core.resolve_id(server))
+                routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server))
             )
         ]
 
     async def edit_member(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         member: str | BaseUser | BaseMember,
         /,
         *,
-        nickname: core.UndefinedOr[str | None] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        roles: core.UndefinedOr[list[core.ULIDOr[BaseRole]] | None] = core.UNDEFINED,
-        timeout: core.UndefinedOr[
+        nick: UndefinedOr[str | None] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
+        timed_out_until: UndefinedOr[
             datetime | timedelta | float | int | None
-        ] = core.UNDEFINED,
+        ] = UNDEFINED,
     ) -> Member:
         """|coro|
 
         Edits the member.
 
+        Parameters
+        ----------
+        server: :class:`BaseServer`
+            The server.
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The member.
+        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The member's new nick. Use ``None`` to remove the nickname.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
+        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+            The member's new list of roles. This *replaces* the roles.
+        timed_out_until: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+            The date the member's timeout should expire, or None to remove the timeout. This must be a timezone-aware datetime object. Consider using utils.utcnow().
+
         Returns
         -------
         :class:`Member`
-            The updated member.
+            The newly updated member.
         """
         j: raw.DataMemberEdit = {}
         r: list[raw.FieldsMember] = []
-        if core.is_defined(nickname):
-            if nickname is not None:
-                j["nickname"] = nickname
+        if is_defined(nick):
+            if nick is not None:
+                j["nickname"] = nick
             else:
                 r.append("Nickname")
-        if core.is_defined(avatar):
+        if is_defined(avatar):
             if avatar is not None:
-                j["avatar"] = avatar
+                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
             else:
                 r.append("Avatar")
-        if core.is_defined(roles):
+        if is_defined(roles):
             if roles is not None:
-                j["roles"] = [core.resolve_id(e) for e in roles]
+                j["roles"] = [resolve_id(e) for e in roles]
             else:
                 r.append("Roles")
-        if core.is_defined(timeout):
-            if timeout is None:
+        if is_defined(timed_out_until):
+            if timed_out_until is None:
                 r.append("Timeout")
-            elif isinstance(timeout, datetime):
-                j["timeout"] = timeout.isoformat()
-            elif isinstance(timeout, timedelta):
-                j["timeout"] = (datetime.now() + timeout).isoformat()
-            elif isinstance(timeout, (float, int)):
-                j["timeout"] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
+            elif isinstance(timed_out_until, datetime):
+                j["timeout"] = timed_out_until.isoformat()
+            elif isinstance(timed_out_until, timedelta):
+                j["timeout"] = (datetime.now() + timed_out_until).isoformat()
+            elif isinstance(timed_out_until, (float, int)):
+                j["timeout"] = (
+                    datetime.now() + timedelta(seconds=timed_out_until)
+                ).isoformat()
         if len(r) > 0:
             j["remove"] = r
         return self.state.parser.parse_member(
             await self.request(
                 routes.SERVERS_MEMBER_EDIT.compile(
-                    server_id=core.resolve_id(server),
-                    member_id=core.resolve_id(member),
+                    server_id=resolve_id(server),
+                    member_id=resolve_id(member),
                 ),
                 json=j,
             )
         )
 
     async def query_members_by_name(
-        self, server: core.ULIDOr[BaseServer], query: str, /
+        self, server: ULIDOr[BaseServer], query: str, /
     ) -> list[Member]:
         """|coro|
 
         Query members by a given name, this API is not stable and will be removed in the future.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/member_experimental_query_member_experimental_query
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        query: :class:`str`
+            The query to search members for.
+
+        Returns
+        -------
+        List[:class:`Member`]
+            The members matched.
         """
         return self.state.parser.parse_members_with_users(
             await self.request(
                 routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(
-                    server_id=core.resolve_id(server)
+                    server_id=resolve_id(server)
                 ),
                 params={
                     "query": query,
@@ -2028,51 +2198,62 @@ class HTTPClient:
 
     async def get_member(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         member: str | BaseUser | BaseMember,
         /,
     ) -> Member:
         """|coro|
 
-        Retrieve a member.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/member_fetch_req
+        Retrieves a Member from a server ID, and a member ID.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The ID of the user.
+
         """
         return self.state.parser.parse_member(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH.compile(
-                    server_id=core.resolve_id(server),
-                    member_id=core.resolve_id(member),
+                    server_id=resolve_id(server),
+                    member_id=resolve_id(member),
                 )
             )
         )
 
     async def get_members(
-        self, server: core.ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
+        self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
     ) -> list[Member]:
         """|coro|
 
-        Retrieve all server members.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/member_fetch_all_req
+        Retrieves all server members.
 
         Parameters
         ----------
-        exclude_offline: :class:`bool` | None
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
+
+        Returns
+        -------
+        List[:class:`Member`]
+            The retrieved members.
         """
         p: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
             p["exclude_offline"] = utils._bool(exclude_offline)
         return self.state.parser.parse_members_with_users(
             await self.request(
-                routes.SERVERS_MEMBER_FETCH_ALL.compile(
-                    server_id=core.resolve_id(server)
-                ),
+                routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
                 params=p,
             )
         )
 
     async def get_member_list(
-        self, server: core.ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
+        self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
     ) -> MemberList:
         """|coro|
 
@@ -2089,15 +2270,13 @@ class HTTPClient:
             p["exclude_offline"] = utils._bool(exclude_offline)
         return self.state.parser.parse_member_list(
             await self.request(
-                routes.SERVERS_MEMBER_FETCH_ALL.compile(
-                    server_id=core.resolve_id(server)
-                ),
+                routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
                 params=p,
             )
         )
 
     async def kick_member(
-        self, server: core.ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /
+        self, server: ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /
     ) -> None:
         """|coro|
 
@@ -2108,19 +2287,19 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to kick the member.
-        APIError
+        HTTPException
             Kicking the member failed.
         """
         await self.request(
             routes.SERVERS_MEMBER_REMOVE.compile(
-                server_id=core.resolve_id(server), member_id=core.resolve_id(member)
+                server_id=resolve_id(server), member_id=resolve_id(member)
             )
         )
 
     async def set_role_server_permissions(
         self,
-        server: core.ULIDOr[BaseServer],
-        role: core.ULIDOr[BaseRole],
+        server: ULIDOr[BaseServer],
+        role: ULIDOr[BaseRole],
         /,
         *,
         allow: Permissions = Permissions.NONE,
@@ -2142,7 +2321,7 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to set role permissions on the server.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         j: raw.DataSetRolePermissions = {
@@ -2150,7 +2329,7 @@ class HTTPClient:
         }
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET.compile(
-                server_id=core.resolve_id(server), role_id=core.resolve_id(role)
+                server_id=resolve_id(server), role_id=resolve_id(role)
             ),
             json=j,
         )
@@ -2162,7 +2341,7 @@ class HTTPClient:
 
     async def set_default_role_permissions(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         permissions: Permissions | PermissionOverride,
         /,
     ) -> Server:
@@ -2175,7 +2354,7 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to set default permissions on the server.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         j: raw.DataDefaultChannelPermissions = {
@@ -2187,7 +2366,7 @@ class HTTPClient:
         }
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(
-                server_id=core.resolve_id(server)
+                server_id=resolve_id(server)
             ),
             json=j,
         )
@@ -2197,7 +2376,7 @@ class HTTPClient:
         )
 
     async def create_role(
-        self, server: core.ULIDOr[BaseServer], /, *, name: str, rank: int | None = None
+        self, server: ULIDOr[BaseServer], /, *, name: str, rank: int | None = None
     ) -> Role:
         """|coro|
 
@@ -2216,10 +2395,10 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to create the role.
-        APIError
+        HTTPException
             Creating the role failed.
         """
-        server_id = core.resolve_id(server)
+        server_id = resolve_id(server)
         j: raw.DataCreateRole = {"name": name, "rank": rank}
         d: raw.NewRoleResponse = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
@@ -2228,7 +2407,7 @@ class HTTPClient:
         return self.state.parser.parse_role(d["role"], d["id"], server_id)
 
     async def delete_role(
-        self, server: core.ULIDOr[BaseServer], role: core.ULIDOr[BaseRole], /
+        self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole], /
     ) -> None:
         """|coro|
 
@@ -2239,25 +2418,25 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to delete the role.
-        APIError
+        HTTPException
             Deleting the role failed.
         """
         await self.request(
             routes.SERVERS_ROLES_DELETE.compile(
-                server_id=core.resolve_id(server), role_id=core.resolve_id(role)
+                server_id=resolve_id(server), role_id=resolve_id(role)
             )
         )
 
     async def edit_role(
         self,
-        server: core.ULIDOr[BaseServer],
-        role: core.ULIDOr[BaseRole],
+        server: ULIDOr[BaseServer],
+        role: ULIDOr[BaseRole],
         /,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        colour: core.UndefinedOr[str | None] = core.UNDEFINED,
-        hoist: core.UndefinedOr[bool] = core.UNDEFINED,
-        rank: core.UndefinedOr[int] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        colour: UndefinedOr[str | None] = UNDEFINED,
+        hoist: UndefinedOr[bool] = UNDEFINED,
+        rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
         """|coro|
 
@@ -2266,45 +2445,45 @@ class HTTPClient:
 
         Parameters
         ----------
-        name: :class:`core.UndefinedOr`[:class:`str`]
+        name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`core.UndefinedOr`[:class:`str` | None]
+        colour: :class:`UndefinedOr`[:class:`str` | None]
             New role colour.
-        hoist: :class:`core.UndefinedOr`[:class:`bool`]
+        hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
-        rank: :class:`core.UndefinedOr`[:class:`int`]
+        rank: :class:`UndefinedOr`[:class:`int`]
             Ranking position. Smaller values take priority.
 
         Raises
         ------
         Forbidden
             You do not have permissions to edit the role.
-        APIError
+        HTTPException
             Editing the role failed.
         """
         j: raw.DataEditRole = {}
         r: list[raw.FieldsRole] = []
-        if core.is_defined(name):
+        if is_defined(name):
             j["name"] = name
-        if core.is_defined(colour):
+        if is_defined(colour):
             if colour is not None:
                 j["colour"] = colour
             else:
                 r.append("Colour")
-        if core.is_defined(hoist):
+        if is_defined(hoist):
             j["hoist"] = hoist
-        if core.is_defined(rank):
+        if is_defined(rank):
             j["rank"] = rank
         if len(r) > 0:
             j["remove"] = r
 
-        server_id = core.resolve_id(server)
-        role_id = core.resolve_id(role)
+        server_id = resolve_id(server)
+        role_id = resolve_id(role)
 
         return self.state.parser.parse_role(
             await self.request(
                 routes.SERVERS_ROLES_EDIT.compile(
-                    server_id=core.resolve_id(server), role_id=core.resolve_id(role)
+                    server_id=resolve_id(server), role_id=resolve_id(role)
                 ),
                 json=j,
             ),
@@ -2314,8 +2493,8 @@ class HTTPClient:
 
     async def get_role(
         self,
-        server: core.ULIDOr[BaseServer],
-        role: core.ULIDOr[BaseRole],
+        server: ULIDOr[BaseServer],
+        role: ULIDOr[BaseRole],
         /,
     ) -> Role:
         """|coro|
@@ -2324,11 +2503,11 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Getting the role failed.
         """
-        server_id = core.resolve_id(server)
-        role_id = core.resolve_id(role)
+        server_id = resolve_id(server)
+        role_id = resolve_id(role)
 
         return self.state.parser.parse_role(
             await self.request(
@@ -2338,7 +2517,7 @@ class HTTPClient:
             server_id,
         )
 
-    async def mark_server_as_read(self, server: core.ULIDOr[BaseServer], /) -> None:
+    async def mark_server_as_read(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
         Mark all channels in a server as read.
@@ -2348,7 +2527,7 @@ class HTTPClient:
             This can only be used by non-bot accounts.
         """
         await self.request(
-            routes.SERVERS_SERVER_ACK.compile(server_id=core.resolve_id(server))
+            routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server))
         )
 
     async def create_server(
@@ -2382,18 +2561,18 @@ class HTTPClient:
             (False, d["channels"]),
         )
 
-    async def delete_server(self, server: core.ULIDOr[BaseServer], /) -> None:
+    async def delete_server(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
         Deletes a server if owner otherwise leaves.
         https://developers.revolt.chat/api/#tag/Server-Information/operation/server_delete_req
         """
         await self.request(
-            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_id(server))
+            routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server))
         )
 
     async def leave_server(
-        self, server: core.ULIDOr[BaseServer], /, *, silent: bool | None = None
+        self, server: ULIDOr[BaseServer], /, *, silent: bool | None = None
     ) -> None:
         """|coro|
 
@@ -2409,26 +2588,24 @@ class HTTPClient:
         if silent is not None:
             p["leave_silently"] = utils._bool(silent)
         await self.request(
-            routes.SERVERS_SERVER_DELETE.compile(server_id=core.resolve_id(server)),
+            routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)),
             params=p,
         )
 
     async def edit_server(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         /,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        icon: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        banner: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        categories: core.UndefinedOr[list[Category] | None] = core.UNDEFINED,
-        system_messages: core.UndefinedOr[
-            SystemMessageChannels | None
-        ] = core.UNDEFINED,
-        flags: core.UndefinedOr[ServerFlags] = core.UNDEFINED,
-        discoverable: core.UndefinedOr[bool] = core.UNDEFINED,
-        analytics: core.UndefinedOr[bool] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[str | None] = UNDEFINED,
+        icon: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        banner: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        categories: UndefinedOr[list[Category] | None] = UNDEFINED,
+        system_messages: UndefinedOr[SystemMessageChannels | None] = UNDEFINED,
+        flags: UndefinedOr[ServerFlags] = UNDEFINED,
+        discoverable: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
     ) -> Server:
         """|coro|
 
@@ -2437,74 +2614,72 @@ class HTTPClient:
 
         Parameters
         ----------
-        name: :class:`core.UndefinedOr`[:class:`str`]
+        name: :class:`UndefinedOr`[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`core.UndefinedOr`[:class:`str` | None]
+        description: :class:`UndefinedOr`[:class:`str` | None]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource` | None]
+        icon: :class:`UndefinedOr`[:class:`ResolvableResource` | None]
             New server icon.
-        banner: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource` | None]
+        banner: :class:`UndefinedOr`[:class:`ResolvableResource` | None]
             New server banner.
-        categories: :class:`core.UndefinedOr`[:class:`list`[:class:`Category`] | None]
+        categories: :class:`UndefinedOr`[:class:`list`[:class:`Category`] | None]
             New category structure for this server.
-        system_messsages: :class:`core.UndefinedOr`[:class:`SystemMessageChannels` | None]
+        system_messsages: :class:`UndefinedOr`[:class:`SystemMessageChannels` | None]
             New system message channels configuration.
-        flags: :class:`core.UndefinedOr`[:class:`ServerFlags`]
+        flags: :class:`UndefinedOr`[:class:`ServerFlags`]
             Bitfield of server flags. Can be passed only if you're privileged user.
-        discoverable: :class:`core.UndefinedOr`[:class:`bool`]
+        discoverable: :class:`UndefinedOr`[:class:`bool`]
             Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg). Can be passed only if you're privileged user.
-        analytics: :class:`core.UndefinedOr`[:class:`bool`]
+        analytics: :class:`UndefinedOr`[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on [Revolt Discover](https://rvlt.gg).
 
         Raises
         ------
         Forbidden
             You do not have permissions to edit the server.
-        APIError
+        HTTPException
             Editing the server failed.
         """
         j: raw.DataEditServer = {}
         r: list[raw.FieldsServer] = []
-        if core.is_defined(name):
+        if is_defined(name):
             j["name"] = name
-        if core.is_defined(description):
+        if is_defined(description):
             if description is not None:
                 j["description"] = description
             else:
                 r.append("Description")
-        if core.is_defined(icon):
+        if is_defined(icon):
             if icon is not None:
-                j["icon"] = await cdn.resolve_resource(self.state, icon, tag="icons")
+                j["icon"] = await resolve_resource(self.state, icon, tag="icons")
             else:
                 r.append("Icon")
-        if core.is_defined(banner):
+        if is_defined(banner):
             if banner is not None:
-                j["banner"] = await cdn.resolve_resource(
-                    self.state, banner, tag="banners"
-                )
+                j["banner"] = await resolve_resource(self.state, banner, tag="banners")
             else:
                 r.append("Banner")
-        if core.is_defined(categories):
+        if is_defined(categories):
             if categories is not None:
                 j["categories"] = [e.build() for e in categories]
             else:
                 r.append("Categories")
-        if core.is_defined(system_messages):
+        if is_defined(system_messages):
             if system_messages is not None:
                 j["system_messages"] = system_messages.build()
             else:
                 r.append("SystemMessages")
-        if core.is_defined(flags):
+        if is_defined(flags):
             j["flags"] = int(flags)
-        if core.is_defined(discoverable):
+        if is_defined(discoverable):
             j["discoverable"] = discoverable
-        if core.is_defined(analytics):
+        if is_defined(analytics):
             j["analytics"] = analytics
         if len(r) > 0:
             j["remove"] = r
 
         d: raw.Server = await self.request(
-            routes.SERVERS_SERVER_EDIT.compile(server_id=core.resolve_id(server)),
+            routes.SERVERS_SERVER_EDIT.compile(server_id=resolve_id(server)),
             json=j,
         )
         return self.state.parser.parse_server(
@@ -2514,7 +2689,7 @@ class HTTPClient:
 
     async def get_server(
         self,
-        server: core.ULIDOr[BaseServer],
+        server: ULIDOr[BaseServer],
         /,
         *,
         populate_channels: bool | None = None,
@@ -2533,7 +2708,7 @@ class HTTPClient:
         if populate_channels is not None:
             p["include_channels"] = utils._bool(populate_channels)
         d: raw.FetchServerResponse = await self.request(
-            routes.SERVERS_SERVER_FETCH.compile(server_id=core.resolve_id(server))
+            routes.SERVERS_SERVER_FETCH.compile(server_id=resolve_id(server))
         )
         return self.state.parser.parse_server(
             d,  # type: ignore
@@ -2642,7 +2817,7 @@ class HTTPClient:
         await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j, params=p)
 
     # Users control
-    async def accept_friend_request(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def accept_friend_request(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Accept another user's friend request.
@@ -2653,11 +2828,11 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_ADD_FRIEND.compile(user_id=core.resolve_id(user))
+                routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user))
             )
         )
 
-    async def block_user(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def block_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Block another user.
@@ -2668,7 +2843,7 @@ class HTTPClient:
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_BLOCK_USER.compile(user_id=core.resolve_id(user))
+                routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user))
             )
         )
 
@@ -2694,36 +2869,34 @@ class HTTPClient:
         route: routes.CompiledRoute,
         /,
         *,
-        display_name: core.UndefinedOr[str | None] = core.UNDEFINED,
-        avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str | None] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         j: raw.DataEditUser = {}
         r: list[raw.FieldsUser] = []
-        if core.is_defined(display_name):
+        if is_defined(display_name):
             if display_name is None:
                 r.append("DisplayName")
             else:
                 j["display_name"] = display_name
-        if core.is_defined(avatar):
+        if is_defined(avatar):
             if avatar is None:
                 r.append("Avatar")
             else:
-                j["avatar"] = await cdn.resolve_resource(
-                    self.state, avatar, tag="avatars"
-                )
-        if core.is_defined(status):
+                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+        if is_defined(status):
             j["status"] = status.build()
             r.extend(status.remove)
-        if core.is_defined(profile):
+        if is_defined(profile):
             j["profile"] = await profile.build(self.state)
             r.extend(profile.remove)
-        if core.is_defined(badges):
+        if is_defined(badges):
             j["badges"] = int(badges)
-        if core.is_defined(flags):
+        if is_defined(flags):
             j["flags"] = int(flags)
         if len(r) > 0:
             j["remove"] = r
@@ -2733,12 +2906,12 @@ class HTTPClient:
     async def edit_self_user(
         self,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> SelfUser:
         """|coro|
 
@@ -2747,22 +2920,22 @@ class HTTPClient:
 
         Parameters
         ----------
-        display_name: :class:`core.UndefinedOr`[:class:`str`] | None
+        display_name: :class:`UndefinedOr`[:class:`str`] | None
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableULID`] | None
+        avatar: :class:`UndefinedOr`[:class:`ResolvableULID`] | None
             New avatar. Pass ``None`` to remove it.
-        status: :class:`core.UndefinedOr`[:class:`UserStatusEdit`]
+        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`core.UndefinedOr`[:class:`UserProfileEdit`]
+        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`core.UndefinedOr`[:class:`UserBadges`]
+        badges: :class:`UndefinedOr`[:class:`UserBadges`]
             Bitfield of new user badges.
-        flags: :class:`core.UndefinedOr`[:class:`UserFlags`]
+        flags: :class:`UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
 
         Raises
         ------
-        APIError
+        HTTPException
             Editing the user failed.
         """
         user = await self._edit_user(
@@ -2778,15 +2951,15 @@ class HTTPClient:
 
     async def edit_user(
         self,
-        user: core.ULIDOr[BaseUser],
+        user: ULIDOr[BaseUser],
         /,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         """|coro|
 
@@ -2795,17 +2968,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        display_name: :class:`core.UndefinedOr`[:class:`str`] | None
+        display_name: :class:`UndefinedOr`[:class:`str`] | None
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource`] | None
+        avatar: :class:`UndefinedOr`[:class:`ResolvableResource`] | None
             New avatar. Pass ``None`` to remove it.
-        status: :class:`core.UndefinedOr`[:class:`UserStatusEdit`]
+        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`core.UndefinedOr`[:class:`UserProfileEdit`]
+        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`core.UndefinedOr`[:class:`UserBadges`]
+        badges: :class:`UndefinedOr`[:class:`UserBadges`]
             Bitfield of new user badges.
-        flags: :class:`core.UndefinedOr`[:class:`UserFlags`]
+        flags: :class:`UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
 
 
@@ -2813,11 +2986,11 @@ class HTTPClient:
         ------
         Forbidden
             Target user have blocked you.
-        APIError
+        HTTPException
             Editing the user failed.
         """
         return await self._edit_user(
-            routes.USERS_EDIT_USER.compile(user_id=core.resolve_id(user)),
+            routes.USERS_EDIT_USER.compile(user_id=resolve_id(user)),
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -2839,14 +3012,14 @@ class HTTPClient:
             for e in await self.request(routes.USERS_FETCH_DMS.compile())
         ]  # type: ignore # The returned channels are always DM/Groups
 
-    async def get_user_profile(self, user: core.ULIDOr[BaseUser], /) -> UserProfile:
+    async def get_user_profile(self, user: ULIDOr[BaseUser], /) -> UserProfile:
         """|coro|
 
         Retrieve a user's profile data.
         Will fail if you do not have permission to access the other user's profile.
         https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_profile_req
         """
-        user_id = core.resolve_id(user)
+        user_id = resolve_id(user)
         return self.state.parser.parse_user_profile(
             await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
         )._stateful(self.state, user_id)
@@ -2859,14 +3032,14 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Invalid token.
         """
         return self.state.parser.parse_user(
             await self.request(routes.USERS_FETCH_SELF.compile())
         )
 
-    async def get_user(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def get_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Retrieve a user's information.
@@ -2874,21 +3047,21 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`core.ResolvableULID`
+        user: :class:`ULIDOr`[:class:`BaseUser`]
             The user.
 
         Raises
         ------
-        APIError
+        HTTPException
             Invalid token, or you been blocked by that user.
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_FETCH_USER.compile(user_id=core.resolve_id(user))
+                routes.USERS_FETCH_USER.compile(user_id=resolve_id(user))
             )
         )
 
-    async def get_user_flags(self, user: core.ULIDOr[BaseUser], /) -> UserFlags:
+    async def get_user_flags(self, user: ULIDOr[BaseUser], /) -> UserFlags:
         """|coro|
 
         Retrieve a user's flags.
@@ -2897,13 +3070,13 @@ class HTTPClient:
         return UserFlags(
             (
                 await self.request(
-                    routes.USERS_FETCH_USER_FLAGS.compile(user_id=core.resolve_id(user))
+                    routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user))
                 )
             )["flags"]
         )
 
     async def get_mutual_friends_and_servers(
-        self, user: core.ULIDOr[BaseUser], /
+        self, user: ULIDOr[BaseUser], /
     ) -> Mutuals:
         """|coro|
 
@@ -2912,23 +3085,23 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Finding mutual friends/servers failed.
         """
         return self.state.parser.parse_mutuals(
             await self.request(
-                routes.USERS_FIND_MUTUAL.compile(user_id=core.resolve_id(user))
+                routes.USERS_FIND_MUTUAL.compile(user_id=resolve_id(user))
             )
         )
 
-    async def get_default_avatar(self, user: core.ULIDOr[BaseUser], /) -> bytes:
+    async def get_default_avatar(self, user: ULIDOr[BaseUser], /) -> bytes:
         """|coro|
 
         This returns a default avatar based on the given ID.
         https://developers.revolt.chat/api/#tag/User-Information/operation/get_default_avatar_req
         """
         response = await self._request(
-            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=core.resolve_id(user))
+            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user))
         )
         avatar = await response.read()
         if not response.closed:
@@ -2936,7 +3109,7 @@ class HTTPClient:
         return avatar
 
     async def open_dm(
-        self, user: core.ULIDOr[BaseUser], /
+        self, user: ULIDOr[BaseUser], /
     ) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
@@ -2946,18 +3119,16 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Opening DM failed.
         """
         channel = self.state.parser.parse_channel(
-            await self.request(
-                routes.USERS_OPEN_DM.compile(user_id=core.resolve_id(user))
-            )
+            await self.request(routes.USERS_OPEN_DM.compile(user_id=resolve_id(user)))
         )
         assert isinstance(channel, (SavedMessagesChannel, DMChannel))
         return channel
 
-    async def deny_friend_request(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def deny_friend_request(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Denies another user's friend request.
@@ -2967,16 +3138,16 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Denying the friend request failed.
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_id(user))
+                routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user))
             )
         )
 
-    async def remove_friend(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def remove_friend(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Removes an existing friend.
@@ -2986,12 +3157,12 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Removing the friend failed.
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=core.resolve_id(user))
+                routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user))
             )
         )
 
@@ -3015,7 +3186,7 @@ class HTTPClient:
         ------
         Forbidden
             Target user have blocked you.
-        APIError
+        HTTPException
             Sending the friend request failed.
         """
         if discriminator is not None:
@@ -3028,7 +3199,7 @@ class HTTPClient:
             )
         )
 
-    async def unblock_user(self, user: core.ULIDOr[BaseUser], /) -> User:
+    async def unblock_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
         Unblock another user by their ID.
@@ -3041,18 +3212,18 @@ class HTTPClient:
         ------
         Forbidden
             Target user have blocked you.
-        APIError
+        HTTPException
             Sending the friend request failed.
         """
         return self.state.parser.parse_user(
             await self.request(
-                routes.USERS_UNBLOCK_USER.compile(user_id=core.resolve_id(user))
+                routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user))
             )
         )
 
     # Webhooks control
     async def delete_webhook(
-        self, webhook: core.ULIDOr[BaseWebhook], /, *, token: str | None = None
+        self, webhook: ULIDOr[BaseWebhook], /, *, token: str | None = None
     ) -> None:
         """|coro|
 
@@ -3062,32 +3233,30 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to delete the webhook.
-        APIError
+        HTTPException
             Deleting the webhook failed.
         """
         if token is None:
             await self.request(
-                routes.WEBHOOKS_WEBHOOK_DELETE.compile(
-                    webhook_id=core.resolve_id(webhook)
-                )
+                routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook))
             )
         else:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(
-                    webhook_id=core.resolve_id(webhook), webhook_token=token
+                    webhook_id=resolve_id(webhook), webhook_token=token
                 ),
                 authenticated=False,
             )
 
     async def edit_webhook(
         self,
-        webhook: core.ULIDOr[BaseWebhook],
+        webhook: ULIDOr[BaseWebhook],
         /,
         *,
         token: str | None = None,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
-        permissions: core.UndefinedOr[Permissions] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        permissions: UndefinedOr[Permissions] = UNDEFINED,
     ) -> Webhook:
         """|coro|
 
@@ -3095,46 +3264,42 @@ class HTTPClient:
 
         Parameters
         ----------
-        name: :class:`core.UndefinedOr`[:class:`str` | None]
+        name: :class:`UndefinedOr`[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: :class:`core.UndefinedOr`[:class:`cdn.ResolvableResource` | None]
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
             New webhook avatar.
-        permissions: :class:`core.UndefinedOr`[:class:`Permissions` | None]
+        permissions: :class:`UndefinedOr`[:class:`Permissions`]
             New webhook permissions.
 
         Raises
         ------
         Forbidden
             You do not have permissions to edit the webhook.
-        APIError
+        HTTPException
             Editing the webhook failed.
         """
         j: raw.DataEditWebhook = {}
         r: list[raw.FieldsWebhook] = []
-        if core.is_defined(name):
+        if is_defined(name):
             j["name"] = name
-        if core.is_defined(avatar):
+        if is_defined(avatar):
             if avatar is None:
                 r.append("Avatar")
             else:
-                j["avatar"] = await cdn.resolve_resource(
-                    self.state, avatar, tag="avatars"
-                )
-        if core.is_defined(permissions):
+                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+        if is_defined(permissions):
             j["permissions"] = int(permissions)
         if len(r) > 0:
             j["remove"] = r
         return self.state.parser.parse_webhook(
             await self.request(
-                routes.WEBHOOKS_WEBHOOK_EDIT.compile(
-                    webhook_id=core.resolve_id(webhook)
-                ),
+                routes.WEBHOOKS_WEBHOOK_EDIT.compile(webhook_id=resolve_id(webhook)),
                 json=j,
             )
             if token is None
             else await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(
-                    webhook_id=core.resolve_id(webhook), webhook_token=token
+                    webhook_id=resolve_id(webhook), webhook_token=token
                 ),
                 json=j,
                 authenticated=False,
@@ -3143,14 +3308,14 @@ class HTTPClient:
 
     async def execute_webhook(
         self,
-        webhook: core.ULIDOr[BaseWebhook],
+        webhook: ULIDOr[BaseWebhook],
         token: str,
         /,
         content: str | None = None,
         *,
         nonce: str | None = None,
-        attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
+        attachments: list[ResolvableResource] | None = None,
+        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -3169,7 +3334,7 @@ class HTTPClient:
             j["content"] = content
         if attachments is not None:
             j["attachments"] = [
-                await cdn.resolve_resource(self.state, attachment, tag="attachments")
+                await resolve_resource(self.state, attachment, tag="attachments")
                 for attachment in attachments
             ]
         if replies is not None:
@@ -3177,7 +3342,7 @@ class HTTPClient:
                 (
                     reply.build()
                     if isinstance(reply, Reply)
-                    else {"id": core.resolve_id(reply), "mention": False}
+                    else {"id": resolve_id(reply), "mention": False}
                 )
                 for reply in replies
             ]
@@ -3193,7 +3358,7 @@ class HTTPClient:
         return self.state.parser.parse_message(
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(
-                    webhook_id=core.resolve_id(webhook), webhook_token=token
+                    webhook_id=resolve_id(webhook), webhook_token=token
                 ),
                 json=j,
                 headers=headers,
@@ -3203,7 +3368,7 @@ class HTTPClient:
 
     async def get_webhook(
         self,
-        webhook: core.ULIDOr[BaseWebhook],
+        webhook: ULIDOr[BaseWebhook],
         /,
         *,
         token: str | None = None,
@@ -3219,7 +3384,7 @@ class HTTPClient:
         ------
         Forbidden
             You do not have permissions to get the webhook.
-        APIError
+        HTTPException
             Getting the webhook failed.
         """
 
@@ -3227,13 +3392,13 @@ class HTTPClient:
             await (
                 self.request(
                     routes.WEBHOOKS_WEBHOOK_FETCH.compile(
-                        webhook_id=core.resolve_id(webhook)
+                        webhook_id=resolve_id(webhook)
                     )
                 )
                 if token is None
                 else self.request(
                     routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(
-                        webhook_id=core.resolve_id(webhook), webhook_token=token
+                        webhook_id=resolve_id(webhook), webhook_token=token
                     ),
                     authenticated=False,
                 )
@@ -3263,7 +3428,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Changing the account password failed.
         """
         j: raw.a.DataChangeEmail = {
@@ -3297,7 +3462,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Changing the account password failed.
         """
         j: raw.a.DataChangePassword = {
@@ -3325,7 +3490,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Confirming the account deletion failed.
         """
         j: raw.a.DataAccountDeletion = {"token": token}
@@ -3354,14 +3519,14 @@ class HTTPClient:
             The account email.
         password: :class:`str`
             The account password.
-        invite: :class:`str` | None
+        invite: Optional[:class:`str`]
             The instance invite code.
-        captcha: :class:`str` | None
+        captcha: Optional[:class:`str`]
             The CAPTCHA verification code.
 
         Raises
         ------
-        APIError
+        HTTPException
             Registering the account failed.
         """
         j: raw.a.DataCreateAccount = {
@@ -3395,7 +3560,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Requesting the account to be deleted failed.
         """
         await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa)
@@ -3419,7 +3584,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Disabling the account failed.
         """
         await self.request(
@@ -3436,7 +3601,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Getting the account data failed.
         """
         return self.state.parser.parse_partial_account(
@@ -3456,12 +3621,12 @@ class HTTPClient:
             The password reset token.
         new_password: :class:`str`
             New password for the account.
-        remove_sessions: :class:`bool` | None
+        remove_sessions: Optional[:class:`bool`]
             Whether to logout all sessions.
 
         Raises
         ------
-        APIError
+        HTTPException
             Sending the email failed.
         """
         j: raw.a.DataPasswordReset = {
@@ -3494,7 +3659,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Resending the verification mail failed.
         """
         j: raw.a.DataResendVerification = {"email": email, "captcha": captcha}
@@ -3520,7 +3685,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Sending the email failed.
         """
         j: raw.a.DataSendPasswordReset = {"email": email, "captcha": captcha}
@@ -3542,7 +3707,7 @@ class HTTPClient:
 
         Raises
         ------
-        APIError
+        HTTPException
             Verifying the email address failed.
         """
         response = await self.request(
@@ -3650,18 +3815,16 @@ class HTTPClient:
         return d["secret"]
 
     async def edit_session(
-        self, session: core.ULIDOr[PartialSession], *, friendly_name: str
+        self, session: ULIDOr[PartialSession], *, friendly_name: str
     ) -> PartialSession:
         """|coro|
 
-        Edit session information.
+        Edits the session information.
         """
         j: raw.a.DataEditSession = {"friendly_name": friendly_name}
         return self.state.parser.parse_partial_session(
             await self.request(
-                routes.AUTH_SESSION_EDIT.compile(
-                    session_id=core.resolve_id(session), json=j
-                )
+                routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session), json=j)
             )
         )
 
@@ -3723,13 +3886,13 @@ class HTTPClient:
         """
         await self.request(routes.AUTH_SESSION_LOGOUT.compile())
 
-    async def revoke_session(self, session_id: core.ULIDOr[PartialSession], /) -> None:
+    async def revoke_session(self, session_id: ULIDOr[PartialSession], /) -> None:
         """|coro|
 
         Delete a specific active session.
         """
         await self.request(
-            routes.AUTH_SESSION_REVOKE.compile(session_id=core.resolve_id(session_id))
+            routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id))
         )
 
     async def revoke_all_sessions(self, *, revoke_self: bool | None = None) -> None:

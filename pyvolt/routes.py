@@ -78,7 +78,7 @@ CHANNELS_GROUP_ADD_MEMBER: t.Final[Route] = Route(
 )
 CHANNELS_GROUP_CREATE: t.Final[Route] = Route("POST", "/channels/create")
 CHANNELS_GROUP_REMOVE_MEMBER: t.Final[Route] = Route(
-    "DELETE", "/channels/{channel_id}/recipients/{member_id}"
+    "DELETE", "/channels/{channel_id}/recipients/{user_id}"
 )
 CHANNELS_INVITE_CREATE: t.Final[Route] = Route("POST", "/channels/{channel_id}/invites")
 CHANNELS_MEMBERS_FETCH: t.Final[Route] = Route("GET", "/channels/{channel_id}/members")
