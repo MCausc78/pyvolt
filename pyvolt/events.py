@@ -720,7 +720,7 @@ class UserSettingsUpdateEvent(BaseEvent):
         settings = self.shard.state.settings
         if settings.fake:
             return False
-        settings.value.update(self.after.value)
+        settings.value.update(self.partial.value)
         return True
 
 

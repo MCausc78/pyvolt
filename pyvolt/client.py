@@ -475,10 +475,13 @@ class Client:
         handlers: list[utils.MaybeAwaitableFunc[[EventT], None]],
         event: EventT,
         name: str,
+        type: type[EventT],
         /,
     ) -> None:
-        event.before_dispatch()
-        await event.abefore_dispatch()
+        if type is not BaseEvent:
+            event.before_dispatch()
+            await event.abefore_dispatch()
+
         for handler in handlers:
             try:
                 await utils._maybe_coroutine(handler, event)
@@ -489,14 +492,15 @@ class Client:
                     _L.exception(
                         "on_error (task: %s) raised an exception", name, exc_info=exc
                     )
+        # Prevent double-processing
+        if type is not BaseEvent:
+            if not event.is_cancelled:
+                _L.debug("Processing %s", event.__class__.__name__)
 
-        if not event.is_cancelled:
-            _L.debug("Processing %s", event.__class__.__name__)
-
-            event.process()
-            await event.aprocess()
-        else:
-            _L.debug("%s processing was cancelled", event.__class__.__name__)
+                event.process()
+                await event.aprocess()
+            else:
+                _L.debug("%s processing was cancelled", event.__class__.__name__)
 
     def dispatch(self, event: BaseEvent) -> None:
         """Dispatches a event."""
@@ -519,7 +523,7 @@ class Client:
                 )
 
             name = name = f"pyvolt-dispatch-{self._get_i()}"
-            asyncio.create_task(self._dispatch(handlers, event, name), name=name)
+            asyncio.create_task(self._dispatch(handlers, event, name, type), name=name)
 
     def subscribe(
         self,
