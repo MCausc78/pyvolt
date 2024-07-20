@@ -4031,7 +4031,7 @@ class HTTPClient:
         j: raw.a.DataEditSession = {"friendly_name": friendly_name}
         return self.state.parser.parse_partial_session(
             await self.request(
-                routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session), json=j)
+                routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)), json=j
             )
         )
 
