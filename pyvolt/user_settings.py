@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from attrs import define, field
 from datetime import datetime
 import typing
 
 from . import utils
-from .core import UNDEFINED, UndefinedOr, is_defined
+from .core import UNDEFINED, UndefinedOr, is_defined, ULIDOr, resolve_id
 from .enums import Enum
 from .localization import Language
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .channel import Channel
+    from .server import BaseServer
     from .state import State
 
 
@@ -402,9 +403,11 @@ class ReviteUserSettings:
     ----------
     parent: :class:`UserSettings`
         The raw user settings.
+    last_viewed_changelog_entry: Optional[:class:`ReviteChangelogEntry`]
+        The last viewed changelog entry.
     seasonal: Optional[:class:`bool`]
         Whether to display effects in the home tab during holiday seasons or not.
-    transparency: Optional[:class:`bool`]
+    transparent: Optional[:class:`bool`]
         Whether to enable transparency effects throughout the app or not.
     ligatures: Optional[:class:`bool`]
         Whether to combine characters together or not.
@@ -414,18 +417,18 @@ class ReviteUserSettings:
 
     __slots__ = (
         "parent",
-        "_last_viewed_changelog_id",
+        "last_viewed_changelog_entry",
         "_language",
         "_notification_options",
         "_ordering",
         "_appearance_emoji_pack",
         "seasonal",
-        "transparency",
+        "transparent",
         "ligatures",
         "_appearance_theme_base",
         "_appearance_theme_css",
         "_appearance_theme_font",
-        "_appearance_theme_light",
+        # "_appearance_theme_light",
         "_appearance_theme_monofont",
         "_appearance_theme_overrides",
     )
@@ -433,11 +436,6 @@ class ReviteUserSettings:
     def __init__(self, parent: UserSettings) -> None:
         self.parent = parent
         self._parse()
-
-    @property
-    def last_viewed_changelog_id(self) -> ReviteChangelogEntry | None:
-        """Optional[:class:`ReviteChangelogEntry`]: The last viewed changelog entry."""
-        return self._last_viewed_changelog_id
 
     def get_language(self) -> Language | None:
         """Optional[:class:`Language`]: The current language."""
@@ -479,7 +477,7 @@ class ReviteUserSettings:
 
     def is_transparent(self) -> bool:
         """Whether to enable transparency effects throughout the app or not."""
-        return True if self.transparency is None else self.transparency
+        return True if self.transparent is None else self.transparent
 
     def is_ligatures_enabled(self) -> bool:
         """:class:`bool`: Whether to combine characters together or not.
@@ -536,11 +534,11 @@ class ReviteUserSettings:
         changelog_json = parent.get("changelog")
         if changelog_json:
             changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
-            self._last_viewed_changelog_id: ReviteChangelogEntry | None = (
+            self.last_viewed_changelog_entry: ReviteChangelogEntry | None = (
                 ReviteChangelogEntry(changelog["viewed"])
             )
         else:
-            self._last_viewed_changelog_id = None
+            self.last_viewed_changelog_entry = None
 
         locale_json = parent.get("locale")
         if locale_json:
@@ -580,11 +578,11 @@ class ReviteUserSettings:
                 self._appearance_emoji_pack = None
 
             self.seasonal: bool | None = appearance.get("appearance:seasonal")
-            self.transparency: bool | None = appearance.get("appearance:transparency")
+            self.transparent: bool | None = appearance.get("appearance:transparency")
         else:
             self._appearance_emoji_pack = None
             self.seasonal = None
-            self.transparency = None
+            self.transparent = None
 
         theme_json = parent.get("theme")
         if theme_json:
@@ -625,9 +623,104 @@ class ReviteUserSettings:
             self._appearance_theme_base = None
             self._appearance_theme_css = None
             self._appearance_theme_font = None
-            self._appearance_theme_light = None
+            # self._appearance_theme_light = None
             self._appearance_theme_monofont = None
             self._appearance_theme_overrides = None
+
+    def payload_for(
+        self,
+        *,
+        last_viewed_changelog_entry: UndefinedOr[
+            ReviteChangelogEntry | int
+        ] = UNDEFINED,
+        language: UndefinedOr[Language] = UNDEFINED,
+        notification_servers: UndefinedOr[
+            dict[ULIDOr[BaseServer], ReviteNotificationState]
+        ] = UNDEFINED,
+        merge_notification_servers: bool = True,
+        notification_channels: UndefinedOr[
+            dict[ULIDOr[Channel], ReviteNotificationState]
+        ] = UNDEFINED,
+        merge_notification_channels: bool = True,
+        ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
+        # TODO: Use these parameters.
+        emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
+        seasonal: UndefinedOr[bool | None] = UNDEFINED,
+        transparent: UndefinedOr[bool | None] = UNDEFINED,
+        ligatures: UndefinedOr[bool | None] = UNDEFINED,
+        base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
+        css: UndefinedOr[str | None] = UNDEFINED,
+        font: UndefinedOr[ReviteFont | None] = UNDEFINED,
+        monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
+        overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
+    ) -> raw.ReviteUserSettingsPayload:
+        payload: raw.ReviteUserSettingsPayload = {}
+
+        if is_defined(last_viewed_changelog_entry):
+            viewed = (
+                last_viewed_changelog_entry.value
+                if isinstance(last_viewed_changelog_entry, ReviteChangelogEntry)
+                else last_viewed_changelog_entry
+            )
+
+            changelog: raw.ReviteChangelog = {
+                "viewed": viewed,  # type: ignore
+            }
+
+            payload["changelog"] = utils.to_json(changelog)
+
+        if is_defined(language):
+            locale: raw.ReviteLocaleOptions = {"lang": language.value}
+            payload["locale"] = utils.to_json(locale)
+
+        if is_defined(notification_servers) or is_defined(notification_channels):
+            options = self._notification_options
+            if options:
+                if merge_notification_servers:
+                    servers: dict[str, raw.ReviteNotificationState] = {
+                        server_id: state.value
+                        for server_id, state in options.servers.items()
+                    }
+                else:
+                    servers = {}
+
+                if merge_notification_channels:
+                    channels: dict[str, raw.ReviteNotificationState] = {
+                        channel_id: state.value
+                        for channel_id, state in options.channels.items()
+                    }
+                else:
+                    channels = {}
+            else:
+                servers = {}
+                channels = {}
+
+            notifications: raw.ReviteNotificationOptions = {
+                "server": servers,
+                "channel": channels,
+            }
+
+            if is_defined(notification_servers):
+                server = notifications["server"] | {
+                    resolve_id(server): state.value
+                    for server, state in notification_servers.items()
+                }
+                notifications["server"] = server  # type: ignore
+
+            if is_defined(notification_channels):
+                channel = notifications["channel"] | {
+                    resolve_id(channel): state.value
+                    for channel, state in notification_channels.items()
+                }
+                notifications["channel"] = channel  # type: ignore
+            payload["notifications"] = utils.to_json(notifications)
+
+        if is_defined(ordering):
+            payload["ordering"] = utils.to_json(
+                {"servers": [resolve_id(server_id) for server_id in ordering]}
+            )
+
+        return payload
 
 
 __all__ = (

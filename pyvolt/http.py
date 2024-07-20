@@ -2867,10 +2867,10 @@ class HTTPClient:
 
     async def edit_user_settings(
         self,
-        dict_settings: dict[str, str | typing.Any] = {},
+        dict_settings: dict[str, str] = {},
         timestamp: datetime | int | None = None,
         /,
-        **kwargs: str | typing.Any,
+        **kwargs: str,
     ) -> None:
         """|coro|
 

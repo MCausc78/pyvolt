@@ -137,6 +137,21 @@ ReviteThemeSettings = typing.TypedDict(
 )
 
 
+class ReviteUserSettingsPayload(typing.TypedDict):
+    # changelog: typing.NotRequired[ReviteChangelog]
+    # locale: typing.NotRequired[ReviteLocaleOptions]
+    # notifications: typing.NotRequired[ReviteNotificationOptions]
+    # ordering: typing.NotRequired[ReviteOrdering]
+    # appearance: typing.NotRequired[ReviteAppearanceSettings]
+    # theme: typing.NotRequired[ReviteThemeSettings]
+    changelog: typing.NotRequired[str]
+    locale: typing.NotRequired[str]
+    notifications: typing.NotRequired[str]
+    ordering: typing.NotRequired[str]
+    appearance: typing.NotRequired[str]
+    theme: typing.NotRequired[str]
+
+
 __all__ = (
     "UserSettings",
     "OptionsFetchSettings",
@@ -159,4 +174,5 @@ __all__ = (
     "ReviteAppearanceMonoFont",
     "ReviteThemeVariable",
     "ReviteThemeSettings",
+    "ReviteUserSettingsPayload",
 )
