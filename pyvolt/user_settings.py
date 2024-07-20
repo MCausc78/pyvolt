@@ -49,8 +49,8 @@ class UserSettings:
 
     async def edit(
         self,
-        a1: dict[str, str] | datetime | int | None = None,
-        a2: dict[str, str] | datetime | int | None = {},
+        dict_settings: dict[str, str] = {},
+        timestamp: datetime | int | None = None,
         /,
         **kwargs: str,
     ) -> None:
@@ -61,7 +61,9 @@ class UserSettings:
         .. note::
             This can only be used by non-bot accounts.
         """
-        return await self.state.http.edit_user_settings(a1, a2, **kwargs)
+        return await self.state.http.edit_user_settings(
+            dict_settings, timestamp, **kwargs
+        )
 
 
 class AndroidTheme(Enum):
@@ -85,6 +87,14 @@ class AndroidMessageReplyStyle(Enum):
 
 
 class AndroidUserSettings:
+    """Represents Android user settings.
+
+    Attributes
+    ----------
+    parent: :class:`UserSettings`
+        The raw user settings.
+    """
+
     __slots__ = (
         "parent",
         "_theme",
@@ -109,6 +119,8 @@ class AndroidUserSettings:
             self._reply_style: AndroidMessageReplyStyle | None = (
                 AndroidMessageReplyStyle(reply_style)
             )
+        else:
+            self._reply_style = None
         self._avatar_radius: int | None = payload.get("avatarRadius")
 
     @property
@@ -243,10 +255,26 @@ class AndroidUserSettings:
         await self.parent.edit({"android": utils.to_json(payload)})
 
 
+class ReviteUserSettings:
+    """Represents Revite user settings.
+
+    Attributes
+    ----------
+    parent: :class:`UserSettings`
+        The raw user settings.
+    """
+
+    __slots__ = ("parent",)
+
+    def __init__(self, parent: UserSettings) -> None:
+        self.parent = parent
+
+
 __all__ = (
     "UserSettings",
     "AndroidTheme",
     "AndroidProfilePictureShape",
     "AndroidMessageReplyStyle",
     "AndroidUserSettings",
+    "ReviteUserSettings",
 )

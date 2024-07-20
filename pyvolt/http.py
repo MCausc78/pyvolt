@@ -2864,37 +2864,10 @@ class HTTPClient:
             for rs in await self.request(routes.SYNC_GET_UNREADS.compile())
         ]
 
-    @typing.overload
     async def edit_user_settings(
         self,
-        timestamp: datetime | int | None = ...,
-        dict_settings: dict[str, str] = ...,
-        /,
-        **kw_settings: str,
-    ) -> None: ...
-
-    @typing.overload
-    async def edit_user_settings(
-        self,
-        dict_settings: dict[str, str] = ...,
-        timestamp: datetime | int | None = ...,
-        /,
-        **kw_settings: str,
-    ) -> None: ...
-
-    @typing.overload
-    async def edit_user_settings(
-        self,
-        a: dict[str, str] | datetime | int | None = ...,
-        b: dict[str, str] | datetime | int | None = ...,
-        /,
-        **kwargs: str,
-    ) -> None: ...
-
-    async def edit_user_settings(
-        self,
-        a: dict[str, str] | datetime | int | None = None,
-        b: dict[str, str] | datetime | int | None = {},
+        dict_settings: dict[str, str] = {},
+        timestamp: datetime | int | None = None,
         /,
         **kwargs: str,
     ) -> None:
@@ -2904,32 +2877,11 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
-
         """
 
         p: raw.OptionsSetSettings = {}
 
-        # probably JavaScript way
-        if isinstance(a, dict):
-            if isinstance(b, dict):
-                j: raw.DataSetSettings = a | b
-                timestamp: datetime | int | None = None
-            else:
-                j = a
-                timestamp = b
-        elif isinstance(b, dict):
-            j = b
-            timestamp = a
-        else:
-            j = {}
-            if a is None or isinstance(a, (datetime, int)):
-                timestamp = a
-            elif b is None or isinstance(b, (datetime, int)):
-                timestamp = b
-            else:
-                timestamp = None
-
-        j |= kwargs
+        j = dict_settings | kwargs
         if timestamp is not None:
             if isinstance(timestamp, datetime):
                 timestamp = int(timestamp.timestamp())

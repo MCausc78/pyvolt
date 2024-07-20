@@ -801,9 +801,19 @@ class Client:
     async def start(self) -> None:
         """|coro|
 
-        Starts up the bot.
+        Starts up the client.
         """
         await self._state.shard.connect()
+
+    async def close(self) -> None:
+        """|coro|
+
+        Closes all HTTP sessions, and websocket connections.
+        """
+        try:
+            await self._state.shard.close()
+        except:
+            pass
 
     async def create_group(
         self,
