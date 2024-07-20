@@ -2141,9 +2141,7 @@ class HTTPClient:
         nick: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
-        timed_out_until: UndefinedOr[
-            datetime | timedelta | float | int | None
-        ] = UNDEFINED,
+        timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -2161,8 +2159,9 @@ class HTTPClient:
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
         roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
             The member's new list of roles. This *replaces* the roles.
-        timed_out_until: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
-            The date the member's timeout should expire, or None to remove the timeout. This must be a timezone-aware datetime object. Consider using utils.utcnow().
+        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+            The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
+            This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
 
         Returns
         -------
@@ -2186,17 +2185,15 @@ class HTTPClient:
                 j["roles"] = [resolve_id(e) for e in roles]
             else:
                 r.append("Roles")
-        if is_defined(timed_out_until):
-            if timed_out_until is None:
+        if is_defined(timeout):
+            if timeout is None:
                 r.append("Timeout")
-            elif isinstance(timed_out_until, datetime):
-                j["timeout"] = timed_out_until.isoformat()
-            elif isinstance(timed_out_until, timedelta):
-                j["timeout"] = (datetime.now() + timed_out_until).isoformat()
-            elif isinstance(timed_out_until, (float, int)):
-                j["timeout"] = (
-                    datetime.now() + timedelta(seconds=timed_out_until)
-                ).isoformat()
+            elif isinstance(timeout, datetime):
+                j["timeout"] = timeout.isoformat()
+            elif isinstance(timeout, timedelta):
+                j["timeout"] = (datetime.now() + timeout).isoformat()
+            elif isinstance(timeout, (float, int)):
+                j["timeout"] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
         if len(r) > 0:
             j["remove"] = r
         return self.state.parser.parse_member(

@@ -1005,9 +1005,7 @@ class BaseMember:
         nick: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
-        timed_out_until: UndefinedOr[
-            datetime | timedelta | float | int | None
-        ] = UNDEFINED,
+        timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -1021,8 +1019,9 @@ class BaseMember:
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
         roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
             The member's new list of roles. This *replaces* the roles.
-        timed_out_until: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
-            The date the member's timeout should expire, or None to remove the timeout. This must be a timezone-aware datetime object. Consider using utils.utcnow().
+        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+            The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
+            This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
 
         Returns
         -------
@@ -1035,7 +1034,7 @@ class BaseMember:
             nick=nick,
             avatar=avatar,
             roles=roles,
-            timed_out_until=timed_out_until,
+            timeout=timeout,
         )
 
     async def kick(self) -> None:
