@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from enum import IntFlag
-import typing as t
+import typing
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
 
 

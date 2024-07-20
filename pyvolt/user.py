@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from enum import IntFlag
-import typing as t
+import typing
 
 from . import cdn, core
 from .base import Base
@@ -11,7 +11,7 @@ from .permissions import UserPermissions
 from .safety_reports import UserReportReason
 
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .channel import SavedMessagesChannel, DMChannel
     from .message import BaseMessage

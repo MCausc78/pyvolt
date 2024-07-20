@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from attrs import define, field
-import typing as t
+import typing
 
 from . import core
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .state import State
 
 

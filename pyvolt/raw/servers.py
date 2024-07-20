@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 from .basic import Bool
 from .channels import Channel
@@ -8,102 +8,102 @@ from .files import File
 from .permissions import Override, OverrideField
 
 
-# class BaseServer(t.Generic[C], t.TypedDict):
-class BaseServer(t.TypedDict):
+# class BaseServer(t.Generic[C], typing.TypedDict):
+class BaseServer(typing.TypedDict):
     _id: str
     owner: str
     name: str
-    description: t.NotRequired[str]
+    description: typing.NotRequired[str]
     # channels: list[C]
-    categories: t.NotRequired[list[Category]]
-    system_messages: t.NotRequired[SystemMessageChannels]
-    roles: t.NotRequired[dict[str, Role]]
+    categories: typing.NotRequired[list[Category]]
+    system_messages: typing.NotRequired[SystemMessageChannels]
+    roles: typing.NotRequired[dict[str, Role]]
     default_permissions: int
-    icon: t.NotRequired[File]
-    banner: t.NotRequired[File]
-    flags: t.NotRequired[int]
-    nsfw: t.NotRequired[bool]
-    analytics: t.NotRequired[bool]
-    discoverable: t.NotRequired[bool]
+    icon: typing.NotRequired[File]
+    banner: typing.NotRequired[File]
+    flags: typing.NotRequired[int]
+    nsfw: typing.NotRequired[bool]
+    analytics: typing.NotRequired[bool]
+    discoverable: typing.NotRequired[bool]
 
 
 class Server(BaseServer):
     channels: list[str]
 
 
-class PartialServer(t.TypedDict):
-    owner: t.NotRequired[str]
-    name: t.NotRequired[str]
-    description: t.NotRequired[str]
-    channels: t.NotRequired[list[str]]
-    categories: t.NotRequired[list[Category]]
-    system_messages: t.NotRequired[SystemMessageChannels]
-    default_permissions: t.NotRequired[int]
-    icon: t.NotRequired[File]
-    banner: t.NotRequired[File]
-    flags: t.NotRequired[int]
-    discoverable: t.NotRequired[bool]
-    analytics: t.NotRequired[bool]
+class PartialServer(typing.TypedDict):
+    owner: typing.NotRequired[str]
+    name: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    channels: typing.NotRequired[list[str]]
+    categories: typing.NotRequired[list[Category]]
+    system_messages: typing.NotRequired[SystemMessageChannels]
+    default_permissions: typing.NotRequired[int]
+    icon: typing.NotRequired[File]
+    banner: typing.NotRequired[File]
+    flags: typing.NotRequired[int]
+    discoverable: typing.NotRequired[bool]
+    analytics: typing.NotRequired[bool]
 
 
-class Role(t.TypedDict):
+class Role(typing.TypedDict):
     name: str
     permissions: OverrideField
-    colour: t.NotRequired[str]
-    hoist: t.NotRequired[bool]
+    colour: typing.NotRequired[str]
+    hoist: typing.NotRequired[bool]
     rank: int
 
 
-class PartialRole(t.TypedDict):
-    name: t.NotRequired[str]
-    permissions: t.NotRequired[OverrideField]
-    colour: t.NotRequired[str]
-    hoist: t.NotRequired[bool]
-    rank: t.NotRequired[int]
+class PartialRole(typing.TypedDict):
+    name: typing.NotRequired[str]
+    permissions: typing.NotRequired[OverrideField]
+    colour: typing.NotRequired[str]
+    hoist: typing.NotRequired[bool]
+    rank: typing.NotRequired[int]
 
 
-FieldsServer = t.Literal[
+FieldsServer = typing.Literal[
     "Description", "Categories", "SystemMessages", "Icon", "Banner"
 ]
-FieldsRole = t.Literal["Colour"]
+FieldsRole = typing.Literal["Colour"]
 
 
-class Category(t.TypedDict):
+class Category(typing.TypedDict):
     id: str
     title: str
     channels: list[str]
 
 
-class SystemMessageChannels(t.TypedDict):
-    user_joined: t.NotRequired[str]
-    user_left: t.NotRequired[str]
-    user_kicked: t.NotRequired[str]
-    user_banned: t.NotRequired[str]
+class SystemMessageChannels(typing.TypedDict):
+    user_joined: typing.NotRequired[str]
+    user_left: typing.NotRequired[str]
+    user_kicked: typing.NotRequired[str]
+    user_banned: typing.NotRequired[str]
 
 
-class DataCreateServer(t.TypedDict):
+class DataCreateServer(typing.TypedDict):
     name: str
-    description: t.NotRequired[str | None]
-    nsfw: t.NotRequired[bool]
+    description: typing.NotRequired[str | None]
+    nsfw: typing.NotRequired[bool]
 
 
-class DataCreateRole(t.TypedDict):
+class DataCreateRole(typing.TypedDict):
     name: str
-    rank: t.NotRequired[int | None]
+    rank: typing.NotRequired[int | None]
 
 
-class NewRoleResponse(t.TypedDict):
+class NewRoleResponse(typing.TypedDict):
     id: str
     role: Role
 
 
-class CreateServerLegacyResponse(t.TypedDict):
+class CreateServerLegacyResponse(typing.TypedDict):
     server: Server
     channels: list[Channel]
 
 
-class OptionsFetchServer(t.TypedDict):
-    include_channels: t.NotRequired[Bool]
+class OptionsFetchServer(typing.TypedDict):
+    include_channels: typing.NotRequired[Bool]
 
 
 class ServerWithChannels(BaseServer):
@@ -113,33 +113,33 @@ class ServerWithChannels(BaseServer):
 FetchServerResponse = Server | ServerWithChannels
 
 
-class DataEditServer(t.TypedDict):
-    name: t.NotRequired[str]
-    description: t.NotRequired[str]
-    icon: t.NotRequired[str]
-    banner: t.NotRequired[str]
-    categories: t.NotRequired[list[Category]]
-    system_messages: t.NotRequired[SystemMessageChannels]
-    flags: t.NotRequired[int]
-    discoverable: t.NotRequired[bool]
-    analytics: t.NotRequired[bool]
-    remove: t.NotRequired[list[FieldsServer]]
+class DataEditServer(typing.TypedDict):
+    name: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    icon: typing.NotRequired[str]
+    banner: typing.NotRequired[str]
+    categories: typing.NotRequired[list[Category]]
+    system_messages: typing.NotRequired[SystemMessageChannels]
+    flags: typing.NotRequired[int]
+    discoverable: typing.NotRequired[bool]
+    analytics: typing.NotRequired[bool]
+    remove: typing.NotRequired[list[FieldsServer]]
 
 
-class DataEditRole(t.TypedDict):
-    name: t.NotRequired[str]
-    colour: t.NotRequired[str]
-    hoist: t.NotRequired[bool]
-    rank: t.NotRequired[int]
-    remove: t.NotRequired[list[FieldsRole]]
+class DataEditRole(typing.TypedDict):
+    name: typing.NotRequired[str]
+    colour: typing.NotRequired[str]
+    hoist: typing.NotRequired[bool]
+    rank: typing.NotRequired[int]
+    remove: typing.NotRequired[list[FieldsRole]]
 
 
-class DataSetServerRolePermission(t.TypedDict):
+class DataSetServerRolePermission(typing.TypedDict):
     permissions: Override
 
 
-class OptionsServerDelete(t.TypedDict):
-    leave_silently: t.NotRequired[Bool]
+class OptionsServerDelete(typing.TypedDict):
+    leave_silently: typing.NotRequired[Bool]
 
 
 __all__ = (

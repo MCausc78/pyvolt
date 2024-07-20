@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import abc
 from attrs import define, field
-import typing as t
+import typing
 
 from . import cdn
 from .enums import Enum
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .state import State
 
 

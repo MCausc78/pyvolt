@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 UserSettings = dict[str, tuple[int, str]]
 
 
-class OptionsFetchSettings(t.TypedDict):
+class OptionsFetchSettings(typing.TypedDict):
     keys: list[str]
 
 
-class OptionsSetSettings(t.TypedDict):
-    timestamp: t.NotRequired[int]
+class OptionsSetSettings(typing.TypedDict):
+    timestamp: typing.NotRequired[int]
 
 
 DataSetSettings = dict[str, str]

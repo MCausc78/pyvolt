@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from attrs import define, field
 from datetime import datetime
-import typing as t
+import typing
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .state import State
 
 
@@ -26,10 +26,10 @@ class UserSettings:
     def __getitem__(self, key: str) -> str:
         return self.value[key][1]
 
-    @t.overload
+    @typing.overload
     def get(self, key: str) -> str | None: ...
 
-    @t.overload
+    @typing.overload
     def get(self, key: str, default: str, /) -> str: ...
 
     def get(self, key: str, *default: str) -> str | None:

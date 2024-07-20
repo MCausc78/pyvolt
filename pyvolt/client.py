@@ -8,7 +8,7 @@ import inspect
 from functools import wraps
 import logging
 import sys
-import typing as t
+import typing
 
 from . import cache as caching, utils
 from .cache import Cache, MapCache
@@ -33,7 +33,7 @@ from .user_settings import UserSettings
 from .user import BaseUser, User, SelfUser
 
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
 
 
@@ -329,15 +329,15 @@ class ClientEventHandler(EventHandler):
 
 
 # OOP in Python sucks.
-ClientT = t.TypeVar("ClientT", bound="Client")
-EventT = t.TypeVar("EventT", bound="BaseEvent")
+ClientT = typing.TypeVar("ClientT", bound="Client")
+EventT = typing.TypeVar("EventT", bound="BaseEvent")
 
 
 def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
     """Returns parents of BaseEvent, including BaseEvent itself."""
     if type is BaseEvent:
         return (BaseEvent,)
-    tmp: t.Any = type.__mro__[:-1]
+    tmp: typing.Any = type.__mro__[:-1]
     return tmp
 
 
@@ -354,7 +354,7 @@ class Client:
 
     __slots__ = ("_handlers", "_types", "_i", "_state", "extra")
 
-    @t.overload
+    @typing.overload
     def __init__(
         self,
         *,
@@ -363,7 +363,7 @@ class Client:
         state: ca.Callable[[Client], State] | State | None = None,
     ) -> None: ...
 
-    @t.overload
+    @typing.overload
     def __init__(
         self,
         *,
@@ -527,12 +527,12 @@ class Client:
         callback: utils.MaybeAwaitableFunc[[EventT], None],
     ) -> None:
         """Subscribes to event."""
-        ev: t.Any = event
+        ev: typing.Any = event
         try:
             ev, converter = _COMMON_CONVERTERS[event](callback)  # type: ignore
-            tmp: t.Any = converter
+            tmp: typing.Any = converter
         except KeyError:
-            tmp: t.Any = callback
+            tmp: typing.Any = callback
 
         try:
             self._handlers[ev].append(tmp)

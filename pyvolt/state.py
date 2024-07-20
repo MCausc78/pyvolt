@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 from . import core
 from .user_settings import UserSettings
 from .user import UserBadges, UserFlags, RelationshipStatus, User
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .cache import Cache
     from .cdn import CDNClient
     from .channel import SavedMessagesChannel

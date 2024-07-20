@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import aiohttp
-import typing as t
+import typing
 
 Response = aiohttp.ClientResponse
 
@@ -39,7 +39,7 @@ class HTTPException(PyvoltError):
     def __init__(
         self,
         response: Response,
-        data: dict[str, t.Any] | str,
+        data: dict[str, typing.Any] | str,
         *,
         message: str | None = None,
     ) -> None:
@@ -93,35 +93,37 @@ class HTTPException(PyvoltError):
 
 
 class Unauthorized(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class Forbidden(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class NotFound(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class Ratelimited(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class InternalServerError(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class BadGateway(HTTPException):
-    pass
+    __slots__ = ()
 
 
 class ShardError(PyvoltError):
-    pass
+    __slots__ = ()
 
 
 class AuthenticationError(ShardError):
-    def __init__(self, a: t.Any) -> None:
+    __slots__ = ()
+
+    def __init__(self, a: typing.Any) -> None:
         super().__init__("Failed to connect shard", a)
 
 

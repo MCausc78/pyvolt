@@ -5,14 +5,14 @@ import aiohttp
 from attrs import define, field
 import io
 import logging
-import typing as t
+import typing
 from urllib.parse import quote
 
 from . import core, utils
 from .enums import Enum
 from .errors import HTTPException
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .state import State
     import typing_extensions as te
 
@@ -46,7 +46,9 @@ class AssetMetadata:
     height: int | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
-Tag = t.Literal["icons", "banners", "emojis", "backgrounds", "avatars", "attachments"]
+Tag = typing.Literal[
+    "icons", "banners", "emojis", "backgrounds", "avatars", "attachments"
+]
 
 
 @define(slots=True)
@@ -296,7 +298,7 @@ class CDNClient:
     async def request(
         self, method: str, route: str, **kwargs
     ) -> aiohttp.ClientResponse:
-        headers: dict[str, t.Any] = kwargs.pop("headers", {})
+        headers: dict[str, typing.Any] = kwargs.pop("headers", {})
         if not kwargs.pop("manual_accept", False):
             headers["Accept"] = "application/json"
         if "User-Agent" not in headers:
@@ -370,7 +372,7 @@ class CDNClient:
     async def upload(
         self,
         tag: Tag,
-        data: t.Any,
+        data: typing.Any,
     ) -> str:
         response = await self.request("POST", f"/{tag}", data=data)
         data = await response.json(loads=utils.from_json)

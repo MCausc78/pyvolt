@@ -4,13 +4,13 @@ import abc
 import aiohttp
 import asyncio
 import logging
-import typing as t
+import typing
 
 from . import core, utils
 from .enums import Enum
 from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .channel import TextChannel
     from .server import BaseServer

@@ -4,12 +4,12 @@ import abc
 from attrs import define, field
 from enum import Enum, auto
 import logging
-import typing as t
+import typing
 
 from .emoji import ServerEmoji, Emoji
 from .user import User
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .channel import ServerChannel, Channel
     from .message import Message
     from .read_state import ReadState
@@ -402,7 +402,7 @@ class EmptyCache(Cache):
         pass
 
 
-V = t.TypeVar("V")
+V = typing.TypeVar("V")
 
 
 def _put0(d: dict[str, V], k: str, max_size: int, required_keys: int = 1) -> bool:

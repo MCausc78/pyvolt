@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from collections import abc as ca, namedtuple
 import types
-import typing as t
+import typing
 
 
 def _create_value_cls(name: str, comparable: bool):
@@ -51,17 +51,17 @@ def _is_descriptor(obj):
 
 
 class EnumMeta(type):
-    if t.TYPE_CHECKING:
-        __name__: t.ClassVar[str]  # type: ignore
-        _enum_member_names_: t.ClassVar[list[str]]
-        _enum_member_map_: t.ClassVar[dict[str, t.Any]]
-        _enum_value_map_: t.ClassVar[dict[t.Any, t.Any]]
+    if typing.TYPE_CHECKING:
+        __name__: typing.ClassVar[str]  # type: ignore
+        _enum_member_names_: typing.ClassVar[list[str]]
+        _enum_member_map_: typing.ClassVar[dict[str, typing.Any]]
+        _enum_value_map_: typing.ClassVar[dict[typing.Any, typing.Any]]
 
     def __new__(
         cls,
         name: str,
         bases: tuple[type, ...],
-        attrs: dict[str, t.Any],
+        attrs: dict[str, typing.Any],
         *,
         comparable: bool = False,
     ) -> EnumMeta:
@@ -102,10 +102,10 @@ class EnumMeta(type):
         value_cls._actual_enum_cls_ = actual_cls  # type: ignore # Runtime attribute isn't understood
         return actual_cls
 
-    def __iter__(cls) -> ca.Iterator[t.Any]:
+    def __iter__(cls) -> ca.Iterator[typing.Any]:
         return (cls._enum_member_map_[name] for name in cls._enum_member_names_)
 
-    def __reversed__(cls) -> ca.Iterator[t.Any]:
+    def __reversed__(cls) -> ca.Iterator[typing.Any]:
         return (
             cls._enum_member_map_[name] for name in reversed(cls._enum_member_names_)
         )
@@ -117,25 +117,25 @@ class EnumMeta(type):
         return f"<enum {cls.__name__}>"
 
     @property
-    def __members__(cls) -> ca.Mapping[str, t.Any]:
+    def __members__(cls) -> ca.Mapping[str, typing.Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
-    def __call__(cls, value: str) -> t.Any:
+    def __call__(cls, value: str) -> typing.Any:
         try:
             return cls._enum_value_map_[value]
         except (KeyError, TypeError):
             raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
-    def __getitem__(cls, key: str) -> t.Any:
+    def __getitem__(cls, key: str) -> typing.Any:
         return cls._enum_member_map_[key]
 
-    def __setattr__(cls, name: str, value: t.Any) -> None:
+    def __setattr__(cls, name: str, value: typing.Any) -> None:
         raise TypeError("Enums are immutable.")
 
     def __delattr__(cls, attr: str) -> None:
         raise TypeError("Enums are immutable")
 
-    def __instancecheck__(self, instance: t.Any) -> bool:
+    def __instancecheck__(self, instance: typing.Any) -> bool:
         # isinstance(x, Y)
         # -> __instancecheck__(Y, x)
         try:
@@ -144,13 +144,13 @@ class EnumMeta(type):
             return False
 
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from enum import Enum
 else:
 
     class Enum(metaclass=EnumMeta):
         @classmethod
-        def try_value(cls, value) -> t.Any:
+        def try_value(cls, value) -> typing.Any:
             try:
                 return cls._enum_value_map_[value]
             except (KeyError, TypeError):

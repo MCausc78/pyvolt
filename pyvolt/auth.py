@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from attrs import define, field
-import typing as t
+import typing
 
 from . import core
 from .base import Base
 from .enums import Enum
 from .state import State
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
 
 

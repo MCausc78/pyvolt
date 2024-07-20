@@ -5,9 +5,9 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 import multidict
-import typing as t
+import typing
 
-
+from . import routes, utils
 from .auth import (
     PartialAccount,
     MFATicket,
@@ -95,9 +95,7 @@ from .webhook import BaseWebhook, Webhook
 _L = logging.getLogger(__name__)
 
 
-from . import routes, utils
-
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .state import State
 
@@ -168,7 +166,7 @@ class HTTPClient:
         mfa_ticket: str | None = None,
         **kwargs,
     ) -> aiohttp.ClientResponse:
-        headers: multidict.CIMultiDict[t.Any] = multidict.CIMultiDict(
+        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(
             kwargs.pop("headers", {})
         )
 
@@ -260,7 +258,7 @@ class HTTPClient:
         user_agent: str = "",
         mfa_ticket: str | None = None,
         **kwargs,
-    ) -> t.Any:
+    ) -> typing.Any:
         response = await self._request(
             route,
             authenticated=authenticated,
@@ -437,7 +435,7 @@ class HTTPClient:
             await self.request(routes.BOTS_FETCH_PUBLIC.compile(bot_id=resolve_id(bot)))
         )
 
-    @t.overload
+    @typing.overload
     async def invite_bot(
         self,
         bot: ULIDOr[BaseBot | BaseUser],
@@ -445,7 +443,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
     ) -> None: ...
 
-    @t.overload
+    @typing.overload
     async def invite_bot(
         self,
         bot: ULIDOr[BaseBot | BaseUser],
@@ -872,7 +870,7 @@ class HTTPClient:
     async def bulk_delete_messages(
         self,
         channel: ULIDOr[TextChannel],
-        messages: t.Sequence[ULIDOr[BaseMessage]],
+        messages: typing.Sequence[ULIDOr[BaseMessage]],
     ) -> None:
         """|coro|
 
@@ -884,7 +882,7 @@ class HTTPClient:
         ----------
         channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        messages: :class:`t.Sequence`[:class:`ULIDOr`[:class:`BaseMessage`]]
+        messages: :class:`typing.Sequence`[:class:`ULIDOr`[:class:`BaseMessage`]]
             The messages to delete.
 
         Raises
@@ -2866,7 +2864,7 @@ class HTTPClient:
             for rs in await self.request(routes.SYNC_GET_UNREADS.compile())
         ]
 
-    @t.overload
+    @typing.overload
     async def edit_user_settings(
         self,
         timestamp: datetime | int | None = ...,
@@ -2875,7 +2873,7 @@ class HTTPClient:
         **kw_settings: str,
     ) -> None: ...
 
-    @t.overload
+    @typing.overload
     async def edit_user_settings(
         self,
         dict_settings: dict[str, str] = ...,
@@ -2884,7 +2882,7 @@ class HTTPClient:
         **kw_settings: str,
     ) -> None: ...
 
-    @t.overload
+    @typing.overload
     async def edit_user_settings(
         self,
         a: dict[str, str] | datetime | int | None = ...,

@@ -1,45 +1,45 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 
-class File(t.TypedDict):
+class File(typing.TypedDict):
     _id: str
     tag: str
     filename: str
     metadata: Metadata
     content_type: str
     size: int
-    deleted: t.NotRequired[bool]
-    reported: t.NotRequired[bool]
-    message_id: t.NotRequired[str]
-    user_id: t.NotRequired[str]
-    server_id: t.NotRequired[str]
-    object: t.NotRequired[str]
+    deleted: typing.NotRequired[bool]
+    reported: typing.NotRequired[bool]
+    message_id: typing.NotRequired[str]
+    user_id: typing.NotRequired[str]
+    server_id: typing.NotRequired[str]
+    object: typing.NotRequired[str]
 
 
-class FileMetadata(t.TypedDict):
-    type: t.Literal["File"]
+class FileMetadata(typing.TypedDict):
+    type: typing.Literal["File"]
 
 
-class TextMetadata(t.TypedDict):
-    type: t.Literal["Text"]
+class TextMetadata(typing.TypedDict):
+    type: typing.Literal["Text"]
 
 
-class ImageMetadata(t.TypedDict):
-    type: t.Literal["Image"]
+class ImageMetadata(typing.TypedDict):
+    type: typing.Literal["Image"]
     width: int
     height: int
 
 
-class VideoMetadata(t.TypedDict):
-    type: t.Literal["Video"]
+class VideoMetadata(typing.TypedDict):
+    type: typing.Literal["Video"]
     width: int
     height: int
 
 
-class AudioMetadata(t.TypedDict):
-    type: t.Literal["Audio"]
+class AudioMetadata(typing.TypedDict):
+    type: typing.Literal["Audio"]
 
 
 Metadata = FileMetadata | TextMetadata | ImageMetadata | VideoMetadata | AudioMetadata

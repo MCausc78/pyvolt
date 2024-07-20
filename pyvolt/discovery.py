@@ -3,7 +3,7 @@ from __future__ import annotations
 import aiohttp
 from attrs import define, field
 import logging
-import typing as t
+import typing
 
 from . import cdn, core, utils
 from .bot import BaseBot
@@ -13,7 +13,7 @@ from .server import ServerFlags, BaseServer
 from .state import State
 from .user import StatelessUserProfile, UserProfile
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
 
 _L = logging.getLogger(__name__)
@@ -292,7 +292,7 @@ class DiscoveryClient:
             raise DiscoveryError(response, response.status, body)
         return response
 
-    async def request(self, method: str, path: str, **kwargs) -> t.Any:
+    async def request(self, method: str, path: str, **kwargs) -> typing.Any:
         response = await self._request(method, path, **kwargs)
         result = await utils._json_or_text(response)
         _L.debug("received from %s %s: %s", method, path, result)
@@ -300,12 +300,31 @@ class DiscoveryClient:
         return result
 
     async def servers(self) -> DiscoveryServersPage:
+        """|coro|
+
+        Retrieves servers on a main page.
+
+        Returns
+        -------
+        :class:`DiscoveryServersPage`
+            The servers page.
+        """
         page: raw.NextPage[raw.DiscoveryServersPage] = await self.request(
             "GET", "/discover/servers.json", params={"embedded": "true"}
         )
         return self.state.parser.parse_discovery_servers_page(page["pageProps"])
 
     async def bots(self) -> DiscoveryBotsPage:
+        """|coro|
+
+        Retrieves bots on a main page.
+
+        Returns
+        -------
+        :class:`DiscoveryBotsPage`
+            The bots page.
+        """
+
         page: raw.NextPage[raw.DiscoveryBotsPage] = await self.request(
             "GET", "/discover/bots.json", params={"embedded": "true"}
         )
@@ -313,12 +332,35 @@ class DiscoveryClient:
         return self.state.parser.parse_discovery_bots_page(page["pageProps"])
 
     async def themes(self) -> DiscoveryThemesPage:
+        """|coro|
+
+        Retrieves themes on a main page.
+
+        Returns
+        -------
+        :class:`DiscoveryThemesPage`
+            The themes page.
+        """
         page: raw.NextPage[raw.DiscoveryThemesPage] = await self.request(
             "GET", "/discover/themes.json", params={"embedded": "true"}
         )
         return self.state.parser.parse_discovery_themes_page(page["pageProps"])
 
     async def search_servers(self, query: str) -> ServerSearchResult:
+        """|coro|
+
+        Searches for servers.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to search for.
+
+        Returns
+        -------
+        :class:`ServerSearchResult`
+            The search results.
+        """
         page: raw.NextPage[raw.DiscoveryServerSearchResult] = await self.request(
             "GET",
             "/discover/search.json",
@@ -332,6 +374,20 @@ class DiscoveryClient:
         return self.state.parser.parse_discovery_server_search_result(page["pageProps"])
 
     async def search_bots(self, query: str) -> BotSearchResult:
+        """|coro|
+
+        Searches for bots.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to search for.
+
+        Returns
+        -------
+        :class:`BotSearchResult`
+            The search results.
+        """
         page: raw.NextPage[raw.DiscoveryBotSearchResult] = await self.request(
             "GET",
             "/discover/search.json",
@@ -345,6 +401,20 @@ class DiscoveryClient:
         return self.state.parser.parse_discovery_bot_search_result(page["pageProps"])
 
     async def search_themes(self, query: str) -> ThemeSearchResult:
+        """|coro|
+
+        Searches for themes.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to search for.
+
+        Returns
+        -------
+        :class:`ThemeSearchResult`
+            The search results.
+        """
         page: raw.NextPage[raw.DiscoveryThemeSearchResult] = await self.request(
             "GET",
             "/discover/search.json",

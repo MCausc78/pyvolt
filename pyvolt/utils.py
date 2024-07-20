@@ -9,7 +9,7 @@ import datetime
 import inspect
 import json
 import logging
-import typing as t
+import typing
 
 try:
     import orjson
@@ -18,13 +18,13 @@ except ModuleNotFoundError:
 else:
     HAS_ORJSON = True
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from collections import abc as ca
 
     from . import raw
 
-    P = t.ParamSpec("P")
-    T = t.TypeVar("T")
+    P = typing.ParamSpec("P")
+    T = typing.TypeVar("T")
 
     MaybeAwaitable = T | ca.Awaitable[T]
     MaybeAwaitableFunc = ca.Callable[P, MaybeAwaitable[T]]
@@ -35,14 +35,14 @@ _L = logging.getLogger(__name__)
 
 if HAS_ORJSON:
 
-    def to_json(obj: t.Any) -> str:
+    def to_json(obj: typing.Any) -> str:
         return orjson.dumps(obj).decode("utf-8")  # type: ignore
 
     from_json = orjson.loads  # type: ignore
 
 else:
 
-    def to_json(obj: t.Any) -> str:
+    def to_json(obj: typing.Any) -> str:
         return json.dumps(obj, separators=(",", ":"), ensure_ascii=True)
 
     from_json = json.loads
@@ -58,15 +58,15 @@ async def _maybe_coroutine(
         return value
 
 
-_TRUE: t.Literal["true"] = "true"
-_FALSE: t.Literal["false"] = "false"
+_TRUE: typing.Literal["true"] = "true"
+_FALSE: typing.Literal["false"] = "false"
 
 
-def _bool(b: bool) -> t.Literal["true", "false"]:
+def _bool(b: bool) -> typing.Literal["true", "false"]:
     return _TRUE if b else _FALSE
 
 
-async def _json_or_text(response: aiohttp.ClientResponse) -> t.Any:
+async def _json_or_text(response: aiohttp.ClientResponse) -> typing.Any:
     text = await response.text(encoding="utf-8")
     try:
         if response.headers["content-type"].startswith("application/json"):

@@ -1,15 +1,17 @@
-import typing as t
+from __future__ import annotations
 
-T = t.TypeVar("T")
+import typing
+
+T = typing.TypeVar("T")
 
 
-class BaseEmoji(t.Generic[T], t.TypedDict):
+class BaseEmoji(typing.Generic[T], typing.TypedDict):
     _id: str
     parent: T
     creator_id: str
     name: str
-    animated: t.NotRequired[bool]
-    nsfw: t.NotRequired[bool]
+    animated: typing.NotRequired[bool]
+    nsfw: typing.NotRequired[bool]
 
 
 ServerEmoji = BaseEmoji["ServerEmojiParent"]
@@ -17,22 +19,22 @@ DetachedEmoji = BaseEmoji["DetachedEmojiParent"]
 Emoji = BaseEmoji["EmojiParent"]
 
 
-class ServerEmojiParent(t.TypedDict):
-    type: t.Literal["Server"]
+class ServerEmojiParent(typing.TypedDict):
+    type: typing.Literal["Server"]
     id: str
 
 
-class DetachedEmojiParent(t.TypedDict):
-    type: t.Literal["Detached"]
+class DetachedEmojiParent(typing.TypedDict):
+    type: typing.Literal["Detached"]
 
 
 EmojiParent = ServerEmojiParent | DetachedEmojiParent
 
 
-class DataCreateEmoji(t.TypedDict):
+class DataCreateEmoji(typing.TypedDict):
     name: str
     parent: EmojiParent
-    nsfw: t.NotRequired[bool]
+    nsfw: typing.NotRequired[bool]
 
 
 __all__ = (

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 from .channels import GroupChannel, Channel
 from .files import File
@@ -8,16 +8,16 @@ from .servers import Server
 from .users import User
 
 
-class ServerInvite(t.TypedDict):
-    type: t.Literal["Server"]
+class ServerInvite(typing.TypedDict):
+    type: typing.Literal["Server"]
     _id: str
     server: str
     creator: str
     channel: str
 
 
-class GroupInvite(t.TypedDict):
-    type: t.Literal["Group"]
+class GroupInvite(typing.TypedDict):
+    type: typing.Literal["Group"]
     _id: str
     creator: str
     channel: str
@@ -26,43 +26,43 @@ class GroupInvite(t.TypedDict):
 Invite = ServerInvite | GroupInvite
 
 
-class ServerInviteResponse(t.TypedDict):
-    type: t.Literal["Server"]
+class ServerInviteResponse(typing.TypedDict):
+    type: typing.Literal["Server"]
     code: str
     server_id: str
     server_name: str
-    server_icon: t.NotRequired[File]
-    server_banner: t.NotRequired[File]
-    server_flags: t.NotRequired[int]
+    server_icon: typing.NotRequired[File]
+    server_banner: typing.NotRequired[File]
+    server_flags: typing.NotRequired[int]
     channel_id: str
     channel_name: str
-    channel_description: t.NotRequired[str]
+    channel_description: typing.NotRequired[str]
     user_name: str
-    user_avatar: t.NotRequired[File]
+    user_avatar: typing.NotRequired[File]
     member_count: int
 
 
-class GroupInviteResponse(t.TypedDict):
-    type: t.Literal["Group"]
+class GroupInviteResponse(typing.TypedDict):
+    type: typing.Literal["Group"]
     code: str
     channel_id: str
     channel_name: str
-    channel_description: t.NotRequired[str]
+    channel_description: typing.NotRequired[str]
     user_name: str
-    user_avatar: t.NotRequired[File]
+    user_avatar: typing.NotRequired[File]
 
 
 InviteResponse = ServerInviteResponse | GroupInviteResponse
 
 
-class ServerInviteJoinResponse(t.TypedDict):
-    type: t.Literal["Server"]
+class ServerInviteJoinResponse(typing.TypedDict):
+    type: typing.Literal["Server"]
     channels: list[Channel]
     server: Server
 
 
-class GroupInviteJoinResponse(t.TypedDict):
-    type: t.Literal["Group"]
+class GroupInviteJoinResponse(typing.TypedDict):
+    type: typing.Literal["Group"]
     channel: GroupChannel
     users: list[User]
 

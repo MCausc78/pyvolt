@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import copy
 from datetime import datetime
 import logging
-import typing as t
+import typing
 
 from . import core, discovery
 from .auth import (
@@ -171,7 +171,7 @@ from .user import (
 )
 from .webhook import PartialWebhook, Webhook
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .shard import Shard
     from .state import State
@@ -179,7 +179,7 @@ if t.TYPE_CHECKING:
 _L = logging.getLogger(__name__)
 
 
-_EMPTY_DICT: dict[t.Any, t.Any] = {}
+_EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 
 
 class Parser:
@@ -673,7 +673,8 @@ class Parser:
         self,
         d: raw.GroupChannel,
         recipients: (
-            tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[User]]
+            tuple[typing.Literal[True], list[str]]
+            | tuple[typing.Literal[False], list[User]]
         ),
     ) -> GroupChannel:
         icon = d.get("icon")
@@ -1274,8 +1275,8 @@ class Parser:
         self,
         d: raw.Server,
         channels: (
-            tuple[t.Literal[True], list[str]]
-            | tuple[t.Literal[False], list[ServerChannel]]
+            tuple[typing.Literal[True], list[str]]
+            | tuple[typing.Literal[False], list[ServerChannel]]
         ),
     ) -> Server:
         server_id = d["_id"]
@@ -1318,13 +1319,13 @@ class Parser:
         self,
         d: raw.Server,
         channels: (
-            tuple[t.Literal[True], list[str]]
-            | tuple[t.Literal[False], list[raw.Channel]]
+            tuple[typing.Literal[True], list[str]]
+            | tuple[typing.Literal[False], list[raw.Channel]]
         ),
     ) -> Server:
         internal_channels: (
-            tuple[t.Literal[True], list[str]]
-            | tuple[t.Literal[False], list[ServerChannel]]
+            tuple[typing.Literal[True], list[str]]
+            | tuple[typing.Literal[False], list[ServerChannel]]
         ) = (
             (True, [str(i) for i in channels[1]])
             if channels[0]
@@ -1664,8 +1665,10 @@ class Parser:
             id=d["id"],
         )
 
-    def parse_unknown_public_invite(self, d: dict[str, t.Any]) -> UnknownPublicInvite:
-        return UnknownPublicInvite(state=self.state, code=d["code"], d=d)
+    def parse_unknown_public_invite(
+        self, d: dict[str, typing.Any]
+    ) -> UnknownPublicInvite:
+        return UnknownPublicInvite(state=self.state, code=d["code"], payload=d)
 
     def parse_user(self, d: raw.User) -> User | SelfUser:
         if d["relationship"] == "User":

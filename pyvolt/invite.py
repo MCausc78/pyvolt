@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from attrs import define, field
-import typing as t
+import typing
 
 
 from . import cdn
@@ -9,7 +9,7 @@ from . import cdn
 from .server import ServerFlags, Server
 from .state import State
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .channel import GroupChannel
 
 
@@ -192,7 +192,7 @@ class GroupPublicInvite(BaseInvite):
 
 @define(slots=True)
 class UnknownPublicInvite(BaseInvite):
-    d: dict[str, t.Any] = field(repr=True, hash=True, kw_only=True, eq=True)
+    payload: dict[str, typing.Any] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The raw invite data."""
 
 

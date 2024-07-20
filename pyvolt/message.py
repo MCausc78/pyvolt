@@ -4,7 +4,7 @@ import abc
 from attrs import define, field
 from datetime import datetime
 from enum import IntFlag
-import typing as t
+import typing
 
 
 from . import cache as caching, cdn, core
@@ -18,7 +18,7 @@ from .safety_reports import ContentReportReason
 from .server import Member
 from .user import BaseUser, User
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .state import State
 

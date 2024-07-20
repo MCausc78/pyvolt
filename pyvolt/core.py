@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import typing as t
+import typing
 from .ulid import _ulid_timestamp
 
 
@@ -13,18 +13,18 @@ class Undefined:
     def __init__(self) -> None:
         pass
 
-    def __bool__(self) -> t.Literal[False]:
+    def __bool__(self) -> typing.Literal[False]:
         return False
 
 
 UNDEFINED = Undefined()
 
 
-T = t.TypeVar("T")
+T = typing.TypeVar("T")
 UndefinedOr = Undefined | T
 
 
-def is_defined(x: UndefinedOr[T]) -> t.TypeGuard[T]:
+def is_defined(x: UndefinedOr[T]) -> typing.TypeGuard[T]:
     return x is not UNDEFINED and not isinstance(x, Undefined)
 
 
@@ -36,11 +36,11 @@ def ulid_time(val: str) -> datetime:
     return datetime.fromtimestamp(ulid_timestamp(val), timezone.utc)
 
 
-class HasID(t.Protocol):
+class HasID(typing.Protocol):
     id: str
 
 
-U = t.TypeVar("U", bound="HasID")
+U = typing.TypeVar("U", bound="HasID")
 ULIDOr = str | U
 
 

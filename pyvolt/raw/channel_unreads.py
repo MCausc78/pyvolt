@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 
-class ChannelUnread(t.TypedDict):
+class ChannelUnread(typing.TypedDict):
     _id: ChannelCompositeKey
-    last_id: t.NotRequired[str]
-    mentions: t.NotRequired[list[str]]
+    last_id: typing.NotRequired[str]
+    mentions: typing.NotRequired[list[str]]
 
 
-class ChannelCompositeKey(t.TypedDict):
+class ChannelCompositeKey(typing.TypedDict):
     channel: str
     user: str
 

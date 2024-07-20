@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 
 # >> /models/mfa/mod.rs
-class MultiFactorAuthentication(t.TypedDict):
-    totp_token: t.NotRequired[Totp]
-    recovery_codes: t.NotRequired[list[str]]
+class MultiFactorAuthentication(typing.TypedDict):
+    totp_token: typing.NotRequired[Totp]
+    recovery_codes: typing.NotRequired[list[str]]
 
 
-MFAMethod = t.Literal["Password", "Recovery", "Totp"]
+MFAMethod = typing.Literal["Password", "Recovery", "Totp"]
 
 
-class PasswordMFAResponse(t.TypedDict):
+class PasswordMFAResponse(typing.TypedDict):
     password: str
 
 
-class RecoveryMFAResponse(t.TypedDict):
+class RecoveryMFAResponse(typing.TypedDict):
     recovery_code: str
 
 
-class TotpMFAResponse(t.TypedDict):
+class TotpMFAResponse(typing.TypedDict):
     totp_code: str
 
 
@@ -28,16 +28,16 @@ MFAResponse = PasswordMFAResponse | RecoveryMFAResponse | TotpMFAResponse
 
 
 # >> /models/mfa/totp.rs
-class DisabledTotp(t.TypedDict):
-    status: t.Literal["Disabled"]
+class DisabledTotp(typing.TypedDict):
+    status: typing.Literal["Disabled"]
 
 
-class PendingTotp(t.TypedDict):
-    status: t.Literal["Pending"]
+class PendingTotp(typing.TypedDict):
+    status: typing.Literal["Pending"]
 
 
-class EnabledTotp(t.TypedDict):
-    status: t.Literal["Enabled"]
+class EnabledTotp(typing.TypedDict):
+    status: typing.Literal["Enabled"]
 
 
 Totp = DisabledTotp | PendingTotp | EnabledTotp
@@ -45,16 +45,16 @@ Totp = DisabledTotp | PendingTotp | EnabledTotp
 # >> /models/account.rs
 
 
-class VerifiedEmailVerification(t.TypedDict):
-    status: t.Literal["Verified"]
+class VerifiedEmailVerification(typing.TypedDict):
+    status: typing.Literal["Verified"]
 
 
-class PendingEmailVerification(t.TypedDict):
-    stauts: t.Literal["Pending"]
+class PendingEmailVerification(typing.TypedDict):
+    stauts: typing.Literal["Pending"]
 
 
-class MovingEmailVerification(t.TypedDict):
-    status: t.Literal["Moving"]
+class MovingEmailVerification(typing.TypedDict):
+    status: typing.Literal["Moving"]
     new_email: str
     token: str
     expiry: str
@@ -65,24 +65,24 @@ EmailVerification = (
 )
 
 
-class PasswordReset(t.TypedDict):
+class PasswordReset(typing.TypedDict):
     token: str
     expiry: str
 
 
-class WaitingForVerificationDeletionInfo(t.TypedDict):
-    status: t.Literal["WaitingForVerification"]
+class WaitingForVerificationDeletionInfo(typing.TypedDict):
+    status: typing.Literal["WaitingForVerification"]
     token: str
     expiry: str
 
 
-class ScheduledDeletionInfo(t.TypedDict):
-    status: t.Literal["Scheduled"]
+class ScheduledDeletionInfo(typing.TypedDict):
+    status: typing.Literal["Scheduled"]
     after: str
 
 
-class DeletedDeletionInfo(t.TypedDict):
-    status: t.Literal["Deleted"]
+class DeletedDeletionInfo(typing.TypedDict):
+    status: typing.Literal["Deleted"]
 
 
 DeletionInfo = (
@@ -90,12 +90,12 @@ DeletionInfo = (
 )
 
 
-class Lockout(t.TypedDict):
+class Lockout(typing.TypedDict):
     attempts: int
     expiry: str | None
 
 
-class Account(t.TypedDict):
+class Account(typing.TypedDict):
     _id: str
     email: str
     email_normalised: str
@@ -110,22 +110,22 @@ class Account(t.TypedDict):
 # >> /models/session.rs
 
 
-class WebPushSubscription(t.TypedDict):
+class WebPushSubscription(typing.TypedDict):
     endpoint: str
     p256dh: str
     auth: str
 
 
-class Session(t.TypedDict):
+class Session(typing.TypedDict):
     _id: str
     user_id: str
     token: str
     name: str
-    subscription: t.NotRequired[WebPushSubscription]
+    subscription: typing.NotRequired[WebPushSubscription]
 
 
 # >> /models/ticket.rs
-class MFATicket(t.TypedDict):
+class MFATicket(typing.TypedDict):
     _id: str
     account_id: str
     token: str
@@ -135,24 +135,24 @@ class MFATicket(t.TypedDict):
 
 
 # >> /events/mod.rs
-class AuthifierCreateAccountEvent(t.TypedDict):
-    event_type: t.Literal["CreateAccount"]
+class AuthifierCreateAccountEvent(typing.TypedDict):
+    event_type: typing.Literal["CreateAccount"]
     account: Account
 
 
-class AuthifierCreateSessionEvent(t.TypedDict):
-    event_type: t.Literal["CreateSession"]
+class AuthifierCreateSessionEvent(typing.TypedDict):
+    event_type: typing.Literal["CreateSession"]
     session: Session
 
 
-class AuthifierDeleteSessionEvent(t.TypedDict):
-    event_type: t.Literal["DeleteSession"]
+class AuthifierDeleteSessionEvent(typing.TypedDict):
+    event_type: typing.Literal["DeleteSession"]
     user_id: str
     session_id: str
 
 
-class AuthifierDeleteAllSessionsEvent(t.TypedDict):
-    event_type: t.Literal["DeleteAllSessions"]
+class AuthifierDeleteAllSessionsEvent(typing.TypedDict):
+    event_type: typing.Literal["DeleteAllSessions"]
     user_id: str
     exclude_session_id: str | None
 
@@ -167,60 +167,60 @@ AuthifierEvent = (
 # HTTP requests/responses
 
 
-class DataChangeEmail(t.TypedDict):
+class DataChangeEmail(typing.TypedDict):
     email: str
     current_password: str
 
 
-class DataChangePassword(t.TypedDict):
+class DataChangePassword(typing.TypedDict):
     password: str
     current_password: str
 
 
-class DataAccountDeletion(t.TypedDict):
+class DataAccountDeletion(typing.TypedDict):
     token: str
 
 
-class DataCreateAccount(t.TypedDict):
+class DataCreateAccount(typing.TypedDict):
     email: str
     password: str
     invite: str | None
     captcha: str | None
 
 
-class AccountInfo(t.TypedDict):
+class AccountInfo(typing.TypedDict):
     _id: str
     email: str
 
 
-class DataPasswordReset(t.TypedDict):
+class DataPasswordReset(typing.TypedDict):
     token: str
     password: str
-    remove_sessions: t.NotRequired[bool | None]
+    remove_sessions: typing.NotRequired[bool | None]
 
 
-class DataResendVerification(t.TypedDict):
+class DataResendVerification(typing.TypedDict):
     email: str
     captcha: str | None
 
 
-class DataSendPasswordReset(t.TypedDict):
+class DataSendPasswordReset(typing.TypedDict):
     email: str
     captcha: str | None
 
 
-class NoTicketResponseVerify(t.TypedDict):
+class NoTicketResponseVerify(typing.TypedDict):
     pass
 
 
-class WithTicketResponseVerify(t.TypedDict):
+class WithTicketResponseVerify(typing.TypedDict):
     ticket: MFATicket
 
 
 ResponseVerify = NoTicketResponseVerify | WithTicketResponseVerify
 
 
-class MultiFactorStatus(t.TypedDict):
+class MultiFactorStatus(typing.TypedDict):
     email_otp: bool
     trusted_handover: bool
     email_mfa: bool
@@ -229,26 +229,26 @@ class MultiFactorStatus(t.TypedDict):
     recovery_active: bool
 
 
-class ResponseTotpSecret(t.TypedDict):
+class ResponseTotpSecret(typing.TypedDict):
     secret: str
 
 
-class DataEditSession(t.TypedDict):
+class DataEditSession(typing.TypedDict):
     friendly_name: str
 
 
-class SessionInfo(t.TypedDict):
+class SessionInfo(typing.TypedDict):
     _id: str
     name: str
 
 
-class EmailDataLogin(t.TypedDict):
+class EmailDataLogin(typing.TypedDict):
     email: str
     password: str
     friendly_name: str | None
 
 
-class MFADataLogin(t.TypedDict):
+class MFADataLogin(typing.TypedDict):
     mfa_ticket: str
     mfa_response: MFAResponse | None
     friendly_name: str | None
@@ -258,17 +258,17 @@ DataLogin = EmailDataLogin | MFADataLogin
 
 
 class SuccessResponseLogin(Session):
-    result: t.Literal["Success"]
+    result: typing.Literal["Success"]
 
 
-class MFAResponseLogin(t.TypedDict):
-    result: t.Literal["MFA"]
+class MFAResponseLogin(typing.TypedDict):
+    result: typing.Literal["MFA"]
     ticket: str
     allowed_methods: list[MFAMethod]
 
 
-class DisabledResponseLogin(t.TypedDict):
-    result: t.Literal["Disabled"]
+class DisabledResponseLogin(typing.TypedDict):
+    result: typing.Literal["Disabled"]
     user_id: str
 
 

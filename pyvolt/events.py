@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from copy import copy
-import typing as t
+import typing
 
 from . import cache as caching
 
@@ -69,10 +69,10 @@ class BaseEvent:
     def before_dispatch(self) -> None:
         pass
 
-    async def aprocess(self) -> t.Any:
+    async def aprocess(self) -> typing.Any:
         pass
 
-    def process(self) -> t.Any:
+    def process(self) -> typing.Any:
         pass
 
 

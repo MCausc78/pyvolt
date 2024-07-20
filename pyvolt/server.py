@@ -4,21 +4,22 @@ from attrs import define, field
 from collections import abc as ca
 from datetime import datetime, timedelta
 from enum import IntFlag
-import typing as t
+import typing
 
 from . import (
     cache as caching,
     cdn,
-    core,
     utils,
 )
 from .base import Base
 from .bot import BaseBot
-from .cdn import ResolvableResource, resolve_resource
+from .cdn import ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
+    is_defined,
     ULIDOr,
+    resolve_id,
 )
 from .emoji import ServerEmoji
 from .enums import Enum
@@ -38,7 +39,7 @@ from .user import (
 )
 
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from . import raw
     from .channel import (
         ChannelType,
@@ -75,13 +76,13 @@ class Category:
 
     def __init__(
         self,
-        id: core.ULIDOr[Category],
+        id: ULIDOr[Category],
         title: str,
-        channels: list[core.ULIDOr[ServerChannel]],
+        channels: list[ULIDOr[ServerChannel]],
     ) -> None:
-        self.id = core.resolve_id(id)
+        self.id = resolve_id(id)
         self.title = title
-        self.channels = [core.resolve_id(channel) for channel in channels]
+        self.channels = [resolve_id(channel) for channel in channels]
 
     def build(self) -> raw.Category:
         return {
@@ -111,15 +112,15 @@ class SystemMessageChannels:
     def __init__(
         self,
         *,
-        user_joined: core.ULIDOr[TextChannel] | None = None,
-        user_left: core.ULIDOr[TextChannel] | None = None,
-        user_kicked: core.ULIDOr[TextChannel] | None = None,
-        user_banned: core.ULIDOr[TextChannel] | None = None,
+        user_joined: ULIDOr[TextChannel] | None = None,
+        user_left: ULIDOr[TextChannel] | None = None,
+        user_kicked: ULIDOr[TextChannel] | None = None,
+        user_banned: ULIDOr[TextChannel] | None = None,
     ) -> None:
-        self.user_joined = None if user_joined is None else core.resolve_id(user_joined)
-        self.user_left = None if user_left is None else core.resolve_id(user_left)
-        self.user_kicked = None if user_kicked is None else core.resolve_id(user_kicked)
-        self.user_banned = None if user_banned is None else core.resolve_id(user_banned)
+        self.user_joined = None if user_joined is None else resolve_id(user_joined)
+        self.user_left = None if user_left is None else resolve_id(user_left)
+        self.user_kicked = None if user_kicked is None else resolve_id(user_kicked)
+        self.user_banned = None if user_banned is None else resolve_id(user_banned)
 
     def build(self) -> raw.SystemMessageChannels:
         d: raw.SystemMessageChannels = {}
@@ -157,10 +158,10 @@ class BaseRole(Base):
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        colour: core.UndefinedOr[str | None] = core.UNDEFINED,
-        hoist: core.UndefinedOr[bool] = core.UNDEFINED,
-        rank: core.UndefinedOr[int] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        colour: UndefinedOr[str | None] = UNDEFINED,
+        hoist: UndefinedOr[bool] = UNDEFINED,
+        rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
         """|coro|
 
@@ -221,34 +222,32 @@ class BaseRole(Base):
 class PartialRole(BaseRole):
     """Partial representation of a server role."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new role name."""
 
-    permissions: core.UndefinedOr[PermissionOverride] = field(
+    permissions: UndefinedOr[PermissionOverride] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     """The permissions available to this role."""
 
-    colour: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    colour: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New colour used for this. This can be any valid CSS colour."""
 
-    hoist: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    hoist: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether this role should be shown separately on the member sidebar."""
 
-    rank: core.UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
+    rank: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New ranking of this role."""
 
     def into_full(self) -> Role | None:
         """Tries transform this partial role into full object. This is useful when caching role."""
         if (
-            core.is_defined(self.name)
-            and core.is_defined(self.permissions)
-            and core.is_defined(self.hoist)
-            and core.is_defined(self.rank)
+            is_defined(self.name)
+            and is_defined(self.permissions)
+            and is_defined(self.hoist)
+            and is_defined(self.rank)
         ):
-            colour = None if not core.is_defined(self.colour) else self.colour
+            colour = None if not is_defined(self.colour) else self.colour
             return Role(
                 state=self.state,
                 id=self.id,
@@ -281,15 +280,15 @@ class Role(BaseRole):
     """Ranking of this role."""
 
     def _update(self, data: PartialRole) -> None:
-        if core.is_defined(data.name):
+        if is_defined(data.name):
             self.name = data.name
-        if core.is_defined(data.permissions):
+        if is_defined(data.permissions):
             self.permissions = data.permissions
-        if core.is_defined(data.colour):
+        if is_defined(data.colour):
             self.colour = data.colour
-        if core.is_defined(data.hoist):
+        if is_defined(data.hoist):
             self.hoist = data.hoist
-        if core.is_defined(data.rank):
+        if is_defined(data.rank):
             self.rank = data.rank
 
 
@@ -299,7 +298,7 @@ class BaseServer(Base):
 
     async def add_bot(
         self,
-        bot: core.ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[BaseBot | BaseUser],
     ) -> None:
         """|coro|
 
@@ -403,17 +402,15 @@ class BaseServer(Base):
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        icon: core.UndefinedOr[str | None] = core.UNDEFINED,
-        banner: core.UndefinedOr[str | None] = core.UNDEFINED,
-        categories: core.UndefinedOr[list[Category] | None] = core.UNDEFINED,
-        system_messages: core.UndefinedOr[
-            SystemMessageChannels | None
-        ] = core.UNDEFINED,
-        flags: core.UndefinedOr[ServerFlags] = core.UNDEFINED,
-        discoverable: core.UndefinedOr[bool] = core.UNDEFINED,
-        analytics: core.UndefinedOr[bool] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[str | None] = UNDEFINED,
+        icon: UndefinedOr[str | None] = UNDEFINED,
+        banner: UndefinedOr[str | None] = UNDEFINED,
+        categories: UndefinedOr[list[Category] | None] = UNDEFINED,
+        system_messages: UndefinedOr[SystemMessageChannels | None] = UNDEFINED,
+        flags: UndefinedOr[ServerFlags] = UNDEFINED,
+        discoverable: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
     ) -> Server:
         """|coro|
 
@@ -525,7 +522,7 @@ class BaseServer(Base):
 
     async def set_role_permissions(
         self,
-        role: core.ULIDOr[BaseRole],
+        role: ULIDOr[BaseRole],
         *,
         allow: Permissions = Permissions.NONE,
         deny: Permissions = Permissions.NONE,
@@ -578,45 +575,39 @@ class BaseServer(Base):
 class PartialServer(BaseServer):
     """Partial representation of a server on Revolt."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: core.UndefinedOr[str | None] = field(
+    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: UndefinedOr[str | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    channel_ids: core.UndefinedOr[list[str]] = field(
+    channel_ids: UndefinedOr[list[str]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    categories: core.UndefinedOr[list[Category] | None] = field(
+    categories: UndefinedOr[list[Category] | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    system_messages: core.UndefinedOr[SystemMessageChannels | None] = field(
+    system_messages: UndefinedOr[SystemMessageChannels | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    default_permissions: core.UndefinedOr[Permissions] = field(
+    default_permissions: UndefinedOr[Permissions] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(
+    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    internal_banner: core.UndefinedOr[cdn.StatelessAsset | None] = field(
+    internal_banner: UndefinedOr[cdn.StatelessAsset | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    flags: core.UndefinedOr[ServerFlags] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    discoverable: core.UndefinedOr[bool] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    analytics: core.UndefinedOr[bool] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    flags: UndefinedOr[ServerFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
+    discoverable: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    analytics: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     @property
-    def icon(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def icon(self) -> UndefinedOr[cdn.Asset | None]:
         return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
 
     @property
-    def banner(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def banner(self) -> UndefinedOr[cdn.Asset | None]:
         return self.internal_banner and self.internal_banner._stateful(
             self.state, "banners"
         )
@@ -677,7 +668,8 @@ class Server(BaseServer):
     """The description for the server."""
 
     internal_channels: (
-        tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[ServerChannel]]
+        tuple[typing.Literal[True], list[str]]
+        | tuple[typing.Literal[False], list[ServerChannel]]
     ) = field(repr=True, hash=True, kw_only=True, eq=True)
 
     categories: list[Category] | None = field(
@@ -721,29 +713,29 @@ class Server(BaseServer):
     """Whether this server should be publicly discoverable."""
 
     def _update(self, data: PartialServer) -> None:
-        if core.is_defined(data.owner_id):
+        if is_defined(data.owner_id):
             self.owner_id = data.owner_id
-        if core.is_defined(data.name):
+        if is_defined(data.name):
             self.name = data.name
-        if core.is_defined(data.description):
+        if is_defined(data.description):
             self.description = data.description
-        if core.is_defined(data.channel_ids):
+        if is_defined(data.channel_ids):
             self.internal_channels = (True, data.channel_ids)
-        if core.is_defined(data.categories):
+        if is_defined(data.categories):
             self.categories = data.categories or []
-        if core.is_defined(data.system_messages):
+        if is_defined(data.system_messages):
             self.system_messages = data.system_messages
-        if core.is_defined(data.default_permissions):
+        if is_defined(data.default_permissions):
             self.default_permissions = data.default_permissions
-        if core.is_defined(data.internal_icon):
+        if is_defined(data.internal_icon):
             self.internal_icon = data.internal_icon
-        if core.is_defined(data.internal_banner):
+        if is_defined(data.internal_banner):
             self.internal_banner = data.internal_banner
-        if core.is_defined(data.flags):
+        if is_defined(data.flags):
             self.flags = data.flags
-        if core.is_defined(data.discoverable):
+        if is_defined(data.discoverable):
             self.discoverable = data.discoverable
-        if core.is_defined(data.analytics):
+        if is_defined(data.analytics):
             self.analytics = data.analytics
 
     def _role_update_full(self, data: PartialRole | Role) -> None:
@@ -1056,20 +1048,16 @@ class BaseMember:
 class PartialMember(BaseMember):
     """Partial representation of a member of a server on Revolt."""
 
-    nick: core.UndefinedOr[str | None] = field(
+    nick: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    roles: core.UndefinedOr[list[str]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    timed_out_until: core.UndefinedOr[datetime | None] = field(
+    roles: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    timed_out_until: UndefinedOr[datetime | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
 
-    def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
         return self.internal_avatar and self.internal_avatar._stateful(
             self.state, "avatars"
         )
@@ -1099,13 +1087,13 @@ class Member(BaseMember):
     """The timestamp this member is timed out until."""
 
     def _update(self, data: PartialMember) -> None:
-        if core.is_defined(data.nick):
+        if is_defined(data.nick):
             self.nick = data.nick
-        if core.is_defined(data.internal_avatar):
+        if is_defined(data.internal_avatar):
             self.internal_avatar = data.internal_avatar
-        if core.is_defined(data.roles):
+        if is_defined(data.roles):
             self.roles = data.roles or []
-        if core.is_defined(data.timed_out_until):
+        if is_defined(data.timed_out_until):
             self.timed_out_until = data.timed_out_until
 
     @property

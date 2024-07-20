@@ -1,40 +1,40 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 from .files import File
 
 
-class User(t.TypedDict):
+class User(typing.TypedDict):
     _id: str
     username: str
     discriminator: str
-    display_name: t.NotRequired[str]
-    avatar: t.NotRequired[File]
-    relations: t.NotRequired[list[Relationship]]
-    badges: t.NotRequired[int]
-    status: t.NotRequired[UserStatus]
-    profile: t.NotRequired[UserProfile]
-    flags: t.NotRequired[int]
-    privileged: t.NotRequired[bool]
-    bot: t.NotRequired[BotInformation]
+    display_name: typing.NotRequired[str]
+    avatar: typing.NotRequired[File]
+    relations: typing.NotRequired[list[Relationship]]
+    badges: typing.NotRequired[int]
+    status: typing.NotRequired[UserStatus]
+    profile: typing.NotRequired[UserProfile]
+    flags: typing.NotRequired[int]
+    privileged: typing.NotRequired[bool]
+    bot: typing.NotRequired[BotInformation]
     relationship: RelationshipStatus
     online: bool
 
 
-class PartialUser(t.TypedDict):
-    username: t.NotRequired[str]
-    discriminator: t.NotRequired[str]
-    display_name: t.NotRequired[str]
-    avatar: t.NotRequired[File]
-    badges: t.NotRequired[int]
-    status: t.NotRequired[UserStatus]
-    # profile: t.NotRequired[UserProfile]
-    flags: t.NotRequired[int]
-    online: t.NotRequired[bool]
+class PartialUser(typing.TypedDict):
+    username: typing.NotRequired[str]
+    discriminator: typing.NotRequired[str]
+    display_name: typing.NotRequired[str]
+    avatar: typing.NotRequired[File]
+    badges: typing.NotRequired[int]
+    status: typing.NotRequired[UserStatus]
+    # profile: typing.NotRequired[UserProfile]
+    flags: typing.NotRequired[int]
+    online: typing.NotRequired[bool]
 
 
-FieldsUser = t.Literal[
+FieldsUser = typing.Literal[
     "Avatar",
     "StatusText",
     "StatusPresence",
@@ -42,74 +42,74 @@ FieldsUser = t.Literal[
     "ProfileBackground",
     "DisplayName",
 ]
-RelationshipStatus = t.Literal[
+RelationshipStatus = typing.Literal[
     "None", "User", "Friend", "Outgoing", "Incoming", "Blocked", "BlockedOther"
 ]
 
 
-class Relationship(t.TypedDict):
+class Relationship(typing.TypedDict):
     _id: str
     status: RelationshipStatus
 
 
-Presence = t.Literal["Online", "Idle", "Focus", "Busy", "Invisible"]
+Presence = typing.Literal["Online", "Idle", "Focus", "Busy", "Invisible"]
 
 
-class UserStatus(t.TypedDict):
-    text: t.NotRequired[str]
-    presence: t.NotRequired[Presence]
+class UserStatus(typing.TypedDict):
+    text: typing.NotRequired[str]
+    presence: typing.NotRequired[Presence]
 
 
-class UserProfile(t.TypedDict):
-    content: t.NotRequired[str]
-    background: t.NotRequired[File]
+class UserProfile(typing.TypedDict):
+    content: typing.NotRequired[str]
+    background: typing.NotRequired[File]
 
 
-class DataUserProfile(t.TypedDict):
-    content: t.NotRequired[str]
-    background: t.NotRequired[str]
+class DataUserProfile(typing.TypedDict):
+    content: typing.NotRequired[str]
+    background: typing.NotRequired[str]
 
 
-class DataEditUser(t.TypedDict):
-    display_name: t.NotRequired[str]
-    avatar: t.NotRequired[str]
-    status: t.NotRequired[UserStatus]
-    profile: t.NotRequired[DataUserProfile]
-    badges: t.NotRequired[int]
-    flags: t.NotRequired[int]
-    remove: t.NotRequired[list[FieldsUser]]
+class DataEditUser(typing.TypedDict):
+    display_name: typing.NotRequired[str]
+    avatar: typing.NotRequired[str]
+    status: typing.NotRequired[UserStatus]
+    profile: typing.NotRequired[DataUserProfile]
+    badges: typing.NotRequired[int]
+    flags: typing.NotRequired[int]
+    remove: typing.NotRequired[list[FieldsUser]]
 
 
-class FlagResponse(t.TypedDict):
+class FlagResponse(typing.TypedDict):
     flags: int
 
 
-class MutualResponse(t.TypedDict):
+class MutualResponse(typing.TypedDict):
     users: list[str]
     servers: list[str]
 
 
-class BotInformation(t.TypedDict):
+class BotInformation(typing.TypedDict):
     owner: str
 
 
-class DataSendFriendRequest(t.TypedDict):
+class DataSendFriendRequest(typing.TypedDict):
     username: str
 
 
 # delta types
 
 
-class DataChangeUsername(t.TypedDict):
+class DataChangeUsername(typing.TypedDict):
     username: str
     password: str
 
 
-class DataHello(t.TypedDict):
+class DataHello(typing.TypedDict):
     onboarding: bool
 
 
-class DataOnboard(t.TypedDict):
+class DataOnboard(typing.TypedDict):
     username: str
 
 

@@ -1,5 +1,5 @@
-import typing as t
+import typing
 
-Bool = t.Literal["true", "false"]
+Bool = typing.Literal["true", "false"]
 
 __all__ = ("Bool",)

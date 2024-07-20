@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from attrs import define, field
 import contextlib
-import typing as t
+import typing
 
 from . import (
     cache as caching,
@@ -26,7 +26,7 @@ from .permissions import (
 from .server import BaseRole, Role, Server, Member
 from .user import BaseUser, User
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .message import (
         Reply,
         Interactions,
@@ -403,7 +403,8 @@ class GroupChannel(TextChannel):
     """Channel description."""
 
     _recipients: (
-        tuple[t.Literal[True], list[str]] | tuple[t.Literal[False], list[User]]
+        tuple[typing.Literal[True], list[str]]
+        | tuple[typing.Literal[False], list[User]]
     ) = field(repr=True, hash=True, eq=True, alias="internal_recipients")
 
     internal_icon: cdn.StatelessAsset | None = field(
@@ -472,7 +473,7 @@ class GroupChannel(TextChannel):
             cache = self.state.cache
             if not cache:
                 return []
-            recipient_ids = t.cast("list[str]", self._recipients[1])
+            recipient_ids: list[str] = self._recipients[1]  # type: ignore
             recipients = []
             for recipient_id in recipient_ids:
                 user = cache.get_user(recipient_id, caching._USER_REQUEST)
