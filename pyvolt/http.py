@@ -1801,13 +1801,23 @@ class HTTPClient:
             raise NotImplemented
 
     # Onboarding control
-    async def complete_onboarding(self, username: str, /) -> User:
+    async def complete_onboarding(self, username: str, /) -> SelfUser:
         """|coro|
 
         Set a new username, complete onboarding and allow a user to start using Revolt.
+
+        Parameters
+        ----------
+        username: :class:`str`
+            The username to use.
+
+        Returns
+        -------
+        :class:`SelfUser`
+            The updated user.
         """
         j: raw.DataOnboard = {"username": username}
-        return self.state.parser.parse_user(
+        return self.state.parser.parse_self_user(
             await self.request(routes.ONBOARD_COMPLETE.compile(), json=j)
         )
 
@@ -2257,13 +2267,19 @@ class HTTPClient:
     ) -> MemberList:
         """|coro|
 
-        Retrieve server members list.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/member_fetch_all_req
+        Retrieves server members list.
 
         Parameters
         ----------
-        exclude_offline: :class:`bool` | None
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
+
+        Returns
+        -------
+        :class:`MemberList`
+            The member list.
         """
         p: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
@@ -2281,7 +2297,13 @@ class HTTPClient:
         """|coro|
 
         Removes a member from the server.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/member_remove_req
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        member: :class:`Union`[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The member to kick.
 
         Raises
         ------
@@ -2308,13 +2330,16 @@ class HTTPClient:
         """|coro|
 
         Sets permissions for the specified role in the server.
-        https://developers.revolt.chat/api/#tag/Server-Permissions/operation/permissions_set_req
 
         Parameters
         ----------
-        allow: :class:`permissions.Permissions`
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        role: :class:`ULIDOr`[:class:`BaseRole`]
+            The role.
+        allow: :class:`Permissions`
             New allow bit flags.
-        deny: :class:`permissions.Permissions`
+        deny: :class:`Permissions`
             New deny bit flags.
 
         Raises
@@ -2323,6 +2348,11 @@ class HTTPClient:
             You do not have permissions to set role permissions on the server.
         HTTPException
             Setting permissions failed.
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
         """
         j: raw.DataSetRolePermissions = {
             "permissions": {"allow": int(allow), "deny": int(deny)}
@@ -2342,13 +2372,19 @@ class HTTPClient:
     async def set_default_role_permissions(
         self,
         server: ULIDOr[BaseServer],
-        permissions: Permissions | PermissionOverride,
+        permissions: Permissions,
         /,
     ) -> Server:
         """|coro|
 
         Sets permissions for the default role in this server.
-        https://developers.revolt.chat/api/#tag/Server-Permissions/operation/permissions_set_default_req
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        permissions: :class:`Permissions`
+            New default permissions.
 
         Raises
         ------
@@ -2356,14 +2392,13 @@ class HTTPClient:
             You do not have permissions to set default permissions on the server.
         HTTPException
             Setting permissions failed.
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
         """
-        j: raw.DataDefaultChannelPermissions = {
-            "permissions": (
-                permissions.build()
-                if isinstance(permissions, PermissionOverride)
-                else int(permissions)
-            )
-        }
+        j: raw.DataPermissionsValue = {"permissions": int(permissions)}
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(
                 server_id=resolve_id(server)
@@ -2381,15 +2416,13 @@ class HTTPClient:
         """|coro|
 
         Creates a new server role.
-        https://developers.revolt.chat/api/#tag/Server-Permissions/operation/roles_create_req
-
 
         Parameters
         ----------
-        name: :class:`str` | None
-            Role name. Should be between 1 and 32 chars long.
-        rank: :class:`int` | None
-            Ranking position. Smaller values take priority.
+        name: :class:`str`
+            The role name. Should be between 1 and 32 chars long.
+        rank: Optional[:class:`int`]
+            The ranking position. Smaller values take priority.
 
         Raises
         ------
@@ -2397,6 +2430,7 @@ class HTTPClient:
             You do not have permissions to create the role.
         HTTPException
             Creating the role failed.
+
         """
         server_id = resolve_id(server)
         j: raw.DataCreateRole = {"name": name, "rank": rank}
@@ -2411,8 +2445,14 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Delete a server role.
-        https://developers.revolt.chat/api/#tag/Server-Permissions/operation/roles_delete_req
+        Deletes a server role.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        role: :class:`ULIDOr`[:class:`BaseRole`]
+            The role to delete.
 
         Raises
         ------
@@ -2441,18 +2481,21 @@ class HTTPClient:
         """|coro|
 
         Edits the role.
-        https://developers.revolt.chat/api/#tag/Server-Permissions/operation/roles_edit_req
 
         Parameters
         ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        role: :class:`ULIDOr`[:class:`BaseRole`]
+            The role to edit.
         name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`UndefinedOr`[:class:`str` | None]
-            New role colour.
+        colour: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New role colour. This should be valid CSS colour.
         hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
         rank: :class:`UndefinedOr`[:class:`int`]
-            Ranking position. Smaller values take priority.
+            The new ranking position. Smaller values take priority.
 
         Raises
         ------
@@ -2460,6 +2503,11 @@ class HTTPClient:
             You do not have permissions to edit the role.
         HTTPException
             Editing the role failed.
+
+        Returns
+        -------
+        :class:`Role`
+            The newly updated role.
         """
         j: raw.DataEditRole = {}
         r: list[raw.FieldsRole] = []
@@ -2499,12 +2547,26 @@ class HTTPClient:
     ) -> Role:
         """|coro|
 
-        Get a server role.
+        Retrieves a server role.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        role: :class:`ULIDOr`[:class:`BaseRole`]
+            The ID of the role to retrieve.
 
         Raises
         ------
+        NotFound
+            The role does not exist.
         HTTPException
             Getting the role failed.
+
+        Returns
+        -------
+        :class:`Role`
+            The retrieved role.
         """
         server_id = resolve_id(server)
         role_id = resolve_id(role)
@@ -2525,6 +2587,11 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server to mark as read.
         """
         await self.request(
             routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server))
@@ -2536,16 +2603,20 @@ class HTTPClient:
         """|coro|
 
         Create a new server.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_create_req
 
         Parameters
         ----------
         name: :class:`str`
             The server name.
-        description: :class:`str`
+        description: Optional[:class:`str`]
             The server description.
-        nsfw: :class:`bool`
+        nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
+
+        Returns
+        -------
+        :class:`Server`
+            The created server.
         """
         j: raw.DataCreateServer = {"name": name}
         if description is not None:
@@ -2565,7 +2636,11 @@ class HTTPClient:
         """|coro|
 
         Deletes a server if owner otherwise leaves.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_delete_req
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server to delete.
         """
         await self.request(
             routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server))
@@ -2576,12 +2651,13 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Leaves the server.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_delete_req
+        Leaves the server if not owner otherwise deletes it.
 
         Parameters
         ----------
-        leave_silently: :class:`bool`
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server to leave from.
+        silent: Optional[:class:`bool`]
             Whether to not send a leave message.
         """
         p: raw.OptionsServerDelete = {}
@@ -2610,24 +2686,23 @@ class HTTPClient:
         """|coro|
 
         Edits the server.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_edit_req
 
         Parameters
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[:class:`str` | None]
+        description: :class:`UndefinedOr`[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[:class:`ResolvableResource` | None]
+        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
             New server icon.
-        banner: :class:`UndefinedOr`[:class:`ResolvableResource` | None]
+        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
             New server banner.
-        categories: :class:`UndefinedOr`[:class:`list`[:class:`Category`] | None]
+        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[:class:`SystemMessageChannels` | None]
+        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
         flags: :class:`UndefinedOr`[:class:`ServerFlags`]
-            Bitfield of server flags. Can be passed only if you're privileged user.
+            The new server flags. Can be passed only if you're privileged user.
         discoverable: :class:`UndefinedOr`[:class:`bool`]
             Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg). Can be passed only if you're privileged user.
         analytics: :class:`UndefinedOr`[:class:`bool`]
@@ -2639,6 +2714,11 @@ class HTTPClient:
             You do not have permissions to edit the server.
         HTTPException
             Editing the server failed.
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
         """
         j: raw.DataEditServer = {}
         r: list[raw.FieldsServer] = []
@@ -2696,13 +2776,19 @@ class HTTPClient:
     ) -> Server:
         """|coro|
 
-        Get a server.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_fetch_req
+        Retrieves a :class:`Server`.
 
         Parameters
         ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The ID of the server.
         populate_channels: :class:`bool`
-            Whether to include
+            Whether to populate channels.
+
+        Returns
+        -------
+        :class:`Server`
+            The retrieved server.
         """
         p: raw.OptionsFetchServer = {}
         if populate_channels is not None:
@@ -2721,8 +2807,6 @@ class HTTPClient:
 
         Get user settings from server filtered by keys.
 
-        This will return an object with the requested keys, each value is a tuple of `(timestamp, value)`, the value is the previously uploaded data.
-
         .. note::
             This can only be used by non-bot accounts.
         """
@@ -2732,13 +2816,18 @@ class HTTPClient:
             await self.request(routes.SYNC_GET_SETTINGS.compile(), json=j),
         )
 
-    async def get_unreads(self) -> list[ReadState]:
+    async def get_read_states(self) -> list[ReadState]:
         """|coro|
 
         Get information about unread state on channels.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Returns
+        -------
+        List[:class:`ReadState`]
+            The channel read states.
         """
         return [
             self.state.parser.parse_read_state(rs)
@@ -2766,16 +2855,16 @@ class HTTPClient:
     @t.overload
     async def edit_user_settings(
         self,
-        a1: dict[str, str] | datetime | int | None = ...,
-        a2: dict[str, str] | datetime | int | None = ...,
+        a: dict[str, str] | datetime | int | None = ...,
+        b: dict[str, str] | datetime | int | None = ...,
         /,
         **kwargs: str,
     ) -> None: ...
 
     async def edit_user_settings(
         self,
-        a1: dict[str, str] | datetime | int | None = None,
-        a2: dict[str, str] | datetime | int | None = {},
+        a: dict[str, str] | datetime | int | None = None,
+        b: dict[str, str] | datetime | int | None = {},
         /,
         **kwargs: str,
     ) -> None:
@@ -2785,27 +2874,28 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
+
         """
 
         p: raw.OptionsSetSettings = {}
 
         # probably JavaScript way
-        if isinstance(a1, dict):
-            if isinstance(a2, dict):
-                j: raw.DataSetSettings = a1 | a2
+        if isinstance(a, dict):
+            if isinstance(b, dict):
+                j: raw.DataSetSettings = a | b
                 timestamp: datetime | int | None = None
             else:
-                j = a1
-                timestamp = a2
-        elif isinstance(a2, dict):
-            j = a2
-            timestamp = a1
+                j = a
+                timestamp = b
+        elif isinstance(b, dict):
+            j = b
+            timestamp = a
         else:
             j = {}
-            if a1 is None or isinstance(a1, (datetime, int)):
-                timestamp = a1
-            elif a2 is None or isinstance(a2, (datetime, int)):
-                timestamp = a2
+            if a is None or isinstance(a, (datetime, int)):
+                timestamp = a
+            elif b is None or isinstance(b, (datetime, int)):
+                timestamp = b
             else:
                 timestamp = None
 
@@ -2821,10 +2911,19 @@ class HTTPClient:
         """|coro|
 
         Accept another user's friend request.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/add_friend_req
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to friend with.
+
+        Returns
+        -------
+        :class:`User`
+            The friended user.
         """
         return self.state.parser.parse_user(
             await self.request(
@@ -2840,6 +2939,16 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to block.
+
+        Returns
+        -------
+        :class:`User`
+            The blocked user.
         """
         return self.state.parser.parse_user(
             await self.request(
@@ -2847,17 +2956,28 @@ class HTTPClient:
             )
         )
 
-    async def change_username(self, username: str, /, *, password: str) -> User:
+    async def change_username(self, username: str, /, *, password: str) -> SelfUser:
         """|coro|
 
         Change your username.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/change_username_req
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        username: :class:`str`
+            The new username.
+        password: :class:`str`
+            The current password.
+
+        Returns
+        -------
+        :class:`SelfUser`
+            The newly updated user.
         """
         j: raw.DataChangeUsername = {"username": username, "password": password}
-        return self.state.parser.parse_user(
+        return self.state.parser.parse_self_user(
             await self.request(
                 routes.USERS_CHANGE_USERNAME.compile(),
                 json=j,
@@ -2903,7 +3023,7 @@ class HTTPClient:
         d: raw.User = await self.request(route, json=j)
         return self.state.parser.parse_user(d)
 
-    async def edit_self_user(
+    async def edit_my_user(
         self,
         *,
         display_name: UndefinedOr[str] = UNDEFINED,
@@ -2916,27 +3036,31 @@ class HTTPClient:
         """|coro|
 
         Edits the user.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/edit_user_req
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[:class:`str`] | None
+        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[:class:`ResolvableULID`] | None
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
             New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
         badges: :class:`UndefinedOr`[:class:`UserBadges`]
-            Bitfield of new user badges.
+            The new user badges.
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
-            Bitfield of new user flags.
+            The new user flags.
 
         Raises
         ------
         HTTPException
             Editing the user failed.
+
+        Returns
+        -------
+        :class:`SelfUser`
+            The newly updated authenticated user.
         """
         user = await self._edit_user(
             routes.USERS_EDIT_SELF_USER.compile(),
@@ -2964,30 +3088,33 @@ class HTTPClient:
         """|coro|
 
         Edits the user.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/edit_user_req
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[:class:`str`] | None
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to edit.
+        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[:class:`ResolvableResource`] | None
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
             New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
         badges: :class:`UndefinedOr`[:class:`UserBadges`]
-            Bitfield of new user badges.
+            The new user badges.
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
-            Bitfield of new user flags.
-
+            The new user flags.
 
         Raises
         ------
-        Forbidden
-            Target user have blocked you.
         HTTPException
             Editing the user failed.
+
+        Returns
+        -------
+        :class:`User`
+            The newly updated user.
         """
         return await self._edit_user(
             routes.USERS_EDIT_USER.compile(user_id=resolve_id(user)),
@@ -2999,13 +3126,17 @@ class HTTPClient:
             flags=flags,
         )
 
-    async def get_direct_message_channels(
+    async def get_private_channels(
         self,
     ) -> list[DMChannel | GroupChannel]:
         """|coro|
 
         Get all DMs and groups conversations.
-        https://developers.revolt.chat/api/#tag/Direct-Messaging/operation/fetch_dms_req
+
+        Returns
+        -------
+        List[Union[:class:`DMChannel`, :class:`GroupChannel`]]
+            The private channels.
         """
         return [
             self.state.parser.parse_channel(e)
@@ -3016,15 +3147,28 @@ class HTTPClient:
         """|coro|
 
         Retrieve a user's profile data.
-        Will fail if you do not have permission to access the other user's profile.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_profile_req
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permission to access the user's profile.
+
+        Returns
+        -------
+        :class:`UserProfile`
+            The retrieved user profile.
         """
         user_id = resolve_id(user)
         return self.state.parser.parse_user_profile(
             await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
         )._stateful(self.state, user_id)
 
-    async def get_self_user(self) -> User:
+    async def get_me(self) -> User:
         """|coro|
 
         Retrieve your user information.
@@ -3654,7 +3798,7 @@ class HTTPClient:
         ----------
         email: :class:`str`
             The email associated with the account.
-        captcha: :class:`str` | None
+        captcha: Optional[:class:`str`]
             The CAPTCHA verification code.
 
         Raises
@@ -3680,7 +3824,7 @@ class HTTPClient:
         ----------
         email: :class:`str`
             The email associated with the account.
-        captcha: :class:`str` | None
+        captcha: Optional[:class:`str`]
             The CAPTCHA verification code.
 
         Raises
@@ -3820,6 +3964,14 @@ class HTTPClient:
         """|coro|
 
         Edits the session information.
+
+        Parameters
+        ----------
+        session: :class:`ULIDOr`[:class:`PartialSession`]
+            The session to edit.
+        friendly_name: :class:`str`
+            The new device name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
+
         """
         j: raw.a.DataEditSession = {"friendly_name": friendly_name}
         return self.state.parser.parse_partial_session(
@@ -3828,10 +3980,15 @@ class HTTPClient:
             )
         )
 
-    async def get_all_sessions(self) -> list[PartialSession]:
+    async def get_sessions(self) -> list[PartialSession]:
         """|coro|
 
-        Get all sessions associated with this account.
+        Retrieves all sessions associated with this account.
+
+        Returns
+        -------
+        List[:class:`PartialSession`]
+            The sessions.
         """
         sessions: list[raw.a.SessionInfo] = await self.request(
             routes.AUTH_SESSION_FETCH_ALL.compile()
@@ -3843,7 +4000,21 @@ class HTTPClient:
     ) -> LoginResult:
         """|coro|
 
-        Login to an account.
+        Logs in to an account using email and password.
+
+        Parameters
+        ----------
+        email: :class:`str`
+            The email.
+        password: :class:`str`
+            The password.
+        friendly_name: Optional[:class:`str`]
+            The device name.
+
+        Returns
+        -------
+        :class:`LoginResult`
+            The login response.
         """
         j: raw.a.EmailDataLogin = {
             "email": email,
@@ -3865,7 +4036,21 @@ class HTTPClient:
     ) -> Session | AccountDisabled:
         """|coro|
 
-        Login to an account.
+        Logs in to an account.
+
+        Parameters
+        ----------
+        ticket: :class:`str`
+            The MFA ticket.
+        by: Optional[:class:`MFAResponse`]
+            The :class:`ByPassword`, :class:`ByRecoveryCode`, or :class:`ByTOTP` object.
+        friendly_name: Optional[:class:`str`]
+            The device name.
+
+        Returns
+        -------
+        Union[:class:`Session`, :class:`AccountDisabled`]
+            The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
         """
         j: raw.a.MFADataLogin = {
             "mfa_ticket": ticket,
@@ -3882,14 +4067,14 @@ class HTTPClient:
     async def logout(self) -> None:
         """|coro|
 
-        Delete current session.
+        Deletes current session.
         """
         await self.request(routes.AUTH_SESSION_LOGOUT.compile())
 
     async def revoke_session(self, session_id: ULIDOr[PartialSession], /) -> None:
         """|coro|
 
-        Delete a specific active session.
+        Deletes a specific active session.
         """
         await self.request(
             routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id))
@@ -3898,7 +4083,12 @@ class HTTPClient:
     async def revoke_all_sessions(self, *, revoke_self: bool | None = None) -> None:
         """|coro|
 
-        Delete all active sessions, optionally including current one.
+        Deletes all active sessions, optionally including current one.
+
+        Parameters
+        ----------
+        revoke_self: Optional[:class:`bool`]
+            Whether to revoke current session or not.
         """
         p = {}
         if revoke_self is not None:

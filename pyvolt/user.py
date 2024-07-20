@@ -728,7 +728,7 @@ class SelfUser(User):
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
         """
-        return await self.state.http.edit_self_user(
+        return await self.state.http.edit_my_user(
             display_name=display_name,
             avatar=avatar,
             status=status,

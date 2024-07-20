@@ -8,9 +8,26 @@ class Override(t.TypedDict):
     deny: int
 
 
+class DataPermissionsField(t.TypedDict):
+    permissions: Override
+
+
+class DataPermissionsValue(t.TypedDict):
+    permissions: int
+
+
+DataPermissionPoly = DataPermissionsValue | DataPermissionsField
+
+
 class OverrideField(t.TypedDict):
     a: int
     d: int
 
 
-__all__ = ("Override", "OverrideField")
+__all__ = (
+    "Override",
+    "DataPermissionsField",
+    "DataPermissionsValue",
+    "DataPermissionPoly",
+    "OverrideField",
+)
