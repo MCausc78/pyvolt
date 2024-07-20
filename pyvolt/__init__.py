@@ -13,6 +13,7 @@ from .errors import *
 from .events import *
 from .http import *
 from .invite import *
+from .localization import *
 from .message import *
 from .parser import *
 from .permissions import *

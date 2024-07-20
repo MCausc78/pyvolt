@@ -475,10 +475,10 @@ class Client:
         handlers: list[utils.MaybeAwaitableFunc[[EventT], None]],
         event: EventT,
         name: str,
-        type: type[EventT],
+        first: bool,
         /,
     ) -> None:
-        if type is not BaseEvent:
+        if first:
             event.before_dispatch()
             await event.abefore_dispatch()
 
@@ -493,7 +493,7 @@ class Client:
                         "on_error (task: %s) raised an exception", name, exc_info=exc
                     )
         # Prevent double-processing
-        if type is not BaseEvent:
+        if first:
             if not event.is_cancelled:
                 _L.debug("Processing %s", event.__class__.__name__)
 
@@ -511,7 +511,7 @@ class Client:
         except KeyError:
             types = self._types[et] = _parents_of(et)
 
-        for type in types:
+        for i, type in enumerate(types):
 
             handlers = self._handlers.get(type, [])
             if _L.isEnabledFor(logging.DEBUG):
@@ -523,7 +523,9 @@ class Client:
                 )
 
             name = name = f"pyvolt-dispatch-{self._get_i()}"
-            asyncio.create_task(self._dispatch(handlers, event, name, type), name=name)
+            asyncio.create_task(
+                self._dispatch(handlers, event, name, i == 0), name=name
+            )
 
     def subscribe(
         self,

@@ -123,7 +123,7 @@ class State:
         """:class:`UserSettings`: The current user settings."""
         if self._settings:
             return self._settings
-        self._settings = UserSettings(state=self, value={}, fake=True)
+        self._settings = UserSettings(data={}, state=self, mocked=True, partial=True)
         return self._settings
 
 

@@ -1147,7 +1147,7 @@ class Parser:
         channels = [self.parse_channel(c) for c in d.get("channels", [])]
         members = [self.parse_member(m) for m in d.get("members", [])]
         emojis = [self.parse_server_emoji(e) for e in d.get("emojis", [])]
-        user_settings = self.parse_user_settings(d.get("user_settings", {}))
+        user_settings = self.parse_user_settings(d.get("user_settings", {}), False)
         read_states = [self.parse_read_state(rs) for rs in d.get("channel_unreads", [])]
 
         me = users[-1]
@@ -1724,23 +1724,25 @@ class Parser:
             before=None,
         )
 
-    def parse_user_settings(self, d: raw.UserSettings) -> UserSettings:
+    def parse_user_settings(self, d: raw.UserSettings, partial: bool) -> UserSettings:
         return UserSettings(
+            data={k: (s1, s2) for (k, (s1, s2)) in d.items()},
             state=self.state,
-            value={k: (s1, s2) for (k, (s1, s2)) in d.items()},
-            fake=False,
+            mocked=False,
+            partial=partial,
         )
 
     def parse_user_settings_update_event(
         self, shard: Shard, d: raw.ClientUserSettingsUpdateEvent
     ) -> UserSettingsUpdateEvent:
-        partial = self.parse_user_settings(d["update"])
+        partial = self.parse_user_settings(d["update"], True)
+
         before = shard.state.settings
 
-        if not before.fake:
+        if not before.mocked:
             before = copy(before)
             after = copy(before)
-            after.value.update(partial.value)
+            after._update(partial)
         else:
             after = before
 

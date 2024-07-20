@@ -7,29 +7,94 @@ import typing
 from . import utils
 from .core import UNDEFINED, UndefinedOr, is_defined
 from .enums import Enum
+from .localization import Language
 
 if typing.TYPE_CHECKING:
     from . import raw
     from .state import State
 
 
-@define(slots=True)
 class UserSettings:
-    """The user settings."""
+    """Represents Revolt user settings.
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
-    """The state that manages current user settings."""
+    Attributes
+    ----------
+    state: :class:`State`
+        The state that manages current user settings.
+    data: Dict[:class:`str`, Tuple[:class:`int`, :class:`str`]]
+        The mapping of ``{key: (timestamp, value)}``.
+    mocked: :class:`bool`
+        Whether user settings are mocked. Mocked user settings are created by library itself, if not logged in, or in HTTP-only mode.
+    partial: :class:`bool`
+        Whether user settings are partial. This is set to ``True`` when used via :attr:`UserSettingsUpdateEvent.partial`.
+    """
 
-    value: dict[str, tuple[int, str]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
+    __slots__ = (
+        "state",
+        "data",
+        "mocked",
+        "partial",
+        "_android",
+        "_revite",
     )
-    """The {user_setting_key: (timestamp, value)} mapping."""
 
-    fake: bool = field(repr=False, hash=False, kw_only=True, eq=False)
-    """Whether user settings are fake. Fake user settings are created by Pyvolt, if not logged in, or in HTTP-only mode."""
+    def __init__(
+        self,
+        *,
+        data: dict[str, tuple[int, str]],
+        state: State,
+        mocked: bool,
+        partial: bool,
+    ) -> None:
+        self.state = state
+        self.data = data
+        self.mocked = mocked
+        self.partial = partial
+        self._parse()
+
+    def _parse(self) -> None:
+        try:
+            self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
+        except Exception as exc:
+            self._android = exc
+
+        try:
+            self._revite: ReviteUserSettings | Exception = ReviteUserSettings(self)
+        except Exception as exc:
+            self._revite = exc
+
+    def _update(self, partial: UserSettings) -> None:
+        self.data.update(partial.data)
+        self._parse()
+
+    @property
+    def android(self) -> AndroidUserSettings:
+        """:class:`AndroidUserSettings`: The Android user settings.
+
+        Raises
+        ------
+        Exception
+            If ``android`` user setting JSON string is corrupted.
+        """
+        if isinstance(self._android, Exception):
+            raise self._android from None
+        return self._android
+
+    @property
+    def revite(self) -> ReviteUserSettings:
+        """:class:`ReviteUserSettings`: The Revite user settings.
+
+        Raises
+        ------
+        Exception
+            If user settings are corrupted.
+        """
+        if isinstance(self._revite, Exception):
+            raise self._revite from None
+        return self._revite
 
     def __getitem__(self, key: str) -> str:
-        return self.value[key][1]
+        return self.data[key][1]
 
     @typing.overload
     def get(self, key: str) -> str | None: ...
@@ -39,20 +104,16 @@ class UserSettings:
 
     def get(self, key: str, *default: str) -> str | None:
         """Get a user setting."""
-        if key in self.value:
-            return self.value[key][1]
+        if key in self.data:
+            return self.data[key][1]
         return default[0] if default else None
-
-    def as_android(self) -> AndroidUserSettings:
-        """:class:`AndroidUserSettings`: Casts user settings to Android's ones."""
-        return AndroidUserSettings(self)
 
     async def edit(
         self,
-        dict_settings: dict[str, str] = {},
+        dict_settings: dict[str, str | typing.Any] = {},
         timestamp: datetime | int | None = None,
         /,
-        **kwargs: str,
+        **kwargs: str | typing.Any,
     ) -> None:
         """|coro|
 
@@ -92,11 +153,12 @@ class AndroidUserSettings:
     Attributes
     ----------
     parent: :class:`UserSettings`
-        The raw user settings.
+        The parent.
     """
 
     __slots__ = (
         "parent",
+        "_payload",
         "_theme",
         "_colour_overrides",
         "_reply_style",
@@ -105,7 +167,10 @@ class AndroidUserSettings:
 
     def __init__(self, parent: UserSettings) -> None:
         self.parent = parent
-        self._parse(utils.from_json(parent.get("android", "{}")))
+        payload: raw.AndroidUserSettings = utils.from_json(parent.get("android", "{}"))
+        self._payload = payload
+
+        self._parse(payload)
 
     def _parse(self, payload: raw.AndroidUserSettings) -> None:
         theme = payload.get("theme")
@@ -161,7 +226,7 @@ class AndroidUserSettings:
         .. code-block:: python3
 
             payload = settings.payload_for(theme=AndroidTheme.material_you)
-            await http.edit_user_settings(android=json.dumps(payload))
+            await http.edit_user_settings(android=payload)
 
         Parameters
         ----------
@@ -174,9 +239,7 @@ class AndroidUserSettings:
         avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         """
-        payload: raw.AndroidUserSettings = {}
-        if self._theme is not None:
-            payload["theme"] = self._theme.value
+        payload = self._payload
         if is_defined(theme):
             if theme is None:
                 try:
@@ -186,8 +249,6 @@ class AndroidUserSettings:
             else:
                 payload["theme"] = theme.value
 
-        if self._colour_overrides is not None:
-            payload["colourOverrides"] = self._colour_overrides
         if is_defined(colour_overrides):
             if colour_overrides is None:
                 try:
@@ -197,8 +258,6 @@ class AndroidUserSettings:
             else:
                 payload["colourOverrides"] = colour_overrides
 
-        if self._reply_style is not None:
-            payload["messageReplyStyle"] = self._reply_style.value
         if is_defined(reply_style):
             if reply_style is None:
                 try:
@@ -208,8 +267,6 @@ class AndroidUserSettings:
             else:
                 payload["messageReplyStyle"] = reply_style.value
 
-        if self._avatar_radius is not None:
-            payload["avatarRadius"] = self._avatar_radius
         if is_defined(avatar_radius):
             if avatar_radius is None:
                 try:
@@ -252,7 +309,90 @@ class AndroidUserSettings:
             reply_style=reply_style,
             avatar_radius=avatar_radius,
         )
-        await self.parent.edit({"android": utils.to_json(payload)})
+        await self.parent.edit(android=payload)
+
+
+class ReviteChangelogEntry(Enum):
+    mfa_feature = 1
+    """Title: Secure your account with 2FA."""
+
+    iar_reporting_feature = 2
+    """Title: In-App Reporting Is Here"""
+
+    discriminators_feature = 3
+    """Title: Usernames are Changing"""
+
+
+class ReviteNotificationState(Enum):
+    all_messages = "all"
+    mentions_only = "mention"
+    none = "none"
+    muted = "muted"
+
+
+class ReviteNotificationOptions:
+    """Represents Revite notification options.
+
+    Attributes
+    ----------
+    servers: Dict[:class:`str`, :class:`ReviteNotificationState`]
+        The servers.
+    channels: Dict[:class:`str`, :class:`ReviteNotificationState`]
+        The channels.
+    """
+
+    __slots__ = ("servers", "channels")
+
+    def __init__(self, data: raw.ReviteNotificationOptions) -> None:
+        self.servers: dict[str, ReviteNotificationState] = {
+            server_id: ReviteNotificationState(state)
+            for server_id, state in data["server"].items()
+        }
+        self.channels: dict[str, ReviteNotificationState] = {
+            channel_id: ReviteNotificationState(state)
+            for channel_id, state in data["channel"].items()
+        }
+
+
+class ReviteEmojiPack(Enum):
+    mutant_remix = "mutant"
+    twemoji = "twemoji"
+    openmoji = "openmoji"
+    noto_emoji = "noto"
+
+
+class ReviteBaseTheme(Enum):
+    dark = "dark"
+    light = "light"
+
+
+class ReviteFont(Enum):
+    open_sans = "Open Sans"
+    opendyslexic = "OpenDyslexic"
+    inter = "Inter"
+    atkinson_hyperlegible = "Atkinson Hyperlegible"
+    roboto = "Roboto"
+    noto_sans = "Noto Sans"
+    lato = "Lato"
+    bitter = "Bitter"
+    montserrat = "Montserrat"
+    poppins = "Poppins"
+    raleway = "Raleway"
+    ubuntu = "Ubuntu"
+    comic_neue = "Comic Neue"
+    lexend = "Lexend"
+
+
+class ReviteMonoFont(Enum):
+    fira_code = "Fira Code"
+    roboto_mono = "Robot Mono"
+    source_code_pro = "Source Code Pro"
+    space_mono = "Space Mono"
+    ubuntu_mono = "Ubuntu Mono"
+    jetbrains_mono = "JetBrains Mono"
+
+
+ReviteThemeVariable = raw.ReviteThemeVariable
 
 
 class ReviteUserSettings:
@@ -262,12 +402,232 @@ class ReviteUserSettings:
     ----------
     parent: :class:`UserSettings`
         The raw user settings.
+    seasonal: Optional[:class:`bool`]
+        Whether to display effects in the home tab during holiday seasons or not.
+    transparency: Optional[:class:`bool`]
+        Whether to enable transparency effects throughout the app or not.
+    ligatures: Optional[:class:`bool`]
+        Whether to combine characters together or not.
+        For example, ``->`` turns into an arrow if this property is ``True``.
+        Applicable only for supported fonts (such as :attr:`ReviteFont.inter`).
     """
 
-    __slots__ = ("parent",)
+    __slots__ = (
+        "parent",
+        "_last_viewed_changelog_id",
+        "_language",
+        "_notification_options",
+        "_ordering",
+        "_appearance_emoji_pack",
+        "seasonal",
+        "transparency",
+        "ligatures",
+        "_appearance_theme_base",
+        "_appearance_theme_css",
+        "_appearance_theme_font",
+        "_appearance_theme_light",
+        "_appearance_theme_monofont",
+        "_appearance_theme_overrides",
+    )
 
     def __init__(self, parent: UserSettings) -> None:
         self.parent = parent
+        self._parse()
+
+    @property
+    def last_viewed_changelog_id(self) -> ReviteChangelogEntry | None:
+        """Optional[:class:`ReviteChangelogEntry`]: The last viewed changelog entry."""
+        return self._last_viewed_changelog_id
+
+    def get_language(self) -> Language | None:
+        """Optional[:class:`Language`]: The current language."""
+        return self._language
+
+    @property
+    def language(self) -> Language:
+        """:class:`Language`: The current language. Defaults to :attr:`Language.english_simplified` if language is undefined."""
+        return self._language or Language.english
+
+    def get_notification_options(self) -> ReviteNotificationOptions | None:
+        """Optional[:class:`ReviteNotificationOptions`]: The notification options."""
+        return self._notification_options
+
+    @property
+    def notification_options(self) -> ReviteNotificationOptions:
+        """:class:`ReviteNotificationOptions`: The notification options."""
+        return self._notification_options or ReviteNotificationOptions(
+            {"server": {}, "channel": {}}
+        )
+
+    @property
+    def ordering(self) -> list[str]:
+        """List[:class:`str`]: The server ordering."""
+        return self._ordering or []
+
+    def get_emoji_pack(self) -> ReviteEmojiPack | None:
+        """Optional[:class:`ReviteEmojiPack`]: Gets the current emoji pack."""
+        return self._appearance_emoji_pack
+
+    @property
+    def emoji_pack(self) -> ReviteEmojiPack:
+        """:class:`ReviteEmojiPack`: The current emoji pack."""
+        return self._appearance_emoji_pack or ReviteEmojiPack.mutant_remix
+
+    def is_seasonal(self) -> bool:
+        """:class:`bool`: Whether to display effects in the home tab during holiday seasons or not."""
+        return True if self.seasonal is None else self.seasonal
+
+    def is_transparent(self) -> bool:
+        """Whether to enable transparency effects throughout the app or not."""
+        return True if self.transparency is None else self.transparency
+
+    def is_ligatures_enabled(self) -> bool:
+        """:class:`bool`: Whether to combine characters together or not.
+        For example, ``->`` turns into an arrow if this property is ``True``.
+
+        Applicable only for supported fonts (such as :attr:`ReviteFont.inter`).
+        """
+        return True if self.ligatures is None else self.ligatures
+
+    def get_base_theme(self) -> ReviteBaseTheme | None:
+        """Optional[:class:`ReviteBaseTheme`]: The current base theme."""
+        return self._appearance_theme_base
+
+    @property
+    def base_theme(self) -> ReviteBaseTheme:
+        """:class:`ReviteBaseTheme`: The current base theme. Defaults to :attr:`ReviteBaseTheme.dark` if base theme is undefined."""
+        return self._appearance_theme_base or ReviteBaseTheme.dark
+
+    @property
+    def custom_css(self) -> str | None:
+        """Optional[:class:`str`]: The custom CSS string."""
+        return self._appearance_theme_css
+
+    def get_font(self) -> ReviteFont | None:
+        """Optional[:class:`ReviteFont`]: The current Revite font."""
+        return self._appearance_theme_font
+
+    @property
+    def font(self) -> ReviteFont:
+        """:class:`ReviteFont`: The current Revite font. Defaults to :attr:`ReviteFont.open_sans` if font is undefined."""
+        return self._appearance_theme_font or ReviteFont.open_sans
+
+    def get_monofont(self) -> ReviteMonoFont | None:
+        """Optional[:class:`ReviteMonoFont`]: The current Revite monospace font."""
+        return self._appearance_theme_monofont
+
+    @property
+    def monofont(self) -> ReviteMonoFont:
+        """:class:`ReviteMonoFont`: The current Revite monospace font. Defaults to :attr:`ReviteMonoFont.fira_code` if monofont is undefined."""
+        return self._appearance_theme_monofont or ReviteMonoFont.fira_code
+
+    def get_theme_overrides(self) -> dict[ReviteThemeVariable, str] | None:
+        """Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]: The theme overrides."""
+        return self._appearance_theme_overrides
+
+    @property
+    def theme_overrides(self) -> dict[ReviteThemeVariable, str]:
+        """Dict[:class:`ReviteThemeVariable`, :class:`str`]: The theme overrides."""
+        return self._appearance_theme_overrides or {}
+
+    def _parse(self) -> None:
+        parent = self.parent
+
+        changelog_json = parent.get("changelog")
+        if changelog_json:
+            changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
+            self._last_viewed_changelog_id: ReviteChangelogEntry | None = (
+                ReviteChangelogEntry(changelog["viewed"])
+            )
+        else:
+            self._last_viewed_changelog_id = None
+
+        locale_json = parent.get("locale")
+        if locale_json:
+            locale: raw.ReviteLocaleOptions = utils.from_json(locale_json)
+            self._language: Language | None = Language(locale["lang"])
+        else:
+            self._language = None
+
+        notifications_json = parent.get("notifications")
+        if notifications_json:
+            notifications: raw.ReviteNotificationOptions = utils.from_json(
+                notifications_json
+            )
+            self._notification_options: ReviteNotificationOptions | None = (
+                ReviteNotificationOptions(notifications)
+            )
+        else:
+            self._notification_options = None
+
+        ordering_json = parent.get("ordering")
+        if ordering_json:
+            ordering: raw.ReviteOrdering = utils.from_json(ordering_json)
+            self._ordering: list[str] | None = ordering["servers"]
+        else:
+            self._ordering = None
+
+        appearance_json = parent.get("appearance")
+        if appearance_json:
+            appearance: raw.ReviteAppearanceSettings = utils.from_json(appearance_json)
+
+            appearance_emoji_pack = appearance.get("appearance:emoji")
+            if appearance_emoji_pack:
+                self._appearance_emoji_pack: ReviteEmojiPack | None = ReviteEmojiPack(
+                    appearance_emoji_pack
+                )
+            else:
+                self._appearance_emoji_pack = None
+
+            self.seasonal: bool | None = appearance.get("appearance:seasonal")
+            self.transparency: bool | None = appearance.get("appearance:transparency")
+        else:
+            self._appearance_emoji_pack = None
+            self.seasonal = None
+            self.transparency = None
+
+        theme_json = parent.get("theme")
+        if theme_json:
+            theme: raw.ReviteThemeSettings = utils.from_json(theme_json)
+
+            self.ligatures: bool | None = theme.get("appearance:ligatures")
+
+            base_theme = theme.get("appearance:theme:base")
+
+            if base_theme:
+                self._appearance_theme_base = ReviteBaseTheme(base_theme)
+            else:
+                self._appearance_theme_base = None
+            self._appearance_theme_css = theme.get("appearance:theme:css")
+
+            font = theme.get("appearance:theme:font")
+            if font:
+                self._appearance_theme_font: ReviteFont | None = ReviteFont(font)
+            else:
+                self._appearance_theme_font = None
+
+            # Deprecated by base theme
+            # self._appearance_theme_light: bool | None = theme.get('appearance:theme:light')
+
+            monofont = theme.get("appearance:theme:monoFont")
+            if monofont:
+                self._appearance_theme_monofont: ReviteMonoFont | None = ReviteMonoFont(
+                    monofont
+                )
+            else:
+                self._appearance_theme_monofont = None
+            self._appearance_theme_overrides: dict[ReviteThemeVariable, str] | None = (
+                theme.get("appearance:theme:overrides")
+            )
+
+        else:
+            self.ligatures = None
+            self._appearance_theme_base = None
+            self._appearance_theme_css = None
+            self._appearance_theme_font = None
+            self._appearance_theme_light = None
+            self._appearance_theme_monofont = None
+            self._appearance_theme_overrides = None
 
 
 __all__ = (
@@ -276,5 +636,13 @@ __all__ = (
     "AndroidProfilePictureShape",
     "AndroidMessageReplyStyle",
     "AndroidUserSettings",
+    "ReviteChangelogEntry",
+    "ReviteNotificationState",
+    "ReviteNotificationOptions",
+    "ReviteEmojiPack",
+    "ReviteBaseTheme",
+    "ReviteFont",
+    "ReviteMonoFont",
+    "ReviteThemeVariable",
     "ReviteUserSettings",
 )

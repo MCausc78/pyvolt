@@ -718,9 +718,9 @@ class UserSettingsUpdateEvent(BaseEvent):
 
     def process(self) -> bool:
         settings = self.shard.state.settings
-        if settings.fake:
+        if settings.mocked:
             return False
-        settings.value.update(self.partial.value)
+        settings._update(self.partial)
         return True
 
 

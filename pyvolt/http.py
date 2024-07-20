@@ -2844,6 +2844,7 @@ class HTTPClient:
         j: raw.OptionsFetchSettings = {"keys": keys}
         return self.state.parser.parse_user_settings(
             await self.request(routes.SYNC_GET_SETTINGS.compile(), json=j),
+            partial=True,
         )
 
     async def get_read_states(self) -> list[ReadState]:
@@ -2866,10 +2867,10 @@ class HTTPClient:
 
     async def edit_user_settings(
         self,
-        dict_settings: dict[str, str] = {},
+        dict_settings: dict[str, str | typing.Any] = {},
         timestamp: datetime | int | None = None,
         /,
-        **kwargs: str,
+        **kwargs: str | typing.Any,
     ) -> None:
         """|coro|
 
@@ -2881,12 +2882,19 @@ class HTTPClient:
 
         p: raw.OptionsSetSettings = {}
 
-        j = dict_settings | kwargs
         if timestamp is not None:
             if isinstance(timestamp, datetime):
                 timestamp = int(timestamp.timestamp())
             p["timestamp"] = timestamp
-        await self.request(routes.SYNC_SET_SETTINGS.compile(), json=j, params=p)
+
+        payload: dict[str, str] = {}
+        for k, v in (dict_settings | kwargs).items():
+            if isinstance(v, str):
+                payload[k] = v
+            else:
+                payload[k] = utils.to_json(v)
+
+        await self.request(routes.SYNC_SET_SETTINGS.compile(), json=payload, params=p)
 
     # Users control
     async def accept_friend_request(self, user: ULIDOr[BaseUser], /) -> User:

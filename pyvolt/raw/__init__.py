@@ -10,6 +10,7 @@ from .embeds import *
 from .emojis import *
 from .files import *
 from .gateway import *
+from .localization import *
 from .messages import *
 from .permissions import *
 from .safety_reports import *
