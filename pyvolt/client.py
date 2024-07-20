@@ -96,7 +96,7 @@ class ClientEventHandler(EventHandler):
     def handle_authenticated(
         self, shard: Shard, payload: raw.ClientAuthenticatedEvent, /
     ) -> None:
-        pass
+        self.dispatch(self._state.parser.parse_authenticated_event(shard, payload))
 
     def handle_logout(self, shard: Shard, payload: raw.ClientLogoutEvent, /) -> None:
         self.dispatch(self._state.parser.parse_logout_event(shard, payload))
@@ -637,7 +637,7 @@ class Client:
 
         Returns
         -------
-        :class:`Channel` | None
+        Optional[:class:`Channel`]
             The channel or ``None`` if not found.
         """
         cache = self._state.cache
@@ -654,7 +654,7 @@ class Client:
 
         Returns
         -------
-        :class:`Emoji` | None
+        Optional[:class:`Emoji`]
             The emoji or ``None`` if not found.
         """
         cache = self._state.cache
@@ -671,7 +671,7 @@ class Client:
 
         Returns
         -------
-        :class:`ReadState` | None
+        Optional[:class:`ReadState`]
             The read state or ``None`` if not found.
         """
         cache = self._state.cache
@@ -688,7 +688,7 @@ class Client:
 
         Returns
         -------
-        :class:`Server` | None
+        Optional[:class:`Server`]
             The server or ``None`` if not found.
         """
         cache = self._state.cache
@@ -705,7 +705,7 @@ class Client:
 
         Returns
         -------
-        :class:`User` | None:
+        Optional[:class:`User`]
             The user or ``None`` if not found.
         """
         cache = self._state.cache

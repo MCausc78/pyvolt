@@ -31,7 +31,7 @@ class BaseWebhook(Base):
         ------
         Forbidden
             You do not have permissions to delete the webhook.
-        APIError
+        HTTPException
             Deleting the webhook failed.
         """
 
@@ -66,7 +66,7 @@ class BaseWebhook(Base):
         ------
         Forbidden
             You do not have permissions to edit the webhook.
-        APIError
+        HTTPException
             Editing the webhook failed.
         """
 

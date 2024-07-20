@@ -90,7 +90,7 @@ class BaseChannel(Base, abc.ABC):
         ------
         Forbidden
             You do not have permissions to close the channel.
-        APIError
+        HTTPException
             Closing the channel failed.
         """
         return await self.state.http.close_channel(self.id, silent=silent)
@@ -114,7 +114,7 @@ class BaseChannel(Base, abc.ABC):
         ------
         Forbidden
             You do not have permissions to edit the channel.
-        APIError
+        HTTPException
             Editing the channel failed.
         """
         return await self.state.http.edit_channel(
@@ -140,7 +140,7 @@ class BaseChannel(Base, abc.ABC):
 
         Raises
         ------
-        APIError
+        HTTPException
             Asking the token failed.
         """
         return await self.state.http.join_call(self.id)
@@ -256,7 +256,7 @@ class TextChannel(BaseChannel):
 
         Raises
         ------
-        APIError
+        HTTPException
             Getting channel pins failed.
         """
         return await self.state.http.get_channel_pins(self.id)
@@ -299,7 +299,7 @@ class TextChannel(BaseChannel):
         ------
         Forbidden
             You do not have permissions to search messages.
-        APIError
+        HTTPException
             Searching messages failed.
         """
         return await self.state.http.search_for_messages(
@@ -336,7 +336,7 @@ class TextChannel(BaseChannel):
 
         Forbidden
             You do not have permissions to send messages.
-        APIError
+        HTTPException
             Sending the message failed.
         """
         return await self.state.http.send_message(
@@ -499,7 +499,7 @@ class GroupChannel(TextChannel):
         ------
         Forbidden
             You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        APIError
+        HTTPException
             Adding user to the group failed.
         """
         return await self.state.http.add_recipient_to_group(self.id, user)
@@ -516,7 +516,7 @@ class GroupChannel(TextChannel):
         ------
         Forbidden
             You're bot, or lacking `InviteOthers` permission.
-        APIError
+        HTTPException
             Adding bot to the group failed.
         """
         return await self.state.http.invite_bot(bot, group=self.id)
@@ -530,7 +530,7 @@ class GroupChannel(TextChannel):
         ------
         Forbidden
             You do not have permissions to create invite in that channel.
-        APIError
+        HTTPException
             Creating invite failed.
         """
         return await self.state.http.create_invite(self.id)
@@ -547,7 +547,7 @@ class GroupChannel(TextChannel):
 
         Raises
         ------
-        APIError
+        HTTPException
             Leaving the group failed.
         """
         return await self.close(silent=silent)
@@ -628,7 +628,7 @@ class BaseServerChannel(BaseChannel):
         ------
         Forbidden
             You do not have permissions to create invite in that channel.
-        APIError
+        HTTPException
             Creating invite failed.
         """
         return await self.state.http.create_invite(self.id)
@@ -642,7 +642,7 @@ class BaseServerChannel(BaseChannel):
         ------
         Forbidden
             You do not have permissions to delete the channel.
-        APIError
+        HTTPException
             Deleting the channel failed.
         """
         return await self.close()
@@ -668,7 +668,7 @@ class BaseServerChannel(BaseChannel):
         ------
         Forbidden
             You do not have permissions to set role permissions on the channel.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         return await self.state.http.set_role_channel_permissions(
@@ -688,7 +688,7 @@ class BaseServerChannel(BaseChannel):
         ------
         Forbidden
             You do not have permissions to set default permissions on the channel.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         return await self.state.http.set_default_channel_permissions(

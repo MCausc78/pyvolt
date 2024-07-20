@@ -2722,6 +2722,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server to edit.
         name: :class:`UndefinedOr`[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
         description: :class:`UndefinedOr`[Optional[:class:`str`]]
@@ -3332,7 +3334,7 @@ class HTTPClient:
     async def remove_friend(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
-        Removes an existing friend.
+        Removes the user as a friend.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -3340,7 +3342,7 @@ class HTTPClient:
         Raises
         ------
         HTTPException
-            Removing the friend failed.
+            Removing the user as a friend failed.
         """
         return self.state.parser.parse_user(
             await self.request(
@@ -3394,13 +3396,6 @@ class HTTPClient:
         ----------
         user: :class:`ULIDOr`[:class:`BaseUser`]
             The user to unblock.
-
-        Raises
-        ------
-        Forbidden
-            Target user have blocked you.
-        HTTPException
-            Sending the friend request failed.
         """
         return self.state.parser.parse_user(
             await self.request(

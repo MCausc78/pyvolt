@@ -682,14 +682,20 @@ class UserRelationshipUpdateEvent(BaseEvent):
         me = self.shard.state.me
 
         if me:
-            relation = me.relations.get(self.new_user.id)
-
-            if relation:
-                me.relations[self.new_user.id].status = self.new_user.relationship
+            if self.new_user.relationship is RelationshipStatus.none:
+                try:
+                    del me.relations[self.new_user.id]
+                except KeyError:
+                    pass
             else:
-                me.relations[self.new_user.id] = Relationship(
-                    id=self.new_user.id, status=self.new_user.relationship
-                )
+                relation = me.relations.get(self.new_user.id)
+
+                if relation:
+                    me.relations[self.new_user.id].status = self.new_user.relationship
+                else:
+                    me.relations[self.new_user.id] = Relationship(
+                        id=self.new_user.id, status=self.new_user.relationship
+                    )
 
         cache = self.shard.state.cache
         if not cache:

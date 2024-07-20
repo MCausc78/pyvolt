@@ -61,7 +61,6 @@ from .embed import (
     Embed,
 )
 from .emoji import ServerEmoji, DetachedEmoji, Emoji
-from .errors import NoData
 from .events import (
     ReadyEvent,
     PrivateChannelCreateEvent,
@@ -104,6 +103,7 @@ from .events import (
     SessionDeleteEvent,
     SessionDeleteAllEvent,
     LogoutEvent,
+    AuthenticatedEvent,
 )
 from .invite import (
     BaseInvite,
@@ -280,6 +280,11 @@ class Parser:
             )
         else:
             raise NotImplementedError("Unimplemented auth event type", d)
+
+    def parse_authenticated_event(
+        self, shard: Shard, d: raw.ClientAuthenticatedEvent
+    ) -> AuthenticatedEvent:
+        return AuthenticatedEvent(shard=shard)
 
     # basic end, internals start
 
@@ -705,7 +710,7 @@ class Parser:
             code=d["code"],
             channel_id=d["channel_id"],
             channel_name=d["channel_name"],
-            channel_description=d.get("channel_description", None),
+            channel_description=d.get("channel_description"),
             user_name=d["user_name"],
             internal_user_avatar=self.parse_asset(user_avatar) if user_avatar else None,
         )
@@ -759,7 +764,7 @@ class Parser:
             nick=d.get("nickname"),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             roles=d.get("roles") or [],
-            timeout=datetime.fromisoformat(timeout) if timeout else None,
+            timed_out_until=datetime.fromisoformat(timeout) if timeout else None,
         )
 
     def parse_member_list(self, d: raw.AllMemberResponse) -> MemberList:
@@ -1378,7 +1383,7 @@ class Parser:
                 nick=None,
                 internal_avatar=None,
                 roles=[],
-                timeout=None,
+                timed_out_until=None,
             ),
         )
 
@@ -1425,7 +1430,7 @@ class Parser:
                     if "Roles" in clear
                     else (roles if roles is not None else core.UNDEFINED)
                 ),
-                timeout=(
+                timed_out_until=(
                     None
                     if "Timeout" in clear
                     else datetime.fromisoformat(timeout) if timeout else core.UNDEFINED

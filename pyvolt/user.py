@@ -311,14 +311,14 @@ class BaseUser(Base):
     async def accept_friend_request(self) -> User:
         """|coro|
 
-        Accept another user's friend request.
+        Accepts the incoming friend request.
         """
         return await self.state.http.accept_friend_request(self.id)
 
     async def block(self) -> User:
         """|coro|
 
-        Block this user.
+        Blocks the user.
         """
         return await self.state.http.block_user(self.id)
 
@@ -338,18 +338,28 @@ class BaseUser(Base):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[:class:`str`] | `None`
-            New display name. Set `None` to remove it.
-        avatar: :class:`UndefinedOr`[:class:`str`] | `None`
-            New avatar. Must be attachment ID. Set `None` to remove it.
+        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New display name. Pass ``None`` to remove it.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
+            New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
         badges: :class:`UndefinedOr`[:class:`UserBadges`]
-            New user badges.
+            The new user badges.
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
-            New user flags.
+            The new user flags.
+
+        Raises
+        ------
+        HTTPException
+            Editing the user failed.
+
+        Returns
+        -------
+        :class:`User`
+            The newly updated user.
         """
         return await self.state.http.edit_user(
             self.id,
@@ -371,17 +381,17 @@ class BaseUser(Base):
     async def mutual_friend_ids(self) -> list[str]:
         """|coro|
 
-        Retrieve a list of mutual friends with this user.
+        Retrieves a list of mutual friends with this user.
         """
-        mutuals = await self.state.http.get_mutual_friends_and_servers(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id)
         return mutuals.user_ids
 
     async def mutual_server_ids(self) -> list[str]:
         """|coro|
 
-        Retrieve a list of mutual servers with this user.
+        Retrieves a list of mutual servers with this user.
         """
-        mutuals = await self.state.http.get_mutual_friends_and_servers(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id)
         return mutuals.server_ids
 
     async def mutuals(self) -> Mutuals:
@@ -389,7 +399,7 @@ class BaseUser(Base):
 
         Retrieve a list of mutual friends and servers with this user.
         """
-        return await self.state.http.get_mutual_friends_and_servers(self.id)
+        return await self.state.http.get_mutuals_with(self.id)
 
     async def open_dm(self) -> SavedMessagesChannel | DMChannel:
         """|coro|
@@ -401,7 +411,15 @@ class BaseUser(Base):
     async def remove_friend(self) -> User:
         """|coro|
 
-        Denies this user's friend request or removes an existing friend.
+        Removes the user as a friend.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        HTTPException
+            Removing the user as a friend failed.
         """
         return await self.state.http.remove_friend(self.id)
 
@@ -421,7 +439,7 @@ class BaseUser(Base):
 
         Raises
         ------
-        APIError
+        HTTPException
             You're trying to self-report, or reporting the user failed.
         """
         return await self.state.http.report_user(
@@ -434,7 +452,7 @@ class BaseUser(Base):
     async def unblock(self) -> User:
         """|coro|
 
-        Unblock this user.
+        Unblocks the user.
         """
         return await self.state.http.unblock_user(self.id)
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from collections import abc as ca
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import IntFlag
 import typing as t
 
@@ -14,6 +14,12 @@ from . import (
 )
 from .base import Base
 from .bot import BaseBot
+from .cdn import ResolvableResource, resolve_resource
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+)
 from .emoji import ServerEmoji
 from .enums import Enum
 from .errors import NoData
@@ -143,7 +149,7 @@ class BaseRole(Base):
         ------
         Forbidden
             You do not have permissions to delete the role.
-        APIError
+        HTTPException
             Deleting the role failed.
         """
         return await self.state.http.delete_role(self.server_id, self.id)
@@ -175,7 +181,7 @@ class BaseRole(Base):
         ------
         Forbidden
             You do not have permissions to edit the role.
-        APIError
+        HTTPException
             Editing the role failed.
         """
         return await self.state.http.edit_role(
@@ -203,7 +209,7 @@ class BaseRole(Base):
         ------
         Forbidden
             You do not have permissions to set role permissions on the server.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         return await self.state.http.set_role_server_permissions(
@@ -317,10 +323,10 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to create the channel.
-        APIError
+        HTTPException
             Creating the channel failed.
         """
-        return await self.state.http.create_channel(
+        return await self.state.http.create_server_channel(
             self.id, type=type, name=name, description=description, nsfw=nsfw
         )
 
@@ -335,7 +341,7 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to create the channel.
-        APIError
+        HTTPException
             Creating the channel failed.
         """
         from .channel import ChannelType
@@ -356,7 +362,7 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to create the channel.
-        APIError
+        HTTPException
             Creating the channel failed.
         """
         from .channel import ChannelType
@@ -382,7 +388,7 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to create the role.
-        APIError
+        HTTPException
             Creating the role failed.
         """
         return await self.state.http.create_role(self.id, name=name, rank=rank)
@@ -411,24 +417,24 @@ class BaseServer(Base):
     ) -> Server:
         """|coro|
 
-        Edit a server.
+        Edits the server.
 
         Parameters
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[:class:`str` | `None`]
+        description: :class:`UndefinedOr`[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[:class:`str` | `None`]
-            New server icon. Pass attachment ID given by Autumn.
-        banner: :class:`UndefinedOr`[:class:`str` | `None`]
-            New server banner. Pass attachment ID given by Autumn.
-        categories: :class:`UndefinedOr`[:class:`list`[:class:`Category`] | `None`]
+        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New server icon.
+        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New server banner.
+        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[:class:`SystemMessageChannels` | `None`]
+        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
         flags: :class:`UndefinedOr`[:class:`ServerFlags`]
-            Bitfield of server flags. Can be passed only if you're privileged user.
+            The new server flags. Can be passed only if you're privileged user.
         discoverable: :class:`UndefinedOr`[:class:`bool`]
             Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg). Can be passed only if you're privileged user.
         analytics: :class:`UndefinedOr`[:class:`bool`]
@@ -438,8 +444,13 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to edit the server.
-        APIError
+        HTTPException
             Editing the server failed.
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
         """
         return await self.state.http.edit_server(
             self.id,
@@ -465,7 +476,7 @@ class BaseServer(Base):
             You're banned.
         NotFound
             Either server is not discoverable, or it does not exist at all.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         server = await self.state.http.accept_invite(self.id)
@@ -474,7 +485,7 @@ class BaseServer(Base):
     async def leave(self, *, silent: bool | None = None) -> None:
         """|coro|
 
-        Leaves a server.
+        Leaves a server if not owner otherwise deletes it.
 
         Parameters
         ----------
@@ -505,7 +516,7 @@ class BaseServer(Base):
 
         Raises
         ------
-        APIError
+        HTTPException
             You're trying to self-report, or reporting the server failed.
         """
         return await self.state.http.report_server(
@@ -534,16 +545,14 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to set role permissions on the server.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         return await self.state.http.set_role_server_permissions(
             self.id, role, allow=allow, deny=deny
         )
 
-    async def set_default_permissions(
-        self, permissions: Permissions | PermissionOverride, /
-    ) -> Server:
+    async def set_default_permissions(self, permissions: Permissions, /) -> Server:
         """|coro|
 
         Sets permissions for the default role in this server.
@@ -552,7 +561,7 @@ class BaseServer(Base):
         ------
         Forbidden
             You do not have permissions to set default permissions on the server.
-        APIError
+        HTTPException
             Setting permissions failed.
         """
         return await self.state.http.set_default_role_permissions(self.id, permissions)
@@ -829,7 +838,7 @@ class Server(BaseServer):
 
         Returns
         -------
-        :class:`~ServerChannel` | None:
+        Optional[:class:`ServerChannel`]
             The channel or ``None`` if not found.
         """
         cache = self.state.cache
@@ -904,15 +913,29 @@ class Server(BaseServer):
         /,
         *,
         safe: bool = True,
+        with_ownership: bool = True,
+        include_timeout: bool = True,
     ) -> Permissions:
-        """Calculate permissions for given member."""
+        """:class:`Permissions`: Calculate permissions for given member.
 
-        if member.id == self.owner_id:
+        Parameters
+        ----------
+        member: :class:`Member`
+            The member to calculate permissions for.
+        safe: :class:`bool`
+            Whether to raise exception or not if role is missing in cache.
+        with_ownership: :class:`bool`
+            Whether to account for ownership.
+        include_timeout: :class:`bool`
+            Whether to account for timeout.
+        """
+
+        if with_ownership and member.id == self.owner_id:
             return Permissions.ALL
 
         return _calculate_server_permissions(
             _sort_roles(member.roles, safe=safe, server_roles=self.roles),
-            member.timeout,
+            member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
         )
 
@@ -957,6 +980,78 @@ class BaseMember:
         """The member's user ID."""
         return self._user.id if isinstance(self._user, User) else self._user
 
+    async def ban(self, *, reason: str | None = None) -> Ban:
+        """|coro|
+
+        Ban a user.
+
+        Parameters
+        ----------
+        reason: :class:`str` | `None`
+            Ban reason. Should be between 1 and 1024 chars long.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to ban the user.
+        HTTPException
+            Banning the user failed.
+        """
+        return await self.state.http.ban(self.server_id, self.id, reason=reason)
+
+    async def edit(
+        self,
+        *,
+        nick: UndefinedOr[str | None] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
+        timed_out_until: UndefinedOr[
+            datetime | timedelta | float | int | None
+        ] = UNDEFINED,
+    ) -> Member:
+        """|coro|
+
+        Edits the member.
+
+        Parameters
+        ----------
+        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The member's new nick. Use ``None`` to remove the nickname.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
+        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+            The member's new list of roles. This *replaces* the roles.
+        timed_out_until: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+            The date the member's timeout should expire, or None to remove the timeout. This must be a timezone-aware datetime object. Consider using utils.utcnow().
+
+        Returns
+        -------
+        :class:`Member`
+            The newly updated member.
+        """
+        return await self.state.http.edit_member(
+            self.server_id,
+            self.id,
+            nick=nick,
+            avatar=avatar,
+            roles=roles,
+            timed_out_until=timed_out_until,
+        )
+
+    async def kick(self) -> None:
+        """|coro|
+
+        Removes a member from the server.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to kick the member.
+        HTTPException
+            Kicking the member failed.
+        """
+        return await self.state.http.kick_member(self.server_id, self.id)
+
 
 @define(slots=True)
 class PartialMember(BaseMember):
@@ -971,7 +1066,7 @@ class PartialMember(BaseMember):
     roles: core.UndefinedOr[list[str]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    timeout: core.UndefinedOr[datetime | None] = field(
+    timed_out_until: core.UndefinedOr[datetime | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
 
@@ -999,7 +1094,9 @@ class Member(BaseMember):
     roles: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's roles."""
 
-    timeout: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    timed_out_until: datetime | None = field(
+        repr=True, hash=True, kw_only=True, eq=True
+    )
     """The timestamp this member is timed out until."""
 
     def _update(self, data: PartialMember) -> None:
@@ -1009,8 +1106,8 @@ class Member(BaseMember):
             self.internal_avatar = data.internal_avatar
         if core.is_defined(data.roles):
             self.roles = data.roles or []
-        if core.is_defined(data.timeout):
-            self.timeout = data.timeout
+        if core.is_defined(data.timed_out_until):
+            self.timed_out_until = data.timed_out_until
 
     @property
     def avatar(self) -> cdn.Asset | None:
@@ -1018,39 +1115,6 @@ class Member(BaseMember):
         return self.internal_avatar and self.internal_avatar._stateful(
             self.state, "avatars"
         )
-
-    async def ban(self, *, reason: str | None = None) -> Ban:
-        """|coro|
-
-        Ban a user.
-
-        Parameters
-        ----------
-        reason: :class:`str` | `None`
-            Ban reason. Should be between 1 and 1024 chars long.
-
-        Raises
-        ------
-        Forbidden
-            You do not have permissions to ban the user.
-        APIError
-            Banning the user failed.
-        """
-        return await self.state.http.ban_user(self.server_id, self.id, reason=reason)
-
-    async def kick(self) -> None:
-        """|coro|
-
-        Removes a member from the server.
-
-        Raises
-        ------
-        Forbidden
-            You do not have permissions to kick the member.
-        APIError
-            Kicking the member failed.
-        """
-        return await self.state.http.kick_member(self.server_id, self.id)
 
     def get_user(self) -> User | None:
         if isinstance(self._user, User):

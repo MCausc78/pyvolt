@@ -215,7 +215,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to see that message.
-        APIError
+        HTTPException
             Acknowledging message failed.
         """
         return await self.state.http.acknowledge_message(self.channel_id, self.id)
@@ -229,7 +229,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to see that message.
-        APIError
+        HTTPException
             Acknowledging message failed.
         """
         return await self.acknowledge()
@@ -243,7 +243,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to delete message.
-        APIError
+        HTTPException
             Deleting the message failed.
         """
         return await self.state.http.delete_message(self.channel_id, self.id)
@@ -280,7 +280,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to pin messages.
-        APIError
+        HTTPException
             Pinning the message failed.
         """
         return await self.state.http.pin_message(self.channel_id, self.id)
@@ -306,7 +306,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to react to message.
-        APIError
+        HTTPException
             Reacting to message failed.
         """
         return await self.state.http.add_reaction_to_message(
@@ -339,7 +339,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to send messages.
-        APIError
+        HTTPException
             Sending the message failed.
         """
         return await self.state.http.send_message(
@@ -369,7 +369,7 @@ class BaseMessage(Base):
 
         Raises
         ------
-        APIError
+        HTTPException
             Trying to self-report, or reporting the message failed.
         """
         return await self.state.http.report_message(
@@ -386,7 +386,7 @@ class BaseMessage(Base):
         ------
         Forbidden
             You do not have permissions to unpin messages.
-        APIError
+        HTTPException
             Unpinning the message failed.
         """
         return await self.state.http.unpin_message(self.channel_id, self.id)

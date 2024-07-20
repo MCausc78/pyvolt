@@ -35,7 +35,7 @@ class BaseInvite:
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         return await self.state.http.accept_invite(self.code)
@@ -49,7 +49,7 @@ class BaseInvite:
         ------
         Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        APIError
+        HTTPException
             Deleting the invite failed.
         """
         await self.state.http.delete_invite(self.code)
@@ -63,7 +63,7 @@ class BaseInvite:
         ------
         Forbidden
             You do not have permissions to delete invite or not creator of that invite.
-        APIError
+        HTTPException
             Deleting the invite failed.
         """
         return await self.delete()
@@ -136,7 +136,7 @@ class ServerPublicInvite(BaseInvite):
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         server = await super().accept()
@@ -183,7 +183,7 @@ class GroupPublicInvite(BaseInvite):
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         group = await super().accept()
@@ -223,7 +223,7 @@ class GroupInvite(PrivateBaseInvite):
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         group = await super().accept()
@@ -252,7 +252,7 @@ class ServerInvite(PrivateBaseInvite):
         ------
         Forbidden
             You're banned.
-        APIError
+        HTTPException
             Accepting the invite failed.
         """
         server = await super().accept()
