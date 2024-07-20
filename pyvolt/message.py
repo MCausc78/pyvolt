@@ -674,6 +674,8 @@ class Message(BaseMessage):
         """Try get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
+        if self._author == core.Z:
+            return self.state.system
         if not self.state.cache:
             return None
 

@@ -419,7 +419,6 @@ class HTTPClient:
         """|coro|
 
         Retrieves the public bot with the given ID.
-        https://developers.revolt.chat/api/#tag/Bots/operation/fetch_public_fetch_public_bot
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1257,7 +1256,6 @@ class HTTPClient:
 
         Sends a message to the given channel.
         You must have `SendMessages` permission.
-        https://developers.revolt.chat/api/#tag/Messaging/operation/message_send_message_send
 
         Parameters
         ----------
@@ -1273,12 +1271,12 @@ class HTTPClient:
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.
-        masquearde: Optional[:class:`~Masquerade`]
+        masquearde: Optional[:class:`Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`~Interactions`]
+        interactions: Optional[:class:`Interactions`]
             The message interactions.
         silent: Optional[:class:`bool`]
-            Whether to suppress notifications.
+            Whether to suppress notifications or not.
 
         Raises
         ------
@@ -1867,7 +1865,6 @@ class HTTPClient:
         """|coro|
 
         Report a piece of content to the moderation team.
-        https://developers.revolt.chat/developers/api/reference.html#tag/user-safety/post/safety/report
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1899,7 +1896,6 @@ class HTTPClient:
         """|coro|
 
         Report a piece of content to the moderation team.
-        https://developers.revolt.chat/developers/api/reference.html#tag/user-safety/post/safety/report
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1932,7 +1928,6 @@ class HTTPClient:
         """|coro|
 
         Report a piece of content to the moderation team.
-        https://developers.revolt.chat/developers/api/reference.html#tag/user-safety/post/safety/report
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1958,7 +1953,7 @@ class HTTPClient:
         await self._report_content(j)
 
     # Servers control
-    async def ban_user(
+    async def ban(
         self,
         server: ULIDOr[BaseServer],
         user: str | BaseUser | BaseMember,
@@ -1968,13 +1963,16 @@ class HTTPClient:
     ) -> Ban:
         """|coro|
 
-        Ban a user by their ID.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/ban_create_req
+        Ban a user.
 
         Parameters
         ----------
-        reason: :class:`str` | None
-            Ban reason. Should be between 1 and 1024 chars long.
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The user to ban.
+        reason: Optional[:class:`str`]
+            The ban reason. Should be between 1 and 1024 chars long.
 
         Raises
         ------
@@ -1997,8 +1995,17 @@ class HTTPClient:
     async def get_bans(self, server: ULIDOr[BaseServer], /) -> list[Ban]:
         """|coro|
 
-        Get all bans on a server.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/ban_list_req
+        Retrieves all bans on a server.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+
+        Returns
+        -------
+        List[:class:`Ban`]
+            The ban entries.
         """
         return self.state.parser.parse_bans(
             await self.request(
@@ -2006,13 +2013,10 @@ class HTTPClient:
             )
         )
 
-    async def unban_user(
-        self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]
-    ) -> None:
+    async def unban(self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]) -> None:
         """|coro|
 
         Remove a user's ban.
-        https://developers.revolt.chat/api/#tag/Server-Members/operation/ban_remove_req
 
         Raises
         ------
@@ -2027,7 +2031,7 @@ class HTTPClient:
             ),
         )
 
-    async def create_channel(
+    async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
         /,
@@ -2040,7 +2044,17 @@ class HTTPClient:
         """|coro|
 
         Create a new text or voice channel within server.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/channel_create_req
+
+        Parameters
+        ----------
+        type: Optional[:class:`ChannelType`]
+            The channel type. Defaults to :attr:`ChannelType.text` if not provided.
+        name: :class:`str`
+            The channel name.
+        description: Optional[:class:`str`]
+            The channel description.
+        nsfw: Optional[:class:`bool`]
+            To mark channel as NSFW or not.
 
         Raises
         ------
@@ -2068,7 +2082,17 @@ class HTTPClient:
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
-        Get all emojis on a server.
+        Retrieves all custom :class:`ServerEmoji`s from the server.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+
+        Returns
+        -------
+        List[:class:`ServerEmoji`]
+            The retrieved emojis.
         """
         return [
             self.state.parser.parse_server_emoji(e)
@@ -2078,11 +2102,16 @@ class HTTPClient:
         ]
 
     async def get_server_invites(
-        self, server: ULIDOr[ServerChannel], /
+        self, server: ULIDOr[BaseServer], /
     ) -> list[ServerInvite]:
         """|coro|
 
-        Get all server invites.
+        Returns a list of all invites from the server.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
 
         Raises
         ------
@@ -2090,6 +2119,11 @@ class HTTPClient:
             You do not have permissions to manage the server.
         HTTPException
             Getting the invites failed.
+
+        Returns
+        -------
+        List[:class:`ServerInvite`]
+            The retrieved invites.
         """
         return [
             self.state.parser.parse_server_invite(i)
@@ -2583,7 +2617,6 @@ class HTTPClient:
         """|coro|
 
         Mark all channels in a server as read.
-        https://developers.revolt.chat/api/#tag/Server-Information/operation/server_ack_req
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2935,7 +2968,6 @@ class HTTPClient:
         """|coro|
 
         Block another user.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/block_user_req
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2956,7 +2988,9 @@ class HTTPClient:
             )
         )
 
-    async def change_username(self, username: str, /, *, password: str) -> SelfUser:
+    async def change_username(
+        self, username: str, /, *, current_password: str
+    ) -> SelfUser:
         """|coro|
 
         Change your username.
@@ -2968,15 +3002,15 @@ class HTTPClient:
         ----------
         username: :class:`str`
             The new username.
-        password: :class:`str`
-            The current password.
+        current_password: :class:`str`
+            The current account password.
 
         Returns
         -------
         :class:`SelfUser`
             The newly updated user.
         """
-        j: raw.DataChangeUsername = {"username": username, "password": password}
+        j: raw.DataChangeUsername = {"username": username, "password": current_password}
         return self.state.parser.parse_self_user(
             await self.request(
                 routes.USERS_CHANGE_USERNAME.compile(),
@@ -3172,11 +3206,10 @@ class HTTPClient:
         """|coro|
 
         Retrieve your user information.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_self_req
 
         Raises
         ------
-        HTTPException
+        Unauthorized
             Invalid token.
         """
         return self.state.parser.parse_user(
@@ -3187,7 +3220,6 @@ class HTTPClient:
         """|coro|
 
         Retrieve a user's information.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_user_req
 
         Parameters
         ----------
@@ -3196,8 +3228,15 @@ class HTTPClient:
 
         Raises
         ------
+        Forbidden
+            You been blocked by that user.
         HTTPException
-            Invalid token, or you been blocked by that user.
+            Getting the user failed.
+
+        Returns
+        -------
+        :class:`User`
+            The retrieved user.
         """
         return self.state.parser.parse_user(
             await self.request(
@@ -3209,7 +3248,6 @@ class HTTPClient:
         """|coro|
 
         Retrieve a user's flags.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/fetch_user_flags_fetch_user_flags
         """
         return UserFlags(
             (
@@ -3219,18 +3257,20 @@ class HTTPClient:
             )["flags"]
         )
 
-    async def get_mutual_friends_and_servers(
-        self, user: ULIDOr[BaseUser], /
-    ) -> Mutuals:
+    async def get_mutuals_with(self, user: ULIDOr[BaseUser], /) -> Mutuals:
         """|coro|
 
-        Retrieve a list of mutual friends and servers with another user.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/find_mutual_req
+        Retrieves a list of mutual friends and servers with another user.
 
         Raises
         ------
         HTTPException
             Finding mutual friends/servers failed.
+
+        Returns
+        -------
+        :class:`Mutuals`
+            The found mutuals.
         """
         return self.state.parser.parse_mutuals(
             await self.request(
@@ -3241,11 +3281,11 @@ class HTTPClient:
     async def get_default_avatar(self, user: ULIDOr[BaseUser], /) -> bytes:
         """|coro|
 
-        This returns a default avatar based on the given ID.
-        https://developers.revolt.chat/api/#tag/User-Information/operation/get_default_avatar_req
+        Returns a default avatar based on the given ID.
         """
         response = await self._request(
-            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user))
+            routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user)[-1]),
+            authenticated=False,
         )
         avatar = await response.read()
         if not response.closed:
@@ -3257,9 +3297,7 @@ class HTTPClient:
     ) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
-        Open a DM with another user. If the target is oneself, a saved messages channel is returned.
-        https://developers.revolt.chat/api/#tag/Direct-Messaging/operation/open_dm_req
-
+        Open a DM with another user. If the target is oneself, a :class:`SavedMessagesChannel` is returned.
 
         Raises
         ------
@@ -3316,7 +3354,6 @@ class HTTPClient:
         """|coro|
 
         Send a friend request to another user.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/send_friend_request_req
 
         .. note::
             This can only be used by non-bot accounts.
@@ -3325,6 +3362,8 @@ class HTTPClient:
         ----------
         username: :class:`str`
             Username and discriminator combo separated by `#`.
+        discriminator: Optional[:class:`str`]
+            The user's discriminator.
 
         Raises
         ------
@@ -3346,11 +3385,15 @@ class HTTPClient:
     async def unblock_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
-        Unblock another user by their ID.
-        https://developers.revolt.chat/api/#tag/Relationships/operation/unblock_user_req
+        Unblock a user.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to unblock.
 
         Raises
         ------
@@ -3372,6 +3415,13 @@ class HTTPClient:
         """|coro|
 
         Deletes a webhook. If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
+
+        Parameters
+        ----------
+        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+            The webhook to delete.
+        token: Optional[:class:`str`]
+            The webhook token.
 
         Raises
         ------
@@ -3408,6 +3458,10 @@ class HTTPClient:
 
         Parameters
         ----------
+        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+            The webhook to edit.
+        token: Optional[:class:`str`]
+            The webhook token.
         name: :class:`UndefinedOr`[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
         avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
@@ -3421,6 +3475,11 @@ class HTTPClient:
             You do not have permissions to edit the webhook.
         HTTPException
             Editing the webhook failed.
+
+        Returns
+        -------
+        :class:`Webhook`
+            The newly updated webhook.
         """
         j: raw.DataEditWebhook = {}
         r: list[raw.FieldsWebhook] = []
@@ -3463,10 +3522,34 @@ class HTTPClient:
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
+        silent: bool | None = None,
     ) -> Message:
         """|coro|
 
         Executes a webhook and returns a message.
+
+        Parameters
+        ----------
+        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+            The ID of the webhook.
+        token: :class:`str`
+            The webhook token.
+        content: Optional[:class:`str`]
+            The message content.
+        nonce: Optional[:class:`str`]
+            The message nonce.
+        attachments: Optional[List[:class:`ResolvableResource`]]
+            The message attachments.
+        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+            The message replies.
+        embeds: Optional[List[:class:`SendableEmbed`]]
+            The message embeds.
+        masquearde: Optional[:class:`Masquerade`]
+            The message masquerade.
+        interactions: Optional[:class:`Interactions`]
+            The message interactions.
+        silent: Optional[:class:`bool`]
+            Whether to suppress notifications or not.
 
         Returns
         -------
@@ -3496,6 +3579,16 @@ class HTTPClient:
             j["masquerade"] = masquerade.build()
         if interactions is not None:
             j["interactions"] = interactions.build()
+
+        flags = None
+        if silent is not None:
+            flags = 0
+            if silent:
+                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
+
+        if flags is not None:
+            j["flags"] = flags
+
         headers = {}
         if nonce is not None:
             headers["Idempotency-Key"] = nonce
@@ -3519,10 +3612,17 @@ class HTTPClient:
     ) -> Webhook:
         """|coro|
 
-        Gets a webhook. If webhook token wasn't given, the library will attempt get webhook with bot/user token.
+        Retrieves a webhook. If webhook token wasn't given, the library will attempt get webhook with bot/user token.
 
         .. note::
             Due to Revolt limitation, the webhook avatar information will be partial. Fields are guaranteed to be non-zero/non-empty: `id` and `user_id`.
+
+        Parameters
+        ----------
+        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+            The ID of the webhook.
+        token: Optional[:class:`str`]
+            The webhook token.
 
         Raises
         ------
@@ -3530,6 +3630,11 @@ class HTTPClient:
             You do not have permissions to get the webhook.
         HTTPException
             Getting the webhook failed.
+
+        Returns
+        -------
+        :class:`Webhook`
+            The retrieved webhook.
         """
 
         return self.state.parser.parse_response_webhook(
