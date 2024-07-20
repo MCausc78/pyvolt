@@ -728,7 +728,7 @@ class HTTPClient:
         name: str,
         *,
         description: str | None = None,
-        users: list[ULIDOr[BaseUser]] | None = None,
+        recipients: list[ULIDOr[BaseUser]] | None = None,
         nsfw: bool | None = None,
     ) -> GroupChannel:
         """|coro|
@@ -744,8 +744,8 @@ class HTTPClient:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        users: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
-            List of users to add to the group. Must be friends with these users.
+        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+            The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
 
@@ -762,8 +762,8 @@ class HTTPClient:
         j: raw.DataCreateGroup = {"name": name}
         if description is not None:
             j["description"] = description
-        if users is not None:
-            j["users"] = [resolve_id(user) for user in users]
+        if recipients is not None:
+            j["users"] = [resolve_id(recipient) for recipient in recipients]
         if nsfw is not None:
             j["nsfw"] = nsfw
         return self.state.parser.parse_group_channel(

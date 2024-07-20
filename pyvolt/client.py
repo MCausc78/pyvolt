@@ -10,10 +10,16 @@ import logging
 import sys
 import typing as t
 
-from . import core, cache as caching, utils
+from . import cache as caching, utils
 from .cache import Cache, MapCache
 from .cdn import CDNClient
-from .channel import SavedMessagesChannel, Channel
+from .channel import SavedMessagesChannel, GroupChannel, Channel
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    is_defined,
+    ULIDOr,
+)
 from .emoji import Emoji
 from .events import BaseEvent, MessageCreateEvent
 from .http import HTTPClient
@@ -24,7 +30,7 @@ from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
 from .user_settings import UserSettings
-from .user import User, SelfUser
+from .user import BaseUser, User, SelfUser
 
 
 if t.TYPE_CHECKING:
@@ -363,9 +369,7 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        cache: (
-            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]] | None
-        ) = None,
+        cache: ca.Callable[[Client, State], UndefinedOr[Cache | None]] | None = None,
         cdn_base: str | None = None,
         cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
@@ -381,9 +385,9 @@ class Client:
         token: str,
         bot: bool = True,
         cache: (
-            ca.Callable[[Client, State], core.UndefinedOr[Cache | None]]
-            | core.UndefinedOr[Cache | None]
-        ) = core.UNDEFINED,
+            ca.Callable[[Client, State], UndefinedOr[Cache | None]]
+            | UndefinedOr[Cache | None]
+        ) = UNDEFINED,
         cdn_base: str | None = None,
         cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
@@ -416,7 +420,7 @@ class Client:
                 cr = cache(self, state)
             else:
                 cr = cache
-            c = cr if core.is_defined(cr) else MapCache()
+            c = cr if is_defined(cr) else MapCache()
 
             state.setup(
                 cache=c,
@@ -644,6 +648,23 @@ class Client:
         if cache:
             return cache.get_channel(channel_id, caching._USER_REQUEST)
 
+    async def fetch_channel(self, channel_id: str, /) -> Channel:
+        """|coro|
+
+        Retrieves a channel from API. This is shortcut to :meth:`HTTPClient.get_channel`.
+
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID.
+
+        Returns
+        -------
+        :class:`Channel`
+            The retrieved channel.
+        """
+        return await self.http.get_channel(channel_id)
+
     def get_emoji(self, emoji_id: str, /) -> Emoji | None:
         """Retrieves a emoji from cache.
 
@@ -660,6 +681,23 @@ class Client:
         cache = self._state.cache
         if cache:
             return cache.get_emoji(emoji_id, caching._USER_REQUEST)
+
+    async def fetch_emoji(self, emoji_id: str, /) -> Emoji:
+        """|coro|
+
+        Retrieves a emoji from API. This is shortcut to :meth:`HTTPClient.get_emoji`.
+
+        Parameters
+        ----------
+        emoji_id: :class:`str`
+            The emoji ID.
+
+        Returns
+        -------
+        :class:`Emoji`
+            The retrieved emoji.
+        """
+        return await self.http.get_emoji(emoji_id)
 
     def get_read_state(self, channel_id: str, /) -> ReadState | None:
         """Retrieves a read state from cache.
@@ -695,6 +733,23 @@ class Client:
         if cache:
             return cache.get_server(server_id, caching._USER_REQUEST)
 
+    async def fetch_server(self, server_id: str, /) -> Server:
+        """|coro|
+
+        Retrieves a server from API. This is shortcut to :meth:`HTTPClient.get_server`.
+
+        Parameters
+        ----------
+        server_id: :class:`str`
+            The server ID.
+
+        Returns
+        -------
+        :class:`Server`
+            The server.
+        """
+        return await self.http.get_server(server_id)
+
     def get_user(self, user_id: str, /) -> User | None:
         """Retrieves a user from cache.
 
@@ -712,6 +767,23 @@ class Client:
         if cache:
             return cache.get_user(user_id, caching._USER_REQUEST)
 
+    async def fetch_user(self, user_id: str, /) -> User:
+        """|coro|
+
+        Retrieves a user from API. This is shortcut to :meth:`HTTPClient.get_user`.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user ID.
+
+        Returns
+        -------
+        :class:`User`
+            The user.
+        """
+        return await self.http.get_user(user_id)
+
     @property
     def settings(self) -> UserSettings:
         """:class:`UserSettings`: The current user settings."""
@@ -728,6 +800,69 @@ class Client:
         Starts up the bot.
         """
         await self._state.shard.connect()
+
+    async def create_group(
+        self,
+        name: str,
+        *,
+        description: str | None = None,
+        recipients: list[ULIDOr[BaseUser]] | None = None,
+        nsfw: bool | None = None,
+    ) -> GroupChannel:
+        """|coro|
+
+        Creates the new group channel.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The group name.
+        description: Optional[:class:`str`]
+            The group description.
+        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+            The list of recipients to add to the group. You must be friends with these users.
+        nsfw: Optional[:class:`bool`]
+            Whether this group should be age-restricted.
+
+        Raises
+        ------
+        HTTPException
+            Creating the group failed.
+
+        Returns
+        -------
+        :class:`GroupChannel`
+            The new group.
+        """
+        return await self.http.create_group(
+            name, description=description, recipients=recipients, nsfw=nsfw
+        )
+
+    async def create_server(
+        self, name: str, /, *, description: str | None = None, nsfw: bool | None = None
+    ) -> Server:
+        """|coro|
+
+        Create a new server.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The server name.
+        description: Optional[:class:`str`]
+            The server description.
+        nsfw: Optional[:class:`bool`]
+            Whether this server is age-restricted.
+
+        Returns
+        -------
+        :class:`Server`
+            The created server.
+        """
+        return await self.http.create_server(name, description=description, nsfw=nsfw)
 
 
 __all__ = (
