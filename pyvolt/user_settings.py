@@ -131,17 +131,25 @@ class AndroidUserSettings:
         """:class:`int`: The current profile picture shape."""
         return self._avatar_radius or 50
 
-    async def edit(
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} theme={self.theme!r} colour_overrides={self.colour_overrides!r} reply_style={self.reply_style!r} profile_picture_shape={self.profile_picture_shape!r}>"
+
+    def payload_for(
         self,
         *,
         theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
         colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
         avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
-    ) -> None:
+    ) -> raw.AndroidUserSettings:
         """|coro|
 
-        Edits the Android user settings.
+        Builds a payload for Android user settings. You must pass it as JSON string to :meth:`HTTPClient.edit_user_settings`, like that:
+
+        .. code-block:: python3
+
+            payload = settings.payload_for(theme=AndroidTheme.material_you)
+            await http.edit_user_settings(android=json.dumps(payload))
 
         Parameters
         ----------
@@ -155,7 +163,6 @@ class AndroidUserSettings:
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         """
         payload: raw.AndroidUserSettings = {}
-
         if self._theme is not None:
             payload["theme"] = self._theme.value
         if is_defined(theme):
@@ -202,6 +209,37 @@ class AndroidUserSettings:
             else:
                 payload["avatarRadius"] = avatar_radius
 
+        return payload
+
+    async def edit(
+        self,
+        *,
+        theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
+        colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
+        reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
+        avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
+    ) -> None:
+        """|coro|
+
+        Edits the Android user settings.
+
+        Parameters
+        ----------
+        theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
+            The new theme. Passing ``None`` denotes ``theme`` removal in internal object.
+        colour_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
+            The new colour overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
+        reply_style: :class:`UndefinedOr`[Optional[:class:`AndroidMessageReplyStyle`]]
+            The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
+        avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
+            The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
+        """
+        payload = self.payload_for(
+            theme=theme,
+            colour_overrides=colour_overrides,
+            reply_style=reply_style,
+            avatar_radius=avatar_radius,
+        )
         await self.parent.edit({"android": utils.to_json(payload)})
 
 
