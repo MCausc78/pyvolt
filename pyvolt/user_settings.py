@@ -664,14 +664,14 @@ class ReviteUserSettings:
             ReviteChangelogEntry | int
         ] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
-        notification_servers: UndefinedOr[
+        server_notifications: UndefinedOr[
             dict[ULIDOr[BaseServer], ReviteNotificationState]
         ] = UNDEFINED,
-        merge_notification_servers: bool = True,
-        notification_channels: UndefinedOr[
+        merge_server_notifications: bool = True,
+        channel_notifications: UndefinedOr[
             dict[ULIDOr[Channel], ReviteNotificationState]
         ] = UNDEFINED,
-        merge_notification_channels: bool = True,
+        merge_channel_notifications: bool = True,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
         emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
         seasonal: UndefinedOr[bool | None] = UNDEFINED,
@@ -696,13 +696,13 @@ class ReviteUserSettings:
             The last viewed changelog entry.
         language: :class:`UndefinedOr`[:class:`Language`]
             The language.
-        notification_servers: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+        server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
             The notification options for servers.
-        merge_notification_servers: :class:`bool`
+        merge_server_notifications: :class:`bool`
             Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
-        notification_channels: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+        channel_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
             The notification options for channels.
-        merge_notification_channels: :class:`bool`
+        merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
         ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
             The servers tab order.
@@ -765,10 +765,10 @@ class ReviteUserSettings:
                 locale = {"lang": language.value}
             payload["locale"] = utils.to_json(locale)
 
-        if is_defined(notification_servers) or is_defined(notification_channels):
+        if is_defined(server_notifications) or is_defined(channel_notifications):
             options = self._notification_options
             if options:
-                if merge_notification_servers:
+                if merge_server_notifications:
                     servers: dict[str, raw.ReviteNotificationState] = {
                         server_id: state.value
                         for server_id, state in options.servers.items()
@@ -776,7 +776,7 @@ class ReviteUserSettings:
                 else:
                     servers = {}
 
-                if merge_notification_channels:
+                if merge_channel_notifications:
                     channels: dict[str, raw.ReviteNotificationState] = {
                         channel_id: state.value
                         for channel_id, state in options.channels.items()
@@ -801,17 +801,17 @@ class ReviteUserSettings:
                     "channel": channels,
                 }
 
-            if is_defined(notification_servers):
+            if is_defined(server_notifications):
                 server_payload = notifications["server"] | {
                     resolve_id(server): state.value
-                    for server, state in notification_servers.items()
+                    for server, state in server_notifications.items()
                 }
                 # I literally don't know why it errors...
                 notifications["server"] = server_payload  # type: ignore
-            if is_defined(notification_channels):
+            if is_defined(channel_notifications):
                 channel_payload = notifications["channel"] | {
                     resolve_id(channel): state.value
-                    for channel, state in notification_channels.items()
+                    for channel, state in channel_notifications.items()
                 }
                 notifications["channel"] = channel_payload  # type: ignore
             payload["notifications"] = utils.to_json(notifications)
@@ -937,14 +937,14 @@ class ReviteUserSettings:
             ReviteChangelogEntry | int
         ] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
-        notification_servers: UndefinedOr[
+        server_notifications: UndefinedOr[
             dict[ULIDOr[BaseServer], ReviteNotificationState]
         ] = UNDEFINED,
-        merge_notification_servers: bool = True,
-        notification_channels: UndefinedOr[
+        merge_server_notifications: bool = True,
+        channel_notifications: UndefinedOr[
             dict[ULIDOr[Channel], ReviteNotificationState]
         ] = UNDEFINED,
-        merge_notification_channels: bool = True,
+        merge_channel_notifications: bool = True,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
         emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
         seasonal: UndefinedOr[bool | None] = UNDEFINED,
@@ -968,13 +968,13 @@ class ReviteUserSettings:
             The last viewed changelog entry.
         language: :class:`UndefinedOr`[:class:`Language`]
             The language.
-        notification_servers: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+        server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
             The notification options for servers.
-        merge_notification_servers: :class:`bool`
+        merge_server_notifications: :class:`bool`
             Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
-        notification_channels: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+        channel_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
             The notification options for channels.
-        merge_notification_channels: :class:`bool`
+        merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
         ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
             The servers tab order.
@@ -1009,10 +1009,10 @@ class ReviteUserSettings:
         payload = self.payload_for(
             last_viewed_changelog_entry=last_viewed_changelog_entry,
             language=language,
-            notification_servers=notification_servers,
-            merge_notification_servers=merge_notification_servers,
-            notification_channels=notification_channels,
-            merge_notification_channels=merge_notification_channels,
+            server_notifications=server_notifications,
+            merge_server_notifications=merge_server_notifications,
+            channel_notifications=channel_notifications,
+            merge_channel_notifications=merge_channel_notifications,
             ordering=ordering,
             emoji_pack=emoji_pack,
             seasonal=seasonal,
