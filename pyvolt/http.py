@@ -2868,7 +2868,7 @@ class HTTPClient:
     async def edit_user_settings(
         self,
         dict_settings: dict[str, str] = {},
-        timestamp: datetime | int | None = None,
+        edited_at: datetime | int | None = None,
         /,
         **kwargs: str,
     ) -> None:
@@ -2882,10 +2882,10 @@ class HTTPClient:
 
         p: raw.OptionsSetSettings = {}
 
-        if timestamp is not None:
-            if isinstance(timestamp, datetime):
-                timestamp = int(timestamp.timestamp())
-            p["timestamp"] = timestamp
+        if edited_at is not None:
+            if isinstance(edited_at, datetime):
+                edited_at = int(edited_at.timestamp())
+            p["timestamp"] = edited_at
 
         payload: dict[str, str] = {}
         for k, v in (dict_settings | kwargs).items():

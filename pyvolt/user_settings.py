@@ -53,6 +53,9 @@ class UserSettings:
         self.partial = partial
         self._parse()
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} data={self.data!r} mocked={self.mocked!r} partial={self.partial!r}>"
+
     def _parse(self) -> None:
         try:
             self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
@@ -111,10 +114,10 @@ class UserSettings:
 
     async def edit(
         self,
-        dict_settings: dict[str, str | typing.Any] = {},
-        timestamp: datetime | int | None = None,
+        dict_settings: dict[str, str] = {},
+        edited_at: datetime | int | None = None,
         /,
-        **kwargs: str | typing.Any,
+        **kwargs: str,
     ) -> None:
         """|coro|
 
@@ -124,7 +127,7 @@ class UserSettings:
             This can only be used by non-bot accounts.
         """
         return await self.state.http.edit_user_settings(
-            dict_settings, timestamp, **kwargs
+            dict_settings, edited_at, **kwargs
         )
 
 
@@ -220,14 +223,12 @@ class AndroidUserSettings:
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
         avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
     ) -> raw.AndroidUserSettings:
-        """|coro|
-
-        Builds a payload for Android user settings. You must pass it as JSON string to :meth:`HTTPClient.edit_user_settings`, like that:
+        """Builds a payload for Android user settings. You must pass it as JSON string to :meth:`HTTPClient.edit_user_settings`, like so:
 
         .. code-block:: python3
 
             payload = settings.payload_for(theme=AndroidTheme.material_you)
-            await http.edit_user_settings(android=payload)
+            await http.edit_user_settings(android=json.loads(payload))
 
         Parameters
         ----------
@@ -284,6 +285,7 @@ class AndroidUserSettings:
     async def edit(
         self,
         *,
+        edited_at: datetime | int | None = None,
         theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
         colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
@@ -295,6 +297,8 @@ class AndroidUserSettings:
 
         Parameters
         ----------
+        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
+            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
         theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
             The new theme. Passing ``None`` denotes ``theme`` removal in internal object.
         colour_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
@@ -310,7 +314,7 @@ class AndroidUserSettings:
             reply_style=reply_style,
             avatar_radius=avatar_radius,
         )
-        await self.parent.edit(android=payload)
+        await self.parent.edit({"android": utils.to_json(payload)}, edited_at)
 
 
 class ReviteChangelogEntry(Enum):
@@ -354,6 +358,9 @@ class ReviteNotificationOptions:
             for channel_id, state in data["channel"].items()
         }
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} servers={self.servers!r} channels={self.channels!r}>"
+
 
 class ReviteEmojiPack(Enum):
     mutant_remix = "mutant"
@@ -393,7 +400,7 @@ class ReviteMonoFont(Enum):
     jetbrains_mono = "JetBrains Mono"
 
 
-ReviteThemeVariable = raw.ReviteThemeVariable
+ReviteThemeVariable: typing.TypeAlias = "raw.ReviteThemeVariable"
 
 
 class ReviteUserSettings:
@@ -417,14 +424,20 @@ class ReviteUserSettings:
 
     __slots__ = (
         "parent",
+        "_changelog_payload",
         "last_viewed_changelog_entry",
+        "_locale_payload",
         "_language",
+        "_notifications_payload",
         "_notification_options",
+        "_ordering_payload",
         "_ordering",
+        "_appearance_payload",
         "_appearance_emoji_pack",
         "seasonal",
         "transparent",
         "ligatures",
+        "_theme_payload",
         "_appearance_theme_base",
         "_appearance_theme_css",
         "_appearance_theme_font",
@@ -436,6 +449,9 @@ class ReviteUserSettings:
     def __init__(self, parent: UserSettings) -> None:
         self.parent = parent
         self._parse()
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} last_viewed_changelog_entry={self.last_viewed_changelog_entry!r} language={self.language!r} notification_options={self._notification_options!r} ordering={self.ordering!r} emoji_pack={self.emoji_pack!r} seasonal={self.seasonal!r} transparent={self.transparent!r} ligatures={self.ligatures!r} base_theme={self.base_theme!r} custom_css={self.custom_css!r} font={self.font!r} monofont={self.monofont!r} theme_overrides={self.theme_overrides!r}>"
 
     def get_language(self) -> Language | None:
         """Optional[:class:`Language`]: The current language."""
@@ -534,17 +550,21 @@ class ReviteUserSettings:
         changelog_json = parent.get("changelog")
         if changelog_json:
             changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
+            self._changelog_payload: raw.ReviteChangelog | None = changelog
             self.last_viewed_changelog_entry: ReviteChangelogEntry | None = (
                 ReviteChangelogEntry(changelog["viewed"])
             )
         else:
+            self._changelog_payload = None
             self.last_viewed_changelog_entry = None
 
         locale_json = parent.get("locale")
         if locale_json:
             locale: raw.ReviteLocaleOptions = utils.from_json(locale_json)
+            self._locale_payload: raw.ReviteLocaleOptions | None = locale
             self._language: Language | None = Language(locale["lang"])
         else:
+            self._locale_payload = None
             self._language = None
 
         notifications_json = parent.get("notifications")
@@ -552,22 +572,29 @@ class ReviteUserSettings:
             notifications: raw.ReviteNotificationOptions = utils.from_json(
                 notifications_json
             )
+            self._notifications_payload: raw.ReviteNotificationOptions | None = (
+                notifications
+            )
             self._notification_options: ReviteNotificationOptions | None = (
                 ReviteNotificationOptions(notifications)
             )
         else:
+            self._notifications_payload = None
             self._notification_options = None
 
         ordering_json = parent.get("ordering")
         if ordering_json:
             ordering: raw.ReviteOrdering = utils.from_json(ordering_json)
+            self._ordering_payload: raw.ReviteOrdering | None = ordering
             self._ordering: list[str] | None = ordering["servers"]
         else:
+            self._ordering_payload = None
             self._ordering = None
 
         appearance_json = parent.get("appearance")
         if appearance_json:
             appearance: raw.ReviteAppearanceSettings = utils.from_json(appearance_json)
+            self._appearance_payload: raw.ReviteAppearanceSettings | None = appearance
 
             appearance_emoji_pack = appearance.get("appearance:emoji")
             if appearance_emoji_pack:
@@ -580,6 +607,7 @@ class ReviteUserSettings:
             self.seasonal: bool | None = appearance.get("appearance:seasonal")
             self.transparent: bool | None = appearance.get("appearance:transparency")
         else:
+            self._appearance_payload = None
             self._appearance_emoji_pack = None
             self.seasonal = None
             self.transparent = None
@@ -587,6 +615,7 @@ class ReviteUserSettings:
         theme_json = parent.get("theme")
         if theme_json:
             theme: raw.ReviteThemeSettings = utils.from_json(theme_json)
+            self._theme_payload: raw.ReviteThemeSettings | None = None
 
             self.ligatures: bool | None = theme.get("appearance:ligatures")
 
@@ -619,6 +648,7 @@ class ReviteUserSettings:
             )
 
         else:
+            self._theme_payload = None
             self.ligatures = None
             self._appearance_theme_base = None
             self._appearance_theme_css = None
@@ -643,17 +673,71 @@ class ReviteUserSettings:
         ] = UNDEFINED,
         merge_notification_channels: bool = True,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
-        # TODO: Use these parameters.
         emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
         seasonal: UndefinedOr[bool | None] = UNDEFINED,
         transparent: UndefinedOr[bool | None] = UNDEFINED,
         ligatures: UndefinedOr[bool | None] = UNDEFINED,
         base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
-        css: UndefinedOr[str | None] = UNDEFINED,
+        custom_css: UndefinedOr[str | None] = UNDEFINED,
         font: UndefinedOr[ReviteFont | None] = UNDEFINED,
         monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
         overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
     ) -> raw.ReviteUserSettingsPayload:
+        """Builds a payload for Revite user settings. You must pass it as first argument to :meth:`HTTPClient.edit_user_settings`, like so:
+
+        .. code-block:: python3
+
+            payload = settings.payload_for(language=Language.russian)
+            await http.edit_user_settings(payload)
+
+        Parameters
+        ----------
+        last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
+            The last viewed changelog entry.
+        language: :class:`UndefinedOr`[:class:`Language`]
+            The language.
+        notification_servers: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+            The notification options for servers.
+        merge_notification_servers: :class:`bool`
+            Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
+        notification_channels: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+            The notification options for channels.
+        merge_notification_channels: :class:`bool`
+            Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
+        ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
+            The servers tab order.
+        emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
+            The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
+        seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To display effects in the home tab during holiday seasons or not.
+            Passing ``None`` denotes ``appearance.appearance:seasonal`` removal in internal object.
+        transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To enable transparency effects throughout the app or not.
+            Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
+        ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
+            Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
+        base_theme: :class:`UndefinedOr`[Optional[:class:`ReviteBaseTheme`]]
+            The base theme to use.
+            Passing ``None`` denotes ``theme.appearance:theme:base`` removal in internal object.
+        custom_css: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The CSS string.
+            Passing ``None`` denotes ``theme.appearance:theme:css`` removal in internal object.
+        font: :class:`UndefinedOr`[Optional[:class:`ReviteFont`]]
+            The font to use across the app.
+            Passing ``None`` denotes ``theme.appearance:theme:font`` removal in internal object.
+        monofont: :class:`UndefinedOr`[Optional[:class:`ReviteMonoFont`]]
+            The monospace font to use in codeblocks.
+            Passing ``None`` denotes ``theme.appearance:theme:monoFont`` removal in internal object.
+        overrides: :class:`UndefinedOr`[Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]]
+            The theme overrides.
+            Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
+
+        Returns
+        -------
+        Dict[:class:`str`, Any]
+            The payload that must to be passed in :meth:`HTTPClient.edit_user_settings`.
+        """
         payload: raw.ReviteUserSettingsPayload = {}
 
         if is_defined(last_viewed_changelog_entry):
@@ -663,14 +747,22 @@ class ReviteUserSettings:
                 else last_viewed_changelog_entry
             )
 
-            changelog: raw.ReviteChangelog = {
-                "viewed": viewed,  # type: ignore
-            }
+            if self._changelog_payload is not None:
+                changelog: raw.ReviteChangelog = self._changelog_payload | {
+                    "viewed": viewed
+                }
+            else:
+                changelog = {"viewed": viewed}
 
             payload["changelog"] = utils.to_json(changelog)
 
         if is_defined(language):
-            locale: raw.ReviteLocaleOptions = {"lang": language.value}
+            if self._locale_payload is not None:
+                locale: raw.ReviteLocaleOptions = self._locale_payload | {
+                    "lang": language.value
+                }
+            else:
+                locale = {"lang": language.value}
             payload["locale"] = utils.to_json(locale)
 
         if is_defined(notification_servers) or is_defined(notification_channels):
@@ -695,32 +787,245 @@ class ReviteUserSettings:
                 servers = {}
                 channels = {}
 
-            notifications: raw.ReviteNotificationOptions = {
-                "server": servers,
-                "channel": channels,
-            }
+            if self._notifications_payload is not None:
+                notifications: raw.ReviteNotificationOptions = (
+                    self._notifications_payload
+                    | {
+                        "server": servers,
+                        "channel": channels,
+                    }
+                )
+            else:
+                notifications: raw.ReviteNotificationOptions = {
+                    "server": servers,
+                    "channel": channels,
+                }
 
             if is_defined(notification_servers):
-                server = notifications["server"] | {
+                server_payload = notifications["server"] | {
                     resolve_id(server): state.value
                     for server, state in notification_servers.items()
                 }
-                notifications["server"] = server  # type: ignore
-
+                # I literally don't know why it errors...
+                notifications["server"] = server_payload  # type: ignore
             if is_defined(notification_channels):
-                channel = notifications["channel"] | {
+                channel_payload = notifications["channel"] | {
                     resolve_id(channel): state.value
                     for channel, state in notification_channels.items()
                 }
-                notifications["channel"] = channel  # type: ignore
+                notifications["channel"] = channel_payload  # type: ignore
             payload["notifications"] = utils.to_json(notifications)
 
         if is_defined(ordering):
-            payload["ordering"] = utils.to_json(
-                {"servers": [resolve_id(server_id) for server_id in ordering]}
-            )
+            if self._ordering_payload is not None:
+                ordering_payload: raw.ReviteOrdering = self._ordering_payload | {
+                    "servers": [resolve_id(server_id) for server_id in ordering]
+                }
+            else:
+                ordering_payload: raw.ReviteOrdering = {
+                    "servers": [resolve_id(server_id) for server_id in ordering]
+                }
+            payload["ordering"] = utils.to_json(ordering_payload)
+
+        if is_defined(emoji_pack) or is_defined(seasonal) or is_defined(transparent):
+            if self._appearance_payload is not None:
+                appearance_payload: raw.ReviteAppearanceSettings = (
+                    self._appearance_payload
+                )
+            else:
+                appearance_payload = {}
+
+            if emoji_pack is None:
+                try:
+                    del appearance_payload["appearance:emoji"]
+                except KeyError:
+                    pass
+            elif is_defined(emoji_pack):
+                appearance_payload["appearance:emoji"] = emoji_pack.value
+
+            if seasonal is None:
+                try:
+                    del appearance_payload["appearance:seasonal"]
+                except KeyError:
+                    pass
+            elif is_defined(seasonal):
+                appearance_payload["appearance:seasonal"] = seasonal
+
+            if transparent is None:
+                try:
+                    del appearance_payload["appearance:transparency"]
+                except KeyError:
+                    pass
+            elif is_defined(transparent):
+                appearance_payload["appearance:transparency"] = transparent
+
+            payload["appearance"] = utils.to_json(appearance_payload)
+
+        if (
+            is_defined(ligatures)
+            or is_defined(base_theme)
+            or is_defined(custom_css)
+            or is_defined(font)
+            or is_defined(monofont)
+            or is_defined(overrides)
+        ):
+            if self._theme_payload is not None:
+                theme_payload: raw.ReviteThemeSettings = self._theme_payload
+            else:
+                theme_payload = {}
+
+            if ligatures is None:
+                try:
+                    del theme_payload["appearance:ligatures"]
+                except KeyError:
+                    pass
+            elif is_defined(ligatures):
+                theme_payload["appearance:ligatures"] = ligatures
+
+            if base_theme is None:
+                try:
+                    del theme_payload["appearance:theme:base"]
+                except KeyError:
+                    pass
+            elif is_defined(base_theme):
+                theme_payload["appearance:theme:base"] = base_theme.value
+
+            if custom_css is None:
+                try:
+                    del theme_payload["appearance:theme:css"]
+                except KeyError:
+                    pass
+            elif is_defined(custom_css):
+                theme_payload["appearance:theme:css"] = custom_css
+
+            if font is None:
+                try:
+                    del theme_payload["appearance:theme:font"]
+                except KeyError:
+                    pass
+            elif is_defined(font):
+                try:
+                    del theme_payload["appearance:theme:font"]
+                except KeyError:
+                    pass
+
+            if monofont is None:
+                try:
+                    del theme_payload["appearance:theme:monoFont"]
+                except KeyError:
+                    pass
+            elif is_defined(monofont):
+                theme_payload["appearance:theme:monoFont"] = monofont.value
+
+            if overrides is None:
+                try:
+                    del theme_payload["appearance:theme:overrides"]
+                except KeyError:
+                    pass
+            elif is_defined(overrides):
+                theme_payload["appearance:theme:overrides"] = overrides
+
+            payload["theme"] = utils.to_json(theme_payload)
 
         return payload
+
+    async def edit(
+        self,
+        *,
+        edited_at: datetime | int | None = None,
+        last_viewed_changelog_entry: UndefinedOr[
+            ReviteChangelogEntry | int
+        ] = UNDEFINED,
+        language: UndefinedOr[Language] = UNDEFINED,
+        notification_servers: UndefinedOr[
+            dict[ULIDOr[BaseServer], ReviteNotificationState]
+        ] = UNDEFINED,
+        merge_notification_servers: bool = True,
+        notification_channels: UndefinedOr[
+            dict[ULIDOr[Channel], ReviteNotificationState]
+        ] = UNDEFINED,
+        merge_notification_channels: bool = True,
+        ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
+        emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
+        seasonal: UndefinedOr[bool | None] = UNDEFINED,
+        transparent: UndefinedOr[bool | None] = UNDEFINED,
+        ligatures: UndefinedOr[bool | None] = UNDEFINED,
+        base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
+        custom_css: UndefinedOr[str | None] = UNDEFINED,
+        font: UndefinedOr[ReviteFont | None] = UNDEFINED,
+        monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
+        overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
+    ) -> None:
+        """|coro|
+
+        Edits the Revite user settings.
+
+        Parameters
+        ----------
+        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
+            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
+        last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
+            The last viewed changelog entry.
+        language: :class:`UndefinedOr`[:class:`Language`]
+            The language.
+        notification_servers: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+            The notification options for servers.
+        merge_notification_servers: :class:`bool`
+            Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
+        notification_channels: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+            The notification options for channels.
+        merge_notification_channels: :class:`bool`
+            Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
+        ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
+            The servers tab order.
+        emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
+            The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
+        seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To display effects in the home tab during holiday seasons or not.
+            Passing ``None`` denotes ``appearance.appearance:seasonal`` removal in internal object.
+        transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To enable transparency effects throughout the app or not.
+            Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
+        ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
+            Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
+        base_theme: :class:`UndefinedOr`[Optional[:class:`ReviteBaseTheme`]]
+            The base theme to use.
+            Passing ``None`` denotes ``theme.appearance:theme:base`` removal in internal object.
+        custom_css: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The CSS string.
+            Passing ``None`` denotes ``theme.appearance:theme:css`` removal in internal object.
+        font: :class:`UndefinedOr`[Optional[:class:`ReviteFont`]]
+            The font to use across the app.
+            Passing ``None`` denotes ``theme.appearance:theme:font`` removal in internal object.
+        monofont: :class:`UndefinedOr`[Optional[:class:`ReviteMonoFont`]]
+            The monospace font to use in codeblocks.
+            Passing ``None`` denotes ``theme.appearance:theme:monoFont`` removal in internal object.
+        overrides: :class:`UndefinedOr`[Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]]
+            The theme overrides.
+            Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
+        """
+
+        payload = self.payload_for(
+            last_viewed_changelog_entry=last_viewed_changelog_entry,
+            language=language,
+            notification_servers=notification_servers,
+            merge_notification_servers=merge_notification_servers,
+            notification_channels=notification_channels,
+            merge_notification_channels=merge_notification_channels,
+            ordering=ordering,
+            emoji_pack=emoji_pack,
+            seasonal=seasonal,
+            transparent=transparent,
+            ligatures=ligatures,
+            base_theme=base_theme,
+            custom_css=custom_css,
+            font=font,
+            monofont=monofont,
+            overrides=overrides,
+        )
+        # how????????????
+        await self.parent.edit(payload, edited_at)  # type: ignore
 
 
 __all__ = (
