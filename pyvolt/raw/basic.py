@@ -1,5 +1,5 @@
 import typing
 
-Bool = typing.Literal["true", "false"]
+Bool = typing.Literal['true', 'false']
 
-__all__ = ("Bool",)
+__all__ = ('Bool',)

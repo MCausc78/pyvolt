@@ -23,8 +23,8 @@ if typing.TYPE_CHECKING:
 
     from . import raw
 
-    P = typing.ParamSpec("P")
-    T = typing.TypeVar("T")
+    P = typing.ParamSpec('P')
+    T = typing.TypeVar('T')
 
     MaybeAwaitable = T | ca.Awaitable[T]
     MaybeAwaitableFunc = ca.Callable[P, MaybeAwaitable[T]]
@@ -36,21 +36,19 @@ _L = logging.getLogger(__name__)
 if HAS_ORJSON:
 
     def to_json(obj: typing.Any) -> str:
-        return orjson.dumps(obj).decode("utf-8")  # type: ignore
+        return orjson.dumps(obj).decode('utf-8')  # type: ignore
 
     from_json = orjson.loads  # type: ignore
 
 else:
 
     def to_json(obj: typing.Any) -> str:
-        return json.dumps(obj, separators=(",", ":"), ensure_ascii=True)
+        return json.dumps(obj, separators=(',', ':'), ensure_ascii=True)
 
     from_json = json.loads
 
 
-async def _maybe_coroutine(
-    f: MaybeAwaitableFunc[P, T], *args: P.args, **kwargs: P.kwargs
-) -> T:
+async def _maybe_coroutine(f: MaybeAwaitableFunc[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     value = f(*args, **kwargs)
     if inspect.isawaitable(value):
         return await value
@@ -58,18 +56,18 @@ async def _maybe_coroutine(
         return value
 
 
-_TRUE: typing.Literal["true"] = "true"
-_FALSE: typing.Literal["false"] = "false"
+_TRUE: typing.Literal['true'] = 'true'
+_FALSE: typing.Literal['false'] = 'false'
 
 
-def _bool(b: bool) -> typing.Literal["true", "false"]:
+def _bool(b: bool) -> typing.Literal['true', 'false']:
     return _TRUE if b else _FALSE
 
 
 async def _json_or_text(response: aiohttp.ClientResponse) -> typing.Any:
-    text = await response.text(encoding="utf-8")
+    text = await response.text(encoding='utf-8')
     try:
-        if response.headers["content-type"].startswith("application/json"):
+        if response.headers['content-type'].startswith('application/json'):
             return from_json(text)
     except KeyError:
         # Thanks Cloudflare
@@ -83,10 +81,10 @@ def utcnow() -> datetime.datetime:
 
 
 __all__ = (
-    "to_json",
-    "from_json",
-    "_maybe_coroutine",
-    "_bool",
-    "_json_or_text",
-    "utcnow",
+    'to_json',
+    'from_json',
+    '_maybe_coroutine',
+    '_bool',
+    '_json_or_text',
+    'utcnow',
 )

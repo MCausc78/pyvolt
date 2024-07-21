@@ -100,9 +100,7 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 
-DEFAULT_HTTP_USER_AGENT = (
-    f"pyvolt API client (https://github.com/MCausc78/pyvolt, {version})"
-)
+DEFAULT_HTTP_USER_AGENT = f'pyvolt API client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 _L = logging.getLogger(__name__)
@@ -119,14 +117,14 @@ class HTTPClient:
     """The Revolt HTTP API client."""
 
     __slots__ = (
-        "token",
-        "bot",
-        "state",
-        "_session",
-        "base",
-        "cf_clearance",
-        "max_retries",
-        "user_agent",
+        'token',
+        'bot',
+        'state',
+        '_session',
+        'base',
+        'cf_clearance',
+        'max_retries',
+        'user_agent',
     )
 
     def __init__(
@@ -138,10 +136,7 @@ class HTTPClient:
         cf_clearance: str | None = None,
         max_retries: int | None = None,
         state: State,
-        session: (
-            utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession]
-            | aiohttp.ClientSession
-        ),
+        session: (utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession),
         user_agent: str | None = None,
     ) -> None:
         self.token = token
@@ -149,7 +144,7 @@ class HTTPClient:
 
         self.state = state
         if base is None:
-            base = "https://api.revolt.chat"
+            base = 'https://api.revolt.chat'
         self._session = session
         self.base = base
         self.cf_clearance = cf_clearance
@@ -162,46 +157,41 @@ class HTTPClient:
         *,
         authenticated: bool = True,
         manual_accept: bool = False,
-        user_agent: str = "",
+        user_agent: str = '',
         mfa_ticket: str | None = None,
         **kwargs,
     ) -> aiohttp.ClientResponse:
-        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(
-            kwargs.pop("headers", {})
-        )
+        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
 
         # Prevent UnderAttackMode error
-        cf_clearance = kwargs.pop("cf_clearance", self.cf_clearance)
+        cf_clearance = kwargs.pop('cf_clearance', self.cf_clearance)
         if cf_clearance:
-            if "cookie" not in headers:
-                headers["cookie"] = f"cf_clearance={cf_clearance}"
+            if 'cookie' not in headers:
+                headers['cookie'] = f'cf_clearance={cf_clearance}'
             else:
-
                 pass
 
         if self.token is not None and authenticated:
-            headers["x-bot-token" if self.bot else "x-session-token"] = self.token
+            headers['x-bot-token' if self.bot else 'x-session-token'] = self.token
         if not manual_accept:
-            headers["accept"] = "application/json"
-        headers["user-agent"] = user_agent or self.user_agent
+            headers['accept'] = 'application/json'
+        headers['user-agent'] = user_agent or self.user_agent
         if mfa_ticket is not None:
-            headers["x-mfa-ticket"] = mfa_ticket
+            headers['x-mfa-ticket'] = mfa_ticket
         retries = 0
 
         method = route.route.method
-        url = self.base.rstrip("/") + route.build()
+        url = self.base.rstrip('/') + route.build()
 
         while True:
-            _L.debug("sending request to %s, body=%s", route, kwargs.get("json"))
+            _L.debug('sending request to %s, body=%s', route, kwargs.get('json'))
 
             session = self._session
             if callable(session):
                 session = await utils._maybe_coroutine(session, self)
                 # detect recursion
                 if callable(session):
-                    raise TypeError(
-                        f"Expected aiohttp.ClientSession, not {type(session)!r}"
-                    )
+                    raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
                 # Do not call factory on future requests
                 self._session = session
 
@@ -227,11 +217,11 @@ class HTTPClient:
                     if retries < self.max_retries:
                         j = await utils._json_or_text(response)
                         if isinstance(j, dict):
-                            retry_after: float = j["retry_after"] / 1000.0
+                            retry_after: float = j['retry_after'] / 1000.0
                         else:
-                            retry_after = float("nan")
+                            retry_after = float('nan')
                         _L.debug(
-                            "ratelimited on %s %s, retrying in %.3f seconds",
+                            'ratelimited on %s %s, retrying in %.3f seconds',
                             method,
                             url,
                             retry_after,
@@ -239,13 +229,13 @@ class HTTPClient:
                         await asyncio.sleep(retry_after)
                         continue
                 j = await utils._json_or_text(response)
-                if isinstance(j.get("error"), dict):
-                    error = j["error"]
-                    code = error.get("code")
-                    reason = error.get("reason")
-                    description = error.get("description")
-                    j["type"] = "RocketError"
-                    j["err"] = f"{code} {reason}: {description}"
+                if isinstance(j.get('error'), dict):
+                    error = j['error']
+                    code = error.get('code')
+                    reason = error.get('reason')
+                    description = error.get('description')
+                    j['type'] = 'RocketError'
+                    j['err'] = f'{code} {reason}: {description}'
                 raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
             return response
 
@@ -255,7 +245,7 @@ class HTTPClient:
         *,
         authenticated: bool = True,
         manual_accept: bool = False,
-        user_agent: str = "",
+        user_agent: str = '',
         mfa_ticket: str | None = None,
         **kwargs,
     ) -> typing.Any:
@@ -290,11 +280,9 @@ class HTTPClient:
         :class:`Bot`
             The created bot.
         """
-        j: raw.DataCreateBot = {"name": name}
-        d: raw.BotWithUserResponse = await self.request(
-            routes.BOTS_CREATE.compile(), json=j
-        )
-        return self.state.parser.parse_bot(d, d["user"])
+        j: raw.DataCreateBot = {'name': name}
+        d: raw.BotWithUserResponse = await self.request(routes.BOTS_CREATE.compile(), json=j)
+        return self.state.parser.parse_bot(d, d['user'])
 
     async def delete_bot(self, bot: ULIDOr[BaseBot]) -> None:
         """|coro|
@@ -348,27 +336,25 @@ class HTTPClient:
         j: raw.DataEditBot = {}
         r: list[raw.FieldsBot] = []
         if is_defined(name):
-            j["name"] = name
+            j['name'] = name
         if is_defined(public):
-            j["public"] = public
+            j['public'] = public
         if is_defined(analytics):
-            j["analytics"] = analytics
+            j['analytics'] = analytics
         if is_defined(interactions_url):
             if interactions_url is None:
-                r.append("InteractionsURL")
+                r.append('InteractionsURL')
             else:
-                j["interactions_url"] = interactions_url
+                j['interactions_url'] = interactions_url
         if reset_token:
-            r.append("Token")
+            r.append('Token')
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
 
-        d: raw.BotWithUserResponse = await self.request(
-            routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=j
-        )
+        d: raw.BotWithUserResponse = await self.request(routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=j)
         return self.state.parser.parse_bot(
             d,
-            d["user"],
+            d['user'],
         )
 
     async def get_bot(self, bot: ULIDOr[BaseBot]) -> Bot:
@@ -391,10 +377,8 @@ class HTTPClient:
         :class:`Bot`
             The retrieved bot.
         """
-        d: raw.FetchBotResponse = await self.request(
-            routes.BOTS_FETCH.compile(bot_id=resolve_id(bot))
-        )
-        return self.state.parser.parse_bot(d["bot"], d["user"])
+        d: raw.FetchBotResponse = await self.request(routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)))
+        return self.state.parser.parse_bot(d['bot'], d['user'])
 
     async def get_owned_bots(self) -> list[Bot]:
         """|coro|
@@ -409,9 +393,7 @@ class HTTPClient:
         List[:class:`Bot`]
             The owned bots.
         """
-        return self.state.parser.parse_bots(
-            await self.request(routes.BOTS_FETCH_OWNED.compile())
-        )
+        return self.state.parser.parse_bots(await self.request(routes.BOTS_FETCH_OWNED.compile()))
 
     async def get_public_bot(self, bot: ULIDOr[BaseBot]) -> PublicBot:
         """|coro|
@@ -481,24 +463,22 @@ class HTTPClient:
             You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
         if server and group:
-            raise TypeError("Cannot pass both server and group")
+            raise TypeError('Cannot pass both server and group')
         if not server and not group:
-            raise TypeError("Pass server or group")
+            raise TypeError('Pass server or group')
 
         j: raw.InviteBotDestination
         if server:
-            j = {"server": resolve_id(server)}
+            j = {'server': resolve_id(server)}
         elif group:
-            j = {"group": resolve_id(group)}
+            j = {'group': resolve_id(group)}
         else:
-            raise RuntimeError("Unreachable")
+            raise RuntimeError('Unreachable')
 
         await self.request(routes.BOTS_INVITE.compile(bot_id=resolve_id(bot)), json=j)
 
     # Channels control
-    async def acknowledge_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
-    ) -> None:
+    async def acknowledge_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Marks this message as read.
@@ -527,9 +507,7 @@ class HTTPClient:
             )
         )
 
-    async def close_channel(
-        self, channel: ULIDOr[BaseChannel], silent: bool | None = None
-    ) -> None:
+    async def close_channel(self, channel: ULIDOr[BaseChannel], silent: bool | None = None) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
@@ -550,7 +528,7 @@ class HTTPClient:
         """
         p: raw.OptionsChannelDelete = {}
         if silent is not None:
-            p["leave_silently"] = utils._bool(silent)
+            p['leave_silently'] = utils._bool(silent)
         await self.request(
             routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
             params=p,
@@ -606,27 +584,27 @@ class HTTPClient:
         j: raw.DataEditChannel = {}
         r: list[raw.FieldsChannel] = []
         if is_defined(name):
-            j["name"] = name
+            j['name'] = name
         if is_defined(description):
             if description is None:
-                r.append("Description")
+                r.append('Description')
             else:
-                j["description"] = description
+                j['description'] = description
         if is_defined(owner):
-            j["owner"] = resolve_id(owner)
+            j['owner'] = resolve_id(owner)
         if is_defined(icon):
             if icon is None:
-                r.append("Icon")
+                r.append('Icon')
             else:
-                j["icon"] = await resolve_resource(self.state, icon, tag="icons")
+                j['icon'] = await resolve_resource(self.state, icon, tag='icons')
         if is_defined(nsfw):
-            j["nsfw"] = nsfw
+            j['nsfw'] = nsfw
         if is_defined(archived):
-            j["archived"] = archived
+            j['archived'] = archived
         if is_defined(default_permissions):
-            r.append("DefaultPermissions")
+            r.append('DefaultPermissions')
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
         return self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_CHANNEL_EDIT.compile(channel_id=resolve_id(channel)),
@@ -657,9 +635,7 @@ class HTTPClient:
             The retrieved channel.
         """
         return self.state.parser.parse_channel(
-            await self.request(
-                routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel))
-            )
+            await self.request(routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)))
         )
 
     async def get_channel_pins(self, channel: ULIDOr[TextChannel]) -> list[Message]:
@@ -684,9 +660,7 @@ class HTTPClient:
         """
         return [
             self.state.parser.parse_message(m)
-            for m in await self.request(
-                routes.CHANNELS_CHANNEL_PINS.compile(channel_id=resolve_id(channel))
-            )
+            for m in await self.request(routes.CHANNELS_CHANNEL_PINS.compile(channel_id=resolve_id(channel)))
         ]
 
     async def add_recipient_to_group(
@@ -716,9 +690,7 @@ class HTTPClient:
             Adding user to the group failed.
         """
         await self.request(
-            routes.CHANNELS_GROUP_ADD_MEMBER.compile(
-                channel_id=resolve_id(channel), user_id=resolve_id(user)
-            )
+            routes.CHANNELS_GROUP_ADD_MEMBER.compile(channel_id=resolve_id(channel), user_id=resolve_id(user))
         )
 
     async def create_group(
@@ -757,13 +729,13 @@ class HTTPClient:
         :class:`GroupChannel`
             The new group.
         """
-        j: raw.DataCreateGroup = {"name": name}
+        j: raw.DataCreateGroup = {'name': name}
         if description is not None:
-            j["description"] = description
+            j['description'] = description
         if recipients is not None:
-            j["users"] = [resolve_id(recipient) for recipient in recipients]
+            j['users'] = [resolve_id(recipient) for recipient in recipients]
         if nsfw is not None:
-            j["nsfw"] = nsfw
+            j['nsfw'] = nsfw
         return self.state.parser.parse_group_channel(
             await self.request(routes.CHANNELS_GROUP_CREATE.compile(), json=j),
             recipients=(True, []),
@@ -802,9 +774,7 @@ class HTTPClient:
             )
         )
 
-    async def create_invite(
-        self, channel: ULIDOr[GroupChannel | ServerChannel]
-    ) -> Invite:
+    async def create_invite(self, channel: ULIDOr[GroupChannel | ServerChannel]) -> Invite:
         """|coro|
 
         Creates an invite to channel. The destination channel must be a group or server channel.
@@ -830,9 +800,7 @@ class HTTPClient:
             The invite that was created.
         """
         return self.state.parser.parse_invite(
-            await self.request(
-                routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel))
-            )
+            await self.request(routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel)))
         )
 
     async def get_group_recipients(
@@ -892,9 +860,7 @@ class HTTPClient:
         HTTPException
             Deleting messages failed.
         """
-        j: raw.OptionsBulkDelete = {
-            "ids": [resolve_id(message) for message in messages]
-        }
+        j: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
         await self.request(
             routes.CHANNELS_MESSAGE_BULK_DELETE.compile(channel_id=resolve_id(channel)),
             json=j,
@@ -931,9 +897,7 @@ class HTTPClient:
             )
         )
 
-    async def delete_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
-    ) -> None:
+    async def delete_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Deletes a message you've sent or one you have permission to delete.
@@ -996,9 +960,9 @@ class HTTPClient:
         """
         j: raw.DataEditMessage = {}
         if is_defined(content):
-            j["content"] = content
+            j['content'] = content
         if is_defined(embeds):
-            j["embeds"] = [await embed.build(self.state) for embed in embeds]
+            j['embeds'] = [await embed.build(self.state) for embed in embeds]
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_EDIT.compile(
@@ -1009,9 +973,7 @@ class HTTPClient:
             )
         )
 
-    async def get_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]
-    ) -> Message:
+    async def get_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> Message:
         """|coro|
 
         Retrieves a message.
@@ -1090,17 +1052,17 @@ class HTTPClient:
         """
         p: raw.OptionsQueryMessages = {}
         if limit is not None:
-            p["limit"] = limit
+            p['limit'] = limit
         if before is not None:
-            p["before"] = resolve_id(before)
+            p['before'] = resolve_id(before)
         if after is not None:
-            p["after"] = resolve_id(after)
+            p['after'] = resolve_id(after)
         if sort is not None:
-            p["sort"] = sort.value
+            p['sort'] = sort.value
         if nearby is not None:
-            p["nearby"] = resolve_id(nearby)
+            p['nearby'] = resolve_id(nearby)
         if populate_users is not None:
-            p["include_users"] = utils._bool(populate_users)
+            p['include_users'] = utils._bool(populate_users)
         return self.state.parser.parse_messages(
             await self.request(
                 routes.CHANNELS_MESSAGE_QUERY.compile(channel_id=resolve_id(channel)),
@@ -1189,17 +1151,17 @@ class HTTPClient:
         List[:class:`Message`]
             The messages matched.
         """
-        j: raw.DataMessageSearch = {"query": query}
+        j: raw.DataMessageSearch = {'query': query}
         if limit is not None:
-            j["limit"] = limit
+            j['limit'] = limit
         if before is not None:
-            j["before"] = resolve_id(before)
+            j['before'] = resolve_id(before)
         if after is not None:
-            j["after"] = resolve_id(after)
+            j['after'] = resolve_id(after)
         if sort is not None:
-            j["sort"] = sort.value
+            j['sort'] = sort.value
         if populate_users is not None:
-            j["include_users"] = utils._bool(populate_users)
+            j['include_users'] = utils._bool(populate_users)
 
         return self.state.parser.parse_messages(
             await self.request(
@@ -1208,9 +1170,7 @@ class HTTPClient:
             )
         )
 
-    async def pin_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
-    ) -> None:
+    async def pin_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Pins a message.
@@ -1290,27 +1250,22 @@ class HTTPClient:
         """
         j: raw.DataMessageSend = {}
         if content is not None:
-            j["content"] = content
+            j['content'] = content
         if attachments is not None:
-            j["attachments"] = [
-                await resolve_resource(self.state, attachment, tag="attachments")
-                for attachment in attachments
+            j['attachments'] = [
+                await resolve_resource(self.state, attachment, tag='attachments') for attachment in attachments
             ]
         if replies is not None:
-            j["replies"] = [
-                (
-                    reply.build()
-                    if isinstance(reply, Reply)
-                    else {"id": resolve_id(reply), "mention": False}
-                )
+            j['replies'] = [
+                (reply.build() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
                 for reply in replies
             ]
         if embeds is not None:
-            j["embeds"] = [await embed.build(self.state) for embed in embeds]
+            j['embeds'] = [await embed.build(self.state) for embed in embeds]
         if masquerade is not None:
-            j["masquerade"] = masquerade.build()
+            j['masquerade'] = masquerade.build()
         if interactions is not None:
-            j["interactions"] = interactions.build()
+            j['interactions'] = interactions.build()
 
         flags = None
         if silent is not None:
@@ -1319,11 +1274,11 @@ class HTTPClient:
                 flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
 
         if flags is not None:
-            j["flags"] = flags
+            j['flags'] = flags
 
         headers = {}
         if nonce is not None:
-            headers["Idempotency-Key"] = nonce
+            headers['Idempotency-Key'] = nonce
         return self.state.parser.parse_message(
             await self.request(
                 routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
@@ -1332,9 +1287,7 @@ class HTTPClient:
             )
         )
 
-    async def unpin_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
-    ) -> None:
+    async def unpin_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Unpins a message.
@@ -1398,9 +1351,9 @@ class HTTPClient:
         """
         p: raw.OptionsUnreact = {}
         if user is not None:
-            p["user_id"] = resolve_id(user)
+            p['user_id'] = resolve_id(user)
         if remove_all is not None:
-            p["remove_all"] = utils._bool(remove_all)
+            p['remove_all'] = utils._bool(remove_all)
         await self.request(
             routes.CHANNELS_MESSAGE_UNREACT.compile(
                 channel_id=resolve_id(channel),
@@ -1442,9 +1395,7 @@ class HTTPClient:
         :class:`ServerChannel`
             The updated server channel with new permissions.
         """
-        j: raw.DataSetRolePermissions = {
-            "permissions": {"allow": int(allow), "deny": int(deny)}
-        }
+        j: raw.DataSetRolePermissions = {'permissions': {'allow': int(allow), 'deny': int(deny)}}
         r = self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET.compile(
@@ -1487,25 +1438,17 @@ class HTTPClient:
             The updated server channel with new permissions.
         """
         j: raw.DataDefaultChannelPermissions = {
-            "permissions": (
-                permissions.build()
-                if isinstance(permissions, PermissionOverride)
-                else int(permissions)
-            )
+            'permissions': (permissions.build() if isinstance(permissions, PermissionOverride) else int(permissions))
         }
         r = self.state.parser.parse_channel(
             await self.request(
-                routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(
-                    channel_id=resolve_id(channel)
-                ),
+                routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(channel_id=resolve_id(channel)),
                 json=j,
             )
         )
         return r  # type: ignore
 
-    async def join_call(
-        self, channel: ULIDOr[DMChannel | GroupChannel | VoiceChannel]
-    ) -> str:
+    async def join_call(self, channel: ULIDOr[DMChannel | GroupChannel | VoiceChannel]) -> str:
         """|coro|
 
         Asks the voice server for a token to join the call.
@@ -1529,7 +1472,7 @@ class HTTPClient:
         d: raw.LegacyCreateVoiceUserResponse = await self.request(
             routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
         )
-        return d["token"]
+        return d['token']
 
     async def create_webhook(
         self,
@@ -1564,9 +1507,9 @@ class HTTPClient:
         :class:`Webhook`
             The created webhook.
         """
-        j: raw.CreateWebhookBody = {"name": name}
+        j: raw.CreateWebhookBody = {'name': name}
         if avatar is not None:
-            j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+            j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         return self.state.parser.parse_webhook(
             await self.request(
                 routes.CHANNELS_WEBHOOK_CREATE.compile(channel_id=resolve_id(channel)),
@@ -1574,9 +1517,7 @@ class HTTPClient:
             )
         )
 
-    async def get_channel_webhooks(
-        self, channel: ULIDOr[ServerChannel], /
-    ) -> list[Webhook]:
+    async def get_channel_webhooks(self, channel: ULIDOr[ServerChannel], /) -> list[Webhook]:
         """|coro|
 
         Gets the list of webhooks from this channel.
@@ -1595,11 +1536,7 @@ class HTTPClient:
         """
         return [
             self.state.parser.parse_webhook(e)
-            for e in await self.request(
-                routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(
-                    channel_id=resolve_id(channel)
-                )
-            )
+            for e in await self.request(routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(channel_id=resolve_id(channel)))
         ]
 
     # Customization control (emojis)
@@ -1643,15 +1580,15 @@ class HTTPClient:
             The created emoji.
         """
         j: raw.DataCreateEmoji = {
-            "name": name,
-            "parent": {"type": "Server", "id": resolve_id(server)},
+            'name': name,
+            'parent': {'type': 'Server', 'id': resolve_id(server)},
         }
         if nsfw is not None:
-            j["nsfw"] = nsfw
+            j['nsfw'] = nsfw
         return self.state.parser.parse_server_emoji(
             await self.request(
                 routes.CUSTOMISATION_EMOJI_CREATE.compile(
-                    attachment_id=await resolve_resource(self.state, data, tag="emojis")
+                    attachment_id=await resolve_resource(self.state, data, tag='emojis')
                 ),
                 json=j,
             )
@@ -1674,9 +1611,7 @@ class HTTPClient:
         HTTPException
             Deleting the emoji failed.
         """
-        await self.request(
-            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji))
-        )
+        await self.request(routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)))
 
     async def get_emoji(self, emoji: ULIDOr[BaseEmoji], /) -> Emoji:
         """|coro|
@@ -1700,9 +1635,7 @@ class HTTPClient:
         """
 
         return self.state.parser.parse_emoji(
-            await self.request(
-                routes.CUSTOMISATION_EMOJI_FETCH.compile(emoji_id=resolve_id(emoji))
-            )
+            await self.request(routes.CUSTOMISATION_EMOJI_FETCH.compile(emoji_id=resolve_id(emoji)))
         )
 
     # Invites control
@@ -1724,9 +1657,7 @@ class HTTPClient:
             Deleting the invite failed.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
-        await self.request(
-            routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code)
-        )
+        await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code))
 
     async def get_invite(self, code: str | BaseInvite, /) -> BaseInvite:
         """|coro|
@@ -1779,21 +1710,19 @@ class HTTPClient:
             The joined server or group.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
-        d: raw.InviteJoinResponse = await self.request(
-            routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code)
-        )
-        if d["type"] == "Server":
+        d: raw.InviteJoinResponse = await self.request(routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code))
+        if d['type'] == 'Server':
             return self.state.parser.parse_server(
-                d["server"],
-                (False, d["channels"]),
+                d['server'],
+                (False, d['channels']),
             )
-        elif d["type"] == "Group":
+        elif d['type'] == 'Group':
             return self.state.parser.parse_group_channel(
-                d["channel"],
-                (False, [self.state.parser.parse_user(u) for u in d["users"]]),
+                d['channel'],
+                (False, [self.state.parser.parse_user(u) for u in d['users']]),
             )
         else:
-            _L.error("Invalid payload: %s", d)
+            _L.error('Invalid payload: %s', d)
             raise NotImplemented
 
     # Onboarding control
@@ -1812,10 +1741,8 @@ class HTTPClient:
         :class:`SelfUser`
             The updated user.
         """
-        j: raw.DataOnboard = {"username": username}
-        return self.state.parser.parse_self_user(
-            await self.request(routes.ONBOARD_COMPLETE.compile(), json=j)
-        )
+        j: raw.DataOnboard = {'username': username}
+        return self.state.parser.parse_self_user(await self.request(routes.ONBOARD_COMPLETE.compile(), json=j))
 
     async def onboarding_status(self) -> bool:
         """|coro|
@@ -1824,7 +1751,7 @@ class HTTPClient:
         You may skip calling this if you're restoring an existing session.
         """
         d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile())
-        return d["onboarding"]
+        return d['onboarding']
 
     # Web Push control
     async def push_subscribe(self, *, endpoint: str, p256dh: str, auth: str) -> None:
@@ -1833,9 +1760,9 @@ class HTTPClient:
         Create a new Web Push subscription. If an subscription already exists on this session, it will be removed.
         """
         j: raw.a.WebPushSubscription = {
-            "endpoint": endpoint,
-            "p256dh": p256dh,
-            "auth": auth,
+            'endpoint': endpoint,
+            'p256dh': p256dh,
+            'auth': auth,
         }
         await self.request(
             routes.PUSH_SUBSCRIBE.compile(),
@@ -1873,14 +1800,14 @@ class HTTPClient:
             Trying to self-report, or reporting the message failed.
         """
         j: raw.DataReportContent = {
-            "content": {
-                "type": "Message",
-                "id": resolve_id(message),
-                "report_reason": reason.value,
+            'content': {
+                'type': 'Message',
+                'id': resolve_id(message),
+                'report_reason': reason.value,
             }
         }
         if additional_context is not None:
-            j["additional_context"] = additional_context
+            j['additional_context'] = additional_context
         await self._report_content(j)
 
     async def report_server(
@@ -1904,14 +1831,14 @@ class HTTPClient:
             You're trying to self-report, or reporting the server failed.
         """
         j: raw.DataReportContent = {
-            "content": {
-                "type": "Server",
-                "id": resolve_id(server),
-                "report_reason": reason.value,
+            'content': {
+                'type': 'Server',
+                'id': resolve_id(server),
+                'report_reason': reason.value,
             }
         }
         if additional_context is not None:
-            j["additional_context"] = additional_context
+            j['additional_context'] = additional_context
         await self._report_content(j)
 
     async def report_user(
@@ -1936,17 +1863,17 @@ class HTTPClient:
             You're trying to self-report, or reporting the user failed.
         """
         content: raw.UserReportedContent = {
-            "type": "User",
-            "id": resolve_id(user),
-            "report_reason": reason.value,
+            'type': 'User',
+            'id': resolve_id(user),
+            'report_reason': reason.value,
         }
 
         if message_context is not None:
-            content["message_id"] = resolve_id(message_context)
+            content['message_id'] = resolve_id(message_context)
 
-        j: raw.DataReportContent = {"content": content}
+        j: raw.DataReportContent = {'content': content}
         if additional_context is not None:
-            j["additional_context"] = additional_context
+            j['additional_context'] = additional_context
 
         await self._report_content(j)
 
@@ -1979,12 +1906,10 @@ class HTTPClient:
         HTTPException
             Banning the user failed.
         """
-        j: raw.DataBanCreate = {"reason": reason}
+        j: raw.DataBanCreate = {'reason': reason}
         return self.state.parser.parse_ban(
             await self.request(
-                routes.SERVERS_BAN_CREATE.compile(
-                    server_id=resolve_id(server), user_id=resolve_id(user)
-                ),
+                routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
                 json=j,
             ),
             {},
@@ -2006,9 +1931,7 @@ class HTTPClient:
             The ban entries.
         """
         return self.state.parser.parse_bans(
-            await self.request(
-                routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server))
-            )
+            await self.request(routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server)))
         )
 
     async def unban(self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]) -> None:
@@ -2024,9 +1947,7 @@ class HTTPClient:
             Unbanning the user failed.
         """
         await self.request(
-            routes.SERVERS_BAN_REMOVE.compile(
-                server_id=resolve_id(server), user_id=resolve_id(user)
-            ),
+            routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
         )
 
     async def create_server_channel(
@@ -2061,13 +1982,13 @@ class HTTPClient:
         HTTPException
             Creating the channel failed.
         """
-        j: raw.DataCreateServerChannel = {"name": name}
+        j: raw.DataCreateServerChannel = {'name': name}
         if type is not None:
-            j["type"] = type.value
+            j['type'] = type.value
         if description is not None:
-            j["description"] = description
+            j['description'] = description
         if nsfw is not None:
-            j["nsfw"] = nsfw
+            j['nsfw'] = nsfw
         channel = self.state.parser.parse_channel(
             await self.request(
                 routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
@@ -2094,14 +2015,10 @@ class HTTPClient:
         """
         return [
             self.state.parser.parse_server_emoji(e)
-            for e in await self.request(
-                routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server))
-            )
+            for e in await self.request(routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server)))
         ]
 
-    async def get_server_invites(
-        self, server: ULIDOr[BaseServer], /
-    ) -> list[ServerInvite]:
+    async def get_server_invites(self, server: ULIDOr[BaseServer], /) -> list[ServerInvite]:
         """|coro|
 
         Returns a list of all invites from the server.
@@ -2125,9 +2042,7 @@ class HTTPClient:
         """
         return [
             self.state.parser.parse_server_invite(i)
-            for i in await self.request(
-                routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server))
-            )
+            for i in await self.request(routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server)))
         ]
 
     async def edit_member(
@@ -2170,30 +2085,30 @@ class HTTPClient:
         r: list[raw.FieldsMember] = []
         if is_defined(nick):
             if nick is not None:
-                j["nickname"] = nick
+                j['nickname'] = nick
             else:
-                r.append("Nickname")
+                r.append('Nickname')
         if is_defined(avatar):
             if avatar is not None:
-                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+                j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
             else:
-                r.append("Avatar")
+                r.append('Avatar')
         if is_defined(roles):
             if roles is not None:
-                j["roles"] = [resolve_id(e) for e in roles]
+                j['roles'] = [resolve_id(e) for e in roles]
             else:
-                r.append("Roles")
+                r.append('Roles')
         if is_defined(timeout):
             if timeout is None:
-                r.append("Timeout")
+                r.append('Timeout')
             elif isinstance(timeout, datetime):
-                j["timeout"] = timeout.isoformat()
+                j['timeout'] = timeout.isoformat()
             elif isinstance(timeout, timedelta):
-                j["timeout"] = (datetime.now() + timeout).isoformat()
+                j['timeout'] = (datetime.now() + timeout).isoformat()
             elif isinstance(timeout, (float, int)):
-                j["timeout"] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
+                j['timeout'] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
         return self.state.parser.parse_member(
             await self.request(
                 routes.SERVERS_MEMBER_EDIT.compile(
@@ -2204,9 +2119,7 @@ class HTTPClient:
             )
         )
 
-    async def query_members_by_name(
-        self, server: ULIDOr[BaseServer], query: str, /
-    ) -> list[Member]:
+    async def query_members_by_name(self, server: ULIDOr[BaseServer], query: str, /) -> list[Member]:
         """|coro|
 
         Query members by a given name, this API is not stable and will be removed in the future.
@@ -2225,12 +2138,10 @@ class HTTPClient:
         """
         return self.state.parser.parse_members_with_users(
             await self.request(
-                routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(
-                    server_id=resolve_id(server)
-                ),
+                routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(server_id=resolve_id(server)),
                 params={
-                    "query": query,
-                    "experimental_api": "true",
+                    'query': query,
+                    'experimental_api': 'true',
                 },
             )
         )
@@ -2262,9 +2173,7 @@ class HTTPClient:
             )
         )
 
-    async def get_members(
-        self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
-    ) -> list[Member]:
+    async def get_members(self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None) -> list[Member]:
         """|coro|
 
         Retrieves all server members.
@@ -2283,7 +2192,7 @@ class HTTPClient:
         """
         p: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
-            p["exclude_offline"] = utils._bool(exclude_offline)
+            p['exclude_offline'] = utils._bool(exclude_offline)
         return self.state.parser.parse_members_with_users(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
@@ -2312,7 +2221,7 @@ class HTTPClient:
         """
         p: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
-            p["exclude_offline"] = utils._bool(exclude_offline)
+            p['exclude_offline'] = utils._bool(exclude_offline)
         return self.state.parser.parse_member_list(
             await self.request(
                 routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
@@ -2320,9 +2229,7 @@ class HTTPClient:
             )
         )
 
-    async def kick_member(
-        self, server: ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /
-    ) -> None:
+    async def kick_member(self, server: ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /) -> None:
         """|coro|
 
         Removes a member from the server.
@@ -2342,9 +2249,7 @@ class HTTPClient:
             Kicking the member failed.
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(
-                server_id=resolve_id(server), member_id=resolve_id(member)
-            )
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=resolve_id(member))
         )
 
     async def set_role_server_permissions(
@@ -2383,19 +2288,15 @@ class HTTPClient:
         :class:`Server`
             The newly updated server.
         """
-        j: raw.DataSetRolePermissions = {
-            "permissions": {"allow": int(allow), "deny": int(deny)}
-        }
+        j: raw.DataSetRolePermissions = {'permissions': {'allow': int(allow), 'deny': int(deny)}}
         d: raw.Server = await self.request(
-            routes.SERVERS_PERMISSIONS_SET.compile(
-                server_id=resolve_id(server), role_id=resolve_id(role)
-            ),
+            routes.SERVERS_PERMISSIONS_SET.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
             json=j,
         )
 
         return self.state.parser.parse_server(
             d,
-            (True, d["channels"]),
+            (True, d['channels']),
         )
 
     async def set_default_role_permissions(
@@ -2427,21 +2328,17 @@ class HTTPClient:
         :class:`Server`
             The newly updated server.
         """
-        j: raw.DataPermissionsValue = {"permissions": int(permissions)}
+        j: raw.DataPermissionsValue = {'permissions': int(permissions)}
         d: raw.Server = await self.request(
-            routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(
-                server_id=resolve_id(server)
-            ),
+            routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(server_id=resolve_id(server)),
             json=j,
         )
         return self.state.parser.parse_server(
             d,
-            (True, d["channels"]),
+            (True, d['channels']),
         )
 
-    async def create_role(
-        self, server: ULIDOr[BaseServer], /, *, name: str, rank: int | None = None
-    ) -> Role:
+    async def create_role(self, server: ULIDOr[BaseServer], /, *, name: str, rank: int | None = None) -> Role:
         """|coro|
 
         Creates a new server role.
@@ -2462,16 +2359,14 @@ class HTTPClient:
 
         """
         server_id = resolve_id(server)
-        j: raw.DataCreateRole = {"name": name, "rank": rank}
+        j: raw.DataCreateRole = {'name': name, 'rank': rank}
         d: raw.NewRoleResponse = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
             json=j,
         )
-        return self.state.parser.parse_role(d["role"], d["id"], server_id)
+        return self.state.parser.parse_role(d['role'], d['id'], server_id)
 
-    async def delete_role(
-        self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole], /
-    ) -> None:
+    async def delete_role(self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole], /) -> None:
         """|coro|
 
         Deletes a server role.
@@ -2490,11 +2385,7 @@ class HTTPClient:
         HTTPException
             Deleting the role failed.
         """
-        await self.request(
-            routes.SERVERS_ROLES_DELETE.compile(
-                server_id=resolve_id(server), role_id=resolve_id(role)
-            )
-        )
+        await self.request(routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)))
 
     async def edit_role(
         self,
@@ -2541,27 +2432,25 @@ class HTTPClient:
         j: raw.DataEditRole = {}
         r: list[raw.FieldsRole] = []
         if is_defined(name):
-            j["name"] = name
+            j['name'] = name
         if is_defined(colour):
             if colour is not None:
-                j["colour"] = colour
+                j['colour'] = colour
             else:
-                r.append("Colour")
+                r.append('Colour')
         if is_defined(hoist):
-            j["hoist"] = hoist
+            j['hoist'] = hoist
         if is_defined(rank):
-            j["rank"] = rank
+            j['rank'] = rank
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
 
         server_id = resolve_id(server)
         role_id = resolve_id(role)
 
         return self.state.parser.parse_role(
             await self.request(
-                routes.SERVERS_ROLES_EDIT.compile(
-                    server_id=resolve_id(server), role_id=resolve_id(role)
-                ),
+                routes.SERVERS_ROLES_EDIT.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
                 json=j,
             ),
             role_id,
@@ -2601,9 +2490,7 @@ class HTTPClient:
         role_id = resolve_id(role)
 
         return self.state.parser.parse_role(
-            await self.request(
-                routes.SERVERS_ROLES_FETCH.compile(server_id=server_id, role_id=role_id)
-            ),
+            await self.request(routes.SERVERS_ROLES_FETCH.compile(server_id=server_id, role_id=role_id)),
             role_id,
             server_id,
         )
@@ -2621,13 +2508,9 @@ class HTTPClient:
         server: :class:`ULIDOr`[:class:`BaseServer`]
             The server to mark as read.
         """
-        await self.request(
-            routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server))
-        )
+        await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
 
-    async def create_server(
-        self, name: str, /, *, description: str | None = None, nsfw: bool | None = None
-    ) -> Server:
+    async def create_server(self, name: str, /, *, description: str | None = None, nsfw: bool | None = None) -> Server:
         """|coro|
 
         Create a new server.
@@ -2646,18 +2529,16 @@ class HTTPClient:
         :class:`Server`
             The created server.
         """
-        j: raw.DataCreateServer = {"name": name}
+        j: raw.DataCreateServer = {'name': name}
         if description is not None:
-            j["description"] = description
+            j['description'] = description
         if nsfw is not None:
-            j["nsfw"] = nsfw
-        d: raw.CreateServerLegacyResponse = await self.request(
-            routes.SERVERS_SERVER_CREATE.compile(), json=j
-        )
+            j['nsfw'] = nsfw
+        d: raw.CreateServerLegacyResponse = await self.request(routes.SERVERS_SERVER_CREATE.compile(), json=j)
 
         return self.state.parser.parse_server(
-            d["server"],
-            (False, d["channels"]),
+            d['server'],
+            (False, d['channels']),
         )
 
     async def delete_server(self, server: ULIDOr[BaseServer], /) -> None:
@@ -2670,13 +2551,9 @@ class HTTPClient:
         server: :class:`ULIDOr`[:class:`BaseServer`]
             The server to delete.
         """
-        await self.request(
-            routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server))
-        )
+        await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
 
-    async def leave_server(
-        self, server: ULIDOr[BaseServer], /, *, silent: bool | None = None
-    ) -> None:
+    async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: bool | None = None) -> None:
         """|coro|
 
         Leaves the server if not owner otherwise deletes it.
@@ -2690,7 +2567,7 @@ class HTTPClient:
         """
         p: raw.OptionsServerDelete = {}
         if silent is not None:
-            p["leave_silently"] = utils._bool(silent)
+            p['leave_silently'] = utils._bool(silent)
         await self.request(
             routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)),
             params=p,
@@ -2753,40 +2630,40 @@ class HTTPClient:
         j: raw.DataEditServer = {}
         r: list[raw.FieldsServer] = []
         if is_defined(name):
-            j["name"] = name
+            j['name'] = name
         if is_defined(description):
             if description is not None:
-                j["description"] = description
+                j['description'] = description
             else:
-                r.append("Description")
+                r.append('Description')
         if is_defined(icon):
             if icon is not None:
-                j["icon"] = await resolve_resource(self.state, icon, tag="icons")
+                j['icon'] = await resolve_resource(self.state, icon, tag='icons')
             else:
-                r.append("Icon")
+                r.append('Icon')
         if is_defined(banner):
             if banner is not None:
-                j["banner"] = await resolve_resource(self.state, banner, tag="banners")
+                j['banner'] = await resolve_resource(self.state, banner, tag='banners')
             else:
-                r.append("Banner")
+                r.append('Banner')
         if is_defined(categories):
             if categories is not None:
-                j["categories"] = [e.build() for e in categories]
+                j['categories'] = [e.build() for e in categories]
             else:
-                r.append("Categories")
+                r.append('Categories')
         if is_defined(system_messages):
             if system_messages is not None:
-                j["system_messages"] = system_messages.build()
+                j['system_messages'] = system_messages.build()
             else:
-                r.append("SystemMessages")
+                r.append('SystemMessages')
         if is_defined(flags):
-            j["flags"] = int(flags)
+            j['flags'] = int(flags)
         if is_defined(discoverable):
-            j["discoverable"] = discoverable
+            j['discoverable'] = discoverable
         if is_defined(analytics):
-            j["analytics"] = analytics
+            j['analytics'] = analytics
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
 
         d: raw.Server = await self.request(
             routes.SERVERS_SERVER_EDIT.compile(server_id=resolve_id(server)),
@@ -2794,7 +2671,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_server(
             d,
-            (True, d["channels"]),
+            (True, d['channels']),
         )
 
     async def get_server(
@@ -2822,13 +2699,13 @@ class HTTPClient:
         """
         p: raw.OptionsFetchServer = {}
         if populate_channels is not None:
-            p["include_channels"] = utils._bool(populate_channels)
+            p['include_channels'] = utils._bool(populate_channels)
         d: raw.FetchServerResponse = await self.request(
             routes.SERVERS_SERVER_FETCH.compile(server_id=resolve_id(server))
         )
         return self.state.parser.parse_server(
             d,  # type: ignore
-            (not populate_channels, d["channels"]),  # type: ignore
+            (not populate_channels, d['channels']),  # type: ignore
         )
 
     # Sync control
@@ -2841,7 +2718,7 @@ class HTTPClient:
             This can only be used by non-bot accounts.
         """
         # Sync endpoints aren't meant to be used with bot accounts
-        j: raw.OptionsFetchSettings = {"keys": keys}
+        j: raw.OptionsFetchSettings = {'keys': keys}
         return self.state.parser.parse_user_settings(
             await self.request(routes.SYNC_GET_SETTINGS.compile(), json=j),
             partial=True,
@@ -2860,10 +2737,7 @@ class HTTPClient:
         List[:class:`ReadState`]
             The channel read states.
         """
-        return [
-            self.state.parser.parse_read_state(rs)
-            for rs in await self.request(routes.SYNC_GET_UNREADS.compile())
-        ]
+        return [self.state.parser.parse_read_state(rs) for rs in await self.request(routes.SYNC_GET_UNREADS.compile())]
 
     async def edit_user_settings(
         self,
@@ -2885,7 +2759,7 @@ class HTTPClient:
         if edited_at is not None:
             if isinstance(edited_at, datetime):
                 edited_at = int(edited_at.timestamp())
-            p["timestamp"] = edited_at
+            p['timestamp'] = edited_at
 
         payload: dict[str, str] = {}
         for k, v in (dict_settings | kwargs).items():
@@ -2916,9 +2790,7 @@ class HTTPClient:
             The friended user.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user)))
         )
 
     async def block_user(self, user: ULIDOr[BaseUser], /) -> User:
@@ -2940,14 +2812,10 @@ class HTTPClient:
             The blocked user.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user)))
         )
 
-    async def change_username(
-        self, username: str, /, *, current_password: str
-    ) -> SelfUser:
+    async def change_username(self, username: str, /, *, current_password: str) -> SelfUser:
         """|coro|
 
         Change your username.
@@ -2967,7 +2835,7 @@ class HTTPClient:
         :class:`SelfUser`
             The newly updated user.
         """
-        j: raw.DataChangeUsername = {"username": username, "password": current_password}
+        j: raw.DataChangeUsername = {'username': username, 'password': current_password}
         return self.state.parser.parse_self_user(
             await self.request(
                 routes.USERS_CHANGE_USERNAME.compile(),
@@ -2991,26 +2859,26 @@ class HTTPClient:
         r: list[raw.FieldsUser] = []
         if is_defined(display_name):
             if display_name is None:
-                r.append("DisplayName")
+                r.append('DisplayName')
             else:
-                j["display_name"] = display_name
+                j['display_name'] = display_name
         if is_defined(avatar):
             if avatar is None:
-                r.append("Avatar")
+                r.append('Avatar')
             else:
-                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+                j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         if is_defined(status):
-            j["status"] = status.build()
+            j['status'] = status.build()
             r.extend(status.remove)
         if is_defined(profile):
-            j["profile"] = await profile.build(self.state)
+            j['profile'] = await profile.build(self.state)
             r.extend(profile.remove)
         if is_defined(badges):
-            j["badges"] = int(badges)
+            j['badges'] = int(badges)
         if is_defined(flags):
-            j["flags"] = int(flags)
+            j['flags'] = int(flags)
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
         d: raw.User = await self.request(route, json=j)
         return self.state.parser.parse_user(d)
 
@@ -3129,10 +2997,7 @@ class HTTPClient:
         List[Union[:class:`DMChannel`, :class:`GroupChannel`]]
             The private channels.
         """
-        return [
-            self.state.parser.parse_channel(e)
-            for e in await self.request(routes.USERS_FETCH_DMS.compile())
-        ]  # type: ignore # The returned channels are always DM/Groups
+        return [self.state.parser.parse_channel(e) for e in await self.request(routes.USERS_FETCH_DMS.compile())]  # type: ignore # The returned channels are always DM/Groups
 
     async def get_user_profile(self, user: ULIDOr[BaseUser], /) -> UserProfile:
         """|coro|
@@ -3169,9 +3034,7 @@ class HTTPClient:
         Unauthorized
             Invalid token.
         """
-        return self.state.parser.parse_user(
-            await self.request(routes.USERS_FETCH_SELF.compile())
-        )
+        return self.state.parser.parse_user(await self.request(routes.USERS_FETCH_SELF.compile()))
 
     async def get_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
@@ -3196,9 +3059,7 @@ class HTTPClient:
             The retrieved user.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_FETCH_USER.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_FETCH_USER.compile(user_id=resolve_id(user)))
         )
 
     async def get_user_flags(self, user: ULIDOr[BaseUser], /) -> UserFlags:
@@ -3206,13 +3067,7 @@ class HTTPClient:
 
         Retrieve a user's flags.
         """
-        return UserFlags(
-            (
-                await self.request(
-                    routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user))
-                )
-            )["flags"]
-        )
+        return UserFlags((await self.request(routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user))))['flags'])
 
     async def get_mutuals_with(self, user: ULIDOr[BaseUser], /) -> Mutuals:
         """|coro|
@@ -3230,9 +3085,7 @@ class HTTPClient:
             The found mutuals.
         """
         return self.state.parser.parse_mutuals(
-            await self.request(
-                routes.USERS_FIND_MUTUAL.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_FIND_MUTUAL.compile(user_id=resolve_id(user)))
         )
 
     async def get_default_avatar(self, user: ULIDOr[BaseUser], /) -> bytes:
@@ -3249,9 +3102,7 @@ class HTTPClient:
             response.close()
         return avatar
 
-    async def open_dm(
-        self, user: ULIDOr[BaseUser], /
-    ) -> SavedMessagesChannel | DMChannel:
+    async def open_dm(self, user: ULIDOr[BaseUser], /) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
         Open a DM with another user. If the target is oneself, a :class:`SavedMessagesChannel` is returned.
@@ -3281,9 +3132,7 @@ class HTTPClient:
             Denying the friend request failed.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
         )
 
     async def remove_friend(self, user: ULIDOr[BaseUser], /) -> User:
@@ -3300,14 +3149,10 @@ class HTTPClient:
             Removing the user as a friend failed.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
         )
 
-    async def send_friend_request(
-        self, username: str, discriminator: str | None = None, /
-    ) -> User:
+    async def send_friend_request(self, username: str, discriminator: str | None = None, /) -> User:
         """|coro|
 
         Send a friend request to another user.
@@ -3330,8 +3175,8 @@ class HTTPClient:
             Sending the friend request failed.
         """
         if discriminator is not None:
-            username += "#" + discriminator
-        j: raw.DataSendFriendRequest = {"username": username}
+            username += '#' + discriminator
+        j: raw.DataSendFriendRequest = {'username': username}
         return self.state.parser.parse_user(
             await self.request(
                 routes.USERS_SEND_FRIEND_REQUEST.compile(),
@@ -3353,15 +3198,11 @@ class HTTPClient:
             The user to unblock.
         """
         return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user))
-            )
+            await self.request(routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user)))
         )
 
     # Webhooks control
-    async def delete_webhook(
-        self, webhook: ULIDOr[BaseWebhook], /, *, token: str | None = None
-    ) -> None:
+    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], /, *, token: str | None = None) -> None:
         """|coro|
 
         Deletes a webhook. If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
@@ -3381,14 +3222,10 @@ class HTTPClient:
             Deleting the webhook failed.
         """
         if token is None:
-            await self.request(
-                routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook))
-            )
+            await self.request(routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook)))
         else:
             await self.request(
-                routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(
-                    webhook_id=resolve_id(webhook), webhook_token=token
-                ),
+                routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                 authenticated=False,
             )
 
@@ -3434,16 +3271,16 @@ class HTTPClient:
         j: raw.DataEditWebhook = {}
         r: list[raw.FieldsWebhook] = []
         if is_defined(name):
-            j["name"] = name
+            j['name'] = name
         if is_defined(avatar):
             if avatar is None:
-                r.append("Avatar")
+                r.append('Avatar')
             else:
-                j["avatar"] = await resolve_resource(self.state, avatar, tag="avatars")
+                j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         if is_defined(permissions):
-            j["permissions"] = int(permissions)
+            j['permissions'] = int(permissions)
         if len(r) > 0:
-            j["remove"] = r
+            j['remove'] = r
         return self.state.parser.parse_webhook(
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT.compile(webhook_id=resolve_id(webhook)),
@@ -3451,9 +3288,7 @@ class HTTPClient:
             )
             if token is None
             else await self.request(
-                routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(
-                    webhook_id=resolve_id(webhook), webhook_token=token
-                ),
+                routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                 json=j,
                 authenticated=False,
             )
@@ -3508,27 +3343,22 @@ class HTTPClient:
         """
         j: raw.DataMessageSend = {}
         if content is not None:
-            j["content"] = content
+            j['content'] = content
         if attachments is not None:
-            j["attachments"] = [
-                await resolve_resource(self.state, attachment, tag="attachments")
-                for attachment in attachments
+            j['attachments'] = [
+                await resolve_resource(self.state, attachment, tag='attachments') for attachment in attachments
             ]
         if replies is not None:
-            j["replies"] = [
-                (
-                    reply.build()
-                    if isinstance(reply, Reply)
-                    else {"id": resolve_id(reply), "mention": False}
-                )
+            j['replies'] = [
+                (reply.build() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
                 for reply in replies
             ]
         if embeds is not None:
-            j["embeds"] = [await embed.build(self.state) for embed in embeds]
+            j['embeds'] = [await embed.build(self.state) for embed in embeds]
         if masquerade is not None:
-            j["masquerade"] = masquerade.build()
+            j['masquerade'] = masquerade.build()
         if interactions is not None:
-            j["interactions"] = interactions.build()
+            j['interactions'] = interactions.build()
 
         flags = None
         if silent is not None:
@@ -3537,16 +3367,14 @@ class HTTPClient:
                 flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
 
         if flags is not None:
-            j["flags"] = flags
+            j['flags'] = flags
 
         headers = {}
         if nonce is not None:
-            headers["Idempotency-Key"] = nonce
+            headers['Idempotency-Key'] = nonce
         return self.state.parser.parse_message(
             await self.request(
-                routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(
-                    webhook_id=resolve_id(webhook), webhook_token=token
-                ),
+                routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                 json=j,
                 headers=headers,
                 authenticated=False,
@@ -3589,16 +3417,10 @@ class HTTPClient:
 
         return self.state.parser.parse_response_webhook(
             await (
-                self.request(
-                    routes.WEBHOOKS_WEBHOOK_FETCH.compile(
-                        webhook_id=resolve_id(webhook)
-                    )
-                )
+                self.request(routes.WEBHOOKS_WEBHOOK_FETCH.compile(webhook_id=resolve_id(webhook)))
                 if token is None
                 else self.request(
-                    routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(
-                        webhook_id=resolve_id(webhook), webhook_token=token
-                    ),
+                    routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                     authenticated=False,
                 )
             )
@@ -3631,8 +3453,8 @@ class HTTPClient:
             Changing the account password failed.
         """
         j: raw.a.DataChangeEmail = {
-            "email": email,
-            "current_password": current_password,
+            'email': email,
+            'current_password': current_password,
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_EMAIL.compile(),
@@ -3665,8 +3487,8 @@ class HTTPClient:
             Changing the account password failed.
         """
         j: raw.a.DataChangePassword = {
-            "password": new_password,
-            "current_password": current_password,
+            'password': new_password,
+            'current_password': current_password,
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_PASSWORD.compile(),
@@ -3692,7 +3514,7 @@ class HTTPClient:
         HTTPException
             Confirming the account deletion failed.
         """
-        j: raw.a.DataAccountDeletion = {"token": token}
+        j: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
             routes.AUTH_ACCOUNT_CONFIRM_DELETION.compile(),
             authenticated=False,
@@ -3729,10 +3551,10 @@ class HTTPClient:
             Registering the account failed.
         """
         j: raw.a.DataCreateAccount = {
-            "email": email,
-            "password": password,
-            "invite": invite,
-            "captcha": captcha,
+            'email': email,
+            'password': password,
+            'invite': invite,
+            'captcha': captcha,
         }
         await self.request(
             routes.AUTH_ACCOUNT_CREATE_ACCOUNT.compile(),
@@ -3786,9 +3608,7 @@ class HTTPClient:
         HTTPException
             Disabling the account failed.
         """
-        await self.request(
-            routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa
-        )
+        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa)
 
     async def get_account(self) -> PartialAccount:
         """|coro|
@@ -3803,9 +3623,7 @@ class HTTPClient:
         HTTPException
             Getting the account data failed.
         """
-        return self.state.parser.parse_partial_account(
-            await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile())
-        )
+        return self.state.parser.parse_partial_account(await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile()))
 
     async def confirm_password_reset(
         self, token: str, /, *, new_password: str, remove_sessions: bool | None = None
@@ -3829,9 +3647,9 @@ class HTTPClient:
             Sending the email failed.
         """
         j: raw.a.DataPasswordReset = {
-            "token": token,
-            "password": new_password,
-            "remove_sessions": remove_sessions,
+            'token': token,
+            'password': new_password,
+            'remove_sessions': remove_sessions,
         }
         await self.request(
             routes.AUTH_ACCOUNT_PASSWORD_RESET.compile(),
@@ -3861,16 +3679,14 @@ class HTTPClient:
         HTTPException
             Resending the verification mail failed.
         """
-        j: raw.a.DataResendVerification = {"email": email, "captcha": captcha}
+        j: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
             authenticated=False,
             json=j,
         )
 
-    async def send_password_reset(
-        self, *, email: str, captcha: str | None = None
-    ) -> None:
+    async def send_password_reset(self, *, email: str, captcha: str | None = None) -> None:
         """|coro|
 
         Send an email to reset account password.
@@ -3887,7 +3703,7 @@ class HTTPClient:
         HTTPException
             Sending the email failed.
         """
-        j: raw.a.DataSendPasswordReset = {"email": email, "captcha": captcha}
+        j: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
             authenticated=False,
@@ -3909,26 +3725,22 @@ class HTTPClient:
         HTTPException
             Verifying the email address failed.
         """
-        response = await self.request(
-            routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), authenticated=False
-        )
-        if response is not None and isinstance(response, dict) and "ticket" in response:
-            return self.state.parser.parse_mfa_ticket(response["ticket"])
+        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), authenticated=False)
+        if response is not None and isinstance(response, dict) and 'ticket' in response:
+            return self.state.parser.parse_mfa_ticket(response['ticket'])
         else:
             return None
 
     # MFA authentication control
     async def _create_mfa_ticket(self, j: raw.a.MFAResponse, /) -> MFATicket:
-        return self.state.parser.parse_mfa_ticket(
-            await self.request(routes.AUTH_MFA_CREATE_TICKET.compile(), json=j)
-        )
+        return self.state.parser.parse_mfa_ticket(await self.request(routes.AUTH_MFA_CREATE_TICKET.compile(), json=j))
 
     async def create_password_ticket(self, password: str, /) -> MFATicket:
         """|coro|
 
         Create a new MFA ticket or validate an existing one.
         """
-        j: raw.a.PasswordMFAResponse = {"password": password}
+        j: raw.a.PasswordMFAResponse = {'password': password}
         return await self._create_mfa_ticket(j)
 
     async def create_recovery_code_ticket(self, recovery_code: str, /) -> MFATicket:
@@ -3936,7 +3748,7 @@ class HTTPClient:
 
         Create a new MFA ticket or validate an existing one.
         """
-        j: raw.a.RecoveryMFAResponse = {"recovery_code": recovery_code}
+        j: raw.a.RecoveryMFAResponse = {'recovery_code': recovery_code}
         return await self._create_mfa_ticket(j)
 
     async def create_totp_ticket(self, totp_code: str, /) -> MFATicket:
@@ -3944,7 +3756,7 @@ class HTTPClient:
 
         Create a new MFA ticket or validate an existing one.
         """
-        j: raw.a.TotpMFAResponse = {"totp_code": totp_code}
+        j: raw.a.TotpMFAResponse = {'totp_code': totp_code}
         return await self._create_mfa_ticket(j)
 
     async def get_recovery_codes(self) -> list[str]:
@@ -3968,19 +3780,14 @@ class HTTPClient:
 
         Regenerates recovery codes for an account.
         """
-        return await self.request(
-            routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket
-        )
+        return await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket)
 
     async def get_mfa_methods(self) -> list[MFAMethod]:
         """|coro|
 
         Gets available MFA methods.
         """
-        return [
-            MFAMethod(mm)
-            for mm in await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile())
-        ]
+        return [MFAMethod(mm) for mm in await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile())]
 
     async def disable_totp_2fa(self, *, mfa_ticket: str) -> None:
         """|coro|
@@ -4011,11 +3818,9 @@ class HTTPClient:
             routes.AUTH_MFA_TOTP_GENERATE_SECRET.compile(),
             mfa_ticket=mfa_ticket,
         )
-        return d["secret"]
+        return d['secret']
 
-    async def edit_session(
-        self, session: ULIDOr[PartialSession], *, friendly_name: str
-    ) -> PartialSession:
+    async def edit_session(self, session: ULIDOr[PartialSession], *, friendly_name: str) -> PartialSession:
         """|coro|
 
         Edits the session information.
@@ -4028,11 +3833,9 @@ class HTTPClient:
             The new device name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
 
         """
-        j: raw.a.DataEditSession = {"friendly_name": friendly_name}
+        j: raw.a.DataEditSession = {'friendly_name': friendly_name}
         return self.state.parser.parse_partial_session(
-            await self.request(
-                routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)), json=j
-            )
+            await self.request(routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)), json=j)
         )
 
     async def get_sessions(self) -> list[PartialSession]:
@@ -4045,14 +3848,10 @@ class HTTPClient:
         List[:class:`PartialSession`]
             The sessions.
         """
-        sessions: list[raw.a.SessionInfo] = await self.request(
-            routes.AUTH_SESSION_FETCH_ALL.compile()
-        )
+        sessions: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
         return [self.state.parser.parse_partial_session(e) for e in sessions]
 
-    async def login_with_email(
-        self, email: str, password: str, /, *, friendly_name: str | None = None
-    ) -> LoginResult:
+    async def login_with_email(self, email: str, password: str, /, *, friendly_name: str | None = None) -> LoginResult:
         """|coro|
 
         Logs in to an account using email and password.
@@ -4072,13 +3871,11 @@ class HTTPClient:
             The login response.
         """
         j: raw.a.EmailDataLogin = {
-            "email": email,
-            "password": password,
-            "friendly_name": friendly_name,
+            'email': email,
+            'password': password,
+            'friendly_name': friendly_name,
         }
-        d: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=j
-        )
+        d: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=j)
         return self.state.parser.parse_response_login(d, friendly_name)
 
     async def login_with_mfa(
@@ -4108,15 +3905,13 @@ class HTTPClient:
             The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
         """
         j: raw.a.MFADataLogin = {
-            "mfa_ticket": ticket,
-            "mfa_response": by.build() if by else None,
-            "friendly_name": friendly_name,
+            'mfa_ticket': ticket,
+            'mfa_response': by.build() if by else None,
+            'friendly_name': friendly_name,
         }
-        d: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=j
-        )
+        d: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=j)
         p = self.state.parser.parse_response_login(d, friendly_name)
-        assert not isinstance(p, MFARequired), "Recursion detected"
+        assert not isinstance(p, MFARequired), 'Recursion detected'
         return p
 
     async def logout(self) -> None:
@@ -4131,9 +3926,7 @@ class HTTPClient:
 
         Deletes a specific active session.
         """
-        await self.request(
-            routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id))
-        )
+        await self.request(routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id)))
 
     async def revoke_all_sessions(self, *, revoke_self: bool | None = None) -> None:
         """|coro|
@@ -4147,8 +3940,8 @@ class HTTPClient:
         """
         p = {}
         if revoke_self is not None:
-            p["revoke_self"] = utils._bool(revoke_self)
+            p['revoke_self'] = utils._bool(revoke_self)
         await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), params=p)
 
 
-__all__ = ("DEFAULT_HTTP_USER_AGENT", "_STATUS_TO_ERRORS", "HTTPClient")
+__all__ = ('DEFAULT_HTTP_USER_AGENT', '_STATUS_TO_ERRORS', 'HTTPClient')

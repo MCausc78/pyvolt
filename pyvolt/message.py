@@ -30,7 +30,7 @@ class Reply:
     mention: bool
     """Whether to mention author of that message."""
 
-    __slots__ = ("id", "mention")
+    __slots__ = ('id', 'mention')
 
     def __init__(self, id: core.ULIDOr[BaseMessage], mention: bool = False) -> None:
         self.id = core.resolve_id(id)
@@ -38,8 +38,8 @@ class Reply:
 
     def build(self) -> raw.ReplyIntent:
         return {
-            "id": self.id,
-            "mention": self.mention,
+            'id': self.id,
+            'mention': self.mention,
         }
 
 
@@ -52,7 +52,7 @@ class Interactions:
     restrict_reactions: bool
     """Whether reactions should be restricted to the given list. Can only be set to `True` if `reactions` list is of at least length 1. Defaults to `False`."""
 
-    __slots__ = ("reactions", "restrict_reactions")
+    __slots__ = ('reactions', 'restrict_reactions')
 
     def __init__(self, reactions: list[str], restrict_reactions: bool = False) -> None:
         self.reactions = reactions
@@ -60,8 +60,8 @@ class Interactions:
 
     def build(self) -> raw.Interactions:
         return {
-            "reactions": self.reactions,
-            "restrict_reactions": self.restrict_reactions,
+            'reactions': self.reactions,
+            'restrict_reactions': self.restrict_reactions,
         }
 
 
@@ -79,7 +79,7 @@ class Masquerade:
         Must have `ManageRole` permission to use.
     """
 
-    __slots__ = ("name", "avatar", "colour")
+    __slots__ = ('name', 'avatar', 'colour')
 
     def __init__(
         self,
@@ -95,11 +95,11 @@ class Masquerade:
     def build(self) -> raw.Masquerade:
         j: raw.Masquerade = {}
         if self.name is not None:
-            j["name"] = self.name
+            j['name'] = self.name
         if self.avatar is not None:
-            j["avatar"] = self.avatar
+            j['avatar'] = self.avatar
         if self.colour is not None:
-            j["colour"] = self.colour
+            j['colour'] = self.colour
         return j
 
 
@@ -130,7 +130,7 @@ class SendableEmbed:
     media: cdn.ResolvableResource | None
     colour: str | None
 
-    __slots__ = ("icon_url", "url", "title", "description", "media", "colour")
+    __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'colour')
 
     def __init__(
         self,
@@ -151,26 +151,24 @@ class SendableEmbed:
     async def build(self, state: State) -> raw.SendableEmbed:
         j: raw.SendableEmbed = {}
         if self.icon_url is not None:
-            j["icon_url"] = self.icon_url
+            j['icon_url'] = self.icon_url
         if self.url is not None:
-            j["url"] = self.url
+            j['url'] = self.url
         if self.title is not None:
-            j["title"] = self.title
+            j['title'] = self.title
         if self.description is not None:
-            j["description"] = self.description
+            j['description'] = self.description
         if self.media is not None:
-            j["media"] = await cdn.resolve_resource(
-                state, self.media, tag="attachments"
-            )
+            j['media'] = await cdn.resolve_resource(state, self.media, tag='attachments')
         if self.colour is not None:
-            j["colour"] = self.colour
+            j['colour'] = self.colour
         return j
 
 
 class MessageSort(Enum):
-    relevance = "Relevance"
-    latest = "Latest"
-    oldest = "Oldest"
+    relevance = 'Relevance'
+    latest = 'Latest'
+    oldest = 'Oldest'
 
 
 @define(slots=True)
@@ -200,9 +198,7 @@ class BaseMessage(Base):
             return TextChannel(state=self.state, id=self.channel_id)
         channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
         if channel:
-            assert isinstance(
-                channel, TextChannel
-            ), "Cache returned non textable channel"
+            assert isinstance(channel, TextChannel), 'Cache returned non textable channel'
             return channel
         return TextChannel(state=self.state, id=self.channel_id)
 
@@ -266,9 +262,7 @@ class BaseMessage(Base):
             New embeds.
         """
 
-        return await self.state.http.edit_message(
-            self.channel_id, self.id, content=content, embeds=embeds
-        )
+        return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
 
     async def pin(self) -> None:
         """|coro|
@@ -309,9 +303,7 @@ class BaseMessage(Base):
         HTTPException
             Reacting to message failed.
         """
-        return await self.state.http.add_reaction_to_message(
-            self.channel_id, self.id, emoji
-        )
+        return await self.state.http.add_reaction_to_message(self.channel_id, self.id, emoji)
 
     async def reply(
         self,
@@ -372,9 +364,7 @@ class BaseMessage(Base):
         HTTPException
             Trying to self-report, or reporting the message failed.
         """
-        return await self.state.http.report_message(
-            self.id, reason, additional_context=additional_context
-        )
+        return await self.state.http.report_message(self.id, reason, additional_context=additional_context)
 
     async def unpin(self) -> None:
         """|coro|
@@ -429,19 +419,13 @@ class PartialMessage(BaseMessage):
     content: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message content."""
 
-    edited_at: core.UndefinedOr[datetime] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    edited_at: core.UndefinedOr[datetime] = field(repr=True, hash=True, kw_only=True, eq=True)
     """When message was edited."""
 
-    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message embeds."""
 
-    reactions: core.UndefinedOr[dict[str, tuple[str, ...]]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    reactions: core.UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message reactions."""
 
     @property
@@ -458,9 +442,7 @@ class PartialMessage(BaseMessage):
 class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
-    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message appended stateless embeds."""
 
     @property
@@ -582,9 +564,7 @@ class Message(BaseMessage):
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the channel this message was sent in."""
 
-    _author: User | Member | str = field(
-        repr=False, hash=True, kw_only=True, eq=True, alias="internal_author"
-    )
+    _author: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_author')
 
     webhook: MessageWebhook | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The webhook that sent this message."""
@@ -592,22 +572,16 @@ class Message(BaseMessage):
     content: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The message content."""
 
-    system_event: SystemEvent | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    system_event: SystemEvent | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The system event information, occured in this message, if any."""
 
-    internal_attachments: list[cdn.StatelessAsset] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_attachments: list[cdn.StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless attachments on this message."""
 
     edited_at: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Timestamp at which this message was last edited."""
 
-    internal_embeds: list[StatelessEmbed] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_embeds: list[StatelessEmbed] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The attached stateless embeds to this message."""
 
     mention_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -616,14 +590,10 @@ class Message(BaseMessage):
     replies: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The list of message ID this message is replying to."""
 
-    reactions: dict[str, tuple[str, ...]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    reactions: dict[str, tuple[str, ...]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Mapping of emojis to array of user IDs."""
 
-    interactions: Interactions | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    interactions: Interactions | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The information about how this message should be interacted with."""
 
     masquerade: Masquerade | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -663,9 +633,7 @@ class Message(BaseMessage):
         except KeyError:
             self.reactions[emoji] = ()
         else:
-            self.reactions[emoji] = tuple(
-                reactor_id for reactor_id in reaction if reactor_id != user_id
-            )
+            self.reactions[emoji] = tuple(reactor_id for reactor_id in reaction if reactor_id != user_id)
 
     def _clear(self, emoji: str) -> None:
         self.reactions.pop(emoji, None)
@@ -697,15 +665,13 @@ class Message(BaseMessage):
     @property
     def attachments(self) -> list[cdn.Asset]:
         """The attachments on this message."""
-        return [
-            a._stateful(self.state, "attachments") for a in self.internal_attachments
-        ]
+        return [a._stateful(self.state, 'attachments') for a in self.internal_attachments]
 
     @property
     def author(self) -> User | Member:
         author = self.get_author()
         if not author:
-            raise NoData(self.author_id, "message author")
+            raise NoData(self.author_id, 'message author')
         return author
 
     @property
@@ -726,28 +692,28 @@ class Message(BaseMessage):
 
 
 __all__ = (
-    "Reply",
-    "Interactions",
-    "Masquerade",
-    "SendableEmbed",
-    "MessageSort",
-    "MessageWebhook",
-    "BaseMessage",
-    "PartialMessage",
-    "MessageAppendData",
-    "BaseSystemEvent",
-    "TextSystemEvent",
-    "UserAddedSystemEvent",
-    "UserRemovedSystemEvent",
-    "UserJoinedSystemEvent",
-    "UserLeftSystemEvent",
-    "UserKickedSystemEvent",
-    "UserBannedSystemEvent",
-    "ChannelRenamedSystemEvent",
-    "ChannelDescriptionChangedSystemEvent",
-    "ChannelIconChangedSystemEvent",
-    "ChannelOwnershipChangedSystemEvent",
-    "SystemEvent",
-    "MessageFlags",
-    "Message",
+    'Reply',
+    'Interactions',
+    'Masquerade',
+    'SendableEmbed',
+    'MessageSort',
+    'MessageWebhook',
+    'BaseMessage',
+    'PartialMessage',
+    'MessageAppendData',
+    'BaseSystemEvent',
+    'TextSystemEvent',
+    'UserAddedSystemEvent',
+    'UserRemovedSystemEvent',
+    'UserJoinedSystemEvent',
+    'UserLeftSystemEvent',
+    'UserKickedSystemEvent',
+    'UserBannedSystemEvent',
+    'ChannelRenamedSystemEvent',
+    'ChannelDescriptionChangedSystemEvent',
+    'ChannelIconChangedSystemEvent',
+    'ChannelOwnershipChangedSystemEvent',
+    'SystemEvent',
+    'MessageFlags',
+    'Message',
 )

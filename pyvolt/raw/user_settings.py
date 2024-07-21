@@ -19,9 +19,9 @@ DataSetSettings = dict[str, str]
 
 
 # Android User Settings
-AndroidTheme = typing.Literal["Revolt", "Light", "Amoled", "None", "M3Dynamic"]
+AndroidTheme = typing.Literal['Revolt', 'Light', 'Amoled', 'None', 'M3Dynamic']
 AndroidProfilePictureShape = int
-AndroidMessageReplyStyle = typing.Literal["None", "SwipeFromEnd", "DoubleTap"]
+AndroidMessageReplyStyle = typing.Literal['None', 'SwipeFromEnd', 'DoubleTap']
 
 
 class AndroidUserSettings(typing.TypedDict):
@@ -45,7 +45,7 @@ class ReviteLocaleOptions(typing.TypedDict):
     lang: Language
 
 
-ReviteNotificationState = typing.Literal["all", "mention", "none", "muted"]
+ReviteNotificationState = typing.Literal['all', 'mention', 'none', 'muted']
 
 
 class ReviteNotificationOptions(typing.TypedDict):
@@ -57,82 +57,80 @@ class ReviteOrdering(typing.TypedDict):
     servers: list[str]
 
 
-ReviteAppearanceEmojiPack = typing.Literal["mutant", "twemoji", "openmoji", "noto"]
+ReviteAppearanceEmojiPack = typing.Literal['mutant', 'twemoji', 'openmoji', 'noto']
 ReviteAppearanceSettings = typing.TypedDict(
-    "ReviteAppearanceSettings",
+    'ReviteAppearanceSettings',
     {
-        "appearance:emoji": typing.NotRequired[ReviteAppearanceEmojiPack],
-        "appearance:seasonal": typing.NotRequired[bool],
-        "appearance:transparency": typing.NotRequired[bool],
+        'appearance:emoji': typing.NotRequired[ReviteAppearanceEmojiPack],
+        'appearance:seasonal': typing.NotRequired[bool],
+        'appearance:transparency': typing.NotRequired[bool],
     },
 )
 
-ReviteAppearanceTheme = typing.Literal["dark", "light"]
+ReviteAppearanceTheme = typing.Literal['dark', 'light']
 ReviteAppearanceFont = typing.Literal[
-    "Open Sans",
-    "OpenDyslexic",
-    "Inter",
-    "Atkinson Hyperlegible",
-    "Roboto",
-    "Noto Sans",
-    "Lato",
-    "Bitter",
-    "Montserrat",
-    "Poppins",
-    "Raleway",
-    "Ubuntu",
-    "Comic Neue",
-    "Lexend",
+    'Open Sans',
+    'OpenDyslexic',
+    'Inter',
+    'Atkinson Hyperlegible',
+    'Roboto',
+    'Noto Sans',
+    'Lato',
+    'Bitter',
+    'Montserrat',
+    'Poppins',
+    'Raleway',
+    'Ubuntu',
+    'Comic Neue',
+    'Lexend',
 ]
 ReviteAppearanceMonoFont = typing.Literal[
-    "Fira Code",
-    "Roboto Mono",
-    "Source Code Pro",
-    "Space Mono",
-    "Ubuntu Mono",
-    "JetBrains Mono",
+    'Fira Code',
+    'Roboto Mono',
+    'Source Code Pro',
+    'Space Mono',
+    'Ubuntu Mono',
+    'JetBrains Mono',
 ]
 ReviteThemeVariable = typing.Literal[
-    "accent",
-    "background",
-    "foreground",
-    "block",
-    "message-box",
-    "mention",
-    "success",
-    "warning",
-    "error",
-    "hover",
-    "scrollbar-thumb",
-    "scrollbar-track",
-    "primary-background",
-    "primary-header",
-    "secondary-background",
-    "secondary-foreground",
-    "secondary-header",
-    "tertiary-background",
-    "tertiary-foreground",
-    "tooltip",
-    "status-online",
-    "status-away",
-    "status-focus",
-    "status-busy",
-    "status-streaming",
-    "status-invisible",
+    'accent',
+    'background',
+    'foreground',
+    'block',
+    'message-box',
+    'mention',
+    'success',
+    'warning',
+    'error',
+    'hover',
+    'scrollbar-thumb',
+    'scrollbar-track',
+    'primary-background',
+    'primary-header',
+    'secondary-background',
+    'secondary-foreground',
+    'secondary-header',
+    'tertiary-background',
+    'tertiary-foreground',
+    'tooltip',
+    'status-online',
+    'status-away',
+    'status-focus',
+    'status-busy',
+    'status-streaming',
+    'status-invisible',
 ]
 ReviteThemeSettings = typing.TypedDict(
-    "ReviteThemeSettings",
+    'ReviteThemeSettings',
     {
-        "appearance:ligatures": typing.NotRequired[bool],
-        "appearance:theme:base": typing.NotRequired[ReviteAppearanceTheme],
-        "appearance:theme:css": typing.NotRequired[str],
-        "appearance:theme:font": typing.NotRequired[ReviteAppearanceFont],
+        'appearance:ligatures': typing.NotRequired[bool],
+        'appearance:theme:base': typing.NotRequired[ReviteAppearanceTheme],
+        'appearance:theme:css': typing.NotRequired[str],
+        'appearance:theme:font': typing.NotRequired[ReviteAppearanceFont],
         # Deprecated by `base`
         # 'appearance:theme:light': typing.NotRequired[bool],
-        "appearance:theme:monoFont": typing.NotRequired[ReviteAppearanceMonoFont],
-        "appearance:theme:overrides": typing.NotRequired[
-            dict[ReviteThemeVariable, str]
-        ],
+        'appearance:theme:monoFont': typing.NotRequired[ReviteAppearanceMonoFont],
+        'appearance:theme:overrides': typing.NotRequired[dict[ReviteThemeVariable, str]],
     },
 )
 
@@ -153,26 +151,26 @@ class ReviteUserSettingsPayload(typing.TypedDict):
 
 
 __all__ = (
-    "UserSettings",
-    "OptionsFetchSettings",
-    "OptionsSetSettings",
-    "DataSetSettings",
-    "AndroidTheme",
-    "AndroidProfilePictureShape",
-    "AndroidMessageReplyStyle",
-    "AndroidUserSettings",
-    "ReviteChangelogEntryID",
-    "ReviteChangelog",
-    "ReviteLocaleOptions",
-    "ReviteNotificationState",
-    "ReviteNotificationOptions",
-    "ReviteOrdering",
-    "ReviteAppearanceEmojiPack",
-    "ReviteAppearanceSettings",
-    "ReviteAppearanceTheme",
-    "ReviteAppearanceFont",
-    "ReviteAppearanceMonoFont",
-    "ReviteThemeVariable",
-    "ReviteThemeSettings",
-    "ReviteUserSettingsPayload",
+    'UserSettings',
+    'OptionsFetchSettings',
+    'OptionsSetSettings',
+    'DataSetSettings',
+    'AndroidTheme',
+    'AndroidProfilePictureShape',
+    'AndroidMessageReplyStyle',
+    'AndroidUserSettings',
+    'ReviteChangelogEntryID',
+    'ReviteChangelog',
+    'ReviteLocaleOptions',
+    'ReviteNotificationState',
+    'ReviteNotificationOptions',
+    'ReviteOrdering',
+    'ReviteAppearanceEmojiPack',
+    'ReviteAppearanceSettings',
+    'ReviteAppearanceTheme',
+    'ReviteAppearanceFont',
+    'ReviteAppearanceMonoFont',
+    'ReviteThemeVariable',
+    'ReviteThemeSettings',
+    'ReviteUserSettingsPayload',
 )

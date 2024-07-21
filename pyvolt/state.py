@@ -18,15 +18,15 @@ if typing.TYPE_CHECKING:
 
 class State:
     __slots__ = (
-        "_cache",
-        "_cdn_client",
-        "_http",
-        "_parser",
-        "_shard",
-        "_me",
-        "_saved_notes",
-        "_settings",
-        "system",
+        '_cache',
+        '_cdn_client',
+        '_http',
+        '_parser',
+        '_shard',
+        '_me',
+        '_saved_notes',
+        '_settings',
+        'system',
     )
 
     def __init__(
@@ -49,8 +49,8 @@ class State:
         self.system = User(
             state=self,
             id=core.Z,
-            name="Revolt",
-            discriminator="0000",
+            name='Revolt',
+            discriminator='0000',
             internal_avatar=None,
             display_name=None,
             badges=UserBadges.NONE,
@@ -89,22 +89,22 @@ class State:
 
     @property
     def cdn_client(self) -> CDNClient:
-        assert self._cdn_client, "State has no CDN client attached"
+        assert self._cdn_client, 'State has no CDN client attached'
         return self._cdn_client
 
     @property
     def http(self) -> HTTPClient:
-        assert self._http, "State has no HTTP client attached"
+        assert self._http, 'State has no HTTP client attached'
         return self._http
 
     @property
     def parser(self) -> Parser:
-        assert self._parser, "State has no parser attached"
+        assert self._parser, 'State has no parser attached'
         return self._parser
 
     @property
     def shard(self) -> Shard:
-        assert self._shard, "State has no shard attached"
+        assert self._shard, 'State has no shard attached'
         return self._shard
 
     @property
@@ -127,4 +127,4 @@ class State:
         return self._settings
 
 
-__all__ = ("State",)
+__all__ = ('State',)

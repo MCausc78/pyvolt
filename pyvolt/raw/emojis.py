@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing
 
-T = typing.TypeVar("T")
+T = typing.TypeVar('T')
 
 
 class BaseEmoji(typing.Generic[T], typing.TypedDict):
@@ -14,18 +14,18 @@ class BaseEmoji(typing.Generic[T], typing.TypedDict):
     nsfw: typing.NotRequired[bool]
 
 
-ServerEmoji = BaseEmoji["ServerEmojiParent"]
-DetachedEmoji = BaseEmoji["DetachedEmojiParent"]
-Emoji = BaseEmoji["EmojiParent"]
+ServerEmoji = BaseEmoji['ServerEmojiParent']
+DetachedEmoji = BaseEmoji['DetachedEmojiParent']
+Emoji = BaseEmoji['EmojiParent']
 
 
 class ServerEmojiParent(typing.TypedDict):
-    type: typing.Literal["Server"]
+    type: typing.Literal['Server']
     id: str
 
 
 class DetachedEmojiParent(typing.TypedDict):
-    type: typing.Literal["Detached"]
+    type: typing.Literal['Detached']
 
 
 EmojiParent = ServerEmojiParent | DetachedEmojiParent
@@ -38,12 +38,12 @@ class DataCreateEmoji(typing.TypedDict):
 
 
 __all__ = (
-    "BaseEmoji",
-    "ServerEmoji",
-    "DetachedEmoji",
-    "Emoji",
-    "ServerEmojiParent",
-    "DetachedEmojiParent",
-    "EmojiParent",
-    "DataCreateEmoji",
+    'BaseEmoji',
+    'ServerEmoji',
+    'DetachedEmoji',
+    'Emoji',
+    'ServerEmojiParent',
+    'DetachedEmojiParent',
+    'EmojiParent',
+    'DataCreateEmoji',
 )

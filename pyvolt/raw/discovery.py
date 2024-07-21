@@ -8,7 +8,7 @@ from .files import File
 from .users import UserProfile
 
 # Servers
-DiscoveryServerActivity = typing.Literal["high", "medium", "low", "no"]
+DiscoveryServerActivity = typing.Literal['high', 'medium', 'low', 'no']
 
 
 class DiscoveryServer(typing.TypedDict):
@@ -31,13 +31,13 @@ class DiscoveryServersPage(typing.TypedDict):
 class DiscoveryServerSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: typing.Literal["servers"]
+    type: typing.Literal['servers']
     servers: list[DiscoveryServer]
     relatedTags: list[str]
 
 
 # Bots
-DiscoveryBotUsage = typing.Literal["high", "medium", "low"]
+DiscoveryBotUsage = typing.Literal['high', 'medium', 'low']
 
 
 class DiscoveryBot(typing.TypedDict):
@@ -58,7 +58,7 @@ class DiscoveryBotsPage(typing.TypedDict):
 class DiscoveryBotSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: typing.Literal["bots"]
+    type: typing.Literal['bots']
     bots: list[DiscoveryBot]
     relatedTags: list[str]
 
@@ -83,12 +83,12 @@ class DiscoveryThemesPage(typing.TypedDict):
 class DiscoveryThemeSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: typing.Literal["themes"]
+    type: typing.Literal['themes']
     themes: list[DiscoveryTheme]
     relatedTags: list[str]
 
 
-P = typing.TypeVar("P")
+P = typing.TypeVar('P')
 
 
 class NextPage(typing.Generic[P], typing.TypedDict):
@@ -97,16 +97,16 @@ class NextPage(typing.Generic[P], typing.TypedDict):
 
 
 __all__ = (
-    "DiscoveryServerActivity",
-    "DiscoveryServer",
-    "DiscoveryServersPage",
-    "DiscoveryServerSearchResult",
-    "DiscoveryBotUsage",
-    "DiscoveryBot",
-    "DiscoveryBotsPage",
-    "DiscoveryBotSearchResult",
-    "DiscoveryTheme",
-    "DiscoveryThemesPage",
-    "DiscoveryThemeSearchResult",
-    "NextPage",
+    'DiscoveryServerActivity',
+    'DiscoveryServer',
+    'DiscoveryServersPage',
+    'DiscoveryServerSearchResult',
+    'DiscoveryBotUsage',
+    'DiscoveryBot',
+    'DiscoveryBotsPage',
+    'DiscoveryBotSearchResult',
+    'DiscoveryTheme',
+    'DiscoveryThemesPage',
+    'DiscoveryThemeSearchResult',
+    'NextPage',
 )

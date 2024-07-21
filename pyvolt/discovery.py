@@ -18,16 +18,14 @@ if typing.TYPE_CHECKING:
 
 _L = logging.getLogger(__name__)
 
-DEFAULT_DISCOVERY_USER_AGENT = (
-    f"pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {core.__version__})"
-)
+DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {core.__version__})'
 
 
 class ServerActivity(Enum):
-    high = "high"
-    medium = "medium"
-    low = "low"
-    no = "no"
+    high = 'high'
+    medium = 'medium'
+    low = 'low'
+    no = 'no'
 
 
 @define(slots=True)
@@ -40,14 +38,10 @@ class DiscoveryServer(BaseServer):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server description."""
 
-    internal_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server icon."""
 
-    internal_banner: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server banner."""
 
     flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -65,7 +59,7 @@ class DiscoveryServer(BaseServer):
     @property
     def icon(self) -> cdn.Asset | None:
         """The server icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def invite_code(self) -> str:
@@ -75,9 +69,7 @@ class DiscoveryServer(BaseServer):
     @property
     def banner(self) -> cdn.Asset | None:
         """The server banner."""
-        return self.internal_banner and self.internal_banner._stateful(
-            self.state, "banners"
-        )
+        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 @define(slots=True)
@@ -90,9 +82,9 @@ class DiscoveryServersPage:
 
 
 class BotUsage(Enum):
-    high = "high"
-    medium = "medium"
-    low = "low"
+    high = 'high'
+    medium = 'medium'
+    low = 'low'
 
 
 @define(slots=True)
@@ -100,14 +92,10 @@ class DiscoveryBot(BaseBot):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The bot's name."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless bot's avatar."""
 
-    internal_profile: StatelessUserProfile = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_profile: StatelessUserProfile = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless bot's profile."""
 
     tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -122,14 +110,12 @@ class DiscoveryBot(BaseBot):
     @property
     def avatar(self) -> cdn.Asset | None:
         """The bot's avatar."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def description(self) -> str:
         """The bot's profile description."""
-        return self.internal_profile.content or ""
+        return self.internal_profile.content or ''
 
     @property
     def profile(self) -> UserProfile:
@@ -262,31 +248,21 @@ class ThemeSearchResult:
 
 class DiscoveryClient:
     __slots__ = (
-        "_base",
-        "session",
-        "state",
+        '_base',
+        'session',
+        'state',
     )
 
-    def __init__(
-        self, *, base: str | None = None, session: aiohttp.ClientSession, state: State
-    ) -> None:
-        self._base = (
-            "https://rvlt.gg/_next/data/OddIUaX26creykRzYdVYw/"
-            if base is None
-            else base.rstrip("/") + "/"
-        )
+    def __init__(self, *, base: str | None = None, session: aiohttp.ClientSession, state: State) -> None:
+        self._base = 'https://rvlt.gg/_next/data/OddIUaX26creykRzYdVYw/' if base is None else base.rstrip('/') + '/'
         self.session = session
         self.state = state
 
-    async def _request(
-        self, method: str, path: str, **kwargs
-    ) -> aiohttp.ClientResponse:
-        _L.debug("sending %s to %s params=%s", method, path, kwargs.get("params"))
-        headers = {"user-agent": DEFAULT_DISCOVERY_USER_AGENT}
-        headers.update(kwargs.pop("headers", {}))
-        response = await self.session.request(
-            method, self._base + path.lstrip("/"), headers=headers, **kwargs
-        )
+    async def _request(self, method: str, path: str, **kwargs) -> aiohttp.ClientResponse:
+        _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
+        headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
+        headers.update(kwargs.pop('headers', {}))
+        response = await self.session.request(method, self._base + path.lstrip('/'), headers=headers, **kwargs)
         if response.status >= 400:
             body = await utils._json_or_text(response)
             raise DiscoveryError(response, response.status, body)
@@ -295,7 +271,7 @@ class DiscoveryClient:
     async def request(self, method: str, path: str, **kwargs) -> typing.Any:
         response = await self._request(method, path, **kwargs)
         result = await utils._json_or_text(response)
-        _L.debug("received from %s %s: %s", method, path, result)
+        _L.debug('received from %s %s: %s', method, path, result)
         response.close()
         return result
 
@@ -310,9 +286,9 @@ class DiscoveryClient:
             The servers page.
         """
         page: raw.NextPage[raw.DiscoveryServersPage] = await self.request(
-            "GET", "/discover/servers.json", params={"embedded": "true"}
+            'GET', '/discover/servers.json', params={'embedded': 'true'}
         )
-        return self.state.parser.parse_discovery_servers_page(page["pageProps"])
+        return self.state.parser.parse_discovery_servers_page(page['pageProps'])
 
     async def bots(self) -> DiscoveryBotsPage:
         """|coro|
@@ -326,10 +302,10 @@ class DiscoveryClient:
         """
 
         page: raw.NextPage[raw.DiscoveryBotsPage] = await self.request(
-            "GET", "/discover/bots.json", params={"embedded": "true"}
+            'GET', '/discover/bots.json', params={'embedded': 'true'}
         )
 
-        return self.state.parser.parse_discovery_bots_page(page["pageProps"])
+        return self.state.parser.parse_discovery_bots_page(page['pageProps'])
 
     async def themes(self) -> DiscoveryThemesPage:
         """|coro|
@@ -342,9 +318,9 @@ class DiscoveryClient:
             The themes page.
         """
         page: raw.NextPage[raw.DiscoveryThemesPage] = await self.request(
-            "GET", "/discover/themes.json", params={"embedded": "true"}
+            'GET', '/discover/themes.json', params={'embedded': 'true'}
         )
-        return self.state.parser.parse_discovery_themes_page(page["pageProps"])
+        return self.state.parser.parse_discovery_themes_page(page['pageProps'])
 
     async def search_servers(self, query: str) -> ServerSearchResult:
         """|coro|
@@ -362,16 +338,16 @@ class DiscoveryClient:
             The search results.
         """
         page: raw.NextPage[raw.DiscoveryServerSearchResult] = await self.request(
-            "GET",
-            "/discover/search.json",
+            'GET',
+            '/discover/search.json',
             params={
-                "embedded": "true",
-                "query": query,
-                "type": "servers",
+                'embedded': 'true',
+                'query': query,
+                'type': 'servers',
             },
         )
 
-        return self.state.parser.parse_discovery_server_search_result(page["pageProps"])
+        return self.state.parser.parse_discovery_server_search_result(page['pageProps'])
 
     async def search_bots(self, query: str) -> BotSearchResult:
         """|coro|
@@ -389,16 +365,16 @@ class DiscoveryClient:
             The search results.
         """
         page: raw.NextPage[raw.DiscoveryBotSearchResult] = await self.request(
-            "GET",
-            "/discover/search.json",
+            'GET',
+            '/discover/search.json',
             params={
-                "embedded": "true",
-                "query": query,
-                "type": "bots",
+                'embedded': 'true',
+                'query': query,
+                'type': 'bots',
             },
         )
 
-        return self.state.parser.parse_discovery_bot_search_result(page["pageProps"])
+        return self.state.parser.parse_discovery_bot_search_result(page['pageProps'])
 
     async def search_themes(self, query: str) -> ThemeSearchResult:
         """|coro|
@@ -416,29 +392,29 @@ class DiscoveryClient:
             The search results.
         """
         page: raw.NextPage[raw.DiscoveryThemeSearchResult] = await self.request(
-            "GET",
-            "/discover/search.json",
+            'GET',
+            '/discover/search.json',
             params={
-                "embedded": "true",
-                "query": query,
-                "type": "themes",
+                'embedded': 'true',
+                'query': query,
+                'type': 'themes',
             },
         )
 
-        return self.state.parser.parse_discovery_theme_search_result(page["pageProps"])
+        return self.state.parser.parse_discovery_theme_search_result(page['pageProps'])
 
 
 __all__ = (
-    "ServerActivity",
-    "DiscoveryServer",
-    "DiscoveryServersPage",
-    "BotUsage",
-    "DiscoveryBot",
-    "DiscoveryBotsPage",
-    "DiscoveryTheme",
-    "DiscoveryThemesPage",
-    "ServerSearchResult",
-    "BotSearchResult",
-    "ThemeSearchResult",
-    "DiscoveryClient",
+    'ServerActivity',
+    'DiscoveryServer',
+    'DiscoveryServersPage',
+    'BotUsage',
+    'DiscoveryBot',
+    'DiscoveryBotsPage',
+    'DiscoveryTheme',
+    'DiscoveryThemesPage',
+    'ServerSearchResult',
+    'BotSearchResult',
+    'ThemeSearchResult',
+    'DiscoveryClient',
 )

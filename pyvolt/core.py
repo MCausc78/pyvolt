@@ -20,7 +20,7 @@ class Undefined:
 UNDEFINED = Undefined()
 
 
-T = typing.TypeVar("T")
+T = typing.TypeVar('T')
 UndefinedOr = Undefined | T
 
 
@@ -29,7 +29,7 @@ def is_defined(x: UndefinedOr[T]) -> typing.TypeGuard[T]:
 
 
 def ulid_timestamp(val: str) -> float:
-    return _ulid_timestamp(val.encode("ascii"))
+    return _ulid_timestamp(val.encode('ascii'))
 
 
 def ulid_time(val: str) -> datetime:
@@ -40,7 +40,7 @@ class HasID(typing.Protocol):
     id: str
 
 
-U = typing.TypeVar("U", bound="HasID")
+U = typing.TypeVar('U', bound='HasID')
 ULIDOr = str | U
 
 
@@ -51,21 +51,21 @@ def resolve_id(resolvable: ULIDOr) -> str:
 
 
 # zero ID
-Z = "00000000000000000000000000"
+Z = '00000000000000000000000000'
 
-__version__: str = "1.0.0"
+__version__: str = '1.0.0'
 
 __all__ = (
-    "Undefined",
-    "UNDEFINED",
-    "T",
-    "UndefinedOr",
-    "is_defined",
-    "ulid_timestamp",
-    "ulid_time",
-    "HasID",
-    "ULIDOr",
-    "resolve_id",
-    "__version__",
-    "Z",
+    'Undefined',
+    'UNDEFINED',
+    'T',
+    'UndefinedOr',
+    'is_defined',
+    'ulid_timestamp',
+    'ulid_time',
+    'HasID',
+    'ULIDOr',
+    'resolve_id',
+    '__version__',
+    'Z',
 )

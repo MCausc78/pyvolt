@@ -138,7 +138,7 @@ _LUT = [
 
 
 def _ulid_timestamp(v: bytes) -> float:
-    return int.from_bytes(_ulid_decode_timestamp(v)[:6], byteorder="big") / 1000
+    return int.from_bytes(_ulid_decode_timestamp(v)[:6], byteorder='big') / 1000
 
 
 def _ulid_decode_timestamp(v: bytes) -> bytes:
@@ -154,4 +154,4 @@ def _ulid_decode_timestamp(v: bytes) -> bytes:
     )
 
 
-__all__ = ("_LUT", "_ulid_timestamp", "_ulid_decode_timestamp")
+__all__ = ('_LUT', '_ulid_timestamp', '_ulid_decode_timestamp')

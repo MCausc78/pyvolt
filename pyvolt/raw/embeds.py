@@ -4,7 +4,7 @@ import typing
 
 from .files import File
 
-ImageSize = typing.Literal["Large", "Preview"]
+ImageSize = typing.Literal['Large', 'Preview']
 
 
 class Image(typing.TypedDict):
@@ -20,55 +20,55 @@ class Video(typing.TypedDict):
     height: int
 
 
-TwitchType = typing.Literal["Channel", "Video", "Clip"]
-LightspeedType = typing.Literal["Channel"]
-BandcampType = typing.Literal["Album", "Track"]
+TwitchType = typing.Literal['Channel', 'Video', 'Clip']
+LightspeedType = typing.Literal['Channel']
+BandcampType = typing.Literal['Album', 'Track']
 
 
 class NoneSpecial(typing.TypedDict):
-    type: typing.Literal["None"]
+    type: typing.Literal['None']
 
 
 class GIFSpecial(typing.TypedDict):
-    type: typing.Literal["GIF"]
+    type: typing.Literal['GIF']
 
 
 class YouTubeSpecial(typing.TypedDict):
-    type: typing.Literal["YouTube"]
+    type: typing.Literal['YouTube']
     id: str
     timestamp: typing.NotRequired[str]
 
 
 class LightspeedSpecial(typing.TypedDict):
-    type: typing.Literal["Lightspeed"]
+    type: typing.Literal['Lightspeed']
     content_type: LightspeedType
     id: str
 
 
 class TwitchSpecial(typing.TypedDict):
-    type: typing.Literal["Twitch"]
+    type: typing.Literal['Twitch']
     content_type: TwitchType
     id: str
 
 
 class SpotifySpecial(typing.TypedDict):
-    type: typing.Literal["Spotify"]
+    type: typing.Literal['Spotify']
     content_type: str
     id: str
 
 
 class SoundcloudSpecial(typing.TypedDict):
-    type: typing.Literal["Soundcloud"]
+    type: typing.Literal['Soundcloud']
 
 
 class BandcampSpecial(typing.TypedDict):
-    type: typing.Literal["Bandcamp"]
+    type: typing.Literal['Bandcamp']
     content_type: BandcampType
     id: str
 
 
 class StreamableSpecial(typing.TypedDict):
-    type: typing.Literal["Streamable"]
+    type: typing.Literal['Streamable']
     id: str
 
 
@@ -107,50 +107,50 @@ class Text(typing.TypedDict):
 
 
 class WebsiteEmbed(WebsiteMetadata):
-    type: typing.Literal["Website"]
+    type: typing.Literal['Website']
 
 
 class ImageEmbed(Image):
-    type: typing.Literal["Image"]
+    type: typing.Literal['Image']
 
 
 class VideoEmbed(Video):
-    type: typing.Literal["Video"]
+    type: typing.Literal['Video']
 
 
 class TextEmbed(Text):
-    type: typing.Literal["Text"]
+    type: typing.Literal['Text']
 
 
 class NoneEmbed(typing.TypedDict):
-    type: typing.Literal["None"]
+    type: typing.Literal['None']
 
 
 Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
 
 __all__ = (
-    "ImageSize",
-    "Image",
-    "Video",
-    "TwitchType",
-    "LightspeedType",
-    "BandcampType",
-    "NoneSpecial",
-    "GIFSpecial",
-    "YouTubeSpecial",
-    "LightspeedSpecial",
-    "TwitchSpecial",
-    "SpotifySpecial",
-    "SoundcloudSpecial",
-    "BandcampSpecial",
-    "StreamableSpecial",
-    "Special",
-    "WebsiteMetadata",
-    "Text",
-    "WebsiteEmbed",
-    "ImageEmbed",
-    "VideoEmbed",
-    "TextEmbed",
-    "NoneEmbed",
-    "Embed",
+    'ImageSize',
+    'Image',
+    'Video',
+    'TwitchType',
+    'LightspeedType',
+    'BandcampType',
+    'NoneSpecial',
+    'GIFSpecial',
+    'YouTubeSpecial',
+    'LightspeedSpecial',
+    'TwitchSpecial',
+    'SpotifySpecial',
+    'SoundcloudSpecial',
+    'BandcampSpecial',
+    'StreamableSpecial',
+    'Special',
+    'WebsiteMetadata',
+    'Text',
+    'WebsiteEmbed',
+    'ImageEmbed',
+    'VideoEmbed',
+    'TextEmbed',
+    'NoneEmbed',
+    'Embed',
 )

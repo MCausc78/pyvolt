@@ -28,8 +28,8 @@ class MemberCompositeKey(typing.TypedDict):
     user: str
 
 
-FieldsMember = typing.Literal["Nickname", "Avatar", "Roles", "Timeout"]
-RemovalIntention = typing.Literal["Leave", "Kick", "Ban"]
+FieldsMember = typing.Literal['Nickname', 'Avatar', 'Roles', 'Timeout']
+RemovalIntention = typing.Literal['Leave', 'Kick', 'Ban']
 
 
 class OptionsFetchAllMembers(typing.TypedDict):
@@ -50,12 +50,12 @@ class DataMemberEdit(typing.TypedDict):
 
 
 __all__ = (
-    "Member",
-    "PartialMember",
-    "MemberCompositeKey",
-    "FieldsMember",
-    "RemovalIntention",
-    "OptionsFetchAllMembers",
-    "AllMemberResponse",
-    "DataMemberEdit",
+    'Member',
+    'PartialMember',
+    'MemberCompositeKey',
+    'FieldsMember',
+    'RemovalIntention',
+    'OptionsFetchAllMembers',
+    'AllMemberResponse',
+    'DataMemberEdit',
 )

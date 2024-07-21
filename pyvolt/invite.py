@@ -79,14 +79,10 @@ class ServerPublicInvite(BaseInvite):
     server_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of the server."""
 
-    internal_server_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_server_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless icon of the server."""
 
-    internal_server_banner: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_server_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless banner of the server."""
 
     flags: ServerFlags | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -104,9 +100,7 @@ class ServerPublicInvite(BaseInvite):
     user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of inviter."""
 
-    internal_user_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_user_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the inviter."""
 
     members_count: int = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -114,15 +108,11 @@ class ServerPublicInvite(BaseInvite):
 
     def server_icon(self) -> cdn.Asset | None:
         """The icon of the server."""
-        return self.internal_server_icon and self.internal_server_icon._stateful(
-            self.state, "icons"
-        )
+        return self.internal_server_icon and self.internal_server_icon._stateful(self.state, 'icons')
 
     def server_banner(self) -> cdn.Asset | None:
         """The banner of the server."""
-        return self.internal_server_banner and self.internal_server_banner._stateful(
-            self.state, "banners"
-        )
+        return self.internal_server_banner and self.internal_server_banner._stateful(self.state, 'banners')
 
     async def accept(self) -> Server:
         """|coro|
@@ -159,17 +149,13 @@ class GroupPublicInvite(BaseInvite):
     user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of inviter."""
 
-    internal_user_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_user_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the inviter."""
 
     @property
     def user_avatar(self) -> cdn.Asset | None:
         """The avatar of the inviter."""
-        return self.internal_user_avatar and self.internal_user_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
 
     async def accept(self) -> GroupChannel:
         """|coro|
@@ -262,12 +248,12 @@ class ServerInvite(PrivateBaseInvite):
 Invite = GroupInvite | ServerInvite
 
 __all__ = (
-    "BaseInvite",
-    "ServerPublicInvite",
-    "GroupPublicInvite",
-    "UnknownPublicInvite",
-    "PrivateBaseInvite",
-    "GroupInvite",
-    "ServerInvite",
-    "Invite",
+    'BaseInvite',
+    'ServerPublicInvite',
+    'GroupPublicInvite',
+    'UnknownPublicInvite',
+    'PrivateBaseInvite',
+    'GroupInvite',
+    'ServerInvite',
+    'Invite',
 )

@@ -72,7 +72,7 @@ class Category:
     channels: list[str]
     """Channel in this category."""
 
-    __slots__ = ("id", "title", "channels")
+    __slots__ = ('id', 'title', 'channels')
 
     def __init__(
         self,
@@ -86,9 +86,9 @@ class Category:
 
     def build(self) -> raw.Category:
         return {
-            "id": self.id,
-            "title": self.title,
-            "channels": self.channels,
+            'id': self.id,
+            'title': self.title,
+            'channels': self.channels,
         }
 
 
@@ -107,7 +107,7 @@ class SystemMessageChannels:
     user_banned: str | None
     """ID of channel to send user banned messages in."""
 
-    __slots__ = ("user_joined", "user_left", "user_kicked", "user_banned")
+    __slots__ = ('user_joined', 'user_left', 'user_kicked', 'user_banned')
 
     def __init__(
         self,
@@ -125,13 +125,13 @@ class SystemMessageChannels:
     def build(self) -> raw.SystemMessageChannels:
         d: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
-            d["user_joined"] = self.user_joined
+            d['user_joined'] = self.user_joined
         if self.user_left is not None:
-            d["user_left"] = self.user_left
+            d['user_left'] = self.user_left
         if self.user_kicked is not None:
-            d["user_kicked"] = self.user_kicked
+            d['user_kicked'] = self.user_kicked
         if self.user_banned is not None:
-            d["user_banned"] = self.user_banned
+            d['user_banned'] = self.user_banned
         return d
 
 
@@ -213,9 +213,7 @@ class BaseRole(Base):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(
-            self.server_id, self.id, allow=allow, deny=deny
-        )
+        return await self.state.http.set_role_server_permissions(self.server_id, self.id, allow=allow, deny=deny)
 
 
 @define(slots=True)
@@ -225,9 +223,7 @@ class PartialRole(BaseRole):
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new role name."""
 
-    permissions: UndefinedOr[PermissionOverride] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: UndefinedOr[PermissionOverride] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The permissions available to this role."""
 
     colour: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -241,12 +237,7 @@ class PartialRole(BaseRole):
 
     def into_full(self) -> Role | None:
         """Tries transform this partial role into full object. This is useful when caching role."""
-        if (
-            is_defined(self.name)
-            and is_defined(self.permissions)
-            and is_defined(self.hoist)
-            and is_defined(self.rank)
-        ):
+        if is_defined(self.name) and is_defined(self.permissions) and is_defined(self.hoist) and is_defined(self.rank):
             colour = None if not is_defined(self.colour) else self.colour
             return Role(
                 state=self.state,
@@ -345,9 +336,7 @@ class BaseServer(Base):
         """
         from .channel import ChannelType
 
-        channel = await self.create_channel(
-            type=ChannelType.text, name=name, description=description, nsfw=nsfw
-        )
+        channel = await self.create_channel(type=ChannelType.text, name=name, description=description, nsfw=nsfw)
         return channel  # type: ignore
 
     async def create_voice_channel(
@@ -366,9 +355,7 @@ class BaseServer(Base):
         """
         from .channel import ChannelType
 
-        channel = await self.create_channel(
-            type=ChannelType.voice, name=name, description=description, nsfw=nsfw
-        )
+        channel = await self.create_channel(type=ChannelType.voice, name=name, description=description, nsfw=nsfw)
         return channel  # type: ignore
 
     async def create_role(self, *, name: str, rank: int | None = None) -> Role:
@@ -516,9 +503,7 @@ class BaseServer(Base):
         HTTPException
             You're trying to self-report, or reporting the server failed.
         """
-        return await self.state.http.report_server(
-            self.id, reason, additional_context=additional_context
-        )
+        return await self.state.http.report_server(self.id, reason, additional_context=additional_context)
 
     async def set_role_permissions(
         self,
@@ -545,9 +530,7 @@ class BaseServer(Base):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(
-            self.id, role, allow=allow, deny=deny
-        )
+        return await self.state.http.set_role_server_permissions(self.id, role, allow=allow, deny=deny)
 
     async def set_default_permissions(self, permissions: Permissions, /) -> Server:
         """|coro|
@@ -577,40 +560,24 @@ class PartialServer(BaseServer):
 
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    channel_ids: UndefinedOr[list[str]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    categories: UndefinedOr[list[Category] | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    system_messages: UndefinedOr[SystemMessageChannels | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    default_permissions: UndefinedOr[Permissions] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_banner: UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    description: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_ids: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    categories: UndefinedOr[list[Category] | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    default_permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     flags: UndefinedOr[ServerFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
     discoverable: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     analytics: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     @property
     def icon(self) -> UndefinedOr[cdn.Asset | None]:
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def banner(self) -> UndefinedOr[cdn.Asset | None]:
-        return self.internal_banner and self.internal_banner._stateful(
-            self.state, "banners"
-        )
+        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 def _sort_roles(
@@ -633,7 +600,7 @@ def _sort_roles(
             reverse=True,
         )
     except KeyError as ke:
-        raise NoData(ke.args[0], "role")
+        raise NoData(ke.args[0], 'role')
 
 
 def _calculate_server_permissions(
@@ -667,37 +634,26 @@ class Server(BaseServer):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The description for the server."""
 
-    internal_channels: (
-        tuple[typing.Literal[True], list[str]]
-        | tuple[typing.Literal[False], list[ServerChannel]]
-    ) = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    categories: list[Category] | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
+    internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
+        field(repr=True, hash=True, kw_only=True, eq=True)
     )
+
+    categories: list[Category] | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The categories for this server."""
 
-    system_messages: SystemMessageChannels | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    system_messages: SystemMessageChannels | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The configuration for sending system event messages."""
 
     roles: dict[str, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The roles for this server."""
 
-    default_permissions: Permissions = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    default_permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)
     """The default set of server and channel permissions."""
 
-    internal_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server icon."""
 
-    internal_banner: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server banner."""
 
     flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -757,14 +713,12 @@ class Server(BaseServer):
     @property
     def icon(self) -> cdn.Asset | None:
         """The server icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def banner(self) -> cdn.Asset | None:
         """The server banner."""
-        return self.internal_banner and self.internal_banner._stateful(
-            self.state, "banners"
-        )
+        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
     @property
     def channel_ids(self) -> list[str]:
@@ -793,9 +747,7 @@ class Server(BaseServer):
                     ServerTextChannel,
                     VoiceChannel,
                 ) or not isinstance(channel, (ServerTextChannel, VoiceChannel)):
-                    raise TypeError(
-                        f"Cache have given us incorrect channel type: {channel.__class__!r}"
-                    )
+                    raise TypeError(f'Cache have given us incorrect channel type: {channel.__class__!r}')
                 channels.append(channel)
         return channels
 
@@ -804,9 +756,7 @@ class Server(BaseServer):
         """:class:`~ca.Mapping`[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
         cache = self.state.cache
         if cache:
-            return (
-                cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
-            )
+            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
         return {}
 
     @property
@@ -814,10 +764,7 @@ class Server(BaseServer):
         """:class:`~ca.Mapping`[:class:`str`, :class:`Member`]: Returns all members of this server."""
         cache = self.state.cache
         if cache:
-            return (
-                cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST)
-                or {}
-            )
+            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
         return {}
 
     def get_channel(self, channel_id: str, /) -> ServerChannel | None:
@@ -840,11 +787,7 @@ class Server(BaseServer):
         from .channel import ServerChannel
 
         channel = cache.get_channel(channel_id, caching._USER_REQUEST)
-        if (
-            channel
-            and isinstance(channel, ServerChannel)
-            and channel.server_id == self.id
-        ):
+        if channel and isinstance(channel, ServerChannel) and channel.server_id == self.id:
             return channel
 
         if not self.internal_channels[0]:
@@ -963,9 +906,7 @@ class BaseMember:
     server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the server that member is on."""
 
-    _user: User | str = field(
-        repr=True, hash=True, kw_only=True, eq=True, alias="_user"
-    )
+    _user: User | str = field(repr=True, hash=True, kw_only=True, eq=True, alias='_user')
 
     @property
     def id(self) -> str:
@@ -1049,18 +990,12 @@ class PartialMember(BaseMember):
     """Partial representation of a member of a server on Revolt."""
 
     nick: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     roles: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    timed_out_until: UndefinedOr[datetime | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    timed_out_until: UndefinedOr[datetime | None] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def avatar(self) -> UndefinedOr[cdn.Asset | None]:
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
 @define(slots=True)
@@ -1073,17 +1008,13 @@ class Member(BaseMember):
     nick: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's nick."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's avatar on server."""
 
     roles: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's roles."""
 
-    timed_out_until: datetime | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    timed_out_until: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The timestamp this member is timed out until."""
 
     def _update(self, data: PartialMember) -> None:
@@ -1099,9 +1030,7 @@ class Member(BaseMember):
     @property
     def avatar(self) -> cdn.Asset | None:
         """The member's avatar on server."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     def get_user(self) -> User | None:
         if isinstance(self._user, User):
@@ -1114,7 +1043,7 @@ class Member(BaseMember):
     def user(self) -> User:
         user = self.get_user()
         if not user:
-            raise NoData(self.id, "member user")
+            raise NoData(self.id, 'member user')
         return user
 
     @property
@@ -1182,27 +1111,27 @@ class MemberList:
 class MemberRemovalIntention(Enum):
     """Reason why member was removed from server."""
 
-    leave = "Leave"
-    kick = "Kick"
-    ban = "Ban"
+    leave = 'Leave'
+    kick = 'Kick'
+    ban = 'Ban'
 
 
 __all__ = (
-    "ServerFlags",
-    "Category",
-    "SystemMessageChannels",
-    "BaseRole",
-    "PartialRole",
-    "Role",
-    "BaseServer",
-    "PartialServer",
-    "_sort_roles",
-    "_calculate_server_permissions",
-    "Server",
-    "Ban",
-    "BaseMember",
-    "PartialMember",
-    "Member",
-    "MemberList",
-    "MemberRemovalIntention",
+    'ServerFlags',
+    'Category',
+    'SystemMessageChannels',
+    'BaseRole',
+    'PartialRole',
+    'Role',
+    'BaseServer',
+    'PartialServer',
+    '_sort_roles',
+    '_calculate_server_permissions',
+    'Server',
+    'Ban',
+    'BaseMember',
+    'PartialMember',
+    'Member',
+    'MemberList',
+    'MemberRemovalIntention',
 )

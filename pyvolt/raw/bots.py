@@ -18,7 +18,7 @@ class Bot(typing.TypedDict):
     flags: int
 
 
-FieldsBot = typing.Literal["Token", "InteractionsURL"]
+FieldsBot = typing.Literal['Token', 'InteractionsURL']
 
 
 class PublicBot(typing.TypedDict):
@@ -66,15 +66,15 @@ class BotWithUserResponse(Bot):
 
 
 __all__ = (
-    "Bot",
-    "FieldsBot",
-    "PublicBot",
-    "FetchBotResponse",
-    "DataCreateBot",
-    "DataEditBot",
-    "ServerInviteBotDestination",
-    "GroupInviteBotDestination",
-    "InviteBotDestination",
-    "OwnedBotsResponse",
-    "BotWithUserResponse",
+    'Bot',
+    'FieldsBot',
+    'PublicBot',
+    'FetchBotResponse',
+    'DataCreateBot',
+    'DataEditBot',
+    'ServerInviteBotDestination',
+    'GroupInviteBotDestination',
+    'InviteBotDestination',
+    'OwnedBotsResponse',
+    'BotWithUserResponse',
 )

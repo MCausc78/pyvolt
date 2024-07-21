@@ -81,9 +81,7 @@ class BaseWebhook(Base):
                 permissions=permissions,
             )
         else:
-            return await self.state.http.edit_webhook(
-                self.id, name=name, avatar=avatar, permissions=permissions
-            )
+            return await self.state.http.edit_webhook(self.id, name=name, avatar=avatar, permissions=permissions)
 
     async def execute(
         self,
@@ -106,7 +104,7 @@ class BaseWebhook(Base):
             The message sent.
         """
         token = self._token()
-        assert token, "No token"
+        assert token, 'No token'
         return await self.state.http.execute_webhook(
             self.id,
             token,
@@ -125,22 +123,16 @@ class PartialWebhook(BaseWebhook):
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new name of the webhook."""
 
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new stateless avatar of the webhook."""
 
-    permissions: core.UndefinedOr[Permissions] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: core.UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new permissions for the webhook."""
 
     @property
     def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
         """The new avatar of the webhook."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
 @define(slots=True)
@@ -148,9 +140,7 @@ class Webhook(BaseWebhook):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of the webhook."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the webhook."""
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -173,13 +163,11 @@ class Webhook(BaseWebhook):
     @property
     def avatar(self) -> cdn.Asset | None:
         """The avatar of the webhook."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
 __all__ = (
-    "BaseWebhook",
-    "PartialWebhook",
-    "Webhook",
+    'BaseWebhook',
+    'PartialWebhook',
+    'Webhook',
 )

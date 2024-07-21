@@ -127,7 +127,7 @@ class PermissionOverride:
     deny: Permissions
     """Disallow bit flags."""
 
-    __slots__ = ("allow", "deny")
+    __slots__ = ('allow', 'deny')
 
     def __init__(
         self,
@@ -138,10 +138,10 @@ class PermissionOverride:
         self.deny = deny
 
     def build(self) -> raw.Override:
-        return {"allow": int(self.allow), "deny": int(self.deny)}
+        return {'allow': int(self.allow), 'deny': int(self.deny)}
 
     def __repr__(self) -> str:
-        return f"PermissionOverride(allow={self.allow!r}, deny={self.deny!r})"
+        return f'PermissionOverride(allow={self.allow!r}, deny={self.deny!r})'
 
 
 class UserPermissions(IntFlag):
@@ -153,9 +153,7 @@ class UserPermissions(IntFlag):
     ALL = 15
 
 
-ALLOW_PERMISSIONS_IN_TIMEOUT = (
-    Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY
-)
+ALLOW_PERMISSIONS_IN_TIMEOUT = Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY
 VIEW_ONLY_PERMISSIONS = Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY
 DEFAULT_PERMISSIONS = (
     VIEW_ONLY_PERMISSIONS
@@ -167,24 +165,19 @@ DEFAULT_PERMISSIONS = (
     | Permissions.SPEAK
 )
 DEFAULT_SAVED_MESSAGES_PERMISSIONS = Permissions.ALL
-DEFAULT_DM_PERMISSIONS = (
-    DEFAULT_PERMISSIONS | Permissions.MANAGE_CHANNEL | Permissions.REACT
-)
+DEFAULT_DM_PERMISSIONS = DEFAULT_PERMISSIONS | Permissions.MANAGE_CHANNEL | Permissions.REACT
 DEFAULT_SERVER_PERMISSIONS = (
-    DEFAULT_PERMISSIONS
-    | Permissions.REACT
-    | Permissions.CHANGE_NICKNAME
-    | Permissions.CHANGE_AVATAR
+    DEFAULT_PERMISSIONS | Permissions.REACT | Permissions.CHANGE_NICKNAME | Permissions.CHANGE_AVATAR
 )
 
 __all__ = (
-    "Permissions",
-    "PermissionOverride",
-    "UserPermissions",
-    "ALLOW_PERMISSIONS_IN_TIMEOUT",
-    "VIEW_ONLY_PERMISSIONS",
-    "DEFAULT_PERMISSIONS",
-    "DEFAULT_SAVED_MESSAGES_PERMISSIONS",
-    "DEFAULT_DM_PERMISSIONS",
-    "DEFAULT_SERVER_PERMISSIONS",
+    'Permissions',
+    'PermissionOverride',
+    'UserPermissions',
+    'ALLOW_PERMISSIONS_IN_TIMEOUT',
+    'VIEW_ONLY_PERMISSIONS',
+    'DEFAULT_PERMISSIONS',
+    'DEFAULT_SAVED_MESSAGES_PERMISSIONS',
+    'DEFAULT_DM_PERMISSIONS',
+    'DEFAULT_SERVER_PERMISSIONS',
 )

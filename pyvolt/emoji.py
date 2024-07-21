@@ -43,18 +43,14 @@ ResolvableEmoji = Emoji | str
 
 
 def resolve_emoji(resolvable: ResolvableEmoji) -> str:
-    return str(
-        resolvable.id
-        if isinstance(resolvable, (ServerEmoji, DetachedEmoji))
-        else resolvable
-    )
+    return str(resolvable.id if isinstance(resolvable, (ServerEmoji, DetachedEmoji)) else resolvable)
 
 
 __all__ = (
-    "BaseEmoji",
-    "ServerEmoji",
-    "DetachedEmoji",
-    "Emoji",
-    "ResolvableEmoji",
-    "resolve_emoji",
+    'BaseEmoji',
+    'ServerEmoji',
+    'DetachedEmoji',
+    'Emoji',
+    'ResolvableEmoji',
+    'resolve_emoji',
 )

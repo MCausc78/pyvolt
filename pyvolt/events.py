@@ -44,9 +44,7 @@ from .webhook import Webhook, PartialWebhook
 @define(slots=True)
 class BaseEvent:
     shard: Shard = field(repr=True, hash=True, kw_only=True, eq=True)
-    is_cancelled: bool = field(
-        default=False, repr=True, hash=True, kw_only=True, eq=True
-    )
+    is_cancelled: bool = field(default=False, repr=True, hash=True, kw_only=True, eq=True)
 
     def set_cancelled(self, value: bool, /) -> bool:
         """Whether to cancel event processing (updating cache) or not."""
@@ -284,10 +282,7 @@ class MessageAckEvent(BaseEvent):
         read_state = cache.get_read_state(self.channel_id, caching._MESSAGE_ACK)
         if read_state:
             # TODO: What we should do in case of mentions? This solution sucks.
-            if (
-                read_state.last_message_id
-                and self.message_id >= read_state.last_message_id
-            ):
+            if read_state.last_message_id and self.message_id >= read_state.last_message_id:
                 try:
                     read_state.mentioned_in.remove(self.message_id)
                 except ValueError:
@@ -316,14 +311,9 @@ class MessageCreateEvent(BaseEvent):
         elif isinstance(author, User):
             cache.store_user(author, caching._MESSAGE_CREATE)
 
-        read_state = cache.get_read_state(
-            self.message.channel_id, caching._MESSAGE_CREATE
-        )
+        read_state = cache.get_read_state(self.message.channel_id, caching._MESSAGE_CREATE)
         if read_state:
-            if (
-                read_state.user_id in self.message.mention_ids
-                and self.message.id not in read_state.mentioned_in
-            ):
+            if read_state.user_id in self.message.mention_ids and self.message.id not in read_state.mentioned_in:
                 read_state.mentioned_in.append(self.message.id)
                 cache.store_read_state(read_state, caching._MESSAGE_CREATE)
 
@@ -510,9 +500,7 @@ class ServerMemberUpdateEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        before = cache.get_server_member(
-            self.member.server_id, self.member.id, caching._SERVER_MEMBER_UPDATE
-        )
+        before = cache.get_server_member(self.member.server_id, self.member.id, caching._SERVER_MEMBER_UPDATE)
         self.before = before
         if not before:
             return
@@ -541,9 +529,7 @@ class ServerMemberRemoveEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        self.member = cache.get_server_member(
-            self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE
-        )
+        self.member = cache.get_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE)
 
     def process(self) -> bool:
         state = self.shard.state
@@ -554,9 +540,7 @@ class ServerMemberRemoveEvent(BaseEvent):
         me = state.me
         is_me = me.id == self.user_id if me else False
 
-        cache.delete_server_member(
-            self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE
-        )
+        cache.delete_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE)
         if is_me:
             cache.delete_server(self.server_id, caching._SERVER_MEMBER_DELETE)
         return True
@@ -657,9 +641,7 @@ class UserRelationshipUpdateEvent(BaseEvent):
     old_user: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
     new_user: User = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    before: RelationshipStatus | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    before: RelationshipStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Old relationship found in cache."""
 
     @property
@@ -671,9 +653,7 @@ class UserRelationshipUpdateEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        self.old_user = cache.get_user(
-            self.new_user.id, caching._USER_RELATIONSHIP_UPDATE
-        )
+        self.old_user = cache.get_user(self.new_user.id, caching._USER_RELATIONSHIP_UPDATE)
 
         if self.old_user:
             self.before = self.old_user.relationship
@@ -791,48 +771,48 @@ class AuthenticatedEvent(BaseEvent):
 
 
 __all__ = (
-    "BaseEvent",
-    "ReadyEvent",
-    "BaseChannelCreateEvent",
-    "PrivateChannelCreateEvent",
-    "ServerChannelCreateEvent",
-    "ChannelCreateEvent",
-    "ChannelUpdateEvent",
-    "ChannelDeleteEvent",
-    "GroupRecipientAddEvent",
-    "GroupRecipientRemoveEvent",
-    "ChannelStartTypingEvent",
-    "ChannelStopTypingEvent",
-    "MessageAckEvent",
-    "MessageCreateEvent",
-    "MessageUpdateEvent",
-    "MessageAppendEvent",
-    "MessageDeleteEvent",
-    "MessageReactEvent",
-    "MessageUnreactEvent",
-    "MessageClearReactionEvent",
-    "BulkMessageDeleteEvent",
-    "ServerCreateEvent",
-    "ServerEmojiCreateEvent",
-    "ServerEmojiDeleteEvent",
-    "ServerUpdateEvent",
-    "ServerDeleteEvent",
-    "ServerMemberJoinEvent",
-    "ServerMemberUpdateEvent",
-    "ServerMemberRemoveEvent",
-    "RawServerRoleUpdateEvent",
-    "ServerRoleDeleteEvent",
-    "UserUpdateEvent",
-    "UserRelationshipUpdateEvent",
-    "UserSettingsUpdateEvent",
-    "UserPlatformWipeEvent",
-    "WebhookCreateEvent",
-    "WebhookUpdateEvent",
-    "WebhookDeleteEvent",
-    "AuthifierEvent",
-    "SessionCreateEvent",
-    "SessionDeleteEvent",
-    "SessionDeleteAllEvent",
-    "LogoutEvent",
-    "AuthenticatedEvent",
+    'BaseEvent',
+    'ReadyEvent',
+    'BaseChannelCreateEvent',
+    'PrivateChannelCreateEvent',
+    'ServerChannelCreateEvent',
+    'ChannelCreateEvent',
+    'ChannelUpdateEvent',
+    'ChannelDeleteEvent',
+    'GroupRecipientAddEvent',
+    'GroupRecipientRemoveEvent',
+    'ChannelStartTypingEvent',
+    'ChannelStopTypingEvent',
+    'MessageAckEvent',
+    'MessageCreateEvent',
+    'MessageUpdateEvent',
+    'MessageAppendEvent',
+    'MessageDeleteEvent',
+    'MessageReactEvent',
+    'MessageUnreactEvent',
+    'MessageClearReactionEvent',
+    'BulkMessageDeleteEvent',
+    'ServerCreateEvent',
+    'ServerEmojiCreateEvent',
+    'ServerEmojiDeleteEvent',
+    'ServerUpdateEvent',
+    'ServerDeleteEvent',
+    'ServerMemberJoinEvent',
+    'ServerMemberUpdateEvent',
+    'ServerMemberRemoveEvent',
+    'RawServerRoleUpdateEvent',
+    'ServerRoleDeleteEvent',
+    'UserUpdateEvent',
+    'UserRelationshipUpdateEvent',
+    'UserSettingsUpdateEvent',
+    'UserPlatformWipeEvent',
+    'WebhookCreateEvent',
+    'WebhookUpdateEvent',
+    'WebhookDeleteEvent',
+    'AuthifierEvent',
+    'SessionCreateEvent',
+    'SessionDeleteEvent',
+    'SessionDeleteAllEvent',
+    'LogoutEvent',
+    'AuthenticatedEvent',
 )

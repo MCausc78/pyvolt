@@ -8,13 +8,13 @@ from .permissions import Override, OverrideField
 
 
 class SavedMessagesChannel(typing.TypedDict):
-    channel_type: typing.Literal["SavedMessages"]
+    channel_type: typing.Literal['SavedMessages']
     _id: str
     user: str
 
 
 class DirectMessageChannel(typing.TypedDict):
-    channel_type: typing.Literal["DirectMessage"]
+    channel_type: typing.Literal['DirectMessage']
     _id: str
     active: bool
     recipients: list[str]
@@ -22,7 +22,7 @@ class DirectMessageChannel(typing.TypedDict):
 
 
 class GroupChannel(typing.TypedDict):
-    channel_type: typing.Literal["Group"]
+    channel_type: typing.Literal['Group']
     _id: str
     name: str
     owner: str
@@ -35,7 +35,7 @@ class GroupChannel(typing.TypedDict):
 
 
 class TextChannel(typing.TypedDict):
-    channel_type: typing.Literal["TextChannel"]
+    channel_type: typing.Literal['TextChannel']
     _id: str
     server: str
     name: str
@@ -48,7 +48,7 @@ class TextChannel(typing.TypedDict):
 
 
 class VoiceChannel(typing.TypedDict):
-    channel_type: typing.Literal["VoiceChannel"]
+    channel_type: typing.Literal['VoiceChannel']
     _id: str
     server: str
     name: str
@@ -59,13 +59,7 @@ class VoiceChannel(typing.TypedDict):
     nsfw: typing.NotRequired[bool]
 
 
-Channel = (
-    SavedMessagesChannel
-    | DirectMessageChannel
-    | GroupChannel
-    | TextChannel
-    | VoiceChannel
-)
+Channel = SavedMessagesChannel | DirectMessageChannel | GroupChannel | TextChannel | VoiceChannel
 
 
 class PartialChannel(typing.TypedDict):
@@ -81,7 +75,7 @@ class PartialChannel(typing.TypedDict):
     last_message_id: typing.NotRequired[str]
 
 
-FieldsChannel = typing.Literal["Description", "Icon", "DefaultPermissions"]
+FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions']
 
 
 class DataEditChannel(typing.TypedDict):
@@ -102,7 +96,7 @@ class DataCreateGroup(typing.TypedDict):
     nsfw: typing.NotRequired[bool | None]
 
 
-LegacyServerChannelType = typing.Literal["Text", "Voice"]
+LegacyServerChannelType = typing.Literal['Text', 'Voice']
 
 
 class DataCreateServerChannel(typing.TypedDict):
@@ -129,20 +123,20 @@ class LegacyCreateVoiceUserResponse(typing.TypedDict):
 
 
 __all__ = (
-    "SavedMessagesChannel",
-    "DirectMessageChannel",
-    "GroupChannel",
-    "TextChannel",
-    "VoiceChannel",
-    "Channel",
-    "PartialChannel",
-    "FieldsChannel",
-    "DataEditChannel",
-    "DataCreateGroup",
-    "LegacyServerChannelType",
-    "DataCreateServerChannel",
-    "DataDefaultChannelPermissions",
-    "DataSetRolePermissions",
-    "OptionsChannelDelete",
-    "LegacyCreateVoiceUserResponse",
+    'SavedMessagesChannel',
+    'DirectMessageChannel',
+    'GroupChannel',
+    'TextChannel',
+    'VoiceChannel',
+    'Channel',
+    'PartialChannel',
+    'FieldsChannel',
+    'DataEditChannel',
+    'DataCreateGroup',
+    'LegacyServerChannelType',
+    'DataCreateServerChannel',
+    'DataDefaultChannelPermissions',
+    'DataSetRolePermissions',
+    'OptionsChannelDelete',
+    'LegacyCreateVoiceUserResponse',
 )

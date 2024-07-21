@@ -9,7 +9,7 @@ class MultiFactorAuthentication(typing.TypedDict):
     recovery_codes: typing.NotRequired[list[str]]
 
 
-MFAMethod = typing.Literal["Password", "Recovery", "Totp"]
+MFAMethod = typing.Literal['Password', 'Recovery', 'Totp']
 
 
 class PasswordMFAResponse(typing.TypedDict):
@@ -29,15 +29,15 @@ MFAResponse = PasswordMFAResponse | RecoveryMFAResponse | TotpMFAResponse
 
 # >> /models/mfa/totp.rs
 class DisabledTotp(typing.TypedDict):
-    status: typing.Literal["Disabled"]
+    status: typing.Literal['Disabled']
 
 
 class PendingTotp(typing.TypedDict):
-    status: typing.Literal["Pending"]
+    status: typing.Literal['Pending']
 
 
 class EnabledTotp(typing.TypedDict):
-    status: typing.Literal["Enabled"]
+    status: typing.Literal['Enabled']
 
 
 Totp = DisabledTotp | PendingTotp | EnabledTotp
@@ -46,23 +46,21 @@ Totp = DisabledTotp | PendingTotp | EnabledTotp
 
 
 class VerifiedEmailVerification(typing.TypedDict):
-    status: typing.Literal["Verified"]
+    status: typing.Literal['Verified']
 
 
 class PendingEmailVerification(typing.TypedDict):
-    stauts: typing.Literal["Pending"]
+    stauts: typing.Literal['Pending']
 
 
 class MovingEmailVerification(typing.TypedDict):
-    status: typing.Literal["Moving"]
+    status: typing.Literal['Moving']
     new_email: str
     token: str
     expiry: str
 
 
-EmailVerification = (
-    VerifiedEmailVerification | PendingEmailVerification | MovingEmailVerification
-)
+EmailVerification = VerifiedEmailVerification | PendingEmailVerification | MovingEmailVerification
 
 
 class PasswordReset(typing.TypedDict):
@@ -71,23 +69,21 @@ class PasswordReset(typing.TypedDict):
 
 
 class WaitingForVerificationDeletionInfo(typing.TypedDict):
-    status: typing.Literal["WaitingForVerification"]
+    status: typing.Literal['WaitingForVerification']
     token: str
     expiry: str
 
 
 class ScheduledDeletionInfo(typing.TypedDict):
-    status: typing.Literal["Scheduled"]
+    status: typing.Literal['Scheduled']
     after: str
 
 
 class DeletedDeletionInfo(typing.TypedDict):
-    status: typing.Literal["Deleted"]
+    status: typing.Literal['Deleted']
 
 
-DeletionInfo = (
-    WaitingForVerificationDeletionInfo | ScheduledDeletionInfo | DeletedDeletionInfo
-)
+DeletionInfo = WaitingForVerificationDeletionInfo | ScheduledDeletionInfo | DeletedDeletionInfo
 
 
 class Lockout(typing.TypedDict):
@@ -104,7 +100,7 @@ class Account(typing.TypedDict):
     password_reset: PasswordReset | None
     deletion: DeletionInfo | None
     lockout: Lockout | None
-    mfa: "MultiFactorAuthentication"
+    mfa: 'MultiFactorAuthentication'
 
 
 # >> /models/session.rs
@@ -136,23 +132,23 @@ class MFATicket(typing.TypedDict):
 
 # >> /events/mod.rs
 class AuthifierCreateAccountEvent(typing.TypedDict):
-    event_type: typing.Literal["CreateAccount"]
+    event_type: typing.Literal['CreateAccount']
     account: Account
 
 
 class AuthifierCreateSessionEvent(typing.TypedDict):
-    event_type: typing.Literal["CreateSession"]
+    event_type: typing.Literal['CreateSession']
     session: Session
 
 
 class AuthifierDeleteSessionEvent(typing.TypedDict):
-    event_type: typing.Literal["DeleteSession"]
+    event_type: typing.Literal['DeleteSession']
     user_id: str
     session_id: str
 
 
 class AuthifierDeleteAllSessionsEvent(typing.TypedDict):
-    event_type: typing.Literal["DeleteAllSessions"]
+    event_type: typing.Literal['DeleteAllSessions']
     user_id: str
     exclude_session_id: str | None
 
@@ -258,72 +254,72 @@ DataLogin = EmailDataLogin | MFADataLogin
 
 
 class SuccessResponseLogin(Session):
-    result: typing.Literal["Success"]
+    result: typing.Literal['Success']
 
 
 class MFAResponseLogin(typing.TypedDict):
-    result: typing.Literal["MFA"]
+    result: typing.Literal['MFA']
     ticket: str
     allowed_methods: list[MFAMethod]
 
 
 class DisabledResponseLogin(typing.TypedDict):
-    result: typing.Literal["Disabled"]
+    result: typing.Literal['Disabled']
     user_id: str
 
 
 ResponseLogin = SuccessResponseLogin | MFAResponseLogin | DisabledResponseLogin
 
 __all__ = (
-    "MultiFactorAuthentication",
-    "MFAMethod",
-    "PasswordMFAResponse",
-    "RecoveryMFAResponse",
-    "TotpMFAResponse",
-    "MFAResponse",
-    "DisabledTotp",
-    "PendingTotp",
-    "EnabledTotp",
-    "Totp",
-    "VerifiedEmailVerification",
-    "PendingEmailVerification",
-    "MovingEmailVerification",
-    "EmailVerification",
-    "PasswordReset",
-    "WaitingForVerificationDeletionInfo",
-    "ScheduledDeletionInfo",
-    "DeletedDeletionInfo",
-    "DeletionInfo",
-    "Lockout",
-    "Account",
-    "WebPushSubscription",
-    "Session",
-    "MFATicket",
-    "AuthifierCreateAccountEvent",
-    "AuthifierCreateSessionEvent",
-    "AuthifierDeleteSessionEvent",
-    "AuthifierDeleteAllSessionsEvent",
-    "AuthifierEvent",
-    "DataChangeEmail",
-    "DataChangePassword",
-    "DataAccountDeletion",
-    "DataCreateAccount",
-    "AccountInfo",
-    "DataPasswordReset",
-    "DataResendVerification",
-    "DataSendPasswordReset",
-    "NoTicketResponseVerify",
-    "WithTicketResponseVerify",
-    "ResponseVerify",
-    "MultiFactorStatus",
-    "ResponseTotpSecret",
-    "DataEditSession",
-    "SessionInfo",
-    "EmailDataLogin",
-    "MFADataLogin",
-    "DataLogin",
-    "SuccessResponseLogin",
-    "MFAResponseLogin",
-    "DisabledResponseLogin",
-    "ResponseLogin",
+    'MultiFactorAuthentication',
+    'MFAMethod',
+    'PasswordMFAResponse',
+    'RecoveryMFAResponse',
+    'TotpMFAResponse',
+    'MFAResponse',
+    'DisabledTotp',
+    'PendingTotp',
+    'EnabledTotp',
+    'Totp',
+    'VerifiedEmailVerification',
+    'PendingEmailVerification',
+    'MovingEmailVerification',
+    'EmailVerification',
+    'PasswordReset',
+    'WaitingForVerificationDeletionInfo',
+    'ScheduledDeletionInfo',
+    'DeletedDeletionInfo',
+    'DeletionInfo',
+    'Lockout',
+    'Account',
+    'WebPushSubscription',
+    'Session',
+    'MFATicket',
+    'AuthifierCreateAccountEvent',
+    'AuthifierCreateSessionEvent',
+    'AuthifierDeleteSessionEvent',
+    'AuthifierDeleteAllSessionsEvent',
+    'AuthifierEvent',
+    'DataChangeEmail',
+    'DataChangePassword',
+    'DataAccountDeletion',
+    'DataCreateAccount',
+    'AccountInfo',
+    'DataPasswordReset',
+    'DataResendVerification',
+    'DataSendPasswordReset',
+    'NoTicketResponseVerify',
+    'WithTicketResponseVerify',
+    'ResponseVerify',
+    'MultiFactorStatus',
+    'ResponseTotpSecret',
+    'DataEditSession',
+    'SessionInfo',
+    'EmailDataLogin',
+    'MFADataLogin',
+    'DataLogin',
+    'SuccessResponseLogin',
+    'MFAResponseLogin',
+    'DisabledResponseLogin',
+    'ResponseLogin',
 )

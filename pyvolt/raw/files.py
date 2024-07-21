@@ -19,37 +19,37 @@ class File(typing.TypedDict):
 
 
 class FileMetadata(typing.TypedDict):
-    type: typing.Literal["File"]
+    type: typing.Literal['File']
 
 
 class TextMetadata(typing.TypedDict):
-    type: typing.Literal["Text"]
+    type: typing.Literal['Text']
 
 
 class ImageMetadata(typing.TypedDict):
-    type: typing.Literal["Image"]
+    type: typing.Literal['Image']
     width: int
     height: int
 
 
 class VideoMetadata(typing.TypedDict):
-    type: typing.Literal["Video"]
+    type: typing.Literal['Video']
     width: int
     height: int
 
 
 class AudioMetadata(typing.TypedDict):
-    type: typing.Literal["Audio"]
+    type: typing.Literal['Audio']
 
 
 Metadata = FileMetadata | TextMetadata | ImageMetadata | VideoMetadata | AudioMetadata
 
 __all__ = (
-    "File",
-    "FileMetadata",
-    "TextMetadata",
-    "ImageMetadata",
-    "VideoMetadata",
-    "AudioMetadata",
-    "Metadata",
+    'File',
+    'FileMetadata',
+    'TextMetadata',
+    'ImageMetadata',
+    'VideoMetadata',
+    'AudioMetadata',
+    'Metadata',
 )

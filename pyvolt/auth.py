@@ -67,9 +67,7 @@ class PartialSession(Base):
         """
         return await self.state.http.edit_session(
             self.id,
-            friendly_name=(
-                friendly_name if core.is_defined(friendly_name) else self.name
-            ),
+            friendly_name=(friendly_name if core.is_defined(friendly_name) else self.name),
         )
 
     async def revoke(self) -> None:
@@ -90,16 +88,14 @@ class Session(PartialSession):
     token: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The session token."""
 
-    subscription: WebPushSubscription | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    subscription: WebPushSubscription | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The Web Push subscription."""
 
 
 class MFAMethod(Enum):
-    password = "Password"
-    recovery = "Recovery"
-    totp = "Totp"
+    password = 'Password'
+    recovery = 'Recovery'
+    totp = 'Totp'
 
 
 @define(slots=True)
@@ -109,16 +105,12 @@ class MFARequired:
     ticket: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The MFA ticket."""
 
-    allowed_methods: list[MFAMethod] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    allowed_methods: list[MFAMethod] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The allowed methods."""
 
     # internals
     state: State = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_friendly_name: str | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_friendly_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
 
     async def use_totp(self, code: str, /) -> Session | AccountDisabled:
         """|coro|
@@ -152,33 +144,33 @@ class BaseMFAResponse:
 
 
 class ByPassword(BaseMFAResponse):
-    __slots__ = ("password",)
+    __slots__ = ('password',)
 
     def __init__(self, password: str, /) -> None:
         self.password = password
 
     def build(self) -> raw.a.PasswordMFAResponse:
-        return {"password": self.password}
+        return {'password': self.password}
 
 
 class ByRecoveryCode(BaseMFAResponse):
-    __slots__ = ("code",)
+    __slots__ = ('code',)
 
     def __init__(self, code: str, /) -> None:
         self.code = code
 
     def build(self) -> raw.a.RecoveryMFAResponse:
-        return {"recovery_code": self.code}
+        return {'recovery_code': self.code}
 
 
 class ByTOTP(BaseMFAResponse):
-    __slots__ = ("code",)
+    __slots__ = ('code',)
 
     def __init__(self, code: str, /) -> None:
         self.code = code
 
     def build(self) -> raw.a.TotpMFAResponse:
-        return {"totp_code": self.code}
+        return {'totp_code': self.code}
 
 
 MFAResponse = ByPassword | ByRecoveryCode | ByTOTP
@@ -186,19 +178,19 @@ MFAResponse = ByPassword | ByRecoveryCode | ByTOTP
 LoginResult = Session | MFARequired | AccountDisabled
 
 __all__ = (
-    "PartialAccount",
-    "MFATicket",
-    "WebPushSubscription",
-    "PartialSession",
-    "Session",
-    "MFAMethod",
-    "MFARequired",
-    "AccountDisabled",
-    "MFAStatus",
-    "BaseMFAResponse",
-    "ByPassword",
-    "ByRecoveryCode",
-    "ByTOTP",
-    "MFAResponse",
-    "LoginResult",
+    'PartialAccount',
+    'MFATicket',
+    'WebPushSubscription',
+    'PartialSession',
+    'Session',
+    'MFAMethod',
+    'MFARequired',
+    'AccountDisabled',
+    'MFAStatus',
+    'BaseMFAResponse',
+    'ByPassword',
+    'ByRecoveryCode',
+    'ByTOTP',
+    'MFAResponse',
+    'LoginResult',
 )

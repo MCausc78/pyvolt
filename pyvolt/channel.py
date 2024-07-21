@@ -40,10 +40,10 @@ if typing.TYPE_CHECKING:
 
 
 class ChannelType(Enum):
-    text = "Text"
+    text = 'Text'
     """Text channel."""
 
-    voice = "Voice"
+    voice = 'Voice'
     """Voice channel."""
 
 
@@ -72,9 +72,7 @@ class BaseChannel(Base, abc.ABC):
     def message(self, message: core.ULIDOr[BaseMessage]) -> BaseMessage:
         from .message import BaseMessage
 
-        return BaseMessage(
-            state=self.state, id=core.resolve_id(message), channel_id=self.id
-        )
+        return BaseMessage(state=self.state, id=core.resolve_id(message), channel_id=self.id)
 
     async def close(self, *, silent: bool | None = None) -> None:
         """|coro|
@@ -152,31 +150,21 @@ class PartialChannel(BaseChannel):
 
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     owner_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    description: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     nsfw: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     active: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    permissions: core.UndefinedOr[Permissions] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: core.UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
     role_permissions: core.UndefinedOr[dict[str, PermissionOverride]] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
     default_permissions: core.UndefinedOr[PermissionOverride | None] = field(
         repr=True, hash=True, kw_only=True, eq=True
     )
-    last_message_id: core.UndefinedOr[str] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    last_message_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
-def _calculate_saved_messages_channel_permissions(
-    perspective_id: str, user_id: str
-) -> Permissions:
+def _calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str) -> Permissions:
     if perspective_id == user_id:
         return DEFAULT_SAVED_MESSAGES_PERMISSIONS
     return Permissions.NONE
@@ -364,9 +352,7 @@ class SavedMessagesChannel(TextChannel):
         pass
 
     def permissions_for(self, perspective: User | Member, /) -> Permissions:
-        return _calculate_saved_messages_channel_permissions(
-            perspective.id, self.user_id
-        )
+        return _calculate_saved_messages_channel_permissions(perspective.id, self.user_id)
 
 
 @define(slots=True)
@@ -402,14 +388,11 @@ class GroupChannel(TextChannel):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Channel description."""
 
-    _recipients: (
-        tuple[typing.Literal[True], list[str]]
-        | tuple[typing.Literal[False], list[User]]
-    ) = field(repr=True, hash=True, eq=True, alias="internal_recipients")
-
-    internal_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
+    _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
+        repr=True, hash=True, eq=True, alias='internal_recipients'
     )
+
+    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless group icon."""
 
     last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -451,12 +434,15 @@ class GroupChannel(TextChannel):
             except ValueError:
                 pass
         else:
-            self._recipients = (True, [u.id for u in self._recipients[1] if u.id != user_id])  # type: ignore
+            self._recipients = (
+                True,
+                [u.id for u in self._recipients[1] if u.id != user_id],
+            )  # type: ignore
 
     @property
     def icon(self) -> cdn.Asset | None:
         """The group icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def recipient_ids(self) -> list[str]:
@@ -568,19 +554,13 @@ class BaseServerChannel(BaseChannel):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The channel description."""
 
-    internal_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless custom channel icon."""
 
-    default_permissions: PermissionOverride | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    default_permissions: PermissionOverride | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Default permissions assigned to users in this channel."""
 
-    role_permissions: dict[str, PermissionOverride] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    role_permissions: dict[str, PermissionOverride] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Permissions assigned based on role to this channel."""
 
     nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -603,7 +583,7 @@ class BaseServerChannel(BaseChannel):
     @property
     def icon(self) -> cdn.Asset | None:
         """The custom channel icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def server(self) -> Server:
@@ -611,7 +591,7 @@ class BaseServerChannel(BaseChannel):
         server = self.get_server()
         if server:
             return server
-        raise TypeError("Server is not in cache")
+        raise TypeError('Server is not in cache')
 
     def get_server(self) -> Server | None:
         """The server that channel belongs to."""
@@ -672,13 +652,11 @@ class BaseServerChannel(BaseChannel):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_channel_permissions(
-            self.id, role, allow=allow, deny=deny
-        )  # type: ignore
+        return await self.state.http.set_role_channel_permissions(self.id, role, allow=allow, deny=deny)  # type: ignore
 
     async def set_default_permissions(
         self,
-        permissions: "Permissions | PermissionOverride",
+        permissions: 'Permissions | PermissionOverride',
     ) -> ServerChannel:
         """|coro|
 
@@ -692,9 +670,7 @@ class BaseServerChannel(BaseChannel):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_default_channel_permissions(
-            self.id, permissions
-        )  # type: ignore
+        return await self.state.http.set_default_channel_permissions(self.id, permissions)  # type: ignore
 
 
 @define(slots=True)
@@ -717,27 +693,25 @@ class VoiceChannel(BaseServerChannel):
 
 ServerChannel = ServerTextChannel | VoiceChannel
 
-Channel = (
-    SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
-)
+Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
 
 __all__ = (
-    "ChannelType",
-    "BaseChannel",
-    "PartialChannel",
-    "Typing",
-    "_calculate_saved_messages_channel_permissions",
-    "_calculate_dm_channel_permissions",
-    "_calculate_group_channel_permissions",
-    "_calculate_server_channel_permissions",
-    "TextChannel",
-    "SavedMessagesChannel",
-    "DMChannel",
-    "GroupChannel",
-    "PrivateChannel",
-    "BaseServerChannel",
-    "ServerTextChannel",
-    "VoiceChannel",
-    "ServerChannel",
-    "Channel",
+    'ChannelType',
+    'BaseChannel',
+    'PartialChannel',
+    'Typing',
+    '_calculate_saved_messages_channel_permissions',
+    '_calculate_dm_channel_permissions',
+    '_calculate_group_channel_permissions',
+    '_calculate_server_channel_permissions',
+    'TextChannel',
+    'SavedMessagesChannel',
+    'DMChannel',
+    'GroupChannel',
+    'PrivateChannel',
+    'BaseServerChannel',
+    'ServerTextChannel',
+    'VoiceChannel',
+    'ServerChannel',
+    'Channel',
 )

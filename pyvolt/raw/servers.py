@@ -62,10 +62,8 @@ class PartialRole(typing.TypedDict):
     rank: typing.NotRequired[int]
 
 
-FieldsServer = typing.Literal[
-    "Description", "Categories", "SystemMessages", "Icon", "Banner"
-]
-FieldsRole = typing.Literal["Colour"]
+FieldsServer = typing.Literal['Description', 'Categories', 'SystemMessages', 'Icon', 'Banner']
+FieldsRole = typing.Literal['Colour']
 
 
 class Category(typing.TypedDict):
@@ -143,24 +141,24 @@ class OptionsServerDelete(typing.TypedDict):
 
 
 __all__ = (
-    "BaseServer",
-    "Server",
-    "PartialServer",
-    "Role",
-    "PartialRole",
-    "FieldsServer",
-    "FieldsRole",
-    "Category",
-    "SystemMessageChannels",
-    "DataCreateServer",
-    "DataCreateRole",
-    "NewRoleResponse",
-    "CreateServerLegacyResponse",
-    "OptionsFetchServer",
-    "ServerWithChannels",
-    "FetchServerResponse",
-    "DataEditServer",
-    "DataEditRole",
-    "DataSetServerRolePermission",
-    "OptionsServerDelete",
+    'BaseServer',
+    'Server',
+    'PartialServer',
+    'Role',
+    'PartialRole',
+    'FieldsServer',
+    'FieldsRole',
+    'Category',
+    'SystemMessageChannels',
+    'DataCreateServer',
+    'DataCreateRole',
+    'NewRoleResponse',
+    'CreateServerLegacyResponse',
+    'OptionsFetchServer',
+    'ServerWithChannels',
+    'FetchServerResponse',
+    'DataEditServer',
+    'DataEditRole',
+    'DataSetServerRolePermission',
+    'OptionsServerDelete',
 )

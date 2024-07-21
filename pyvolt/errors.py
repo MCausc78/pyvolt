@@ -23,17 +23,17 @@ class HTTPException(PyvoltError):
     with_: str | None
 
     __slots__ = (
-        "response",
-        "data",
-        "type",
-        "retry_after",
-        "err",
-        "max",
-        "permission",
-        "operation",
-        "collection",
-        "location",
-        "with_",
+        'response',
+        'data',
+        'type',
+        'retry_after',
+        'err',
+        'max',
+        'permission',
+        'operation',
+        'collection',
+        'location',
+        'with_',
     )
 
     def __init__(
@@ -49,7 +49,7 @@ class HTTPException(PyvoltError):
         if message is not None:
             errors.append(message)
         if isinstance(data, str):
-            self.type = "NonJSON"
+            self.type = 'NonJSON'
             self.retry_after = None
             self.err = data
             errors.append(data)
@@ -60,36 +60,32 @@ class HTTPException(PyvoltError):
             self.location = None
             self.with_ = None
         else:
-            self.type = data.get("type", "Unknown")
-            self.retry_after = data.get("retry_after")
+            self.type = data.get('type', 'Unknown')
+            self.retry_after = data.get('retry_after')
             if self.retry_after is not None:
-                errors.append(f"retry_after={self.retry_after}")
-            self.error = data.get("error")
+                errors.append(f'retry_after={self.retry_after}')
+            self.error = data.get('error')
             if self.error is not None:
-                errors.append(f"error={self.error}")
-            self.max = data.get("max")
+                errors.append(f'error={self.error}')
+            self.max = data.get('max')
             if self.max is not None:
-                errors.append(f"max={self.max}")
-            self.permission = data.get("permission")
+                errors.append(f'max={self.max}')
+            self.permission = data.get('permission')
             if self.permission is not None:
-                errors.append(f"permission={self.permission}")
-            self.operation = data.get("operation")
+                errors.append(f'permission={self.permission}')
+            self.operation = data.get('operation')
             if self.operation is not None:
-                errors.append(f"operation={self.operation}")
-            self.collection = data.get("collection")
+                errors.append(f'operation={self.operation}')
+            self.collection = data.get('collection')
             if self.collection is not None:
-                errors.append(f"collection={self.collection}")
-            self.location = data.get("location")
+                errors.append(f'collection={self.collection}')
+            self.location = data.get('location')
             if self.location is not None:
-                errors.append(f"location={self.location}")
-            self.with_ = data.get("with")
+                errors.append(f'location={self.location}')
+            self.with_ = data.get('with')
             if self.with_ is not None:
-                errors.append(f"with={self.with_}")
-        super().__init__(
-            self.type
-            if len(errors) == 0
-            else f"{self.type}: {' '.join(errors)} (raw={data})\n"
-        )
+                errors.append(f'with={self.with_}')
+        super().__init__(self.type if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n")
 
 
 class Unauthorized(HTTPException):
@@ -124,19 +120,19 @@ class AuthenticationError(ShardError):
     __slots__ = ()
 
     def __init__(self, a: typing.Any) -> None:
-        super().__init__("Failed to connect shard", a)
+        super().__init__('Failed to connect shard', a)
 
 
 class ConnectError(ShardError):
-    __slots__ = ("errors",)
+    __slots__ = ('errors',)
 
     def __init__(self, tries: int, errors: list[Exception]) -> None:
         self.errors = errors
-        super().__init__(f"Giving up, after {tries} tries, last 3 errors:", errors[-3:])
+        super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
 
 
 class DiscoveryError(PyvoltError):
-    __slots__ = ("response", "status", "data")
+    __slots__ = ('response', 'status', 'data')
 
     def __init__(
         self,
@@ -151,26 +147,26 @@ class DiscoveryError(PyvoltError):
 
 
 class NoData(PyvoltError):
-    __slots__ = ("what", "type")
+    __slots__ = ('what', 'type')
 
     def __init__(self, what: str, type: str) -> None:
         self.what = what
         self.type = type
-        super().__init__(f"Unable to find {type} {what} in cache")
+        super().__init__(f'Unable to find {type} {what} in cache')
 
 
 __all__ = (
-    "PyvoltError",
-    "HTTPException",
-    "Unauthorized",
-    "Forbidden",
-    "NotFound",
-    "Ratelimited",
-    "InternalServerError",
-    "BadGateway",
-    "ShardError",
-    "AuthenticationError",
-    "ConnectError",
-    "DiscoveryError",
-    "NoData",
+    'PyvoltError',
+    'HTTPException',
+    'Unauthorized',
+    'Forbidden',
+    'NotFound',
+    'Ratelimited',
+    'InternalServerError',
+    'BadGateway',
+    'ShardError',
+    'AuthenticationError',
+    'ConnectError',
+    'DiscoveryError',
+    'NoData',
 )

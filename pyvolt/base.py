@@ -24,4 +24,4 @@ class Base:
         return core.ulid_time(self.id)
 
 
-__all__ = ("Base",)
+__all__ = ('Base',)

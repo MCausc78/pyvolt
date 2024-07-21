@@ -51,16 +51,14 @@ class YouTubeEmbedSpecial(EmbedSpecial):
 class LightspeedContentType(Enum):
     """Type of remote Lightspeed.tv content."""
 
-    channel = "Channel"
+    channel = 'Channel'
 
 
 @define(slots=True)
 class LightspeedEmbedSpecial(EmbedSpecial):
     """Represents information about Lightspeed.tv stream."""
 
-    content_type: LightspeedContentType = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    content_type: LightspeedContentType = field(repr=True, hash=True, kw_only=True, eq=True)
     """The Lightspeed.tv content type."""
 
     id: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -70,9 +68,9 @@ class LightspeedEmbedSpecial(EmbedSpecial):
 class TwitchContentType(Enum):
     """Type of remote Twitch content."""
 
-    channel = "Channel"
-    video = "Video"
-    clip = "Clip"
+    channel = 'Channel'
+    video = 'Video'
+    clip = 'Clip'
 
 
 @define(slots=True)
@@ -107,17 +105,15 @@ _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 class BandcampContentType(Enum):
     """Type of remote Bandcamp content."""
 
-    album = "Album"
-    track = "Track"
+    album = 'Album'
+    track = 'Track'
 
 
 @define(slots=True)
 class BandcampEmbedSpecial(EmbedSpecial):
     """Represents information about Bandcamp track."""
 
-    content_type: BandcampContentType = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    content_type: BandcampContentType = field(repr=True, hash=True, kw_only=True, eq=True)
     """The Bandcamp content type."""
 
     id: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -135,10 +131,10 @@ class StreamableEmbedSpecial(EmbedSpecial):
 class ImageSize(Enum):
     """Controls image positioning and size."""
 
-    large = "Large"
+    large = 'Large'
     """Show large preview at the bottom of the embed."""
 
-    preview = "Preview"
+    preview = 'Preview'
     """Show small preview to the side of the embed."""
 
 
@@ -233,9 +229,7 @@ class StatelessTextEmbed(_BaseEmbed):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The description of text embed."""
 
-    internal_media: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_media: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless embed media."""
 
     colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -262,11 +256,7 @@ class TextEmbed(StatelessTextEmbed):
     @property
     def media(self) -> cdn.Asset | None:
         """The embed media."""
-        return (
-            self.internal_media._stateful(self.state, "attachments")
-            if self.internal_media
-            else None
-        )
+        return self.internal_media._stateful(self.state, 'attachments') if self.internal_media else None
 
 
 class NoneEmbed(_BaseEmbed):
@@ -282,31 +272,31 @@ StatelessEmbed = WebsiteEmbed | ImageEmbed | VideoEmbed | StatelessTextEmbed | N
 Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
 
 __all__ = (
-    "_BaseEmbed",
-    "EmbedSpecial",
-    "NoneEmbedSpecial",
-    "_NONE_EMBED_SPECIAL",
-    "GifEmbedSpecial",
-    "_GIF_EMBED_SPECIAL",
-    "YouTubeEmbedSpecial",
-    "LightspeedContentType",
-    "LightspeedEmbedSpecial",
-    "TwitchContentType",
-    "TwitchEmbedSpecial",
-    "SpotifyEmbedSpecial",
-    "SoundcloudEmbedSpecial",
-    "_SOUNDCLOUD_EMBED_SPECIAL",
-    "BandcampContentType",
-    "BandcampEmbedSpecial",
-    "StreamableEmbedSpecial",
-    "ImageSize",
-    "ImageEmbed",
-    "VideoEmbed",
-    "WebsiteEmbed",
-    "StatelessTextEmbed",
-    "TextEmbed",
-    "NoneEmbed",
-    "_NONE_EMBED",
-    "StatelessEmbed",
-    "Embed",
+    '_BaseEmbed',
+    'EmbedSpecial',
+    'NoneEmbedSpecial',
+    '_NONE_EMBED_SPECIAL',
+    'GifEmbedSpecial',
+    '_GIF_EMBED_SPECIAL',
+    'YouTubeEmbedSpecial',
+    'LightspeedContentType',
+    'LightspeedEmbedSpecial',
+    'TwitchContentType',
+    'TwitchEmbedSpecial',
+    'SpotifyEmbedSpecial',
+    'SoundcloudEmbedSpecial',
+    '_SOUNDCLOUD_EMBED_SPECIAL',
+    'BandcampContentType',
+    'BandcampEmbedSpecial',
+    'StreamableEmbedSpecial',
+    'ImageSize',
+    'ImageEmbed',
+    'VideoEmbed',
+    'WebsiteEmbed',
+    'StatelessTextEmbed',
+    'TextEmbed',
+    'NoneEmbed',
+    '_NONE_EMBED',
+    'StatelessEmbed',
+    'Embed',
 )

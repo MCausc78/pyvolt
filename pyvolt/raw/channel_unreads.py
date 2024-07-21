@@ -14,4 +14,4 @@ class ChannelCompositeKey(typing.TypedDict):
     user: str
 
 
-__all__ = ("ChannelUnread", "ChannelCompositeKey")
+__all__ = ('ChannelUnread', 'ChannelCompositeKey')

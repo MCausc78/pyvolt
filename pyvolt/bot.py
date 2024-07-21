@@ -72,9 +72,7 @@ class Bot(BaseBot):
     interactions_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Reserved; URL for handling interactions."""
 
-    terms_of_service_url: str | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    terms_of_service_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """URL for terms of service."""
 
     privacy_policy_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -101,4 +99,4 @@ class PublicBot(BaseBot):
     """The bot description."""
 
 
-__all__ = ("BotFlags", "BaseBot", "Bot", "PublicBot")
+__all__ = ('BotFlags', 'BaseBot', 'Bot', 'PublicBot')

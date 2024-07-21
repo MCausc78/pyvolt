@@ -9,7 +9,7 @@ from .users import User
 
 
 class ServerInvite(typing.TypedDict):
-    type: typing.Literal["Server"]
+    type: typing.Literal['Server']
     _id: str
     server: str
     creator: str
@@ -17,7 +17,7 @@ class ServerInvite(typing.TypedDict):
 
 
 class GroupInvite(typing.TypedDict):
-    type: typing.Literal["Group"]
+    type: typing.Literal['Group']
     _id: str
     creator: str
     channel: str
@@ -27,7 +27,7 @@ Invite = ServerInvite | GroupInvite
 
 
 class ServerInviteResponse(typing.TypedDict):
-    type: typing.Literal["Server"]
+    type: typing.Literal['Server']
     code: str
     server_id: str
     server_name: str
@@ -43,7 +43,7 @@ class ServerInviteResponse(typing.TypedDict):
 
 
 class GroupInviteResponse(typing.TypedDict):
-    type: typing.Literal["Group"]
+    type: typing.Literal['Group']
     code: str
     channel_id: str
     channel_name: str
@@ -56,13 +56,13 @@ InviteResponse = ServerInviteResponse | GroupInviteResponse
 
 
 class ServerInviteJoinResponse(typing.TypedDict):
-    type: typing.Literal["Server"]
+    type: typing.Literal['Server']
     channels: list[Channel]
     server: Server
 
 
 class GroupInviteJoinResponse(typing.TypedDict):
-    type: typing.Literal["Group"]
+    type: typing.Literal['Group']
     channel: GroupChannel
     users: list[User]
 
@@ -70,13 +70,13 @@ class GroupInviteJoinResponse(typing.TypedDict):
 InviteJoinResponse = ServerInviteJoinResponse | GroupInviteJoinResponse
 
 __all__ = (
-    "ServerInvite",
-    "GroupInvite",
-    "Invite",
-    "ServerInviteResponse",
-    "GroupInviteResponse",
-    "InviteResponse",
-    "ServerInviteJoinResponse",
-    "GroupInviteJoinResponse",
-    "InviteJoinResponse",
+    'ServerInvite',
+    'GroupInvite',
+    'Invite',
+    'ServerInviteResponse',
+    'GroupInviteResponse',
+    'InviteResponse',
+    'ServerInviteJoinResponse',
+    'GroupInviteJoinResponse',
+    'InviteJoinResponse',
 )

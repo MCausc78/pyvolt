@@ -35,16 +35,14 @@ class PartialUser(typing.TypedDict):
 
 
 FieldsUser = typing.Literal[
-    "Avatar",
-    "StatusText",
-    "StatusPresence",
-    "ProfileContent",
-    "ProfileBackground",
-    "DisplayName",
+    'Avatar',
+    'StatusText',
+    'StatusPresence',
+    'ProfileContent',
+    'ProfileBackground',
+    'DisplayName',
 ]
-RelationshipStatus = typing.Literal[
-    "None", "User", "Friend", "Outgoing", "Incoming", "Blocked", "BlockedOther"
-]
+RelationshipStatus = typing.Literal['None', 'User', 'Friend', 'Outgoing', 'Incoming', 'Blocked', 'BlockedOther']
 
 
 class Relationship(typing.TypedDict):
@@ -52,7 +50,7 @@ class Relationship(typing.TypedDict):
     status: RelationshipStatus
 
 
-Presence = typing.Literal["Online", "Idle", "Focus", "Busy", "Invisible"]
+Presence = typing.Literal['Online', 'Idle', 'Focus', 'Busy', 'Invisible']
 
 
 class UserStatus(typing.TypedDict):
@@ -114,21 +112,21 @@ class DataOnboard(typing.TypedDict):
 
 
 __all__ = (
-    "User",
-    "PartialUser",
-    "FieldsUser",
-    "RelationshipStatus",
-    "Relationship",
-    "Presence",
-    "UserStatus",
-    "UserProfile",
-    "DataUserProfile",
-    "DataEditUser",
-    "FlagResponse",
-    "MutualResponse",
-    "BotInformation",
-    "DataSendFriendRequest",
-    "DataChangeUsername",
-    "DataHello",
-    "DataOnboard",
+    'User',
+    'PartialUser',
+    'FieldsUser',
+    'RelationshipStatus',
+    'Relationship',
+    'Presence',
+    'UserStatus',
+    'UserProfile',
+    'DataUserProfile',
+    'DataEditUser',
+    'FlagResponse',
+    'MutualResponse',
+    'BotInformation',
+    'DataSendFriendRequest',
+    'DataChangeUsername',
+    'DataHello',
+    'DataOnboard',
 )

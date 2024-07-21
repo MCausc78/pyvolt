@@ -40,7 +40,7 @@ class ResponseWebhook(typing.TypedDict):
     permissions: int
 
 
-FieldsWebhook = typing.Literal["Avatar"]
+FieldsWebhook = typing.Literal['Avatar']
 
 
 class CreateWebhookBody(typing.TypedDict):
@@ -49,11 +49,11 @@ class CreateWebhookBody(typing.TypedDict):
 
 
 __all__ = (
-    "Webhook",
-    "PartialWebhook",
-    "MessageWebhook",
-    "DataEditWebhook",
-    "ResponseWebhook",
-    "FieldsWebhook",
-    "CreateWebhookBody",
+    'Webhook',
+    'PartialWebhook',
+    'MessageWebhook',
+    'DataEditWebhook',
+    'ResponseWebhook',
+    'FieldsWebhook',
+    'CreateWebhookBody',
 )

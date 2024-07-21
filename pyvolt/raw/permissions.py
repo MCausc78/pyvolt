@@ -25,9 +25,9 @@ class OverrideField(typing.TypedDict):
 
 
 __all__ = (
-    "Override",
-    "DataPermissionsField",
-    "DataPermissionsValue",
-    "DataPermissionPoly",
-    "OverrideField",
+    'Override',
+    'DataPermissionsField',
+    'DataPermissionsValue',
+    'DataPermissionPoly',
+    'OverrideField',
 )

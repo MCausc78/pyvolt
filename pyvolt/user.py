@@ -19,19 +19,19 @@ if typing.TYPE_CHECKING:
 
 
 class Presence(Enum):
-    online = "Online"
+    online = 'Online'
     """User is online."""
 
-    idle = "Idle"
+    idle = 'Idle'
     """User is not currently available."""
 
-    focus = "Focus"
+    focus = 'Focus'
     """User is focusing / will only receive mentions."""
 
-    busy = "Busy"
+    busy = 'Busy'
     """User is busy / will not receive any notifications."""
 
-    invisible = "Invisible"
+    invisible = 'Invisible'
     """User appears to be offline."""
 
 
@@ -61,7 +61,7 @@ class UserStatusEdit:
     presence: core.UndefinedOr[Presence | None]
     """Current presence option."""
 
-    __slots__ = ("text", "presence")
+    __slots__ = ('text', 'presence')
 
     def __init__(
         self,
@@ -76,17 +76,17 @@ class UserStatusEdit:
     def remove(self) -> list[raw.FieldsUser]:
         r = []
         if self.text is None:
-            r.append("StatusText")
+            r.append('StatusText')
         if self.presence is None:
-            r.append("StatusPresence")
+            r.append('StatusPresence')
         return r
 
     def build(self) -> raw.UserStatus:
         j: raw.UserStatus = {}
         if self.text is not None and core.is_defined(self.text):
-            j["text"] = self.text
+            j['text'] = self.text
         if self.presence is not None and core.is_defined(self.presence):
-            j["presence"] = self.presence.value
+            j['presence'] = self.presence.value
         return j
 
 
@@ -97,9 +97,7 @@ class StatelessUserProfile:
     content: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user's profile content."""
 
-    internal_background: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_background: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless background visible on user's profile."""
 
     def _stateful(self, state: State, user_id: str) -> UserProfile:
@@ -121,9 +119,7 @@ class UserProfile(StatelessUserProfile):
     @property
     def background(self) -> cdn.Asset | None:
         """Background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(
-            self.state, "backgrounds"
-        )
+        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
 @define(slots=True)
@@ -133,9 +129,7 @@ class PartialUserProfile:
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     """The state."""
 
-    content: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    content: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user's profile content."""
 
     internal_background: core.UndefinedOr[cdn.StatelessAsset | None] = field(
@@ -146,9 +140,7 @@ class PartialUserProfile:
     @property
     def background(self) -> core.UndefinedOr[cdn.Asset | None]:
         """Background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(
-            self.state, "backgrounds"
-        )
+        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
 class UserProfileEdit:
@@ -160,7 +152,7 @@ class UserProfileEdit:
     background: core.UndefinedOr[cdn.ResolvableResource | None]
     """New background visible on user's profile."""
 
-    __slots__ = ("content", "background")
+    __slots__ = ('content', 'background')
 
     def __init__(
         self,
@@ -174,19 +166,17 @@ class UserProfileEdit:
     def remove(self) -> list[raw.FieldsUser]:
         r = []
         if self.content is None:
-            r.append("ProfileContent")
+            r.append('ProfileContent')
         if self.background is None:
-            r.append("ProfileBackground")
+            r.append('ProfileBackground')
         return r
 
     async def build(self, state: State) -> raw.DataUserProfile:
         j: raw.DataUserProfile = {}
         if self.content:
-            j["content"] = self.content
+            j['content'] = self.content
         if self.background:
-            j["background"] = await cdn.resolve_resource(
-                state, self.background, tag="backgrounds"
-            )
+            j['background'] = await cdn.resolve_resource(state, self.background, tag='backgrounds')
         return j
 
 
@@ -252,25 +242,25 @@ class UserFlags(IntFlag):
 class RelationshipStatus(Enum):
     """User's relationship with another user (or themselves)."""
 
-    none = "None"
+    none = 'None'
     """No relationship with other user."""
 
-    user = "User"
+    user = 'User'
     """Other user is us."""
 
-    friend = "Friend"
+    friend = 'Friend'
     """Friends with the other user."""
 
-    outgoing = "Outgoing"
+    outgoing = 'Outgoing'
     """Pending friend request to user."""
 
-    incoming = "Incoming"
+    incoming = 'Incoming'
     """Incoming friend request from user."""
 
-    blocked = "Blocked"
+    blocked = 'Blocked'
     """Blocked this user."""
 
-    blocked_other = "BlockedOther"
+    blocked_other = 'BlockedOther'
     """Blocked by this user."""
 
 
@@ -306,7 +296,7 @@ class BaseUser(Base):
     @property
     def mention(self) -> str:
         """:class:`str`: The user mention."""
-        return f"<@{self.id}>"
+        return f'<@{self.id}>'
 
     async def accept_friend_request(self) -> User:
         """|coro|
@@ -464,39 +454,25 @@ class PartialUser(BaseUser):
     name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New username of the user."""
 
-    discriminator: core.UndefinedOr[str] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    discriminator: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New discriminator of the user."""
 
-    display_name: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    display_name: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New display name of the user."""
 
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New stateless avatar of the user."""
 
-    badges: core.UndefinedOr[UserBadges] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    badges: core.UndefinedOr[UserBadges] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user badges."""
 
-    status: core.UndefinedOr[UserStatusEdit] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    status: core.UndefinedOr[UserStatusEdit] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user's status."""
 
-    profile: core.UndefinedOr[PartialUserProfile] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    profile: core.UndefinedOr[PartialUserProfile] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user's profile page."""
 
-    flags: core.UndefinedOr[UserFlags] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    flags: core.UndefinedOr[UserFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user flags."""
 
     online: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -505,9 +481,7 @@ class PartialUser(BaseUser):
     @property
     def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
         """The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
 @define(slots=True)
@@ -520,17 +494,13 @@ class DisplayUser(BaseUser):
     discriminator: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The discriminator of the user."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the user."""
 
     @property
     def avatar(self) -> cdn.Asset | None:
         """The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     async def send_friend_request(self) -> User:
         """|coro|
@@ -555,11 +525,7 @@ def _calculate_user_permissions(
     perspective_id: str,
     perspective_bot: BotUserInfo | None,
 ) -> UserPermissions:
-    if (
-        user_privileged
-        or user_id == perspective_id
-        or user_relationship is RelationshipStatus.friend
-    ):
+    if user_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
         return UserPermissions.ALL
 
     if user_relationship in (
@@ -600,9 +566,7 @@ class User(DisplayUser):
     bot: BotUserInfo | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The information about the bot."""
 
-    relationship: RelationshipStatus = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    relationship: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
     """The current session user's relationship with this user."""
 
     online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -712,9 +676,7 @@ class User(DisplayUser):
 class SelfUser(User):
     """Representation of a user on Revolt."""
 
-    relations: dict[str, Relationship] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    relations: dict[str, Relationship] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The dictionary of relationships with other users."""
 
     async def edit(
@@ -757,23 +719,23 @@ class SelfUser(User):
 
 
 __all__ = (
-    "Presence",
-    "UserStatus",
-    "UserStatusEdit",
-    "StatelessUserProfile",
-    "UserProfile",
-    "PartialUserProfile",
-    "UserProfileEdit",
-    "UserBadges",
-    "UserFlags",
-    "RelationshipStatus",
-    "Relationship",
-    "Mutuals",
-    "BaseUser",
-    "PartialUser",
-    "DisplayUser",
-    "BotUserInfo",
-    "_calculate_user_permissions",
-    "User",
-    "SelfUser",
+    'Presence',
+    'UserStatus',
+    'UserStatusEdit',
+    'StatelessUserProfile',
+    'UserProfile',
+    'PartialUserProfile',
+    'UserProfileEdit',
+    'UserBadges',
+    'UserFlags',
+    'RelationshipStatus',
+    'Relationship',
+    'Mutuals',
+    'BaseUser',
+    'PartialUser',
+    'DisplayUser',
+    'BotUserInfo',
+    '_calculate_user_permissions',
+    'User',
+    'SelfUser',
 )

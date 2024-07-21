@@ -28,4 +28,4 @@ class ReadState:
     """The list of message IDs that mention the user."""
 
 
-__all__ = ("ReadState",)
+__all__ = ('ReadState',)

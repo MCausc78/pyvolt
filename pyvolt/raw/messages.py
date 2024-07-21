@@ -48,60 +48,60 @@ BulkMessageResponse = list[Message] | MessagesAndUsersBulkMessageResponse
 
 
 class TextSystemMessage(typing.TypedDict):
-    type: typing.Literal["text"]
+    type: typing.Literal['text']
     content: str
 
 
 class UserAddedSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_added"]
+    type: typing.Literal['user_added']
     id: str
     by: str
 
 
 class UserRemoveSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_remove"]
+    type: typing.Literal['user_remove']
     id: str
     by: str
 
 
 class UserJoinedSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_joined"]
+    type: typing.Literal['user_joined']
     id: str
 
 
 class UserLeftSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_left"]
+    type: typing.Literal['user_left']
     id: str
 
 
 class UserKickedSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_kicked"]
+    type: typing.Literal['user_kicked']
     id: str
 
 
 class UserBannedSystemMessage(typing.TypedDict):
-    type: typing.Literal["user_banned"]
+    type: typing.Literal['user_banned']
     id: str
 
 
 class ChannelRenamedSystemMessage(typing.TypedDict):
-    type: typing.Literal["channel_renamed"]
+    type: typing.Literal['channel_renamed']
     by: str
 
 
 class ChannelDescriptionChangedSystemMessage(typing.TypedDict):
-    type: typing.Literal["channel_description_changed"]
+    type: typing.Literal['channel_description_changed']
     by: str
 
 
 class ChannelIconChangedSystemMessage(typing.TypedDict):
-    type: typing.Literal["channel_icon_changed"]
+    type: typing.Literal['channel_icon_changed']
     by: str
 
 
 ChannelOwnershipChangedSystemMessage = typing.TypedDict(
-    "ChannelOwnershipChangedSystemMessage",
-    {"type": typing.Literal["channel_ownership_changed"], "from": str, "to": str},
+    'ChannelOwnershipChangedSystemMessage',
+    {'type': typing.Literal['channel_ownership_changed'], 'from': str, 'to': str},
 )
 
 SystemMessage = (
@@ -134,7 +134,7 @@ class AppendMessage(typing.TypedDict):
     embeds: typing.NotRequired[list[Embed]]
 
 
-MessageSort = typing.Literal["Relevance", "Latest", "Oldest"]
+MessageSort = typing.Literal['Relevance', 'Latest', 'Oldest']
 
 
 class SendableEmbed(typing.TypedDict):
@@ -194,32 +194,32 @@ class OptionsUnreact(typing.TypedDict):
 
 
 __all__ = (
-    "Message",
-    "PartialMessage",
-    "MessagesAndUsersBulkMessageResponse",
-    "BulkMessageResponse",
-    "TextSystemMessage",
-    "UserAddedSystemMessage",
-    "UserRemoveSystemMessage",
-    "UserJoinedSystemMessage",
-    "UserLeftSystemMessage",
-    "UserKickedSystemMessage",
-    "UserBannedSystemMessage",
-    "ChannelRenamedSystemMessage",
-    "ChannelDescriptionChangedSystemMessage",
-    "ChannelIconChangedSystemMessage",
-    "ChannelOwnershipChangedSystemMessage",
-    "SystemMessage",
-    "Masquerade",
-    "Interactions",
-    "AppendMessage",
-    "MessageSort",
-    "SendableEmbed",
-    "ReplyIntent",
-    "DataMessageSend",
-    "OptionsQueryMessages",
-    "DataMessageSearch",
-    "DataEditMessage",
-    "OptionsBulkDelete",
-    "OptionsUnreact",
+    'Message',
+    'PartialMessage',
+    'MessagesAndUsersBulkMessageResponse',
+    'BulkMessageResponse',
+    'TextSystemMessage',
+    'UserAddedSystemMessage',
+    'UserRemoveSystemMessage',
+    'UserJoinedSystemMessage',
+    'UserLeftSystemMessage',
+    'UserKickedSystemMessage',
+    'UserBannedSystemMessage',
+    'ChannelRenamedSystemMessage',
+    'ChannelDescriptionChangedSystemMessage',
+    'ChannelIconChangedSystemMessage',
+    'ChannelOwnershipChangedSystemMessage',
+    'SystemMessage',
+    'Masquerade',
+    'Interactions',
+    'AppendMessage',
+    'MessageSort',
+    'SendableEmbed',
+    'ReplyIntent',
+    'DataMessageSend',
+    'OptionsQueryMessages',
+    'DataMessageSearch',
+    'DataEditMessage',
+    'OptionsBulkDelete',
+    'OptionsUnreact',
 )

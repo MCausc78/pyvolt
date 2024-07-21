@@ -1,0 +1,8 @@
+line-length = 120
+
+[format]
+quote-style = "single"
+docstring-code-format = true
+
+[lint.isort]
+required-imports = ["from __future__ import annotations"]
