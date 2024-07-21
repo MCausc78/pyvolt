@@ -59,7 +59,7 @@ class State:
             privileged=True,
             bot=None,
             relationship=RelationshipStatus.none,
-            online=False,
+            online=True,
         )
 
     def setup(
