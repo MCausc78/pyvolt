@@ -51,25 +51,41 @@ class UserSettings:
         self.data = data
         self.mocked = mocked
         self.partial = partial
-        self._parse()
+        self._parse(partial=None)
+
+    def as_dict(self) -> dict[str, str]:
+        """Dict[:class:`str`, :class:`str`]: The dictionary of `{key -> value}`."""
+        return {k: v for k, (_, v) in self.data.items()}
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} data={self.data!r} mocked={self.mocked!r} partial={self.partial!r}>"
 
-    def _parse(self) -> None:
-        try:
-            self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
-        except Exception as exc:
-            self._android = exc
+    def _parse(self, *, partial: UserSettings | None) -> None:
+        if partial:
+            if isinstance(self._android, AndroidUserSettings):
+                android_payload: raw.AndroidUserSettings = utils.from_json(
+                    partial.get("android", "{}")
+                )
+                self._android._update(android_payload)
+            if isinstance(self._revite, ReviteUserSettings):
+                self._revite._update(partial, full=False)
 
-        try:
-            self._revite: ReviteUserSettings | Exception = ReviteUserSettings(self)
-        except Exception as exc:
-            self._revite = exc
+        else:
+            try:
+                self._android: AndroidUserSettings | Exception = AndroidUserSettings(
+                    self
+                )
+            except Exception as exc:
+                self._android = exc
+
+            try:
+                self._revite: ReviteUserSettings | Exception = ReviteUserSettings(self)
+            except Exception as exc:
+                self._revite = exc
 
     def _update(self, partial: UserSettings) -> None:
         self.data.update(partial.data)
-        self._parse()
+        self._parse(partial=partial)
 
     @property
     def android(self) -> AndroidUserSettings:
@@ -174,22 +190,26 @@ class AndroidUserSettings:
         payload: raw.AndroidUserSettings = utils.from_json(parent.get("android", "{}"))
         self._payload = payload
 
-        self._parse(payload)
+        self._update(payload)
 
-    def _parse(self, payload: raw.AndroidUserSettings) -> None:
+    def _update(self, payload: raw.AndroidUserSettings) -> None:
         theme = payload.get("theme")
+
         if theme:
             self._theme: AndroidTheme | None = AndroidTheme(theme)
         else:
             self._theme = None
+
         self._colour_overrides: dict[str, int] | None = payload.get("colourOverrides")
         reply_style = payload.get("messageReplyStyle")
+
         if reply_style:
             self._reply_style: AndroidMessageReplyStyle | None = (
                 AndroidMessageReplyStyle(reply_style)
             )
         else:
             self._reply_style = None
+
         self._avatar_radius: int | None = payload.get("avatarRadius")
 
     @property
@@ -218,6 +238,7 @@ class AndroidUserSettings:
     def payload_for(
         self,
         *,
+        initial_payload: UndefinedOr[raw.AndroidUserSettings] = UNDEFINED,
         theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
         colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
@@ -232,6 +253,8 @@ class AndroidUserSettings:
 
         Parameters
         ----------
+        initial_payload: :class:`UndefinedOr`[raw.AndroidUserSettings]
+            The initial payload.
         theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
             The new theme. Passing ``None`` denotes ``theme`` removal in internal object.
         colour_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
@@ -241,7 +264,12 @@ class AndroidUserSettings:
         avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         """
-        payload = self._payload
+
+        if is_defined(initial_payload):
+            payload = initial_payload | {}
+        else:
+            payload = self._payload | {}
+
         if is_defined(theme):
             if theme is None:
                 try:
@@ -448,7 +476,7 @@ class ReviteUserSettings:
 
     def __init__(self, parent: UserSettings) -> None:
         self.parent = parent
-        self._parse()
+        self._update(parent, full=True)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} last_viewed_changelog_entry={self.last_viewed_changelog_entry!r} language={self.language!r} notification_options={self._notification_options!r} ordering={self.ordering!r} emoji_pack={self.emoji_pack!r} seasonal={self.seasonal!r} transparent={self.transparent!r} ligatures={self.ligatures!r} base_theme={self.base_theme!r} custom_css={self.custom_css!r} font={self.font!r} monofont={self.monofont!r} theme_overrides={self.theme_overrides!r}>"
@@ -544,110 +572,125 @@ class ReviteUserSettings:
         """Dict[:class:`ReviteThemeVariable`, :class:`str`]: The theme overrides."""
         return self._appearance_theme_overrides or {}
 
-    def _parse(self) -> None:
-        parent = self.parent
+    def _on_changelog(self, changelog: raw.ReviteChangelog) -> None:
+        self._changelog_payload: raw.ReviteChangelog | None = changelog
+        self.last_viewed_changelog_entry: ReviteChangelogEntry | None = (
+            ReviteChangelogEntry(changelog["viewed"])
+        )
 
-        changelog_json = parent.get("changelog")
-        if changelog_json:
-            changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
-            self._changelog_payload: raw.ReviteChangelog | None = changelog
-            self.last_viewed_changelog_entry: ReviteChangelogEntry | None = (
-                ReviteChangelogEntry(changelog["viewed"])
+    def _on_locale(self, locale: raw.ReviteLocaleOptions) -> None:
+        self._locale_payload: raw.ReviteLocaleOptions | None = locale
+        self._language: Language | None = Language(locale["lang"])
+
+    def _on_notifications(self, notifications: raw.ReviteNotificationOptions) -> None:
+        self._notifications_payload: raw.ReviteNotificationOptions | None = (
+            notifications
+        )
+        self._notification_options: ReviteNotificationOptions | None = (
+            ReviteNotificationOptions(notifications)
+        )
+
+    def _on_ordering(self, ordering: raw.ReviteOrdering) -> None:
+        self._ordering_payload: raw.ReviteOrdering | None = ordering
+        self._ordering: list[str] | None = ordering["servers"]
+
+    def _on_appearance(self, appearance: raw.ReviteAppearanceSettings) -> None:
+        self._appearance_payload: raw.ReviteAppearanceSettings | None = appearance
+
+        appearance_emoji_pack = appearance.get("appearance:emoji")
+        if appearance_emoji_pack:
+            self._appearance_emoji_pack: ReviteEmojiPack | None = ReviteEmojiPack(
+                appearance_emoji_pack
             )
         else:
+            self._appearance_emoji_pack = None
+
+        self.seasonal: bool | None = appearance.get("appearance:seasonal")
+        self.transparent: bool | None = appearance.get("appearance:transparency")
+
+    def _on_theme(self, theme: raw.ReviteThemeSettings) -> None:
+        self._theme_payload: raw.ReviteThemeSettings | None = None
+
+        self.ligatures: bool | None = theme.get("appearance:ligatures")
+
+        base_theme = theme.get("appearance:theme:base")
+
+        if base_theme:
+            self._appearance_theme_base = ReviteBaseTheme(base_theme)
+        else:
+            self._appearance_theme_base = None
+        self._appearance_theme_css = theme.get("appearance:theme:css")
+
+        font = theme.get("appearance:theme:font")
+        if font:
+            self._appearance_theme_font: ReviteFont | None = ReviteFont(font)
+        else:
+            self._appearance_theme_font = None
+
+        # Deprecated by base theme
+        # self._appearance_theme_light: bool | None = theme.get('appearance:theme:light')
+
+        monofont = theme.get("appearance:theme:monoFont")
+        if monofont:
+            self._appearance_theme_monofont: ReviteMonoFont | None = ReviteMonoFont(
+                monofont
+            )
+        else:
+            self._appearance_theme_monofont = None
+        self._appearance_theme_overrides: dict[ReviteThemeVariable, str] | None = (
+            theme.get("appearance:theme:overrides")
+        )
+
+    def _update(self, payload: UserSettings, *, full: bool) -> None:
+        changelog_json = payload.get("changelog")
+        if changelog_json:
+            changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
+            self._on_changelog(changelog)
+        elif full:
             self._changelog_payload = None
             self.last_viewed_changelog_entry = None
 
-        locale_json = parent.get("locale")
+        locale_json = payload.get("locale")
         if locale_json:
             locale: raw.ReviteLocaleOptions = utils.from_json(locale_json)
-            self._locale_payload: raw.ReviteLocaleOptions | None = locale
-            self._language: Language | None = Language(locale["lang"])
-        else:
+            self._on_locale(locale)
+        elif full:
             self._locale_payload = None
             self._language = None
 
-        notifications_json = parent.get("notifications")
+        notifications_json = payload.get("notifications")
         if notifications_json:
             notifications: raw.ReviteNotificationOptions = utils.from_json(
                 notifications_json
             )
-            self._notifications_payload: raw.ReviteNotificationOptions | None = (
-                notifications
-            )
-            self._notification_options: ReviteNotificationOptions | None = (
-                ReviteNotificationOptions(notifications)
-            )
-        else:
+            self._on_notifications(notifications)
+        elif full:
             self._notifications_payload = None
             self._notification_options = None
 
-        ordering_json = parent.get("ordering")
+        ordering_json = payload.get("ordering")
         if ordering_json:
             ordering: raw.ReviteOrdering = utils.from_json(ordering_json)
-            self._ordering_payload: raw.ReviteOrdering | None = ordering
-            self._ordering: list[str] | None = ordering["servers"]
-        else:
+            self._on_ordering(ordering)
+        elif full:
             self._ordering_payload = None
             self._ordering = None
 
-        appearance_json = parent.get("appearance")
+        appearance_json = payload.get("appearance")
         if appearance_json:
             appearance: raw.ReviteAppearanceSettings = utils.from_json(appearance_json)
-            self._appearance_payload: raw.ReviteAppearanceSettings | None = appearance
-
-            appearance_emoji_pack = appearance.get("appearance:emoji")
-            if appearance_emoji_pack:
-                self._appearance_emoji_pack: ReviteEmojiPack | None = ReviteEmojiPack(
-                    appearance_emoji_pack
-                )
-            else:
-                self._appearance_emoji_pack = None
-
-            self.seasonal: bool | None = appearance.get("appearance:seasonal")
-            self.transparent: bool | None = appearance.get("appearance:transparency")
-        else:
+            self._on_appearance(appearance)
+        elif full:
             self._appearance_payload = None
             self._appearance_emoji_pack = None
             self.seasonal = None
             self.transparent = None
 
-        theme_json = parent.get("theme")
+        theme_json = payload.get("theme")
         if theme_json:
             theme: raw.ReviteThemeSettings = utils.from_json(theme_json)
-            self._theme_payload: raw.ReviteThemeSettings | None = None
-
-            self.ligatures: bool | None = theme.get("appearance:ligatures")
-
-            base_theme = theme.get("appearance:theme:base")
-
-            if base_theme:
-                self._appearance_theme_base = ReviteBaseTheme(base_theme)
-            else:
-                self._appearance_theme_base = None
-            self._appearance_theme_css = theme.get("appearance:theme:css")
-
-            font = theme.get("appearance:theme:font")
-            if font:
-                self._appearance_theme_font: ReviteFont | None = ReviteFont(font)
-            else:
-                self._appearance_theme_font = None
-
-            # Deprecated by base theme
-            # self._appearance_theme_light: bool | None = theme.get('appearance:theme:light')
-
-            monofont = theme.get("appearance:theme:monoFont")
-            if monofont:
-                self._appearance_theme_monofont: ReviteMonoFont | None = ReviteMonoFont(
-                    monofont
-                )
-            else:
-                self._appearance_theme_monofont = None
-            self._appearance_theme_overrides: dict[ReviteThemeVariable, str] | None = (
-                theme.get("appearance:theme:overrides")
-            )
-
-        else:
+            self._on_theme(theme)
+        elif full:
             self._theme_payload = None
             self.ligatures = None
             self._appearance_theme_base = None
