@@ -62,14 +62,16 @@ class UserSettings:
 
     def _parse(self, *, partial: UserSettings | None) -> None:
         if partial:
-            if isinstance(self._android, AndroidUserSettings):
+            if (
+                isinstance(self._android, AndroidUserSettings)
+                and "android" in partial.data
+            ):
                 android_payload: raw.AndroidUserSettings = utils.from_json(
-                    partial.get("android", "{}")
+                    partial["android"]
                 )
                 self._android._update(android_payload)
             if isinstance(self._revite, ReviteUserSettings):
                 self._revite._update(partial, full=False)
-
         else:
             try:
                 self._android: AndroidUserSettings | Exception = AndroidUserSettings(
