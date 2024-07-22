@@ -228,7 +228,7 @@ class HTTPClient:
                         await asyncio.sleep(retry_after)
                         continue
                 j = await utils._json_or_text(response)
-                if isinstance(j.get('error'), dict):
+                if isinstance(j, dict) and isinstance(j.get('error'), dict):
                     error = j['error']
                     code = error.get('code')
                     reason = error.get('reason')
