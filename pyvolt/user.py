@@ -4,8 +4,13 @@ from attrs import define, field
 from enum import IntFlag
 import typing
 
-from . import cdn, core
+from . import cdn
 from .base import Base
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+)
 from .enums import Enum
 from .permissions import UserPermissions
 from .safety_reports import UserReportReason
@@ -46,19 +51,19 @@ class UserStatus:
     """Current presence option."""
 
     def _update(self, data: UserStatusEdit) -> None:
-        if core.is_defined(data.text):
+        if data.text is not UNDEFINED:
             self.text = data.text
-        if core.is_defined(data.presence):
+        if data.presence is not UNDEFINED:
             self.presence = data.presence
 
 
 class UserStatusEdit:
     """Patrial user's status."""
 
-    text: core.UndefinedOr[str | None]
+    text: UndefinedOr[str | None]
     """Custom status text."""
 
-    presence: core.UndefinedOr[Presence | None]
+    presence: UndefinedOr[Presence | None]
     """Current presence option."""
 
     __slots__ = ('text', 'presence')
@@ -66,8 +71,8 @@ class UserStatusEdit:
     def __init__(
         self,
         *,
-        text: core.UndefinedOr[str | None] = core.UNDEFINED,
-        presence: core.UndefinedOr[Presence | None] = core.UNDEFINED,
+        text: UndefinedOr[str | None] = UNDEFINED,
+        presence: UndefinedOr[Presence | None] = UNDEFINED,
     ) -> None:
         self.text = text
         self.presence = presence
@@ -83,9 +88,9 @@ class UserStatusEdit:
 
     def build(self) -> raw.UserStatus:
         j: raw.UserStatus = {}
-        if self.text is not None and core.is_defined(self.text):
+        if self.text is not None and self.text is not UNDEFINED:
             j['text'] = self.text
-        if self.presence is not None and core.is_defined(self.presence):
+        if self.presence is not None and self.presence is not UNDEFINED:
             j['presence'] = self.presence.value
         return j
 
@@ -129,16 +134,14 @@ class PartialUserProfile:
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     """The state."""
 
-    content: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user's profile content."""
 
-    internal_background: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_background: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless background visible on user's profile."""
 
     @property
-    def background(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def background(self) -> UndefinedOr[cdn.Asset | None]:
         """Background visible on user's profile."""
         return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
@@ -146,18 +149,18 @@ class PartialUserProfile:
 class UserProfileEdit:
     """Partial user's profile."""
 
-    content: core.UndefinedOr[str | None]
+    content: UndefinedOr[str | None]
     """Text to set as user profile description."""
 
-    background: core.UndefinedOr[cdn.ResolvableResource | None]
+    background: UndefinedOr[cdn.ResolvableResource | None]
     """New background visible on user's profile."""
 
     __slots__ = ('content', 'background')
 
     def __init__(
         self,
-        content: core.UndefinedOr[str | None] = core.UNDEFINED,
-        background: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
+        content: UndefinedOr[str | None] = UNDEFINED,
+        background: UndefinedOr[cdn.ResolvableResource | None] = UNDEFINED,
     ) -> None:
         self.content = content
         self.background = background
@@ -315,12 +318,12 @@ class BaseUser(Base):
     async def edit(
         self,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[str | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         """|coro|
 
@@ -418,7 +421,7 @@ class BaseUser(Base):
         reason: UserReportReason,
         *,
         additional_context: str | None = None,
-        message_context: core.ULIDOr[BaseMessage],
+        message_context: ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -451,35 +454,35 @@ class BaseUser(Base):
 class PartialUser(BaseUser):
     """Partially represents a user on Revolt."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New username of the user."""
 
-    discriminator: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    discriminator: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New discriminator of the user."""
 
-    display_name: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    display_name: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New display name of the user."""
 
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New stateless avatar of the user."""
 
-    badges: core.UndefinedOr[UserBadges] = field(repr=True, hash=True, kw_only=True, eq=True)
+    badges: UndefinedOr[UserBadges] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user badges."""
 
-    status: core.UndefinedOr[UserStatusEdit] = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: UndefinedOr[UserStatusEdit] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user's status."""
 
-    profile: core.UndefinedOr[PartialUserProfile] = field(repr=True, hash=True, kw_only=True, eq=True)
+    profile: UndefinedOr[PartialUserProfile] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New user's profile page."""
 
-    flags: core.UndefinedOr[UserFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: UndefinedOr[UserFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user flags."""
 
-    online: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    online: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether this user came online."""
 
     @property
-    def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
         """The avatar of the user."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
@@ -573,28 +576,28 @@ class User(DisplayUser):
     """Whether this user is currently online."""
 
     def _update(self, data: PartialUser) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.discriminator):
+        if data.discriminator is not UNDEFINED:
             self.discriminator = data.discriminator
-        if core.is_defined(data.display_name):
+        if data.display_name is not UNDEFINED:
             self.display_name = data.display_name
-        if core.is_defined(data.internal_avatar):
+        if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if core.is_defined(data.badges):
+        if data.badges is not UNDEFINED:
             self.badges = data.badges
-        if core.is_defined(data.status):
+        if data.status is not UNDEFINED:
             status = data.status
-            if core.is_defined(status.text) and core.is_defined(status.presence):
+            if status.text is not UNDEFINED and status.presence is not UNDEFINED:
                 self.status = UserStatus(
                     text=status.text,
                     presence=status.presence,
                 )
             elif self.status:
                 self.status._update(status)
-        if core.is_defined(data.flags):
+        if data.flags is not UNDEFINED:
             self.flags = data.flags
-        if core.is_defined(data.online):
+        if data.online is not UNDEFINED:
             self.online = data.online
 
     # flags
@@ -682,12 +685,12 @@ class SelfUser(User):
     async def edit(
         self,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[str | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         """|coro|
 

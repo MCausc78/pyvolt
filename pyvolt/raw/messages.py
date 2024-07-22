@@ -28,6 +28,7 @@ class Message(typing.TypedDict):
     reactions: typing.NotRequired[dict[str, list[str]]]
     interactions: typing.NotRequired[Interactions]
     masquerade: typing.NotRequired[Masquerade]
+    pinned: typing.NotRequired[bool]
     flags: typing.NotRequired[int]
 
 
@@ -104,6 +105,19 @@ ChannelOwnershipChangedSystemMessage = typing.TypedDict(
     {'type': typing.Literal['channel_ownership_changed'], 'from': str, 'to': str},
 )
 
+
+class MessagePinnedSystemMessage(typing.TypedDict):
+    type: typing.Literal['message_pinned']
+    id: str
+    by: str
+
+
+class MessageUnpinnedSystemMessage(typing.TypedDict):
+    type: typing.Literal['message_unpinned']
+    id: str
+    by: str
+
+
 SystemMessage = (
     TextSystemMessage
     | UserAddedSystemMessage
@@ -116,6 +130,8 @@ SystemMessage = (
     | ChannelDescriptionChangedSystemMessage
     | ChannelIconChangedSystemMessage
     | ChannelOwnershipChangedSystemMessage
+    | MessagePinnedSystemMessage
+    | MessageUnpinnedSystemMessage
 )
 
 
@@ -171,12 +187,13 @@ class OptionsQueryMessages(typing.TypedDict):
 
 
 class DataMessageSearch(typing.TypedDict):
-    query: str
+    query: typing.NotRequired[str]
+    pinned: typing.NotRequired[bool]
     limit: typing.NotRequired[int]
     before: typing.NotRequired[str]
     after: typing.NotRequired[str]
     sort: typing.NotRequired[MessageSort]
-    include_users: typing.NotRequired[Bool]
+    include_users: typing.NotRequired[bool]
 
 
 class DataEditMessage(typing.TypedDict):
@@ -209,6 +226,8 @@ __all__ = (
     'ChannelDescriptionChangedSystemMessage',
     'ChannelIconChangedSystemMessage',
     'ChannelOwnershipChangedSystemMessage',
+    'MessagePinnedSystemMessage',
+    'MessageUnpinnedSystemMessage',
     'SystemMessage',
     'Masquerade',
     'Interactions',

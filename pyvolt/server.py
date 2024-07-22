@@ -17,7 +17,6 @@ from .cdn import ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
-    is_defined,
     ULIDOr,
     resolve_id,
 )
@@ -237,8 +236,13 @@ class PartialRole(BaseRole):
 
     def into_full(self) -> Role | None:
         """Tries transform this partial role into full object. This is useful when caching role."""
-        if is_defined(self.name) and is_defined(self.permissions) and is_defined(self.hoist) and is_defined(self.rank):
-            colour = None if not is_defined(self.colour) else self.colour
+        if (
+            self.name is not UNDEFINED
+            and self.permissions is not UNDEFINED
+            and self.hoist is not UNDEFINED
+            and self.rank is not UNDEFINED
+        ):
+            colour = None if not self.colour is not UNDEFINED else self.colour
             return Role(
                 state=self.state,
                 id=self.id,
@@ -271,15 +275,15 @@ class Role(BaseRole):
     """Ranking of this role."""
 
     def _update(self, data: PartialRole) -> None:
-        if is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if is_defined(data.permissions):
+        if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
-        if is_defined(data.colour):
+        if data.colour is not UNDEFINED:
             self.colour = data.colour
-        if is_defined(data.hoist):
+        if data.hoist is not UNDEFINED:
             self.hoist = data.hoist
-        if is_defined(data.rank):
+        if data.rank is not UNDEFINED:
             self.rank = data.rank
 
 
@@ -669,29 +673,29 @@ class Server(BaseServer):
     """Whether this server should be publicly discoverable."""
 
     def _update(self, data: PartialServer) -> None:
-        if is_defined(data.owner_id):
+        if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
-        if is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if is_defined(data.description):
+        if data.description is not UNDEFINED:
             self.description = data.description
-        if is_defined(data.channel_ids):
+        if data.channel_ids is not UNDEFINED:
             self.internal_channels = (True, data.channel_ids)
-        if is_defined(data.categories):
+        if data.categories is not UNDEFINED:
             self.categories = data.categories or []
-        if is_defined(data.system_messages):
+        if data.system_messages is not UNDEFINED:
             self.system_messages = data.system_messages
-        if is_defined(data.default_permissions):
+        if data.default_permissions is not UNDEFINED:
             self.default_permissions = data.default_permissions
-        if is_defined(data.internal_icon):
+        if data.internal_icon is not UNDEFINED:
             self.internal_icon = data.internal_icon
-        if is_defined(data.internal_banner):
+        if data.internal_banner is not UNDEFINED:
             self.internal_banner = data.internal_banner
-        if is_defined(data.flags):
+        if data.flags is not UNDEFINED:
             self.flags = data.flags
-        if is_defined(data.discoverable):
+        if data.discoverable is not UNDEFINED:
             self.discoverable = data.discoverable
-        if is_defined(data.analytics):
+        if data.analytics is not UNDEFINED:
             self.analytics = data.analytics
 
     def _role_update_full(self, data: PartialRole | Role) -> None:
@@ -1018,13 +1022,13 @@ class Member(BaseMember):
     """The timestamp this member is timed out until."""
 
     def _update(self, data: PartialMember) -> None:
-        if is_defined(data.nick):
+        if data.nick is not UNDEFINED:
             self.nick = data.nick
-        if is_defined(data.internal_avatar):
+        if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if is_defined(data.roles):
+        if data.roles is not UNDEFINED:
             self.roles = data.roles or []
-        if is_defined(data.timed_out_until):
+        if data.timed_out_until is not UNDEFINED:
             self.timed_out_until = data.timed_out_until
 
     @property

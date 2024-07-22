@@ -3,8 +3,8 @@ from __future__ import annotations
 from attrs import define, field
 from enum import IntFlag
 
-from . import core
 from .base import Base
+from .core import UNDEFINED, UndefinedOr
 from .user import User
 
 
@@ -30,10 +30,10 @@ class BaseBot(Base):
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        public: core.UndefinedOr[bool] = core.UNDEFINED,
-        analytics: core.UndefinedOr[bool] = core.UNDEFINED,
-        interactions_url: core.UndefinedOr[str | None] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        public: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
+        interactions_url: UndefinedOr[str | None] = UNDEFINED,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|

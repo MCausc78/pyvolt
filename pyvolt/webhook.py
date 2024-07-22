@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from attrs import define, field
 
-from . import cdn, core
+from . import cdn
 from .base import Base
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+)
 from .message import (
     Reply,
     Interactions,
@@ -45,9 +50,9 @@ class BaseWebhook(Base):
         self,
         *,
         by_token: bool = False,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        permissions: core.UndefinedOr[Permissions] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[str | None] = UNDEFINED,
+        permissions: UndefinedOr[Permissions] = UNDEFINED,
     ) -> Webhook:
         """|coro|
 
@@ -89,7 +94,7 @@ class BaseWebhook(Base):
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
+        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -120,17 +125,17 @@ class BaseWebhook(Base):
 
 @define(slots=True)
 class PartialWebhook(BaseWebhook):
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new name of the webhook."""
 
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new stateless avatar of the webhook."""
 
-    permissions: core.UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
+    permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new permissions for the webhook."""
 
     @property
-    def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
         """The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
@@ -153,11 +158,11 @@ class Webhook(BaseWebhook):
     """The private token for the webhook."""
 
     def _update(self, data: PartialWebhook) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.internal_avatar):
+        if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if core.is_defined(data.permissions):
+        if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
 
     @property

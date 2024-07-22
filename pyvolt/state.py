@@ -48,7 +48,7 @@ class State:
         self._settings: UserSettings | None = None
         self.system = User(
             state=self,
-            id=core.Z,
+            id=core.ZID,
             name='Revolt',
             discriminator='0000',
             internal_avatar=None,

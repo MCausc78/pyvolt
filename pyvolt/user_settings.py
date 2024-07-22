@@ -4,7 +4,7 @@ from datetime import datetime
 import typing
 
 from . import utils
-from .core import UNDEFINED, UndefinedOr, is_defined, ULIDOr, resolve_id
+from .core import UNDEFINED, UndefinedOr, ULIDOr, resolve_id
 from .enums import Enum
 from .localization import Language
 
@@ -256,12 +256,12 @@ class AndroidUserSettings:
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         """
 
-        if is_defined(initial_payload):
+        if initial_payload is not UNDEFINED:
             payload = initial_payload | {}
         else:
             payload = self._payload | {}
 
-        if is_defined(theme):
+        if theme is not UNDEFINED:
             if theme is None:
                 try:
                     del payload['theme']
@@ -270,7 +270,7 @@ class AndroidUserSettings:
             else:
                 payload['theme'] = theme.value
 
-        if is_defined(colour_overrides):
+        if colour_overrides is not UNDEFINED:
             if colour_overrides is None:
                 try:
                     del payload['colourOverrides']
@@ -279,7 +279,7 @@ class AndroidUserSettings:
             else:
                 payload['colourOverrides'] = colour_overrides
 
-        if is_defined(reply_style):
+        if reply_style is not UNDEFINED:
             if reply_style is None:
                 try:
                     del payload['messageReplyStyle']
@@ -288,7 +288,7 @@ class AndroidUserSettings:
             else:
                 payload['messageReplyStyle'] = reply_style.value
 
-        if is_defined(avatar_radius):
+        if avatar_radius is not UNDEFINED:
             if avatar_radius is None:
                 try:
                     del payload['avatarRadius']
@@ -752,7 +752,7 @@ class ReviteUserSettings:
         """
         payload: raw.ReviteUserSettingsPayload = {}
 
-        if is_defined(last_viewed_changelog_entry):
+        if last_viewed_changelog_entry is not UNDEFINED:
             viewed = (
                 last_viewed_changelog_entry.value
                 if isinstance(last_viewed_changelog_entry, ReviteChangelogEntry)
@@ -766,14 +766,14 @@ class ReviteUserSettings:
 
             payload['changelog'] = utils.to_json(changelog)
 
-        if is_defined(language):
+        if language is not UNDEFINED:
             if self._locale_payload is not None:
                 locale: raw.ReviteLocaleOptions = self._locale_payload | {'lang': language.value}
             else:
                 locale = {'lang': language.value}
             payload['locale'] = utils.to_json(locale)
 
-        if is_defined(server_notifications) or is_defined(channel_notifications):
+        if server_notifications is not UNDEFINED or channel_notifications is not UNDEFINED:
             options = self._notification_options
             if options:
                 if merge_server_notifications:
@@ -804,20 +804,20 @@ class ReviteUserSettings:
                     'channel': channels,
                 }
 
-            if is_defined(server_notifications):
+            if server_notifications is not UNDEFINED:
                 server_payload = notifications['server'] | {
                     resolve_id(server): state.value for server, state in server_notifications.items()
                 }
                 # I literally don't know why it errors...
                 notifications['server'] = server_payload  # type: ignore
-            if is_defined(channel_notifications):
+            if channel_notifications is not UNDEFINED:
                 channel_payload = notifications['channel'] | {
                     resolve_id(channel): state.value for channel, state in channel_notifications.items()
                 }
                 notifications['channel'] = channel_payload  # type: ignore
             payload['notifications'] = utils.to_json(notifications)
 
-        if is_defined(ordering):
+        if ordering is not UNDEFINED:
             if self._ordering_payload is not None:
                 ordering_payload: raw.ReviteOrdering = self._ordering_payload | {
                     'servers': [resolve_id(server_id) for server_id in ordering]
@@ -826,7 +826,7 @@ class ReviteUserSettings:
                 ordering_payload: raw.ReviteOrdering = {'servers': [resolve_id(server_id) for server_id in ordering]}
             payload['ordering'] = utils.to_json(ordering_payload)
 
-        if is_defined(emoji_pack) or is_defined(seasonal) or is_defined(transparent):
+        if emoji_pack is not UNDEFINED or seasonal is not UNDEFINED or transparent is not UNDEFINED:
             if self._appearance_payload is not None:
                 appearance_payload: raw.ReviteAppearanceSettings = self._appearance_payload
             else:
@@ -837,7 +837,7 @@ class ReviteUserSettings:
                     del appearance_payload['appearance:emoji']
                 except KeyError:
                     pass
-            elif is_defined(emoji_pack):
+            elif emoji_pack is not UNDEFINED:
                 appearance_payload['appearance:emoji'] = emoji_pack.value
 
             if seasonal is None:
@@ -845,7 +845,7 @@ class ReviteUserSettings:
                     del appearance_payload['appearance:seasonal']
                 except KeyError:
                     pass
-            elif is_defined(seasonal):
+            elif seasonal is not UNDEFINED:
                 appearance_payload['appearance:seasonal'] = seasonal
 
             if transparent is None:
@@ -853,18 +853,18 @@ class ReviteUserSettings:
                     del appearance_payload['appearance:transparency']
                 except KeyError:
                     pass
-            elif is_defined(transparent):
+            elif transparent is not UNDEFINED:
                 appearance_payload['appearance:transparency'] = transparent
 
             payload['appearance'] = utils.to_json(appearance_payload)
 
         if (
-            is_defined(ligatures)
-            or is_defined(base_theme)
-            or is_defined(custom_css)
-            or is_defined(font)
-            or is_defined(monofont)
-            or is_defined(overrides)
+            ligatures is not UNDEFINED
+            or base_theme is not UNDEFINED
+            or custom_css is not UNDEFINED
+            or font is not UNDEFINED
+            or monofont is not UNDEFINED
+            or overrides is not UNDEFINED
         ):
             if self._theme_payload is not None:
                 theme_payload: raw.ReviteThemeSettings = self._theme_payload
@@ -876,7 +876,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:ligatures']
                 except KeyError:
                     pass
-            elif is_defined(ligatures):
+            elif ligatures is not UNDEFINED:
                 theme_payload['appearance:ligatures'] = ligatures
 
             if base_theme is None:
@@ -884,7 +884,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:theme:base']
                 except KeyError:
                     pass
-            elif is_defined(base_theme):
+            elif base_theme is not UNDEFINED:
                 theme_payload['appearance:theme:base'] = base_theme.value
 
             if custom_css is None:
@@ -892,7 +892,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:theme:css']
                 except KeyError:
                     pass
-            elif is_defined(custom_css):
+            elif custom_css is not UNDEFINED:
                 theme_payload['appearance:theme:css'] = custom_css
 
             if font is None:
@@ -900,7 +900,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:theme:font']
                 except KeyError:
                     pass
-            elif is_defined(font):
+            elif font is not UNDEFINED:
                 try:
                     del theme_payload['appearance:theme:font']
                 except KeyError:
@@ -911,7 +911,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:theme:monoFont']
                 except KeyError:
                     pass
-            elif is_defined(monofont):
+            elif monofont is not UNDEFINED:
                 theme_payload['appearance:theme:monoFont'] = monofont.value
 
             if overrides is None:
@@ -919,7 +919,7 @@ class ReviteUserSettings:
                     del theme_payload['appearance:theme:overrides']
                 except KeyError:
                     pass
-            elif is_defined(overrides):
+            elif overrides is not UNDEFINED:
                 theme_payload['appearance:theme:overrides'] = overrides
 
             payload['theme'] = utils.to_json(theme_payload)

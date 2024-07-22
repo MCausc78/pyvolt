@@ -2,30 +2,29 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import typing
+
+from .enums import Enum
 from .ulid import _ulid_timestamp
 
 
-class Undefined:
-    """Undefined sentinel"""
+class _Sentinel(Enum):
+    """The library sentinels."""
 
-    __slots__ = ()
-
-    def __init__(self) -> None:
-        pass
+    _UNDEFINED = 'UNDEFINED'
 
     def __bool__(self) -> typing.Literal[False]:
         return False
 
+    def __repr__(self) -> typing.Literal['UNDEFINED']:
+        return self.value
 
-UNDEFINED = Undefined()
+
+Undefined: typing.TypeAlias = typing.Literal[_Sentinel._UNDEFINED]
+UNDEFINED: Undefined = _Sentinel._UNDEFINED
 
 
 T = typing.TypeVar('T')
 UndefinedOr = Undefined | T
-
-
-def is_defined(x: UndefinedOr[T]) -> typing.TypeGuard[T]:
-    return x is not UNDEFINED and not isinstance(x, Undefined)
 
 
 def ulid_timestamp(val: str) -> float:
@@ -51,7 +50,7 @@ def resolve_id(resolvable: ULIDOr) -> str:
 
 
 # zero ID
-Z = '00000000000000000000000000'
+ZID = '00000000000000000000000000'
 
 __version__: str = '1.0.0'
 
@@ -60,12 +59,11 @@ __all__ = (
     'UNDEFINED',
     'T',
     'UndefinedOr',
-    'is_defined',
     'ulid_timestamp',
     'ulid_time',
     'HasID',
     'ULIDOr',
     'resolve_id',
     '__version__',
-    'Z',
+    'ZID',
 )

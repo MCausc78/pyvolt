@@ -8,11 +8,16 @@ import typing
 from . import (
     cache as caching,
     cdn,
-    core,
 )
 
 from .base import Base
 from .bot import BaseBot
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+    resolve_id,
+)
 from .enums import Enum
 from .invite import Invite
 from .permissions import (
@@ -69,10 +74,10 @@ class Typing(contextlib.AbstractAsyncContextManager):
 class BaseChannel(Base, abc.ABC):
     """Representation of channel on Revolt."""
 
-    def message(self, message: core.ULIDOr[BaseMessage]) -> BaseMessage:
+    def message(self, message: ULIDOr[BaseMessage]) -> BaseMessage:
         from .message import BaseMessage
 
-        return BaseMessage(state=self.state, id=core.resolve_id(message), channel_id=self.id)
+        return BaseMessage(state=self.state, id=resolve_id(message), channel_id=self.id)
 
     async def close(self, *, silent: bool | None = None) -> None:
         """|coro|
@@ -96,13 +101,13 @@ class BaseChannel(Base, abc.ABC):
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        owner: core.UndefinedOr[core.ULIDOr[BaseUser]] = core.UNDEFINED,
-        icon: core.UndefinedOr[str | None] = core.UNDEFINED,
-        nsfw: core.UndefinedOr[bool] = core.UNDEFINED,
-        archived: core.UndefinedOr[bool] = core.UNDEFINED,
-        default_permissions: core.UndefinedOr[None] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[str | None] = UNDEFINED,
+        owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
+        icon: UndefinedOr[str | None] = UNDEFINED,
+        nsfw: UndefinedOr[bool] = UNDEFINED,
+        archived: UndefinedOr[bool] = UNDEFINED,
+        default_permissions: UndefinedOr[None] = UNDEFINED,
     ) -> Channel:
         """|coro|
 
@@ -148,20 +153,16 @@ class BaseChannel(Base, abc.ABC):
 class PartialChannel(BaseChannel):
     """Partial representation of a channel on Revolt."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: core.UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    nsfw: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    active: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    permissions: core.UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
-    role_permissions: core.UndefinedOr[dict[str, PermissionOverride]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    default_permissions: core.UndefinedOr[PermissionOverride | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    last_message_id: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    active: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
+    role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    last_message_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
 def _calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str) -> Permissions:
@@ -237,62 +238,57 @@ class TextChannel(BaseChannel):
         """Ends typing in channel."""
         await self.state.shard.end_typing(self.id)
 
-    async def pins(self) -> list[Message]:
-        """|coro|
-
-        Retrieves all messages that are currently pinned in the channel.
-
-        Raises
-        ------
-        HTTPException
-            Getting channel pins failed.
-        """
-        return await self.state.http.get_channel_pins(self.id)
-
     async def search(
         self,
-        query: str,
+        query: str | None = None,
         *,
+        pinned: bool | None = None,
         limit: int | None = None,
-        before: core.ULIDOr[BaseMessage] | None = None,
-        after: core.ULIDOr[BaseMessage] | None = None,
+        before: ULIDOr[BaseMessage] | None = None,
+        after: ULIDOr[BaseMessage] | None = None,
         sort: MessageSort | None = None,
         populate_users: bool | None = None,
     ) -> list[Message]:
         """|coro|
 
-        Searches for messages within the given parameters.
+        Searches for messages.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        query: :class:`str`
+        query: Optional[:class:`str`]
             Full-text search query. See [MongoDB documentation](https://docs.mongodb.com/manual/text-search/#-text-operator) for more information.
-        limit: :class:`int`
+        pinned: Optional[:class:`bool`]
+            Whether to search for (un-)pinned messages or not.
+        limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
-        before: :class:`core.ResolvableULID`
-            Message ID before which messages should be fetched.
-        after: :class:`core.ResolvableULID`
-            Message ID after which messages should be fetched.
-        sort: :class:`messages.MessageSort`
-            Sort used for retrieving messages.
-        populate_users: :class:`bool`
+        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message before which messages should be fetched.
+        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+            The message after which messages should be fetched.
+        sort: Optional[:class:`MessageSort`]
+            Sort used for retrieving.
+        populate_users: Optional[:class:`bool`]
             Whether to populate user (and member, if server channel) objects.
-
-        Returns
-        -------
-        :class:`list`[:class:`messages.Message`]
-            The messages matched.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to search messages.
+            You do not have permissions to search
         HTTPException
             Searching messages failed.
+
+        Returns
+        -------
+        List[:class:`Message`]
+            The messages matched.
         """
         return await self.state.http.search_for_messages(
             self.id,
-            query,
+            query=query,
+            pinned=pinned,
             limit=limit,
             before=before,
             after=after,
@@ -306,7 +302,7 @@ class TextChannel(BaseChannel):
         *,
         nonce: str | None = None,
         attachments: list[cdn.ResolvableResource] | None = None,
-        replies: list[Reply | core.ULIDOr[BaseMessage]] | None = None,
+        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
@@ -369,9 +365,9 @@ class DMChannel(TextChannel):
     """ID of the last message sent in this channel."""
 
     def _update(self, data: PartialChannel) -> None:
-        if core.is_defined(data.active):
+        if data.active is not UNDEFINED:
             self.active = data.active
-        if core.is_defined(data.last_message_id):
+        if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
 
 
@@ -405,19 +401,19 @@ class GroupChannel(TextChannel):
     """Whether this group is marked as not safe for work."""
 
     def _update(self, data: PartialChannel) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.owner_id):
+        if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
-        if core.is_defined(data.description):
+        if data.description is not UNDEFINED:
             self.description = data.description
-        if core.is_defined(data.internal_icon):
+        if data.internal_icon is not UNDEFINED:
             self.internal_icon = data.internal_icon
-        if core.is_defined(data.last_message_id):
+        if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
-        if core.is_defined(data.permissions):
+        if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
-        if core.is_defined(data.nsfw):
+        if data.nsfw is not UNDEFINED:
             self.nsfw = data.nsfw
 
     def _join(self, user_id: str) -> None:
@@ -436,8 +432,8 @@ class GroupChannel(TextChannel):
         else:
             self._recipients = (
                 True,
-                [u.id for u in self._recipients[1] if u.id != user_id],
-            )  # type: ignore
+                [u.id for u in self._recipients[1] if u.id != user_id],  # type: ignore
+            )
 
     @property
     def icon(self) -> cdn.Asset | None:
@@ -471,7 +467,7 @@ class GroupChannel(TextChannel):
 
     async def add(
         self,
-        user: core.ULIDOr[BaseUser],
+        user: ULIDOr[BaseUser],
     ) -> None:
         """|coro|
 
@@ -493,7 +489,7 @@ class GroupChannel(TextChannel):
 
     async def add_bot(
         self,
-        bot: core.ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[BaseBot | BaseUser],
     ) -> None:
         """|coro|
 
@@ -567,17 +563,17 @@ class BaseServerChannel(BaseChannel):
     """Whether this channel is marked as not safe for work."""
 
     def _update(self, data: PartialChannel) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.description):
+        if data.description is not UNDEFINED:
             self.description = data.description
-        if core.is_defined(data.internal_icon):
+        if data.internal_icon is not UNDEFINED:
             self.internal_icon = data.internal_icon
-        if core.is_defined(data.nsfw):
+        if data.nsfw is not UNDEFINED:
             self.nsfw = data.nsfw
-        if core.is_defined(data.role_permissions):
+        if data.role_permissions is not UNDEFINED:
             self.role_permissions = data.role_permissions
-        if core.is_defined(data.default_permissions):
+        if data.default_permissions is not UNDEFINED:
             self.default_permissions = data.default_permissions
 
     @property
@@ -630,7 +626,7 @@ class BaseServerChannel(BaseChannel):
 
     async def set_role_permissions(
         self,
-        role: core.ULIDOr[BaseRole],
+        role: ULIDOr[BaseRole],
         *,
         allow: Permissions = Permissions.NONE,
         deny: Permissions = Permissions.NONE,
@@ -642,7 +638,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        role: :class:`core.ResolvableULID`
+        role: :class:`ResolvableULID`
             The role.
 
         Raises
@@ -682,7 +678,7 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
 
     def _update(self, data: PartialChannel) -> None:
         BaseServerChannel._update(self, data)
-        if core.is_defined(data.last_message_id):
+        if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
 
 

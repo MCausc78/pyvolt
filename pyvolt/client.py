@@ -17,7 +17,6 @@ from .channel import SavedMessagesChannel, GroupChannel, Channel
 from .core import (
     UNDEFINED,
     UndefinedOr,
-    is_defined,
     ULIDOr,
 )
 from .emoji import Emoji
@@ -349,7 +348,7 @@ class Client:
                 cr = cache(self, state)
             else:
                 cr = cache
-            c = cr if is_defined(cr) else MapCache()
+            c = cr if cr is not UNDEFINED else MapCache()
 
             state.setup(
                 cache=c,

@@ -36,7 +36,6 @@ from .cdn import ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
     UndefinedOr,
-    is_defined,
     ULIDOr,
     resolve_id,
     __version__ as version,
@@ -335,13 +334,13 @@ class HTTPClient:
         """
         j: raw.DataEditBot = {}
         r: list[raw.FieldsBot] = []
-        if is_defined(name):
+        if name is not UNDEFINED:
             j['name'] = name
-        if is_defined(public):
+        if public is not UNDEFINED:
             j['public'] = public
-        if is_defined(analytics):
+        if analytics is not UNDEFINED:
             j['analytics'] = analytics
-        if is_defined(interactions_url):
+        if interactions_url is not UNDEFINED:
             if interactions_url is None:
                 r.append('InteractionsURL')
             else:
@@ -583,25 +582,25 @@ class HTTPClient:
         """
         j: raw.DataEditChannel = {}
         r: list[raw.FieldsChannel] = []
-        if is_defined(name):
+        if name is not UNDEFINED:
             j['name'] = name
-        if is_defined(description):
+        if description is not UNDEFINED:
             if description is None:
                 r.append('Description')
             else:
                 j['description'] = description
-        if is_defined(owner):
+        if owner is not UNDEFINED:
             j['owner'] = resolve_id(owner)
-        if is_defined(icon):
+        if icon is not UNDEFINED:
             if icon is None:
                 r.append('Icon')
             else:
                 j['icon'] = await resolve_resource(self.state, icon, tag='icons')
-        if is_defined(nsfw):
+        if nsfw is not UNDEFINED:
             j['nsfw'] = nsfw
-        if is_defined(archived):
+        if archived is not UNDEFINED:
             j['archived'] = archived
-        if is_defined(default_permissions):
+        if default_permissions is not UNDEFINED:
             r.append('DefaultPermissions')
         if len(r) > 0:
             j['remove'] = r
@@ -637,31 +636,6 @@ class HTTPClient:
         return self.state.parser.parse_channel(
             await self.request(routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)))
         )
-
-    async def get_channel_pins(self, channel: ULIDOr[TextChannel]) -> list[Message]:
-        """|coro|
-
-        Retrieves all messages that are currently pinned in the channel.
-
-        Parameters
-        ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
-            The channel.
-
-        Raises
-        ------
-        HTTPException
-            Getting channel pins failed.
-
-        Returns
-        -------
-        List[:class:`Message`]
-            The pinned messages.
-        """
-        return [
-            self.state.parser.parse_message(m)
-            for m in await self.request(routes.CHANNELS_CHANNEL_PINS.compile(channel_id=resolve_id(channel)))
-        ]
 
     async def add_recipient_to_group(
         self,
@@ -959,9 +933,9 @@ class HTTPClient:
             The newly edited message.
         """
         j: raw.DataEditMessage = {}
-        if is_defined(content):
+        if content is not UNDEFINED:
             j['content'] = content
-        if is_defined(embeds):
+        if embeds is not UNDEFINED:
             j['embeds'] = [await embed.build(self.state) for embed in embeds]
         return self.state.parser.parse_message(
             await self.request(
@@ -1107,8 +1081,9 @@ class HTTPClient:
     async def search_for_messages(
         self,
         channel: ULIDOr[TextChannel],
-        query: str,
+        query: str | None = None,
         *,
+        pinned: bool | None = None,
         limit: int | None = None,
         before: ULIDOr[BaseMessage] | None = None,
         after: ULIDOr[BaseMessage] | None = None,
@@ -1126,16 +1101,18 @@ class HTTPClient:
         ----------
         channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel to search in.
-        query: :class:`str`
+        query: Optional[:class:`str`]
             Full-text search query. See [MongoDB documentation](https://docs.mongodb.com/manual/text-search/#-text-operator) for more information.
-        limit: :class:`int`
+        pinned: Optional[:class:`bool`]
+            Whether to search for (un-)pinned messages or not.
+        limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
         before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
-            Sort used for retrieving
+            Sort used for retrieving.
         populate_users: Optional[:class:`bool`]
             Whether to populate user (and member, if server channel) objects.
 
@@ -1151,7 +1128,11 @@ class HTTPClient:
         List[:class:`Message`]
             The messages matched.
         """
-        j: raw.DataMessageSearch = {'query': query}
+        j: raw.DataMessageSearch = {}
+        if query is not None:
+            j['query'] = query
+        if pinned is not None:
+            j['pinned'] = pinned
         if limit is not None:
             j['limit'] = limit
         if before is not None:
@@ -1161,7 +1142,7 @@ class HTTPClient:
         if sort is not None:
             j['sort'] = sort.value
         if populate_users is not None:
-            j['include_users'] = utils._bool(populate_users)
+            j['include_users'] = populate_users
 
         return self.state.parser.parse_messages(
             await self.request(
@@ -2082,22 +2063,22 @@ class HTTPClient:
         """
         j: raw.DataMemberEdit = {}
         r: list[raw.FieldsMember] = []
-        if is_defined(nick):
+        if nick is not UNDEFINED:
             if nick is not None:
                 j['nickname'] = nick
             else:
                 r.append('Nickname')
-        if is_defined(avatar):
+        if avatar is not UNDEFINED:
             if avatar is not None:
                 j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
             else:
                 r.append('Avatar')
-        if is_defined(roles):
+        if roles is not UNDEFINED:
             if roles is not None:
                 j['roles'] = [resolve_id(e) for e in roles]
             else:
                 r.append('Roles')
-        if is_defined(timeout):
+        if timeout is not UNDEFINED:
             if timeout is None:
                 r.append('Timeout')
             elif isinstance(timeout, datetime):
@@ -2430,16 +2411,16 @@ class HTTPClient:
         """
         j: raw.DataEditRole = {}
         r: list[raw.FieldsRole] = []
-        if is_defined(name):
+        if name is not UNDEFINED:
             j['name'] = name
-        if is_defined(colour):
+        if colour is not UNDEFINED:
             if colour is not None:
                 j['colour'] = colour
             else:
                 r.append('Colour')
-        if is_defined(hoist):
+        if hoist is not UNDEFINED:
             j['hoist'] = hoist
-        if is_defined(rank):
+        if rank is not UNDEFINED:
             j['rank'] = rank
         if len(r) > 0:
             j['remove'] = r
@@ -2628,38 +2609,38 @@ class HTTPClient:
         """
         j: raw.DataEditServer = {}
         r: list[raw.FieldsServer] = []
-        if is_defined(name):
+        if name is not UNDEFINED:
             j['name'] = name
-        if is_defined(description):
+        if description is not UNDEFINED:
             if description is not None:
                 j['description'] = description
             else:
                 r.append('Description')
-        if is_defined(icon):
+        if icon is not UNDEFINED:
             if icon is not None:
                 j['icon'] = await resolve_resource(self.state, icon, tag='icons')
             else:
                 r.append('Icon')
-        if is_defined(banner):
+        if banner is not UNDEFINED:
             if banner is not None:
                 j['banner'] = await resolve_resource(self.state, banner, tag='banners')
             else:
                 r.append('Banner')
-        if is_defined(categories):
+        if categories is not UNDEFINED:
             if categories is not None:
                 j['categories'] = [e.build() for e in categories]
             else:
                 r.append('Categories')
-        if is_defined(system_messages):
+        if system_messages is not UNDEFINED:
             if system_messages is not None:
                 j['system_messages'] = system_messages.build()
             else:
                 r.append('SystemMessages')
-        if is_defined(flags):
+        if flags is not UNDEFINED:
             j['flags'] = int(flags)
-        if is_defined(discoverable):
+        if discoverable is not UNDEFINED:
             j['discoverable'] = discoverable
-        if is_defined(analytics):
+        if analytics is not UNDEFINED:
             j['analytics'] = analytics
         if len(r) > 0:
             j['remove'] = r
@@ -2856,25 +2837,25 @@ class HTTPClient:
     ) -> User:
         j: raw.DataEditUser = {}
         r: list[raw.FieldsUser] = []
-        if is_defined(display_name):
+        if display_name is not UNDEFINED:
             if display_name is None:
                 r.append('DisplayName')
             else:
                 j['display_name'] = display_name
-        if is_defined(avatar):
+        if avatar is not UNDEFINED:
             if avatar is None:
                 r.append('Avatar')
             else:
                 j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
-        if is_defined(status):
+        if status is not UNDEFINED:
             j['status'] = status.build()
             r.extend(status.remove)
-        if is_defined(profile):
+        if profile is not UNDEFINED:
             j['profile'] = await profile.build(self.state)
             r.extend(profile.remove)
-        if is_defined(badges):
+        if badges is not UNDEFINED:
             j['badges'] = int(badges)
-        if is_defined(flags):
+        if flags is not UNDEFINED:
             j['flags'] = int(flags)
         if len(r) > 0:
             j['remove'] = r
@@ -3269,14 +3250,14 @@ class HTTPClient:
         """
         j: raw.DataEditWebhook = {}
         r: list[raw.FieldsWebhook] = []
-        if is_defined(name):
+        if name is not UNDEFINED:
             j['name'] = name
-        if is_defined(avatar):
+        if avatar is not UNDEFINED:
             if avatar is None:
                 r.append('Avatar')
             else:
                 j['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
-        if is_defined(permissions):
+        if permissions is not UNDEFINED:
             j['permissions'] = int(permissions)
         if len(r) > 0:
             j['remove'] = r

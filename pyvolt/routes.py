@@ -87,7 +87,7 @@ CHANNELS_MESSAGE_REACT: typing.Final[Route] = Route(
 )
 CHANNELS_MESSAGE_PIN: typing.Final[Route] = Route('POST', '/channels/{channel_id}/messages/{message_id}/pin')
 CHANNELS_MESSAGE_SEND: typing.Final[Route] = Route('POST', '/channels/{channel_id}/messages')
-CHANNELS_MESSAGE_UNPIN: typing.Final[Route] = Route('POST', '/channels/{channel_id}/messages/{message_id}/unpin')
+CHANNELS_MESSAGE_UNPIN: typing.Final[Route] = Route('DELETE', '/channels/{channel_id}/messages/{message_id}/pin')
 CHANNELS_MESSAGE_SEARCH: typing.Final[Route] = Route('POST', '/channels/{channel_id}/search')
 CHANNELS_MESSAGE_UNREACT: typing.Final[Route] = Route(
     'DELETE', '/channels/{channel_id}/messages/{message_id}/reactions/{emoji}'

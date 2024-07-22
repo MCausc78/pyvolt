@@ -3,8 +3,8 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
-from . import core
 from .base import Base
+from .core import UNDEFINED, UndefinedOr
 from .enums import Enum
 from .state import State
 
@@ -60,14 +60,14 @@ class PartialSession(Base):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The session friendly name."""
 
-    async def edit(self, *, friendly_name: core.UndefinedOr[str]) -> PartialSession:
+    async def edit(self, *, friendly_name: UndefinedOr[str]) -> PartialSession:
         """|coro|
 
         Edits the session.
         """
         return await self.state.http.edit_session(
             self.id,
-            friendly_name=(friendly_name if core.is_defined(friendly_name) else self.name),
+            friendly_name=friendly_name if friendly_name is not UNDEFINED else self.name,
         )
 
     async def revoke(self) -> None:

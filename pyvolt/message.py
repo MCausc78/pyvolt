@@ -7,9 +7,16 @@ from enum import IntFlag
 import typing
 
 
-from . import cache as caching, cdn, core
+from . import cache as caching, cdn
 from .base import Base
 from .channel import TextChannel, ServerChannel
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+    resolve_id,
+    ZID,
+)
 from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
 from .enums import Enum
@@ -32,8 +39,8 @@ class Reply:
 
     __slots__ = ('id', 'mention')
 
-    def __init__(self, id: core.ULIDOr[BaseMessage], mention: bool = False) -> None:
-        self.id = core.resolve_id(id)
+    def __init__(self, id: ULIDOr[BaseMessage], mention: bool = False) -> None:
+        self.id = resolve_id(id)
         self.mention = mention
 
     def build(self) -> raw.ReplyIntent:
@@ -247,8 +254,8 @@ class BaseMessage(Base):
     async def edit(
         self,
         *,
-        content: core.UndefinedOr[str] = core.UNDEFINED,
-        embeds: core.UndefinedOr[list[SendableEmbed]] = core.UNDEFINED,
+        content: UndefinedOr[str] = UNDEFINED,
+        embeds: UndefinedOr[list[SendableEmbed]] = UNDEFINED,
     ) -> Message:
         """|coro|
 
@@ -289,9 +296,9 @@ class BaseMessage(Base):
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ResolvableULID`
             Channel to message was sent.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ResolvableULID`
             Message react to.
         emoji: :class:`emojis.ResolvableEmoji`
             Emoji to add.
@@ -385,7 +392,7 @@ class BaseMessage(Base):
         self,
         emoji: ResolvableEmoji,
         *,
-        user: core.ULIDOr[BaseUser] | None = None,
+        user: ULIDOr[BaseUser] | None = None,
         remove_all: bool | None = None,
     ) -> None:
         """|coro|
@@ -396,13 +403,13 @@ class BaseMessage(Base):
 
         Parameters
         ----------
-        channel: :class:`core.ResolvableULID`
+        channel: :class:`ResolvableULID`
             Channel to message was sent.
-        message: :class:`core.ResolvableULID`
+        message: :class:`ResolvableULID`
             Message to remove reactions from.
         emoji: :class:`ResolvableEmoji`
             Emoji to remove.
-        user: :class:`core.ResolvableULID` | `None`
+        user: :class:`ResolvableULID` | `None`
             Remove reactions from this user. Requires `ManageMessages` permission if provided.
         remove_all: :class:`bool` | `None`
             Whether to remove all reactions. Requires `ManageMessages` permission if provided.
@@ -416,25 +423,25 @@ class BaseMessage(Base):
 class PartialMessage(BaseMessage):
     """Partial representation of message in channel on Revolt."""
 
-    content: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message content."""
 
-    edited_at: core.UndefinedOr[datetime] = field(repr=True, hash=True, kw_only=True, eq=True)
+    edited_at: UndefinedOr[datetime] = field(repr=True, hash=True, kw_only=True, eq=True)
     """When message was edited."""
 
-    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message embeds."""
 
-    reactions: core.UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message reactions."""
 
     @property
-    def embeds(self) -> core.UndefinedOr[list[Embed]]:
+    def embeds(self) -> UndefinedOr[list[Embed]]:
         """New message embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
-            if core.is_defined(self.internal_embeds)
-            else core.UNDEFINED
+            if self.internal_embeds is not UNDEFINED
+            else UNDEFINED
         )
 
 
@@ -442,16 +449,16 @@ class PartialMessage(BaseMessage):
 class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
-    internal_embeds: core.UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message appended stateless embeds."""
 
     @property
-    def embeds(self) -> core.UndefinedOr[list[Embed]]:
+    def embeds(self) -> UndefinedOr[list[Embed]]:
         """New message appended embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
-            if core.is_defined(self.internal_embeds)
-            else core.UNDEFINED
+            if self.internal_embeds is not UNDEFINED
+            else UNDEFINED
         )
 
 
@@ -606,17 +613,17 @@ class Message(BaseMessage):
     """The message flags."""
 
     def _append(self, data: MessageAppendData) -> None:
-        if core.is_defined(data.internal_embeds):
+        if data.internal_embeds is not UNDEFINED:
             self.internal_embeds.extend(data.internal_embeds)
 
     def _update(self, data: PartialMessage) -> None:
-        if core.is_defined(data.content):
+        if data.content is not UNDEFINED:
             self.content = data.content
-        if core.is_defined(data.edited_at):
+        if data.edited_at is not UNDEFINED:
             self.edited_at = data.edited_at
-        if core.is_defined(data.internal_embeds):
+        if data.internal_embeds is not UNDEFINED:
             self.internal_embeds = data.internal_embeds
-        if core.is_defined(data.reactions):
+        if data.reactions is not UNDEFINED:
             self.reactions = data.reactions
 
     def _react(self, user_id: str, emoji: str) -> None:
@@ -642,7 +649,7 @@ class Message(BaseMessage):
         """Try get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
-        if self._author == core.Z:
+        if self._author == ZID:
             return self.state.system
         if not self.state.cache:
             return None
