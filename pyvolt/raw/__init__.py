@@ -13,6 +13,7 @@ from .files import *
 from .gateway import *
 from .localization import *
 from .messages import *
+from .misc import *
 from .permissions import *
 from .safety_reports import *
 from .server_bans import *
