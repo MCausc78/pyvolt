@@ -20,7 +20,7 @@ from .channels import (
     FieldsChannel,
 )
 from .emojis import ServerEmoji
-from .messages import Message, PartialMessage, AppendMessage
+from .messages import Message, PartialMessage, AppendMessage, FieldsMessage
 from .safety_reports import CreatedReport
 from .server_members import (
     Member,
@@ -77,6 +77,7 @@ class ClientMessageUpdateEvent(typing.TypedDict):
     id: str
     channel: str
     data: PartialMessage
+    clear: list[FieldsMessage]
 
 
 class ClientMessageAppendEvent(typing.TypedDict):

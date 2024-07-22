@@ -131,6 +131,8 @@ from .message import (
     ChannelDescriptionChangedSystemEvent,
     ChannelIconChangedSystemEvent,
     ChannelOwnershipChangedSystemEvent,
+    MessagePinnedSystemEvent,
+    MessageUnpinnedSystemEvent,
     SystemEvent,
     MessageFlags,
     Message,
@@ -230,6 +232,8 @@ class Parser:
             'channel_description_changed': self.parse_message_channel_description_changed_system_event,
             'channel_icon_changed': self.parse_message_channel_icon_changed_system_event,
             'channel_ownership_changed': self.parse_message_channel_ownership_changed_system_event,
+            'message_pinned': self.parse_message_message_pinned_system_event,
+            'message_unpinned': self.parse_message_message_unpinned_system_event,
         }
         self._public_invite_parsers = {
             'Server': self.parse_server_public_invite,
@@ -788,26 +792,26 @@ class Parser:
     def parse_message_channel_description_changed_system_event(
         self, d: raw.ChannelDescriptionChangedSystemMessage
     ) -> ChannelDescriptionChangedSystemEvent:
-        return ChannelDescriptionChangedSystemEvent(by=d['by'])
+        return ChannelDescriptionChangedSystemEvent(by_id=d['by'])
 
     def parse_message_channel_icon_changed_system_event(
         self, d: raw.ChannelIconChangedSystemMessage
     ) -> ChannelIconChangedSystemEvent:
-        return ChannelIconChangedSystemEvent(by=d['by'])
+        return ChannelIconChangedSystemEvent(by_id=d['by'])
 
     def parse_message_channel_renamed_system_event(
         self, d: raw.ChannelRenamedSystemMessage
     ) -> ChannelRenamedSystemEvent:
         return ChannelRenamedSystemEvent(
-            by=d['by'],
+            by_id=d['by'],
         )
 
     def parse_message_channel_ownership_changed_system_event(
         self, d: raw.ChannelOwnershipChangedSystemMessage
     ) -> ChannelOwnershipChangedSystemEvent:
         return ChannelOwnershipChangedSystemEvent(
-            from_=d['from'],
-            to=d['to'],
+            from_id=d['from'],
+            to_id=d['to'],
         )
 
     def parse_message_delete_event(self, shard: Shard, d: raw.ClientMessageDeleteEvent) -> MessageDeleteEvent:
@@ -828,6 +832,20 @@ class Parser:
 
     def parse_message_masquerade(self, d: raw.Masquerade) -> Masquerade:
         return Masquerade(name=d.get('name'), avatar=d.get('avatar'), colour=d.get('colour'))
+
+    def parse_message_message_pinned_system_event(self, d: raw.MessagePinnedSystemMessage) -> MessagePinnedSystemEvent:
+        return MessagePinnedSystemEvent(
+            message_id=d['id'],
+            by_id=d['by'],
+        )
+
+    def parse_message_message_unpinned_system_event(
+        self, d: raw.MessageUnpinnedSystemMessage
+    ) -> MessageUnpinnedSystemEvent:
+        return MessageUnpinnedSystemEvent(
+            message_id=d['id'],
+            by_id=d['by'],
+        )
 
     def parse_message_react_event(self, shard: Shard, d: raw.ClientMessageReactEvent) -> MessageReactEvent:
         return MessageReactEvent(
@@ -865,6 +883,7 @@ class Parser:
 
     def parse_message_update_event(self, shard: Shard, d: raw.ClientMessageUpdateEvent) -> MessageUpdateEvent:
         data = d['data']
+        clear = d['clear']
 
         content = data.get('content')
         edited_at = data.get('edited')
@@ -878,33 +897,34 @@ class Parser:
                 id=d['id'],
                 channel_id=d['channel'],
                 content=content if content is not None else core.UNDEFINED,
-                edited_at=(datetime.fromisoformat(edited_at) if edited_at else core.UNDEFINED),
-                internal_embeds=([self.parse_embed(e) for e in embeds] if embeds is not None else core.UNDEFINED),
-                reactions=({k: tuple(v) for k, v in reactions.items()} if reactions is not None else core.UNDEFINED),
+                edited_at=datetime.fromisoformat(edited_at) if edited_at else core.UNDEFINED,
+                internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else core.UNDEFINED,
+                pinned=False if 'Pinned' in clear else data.get('pinned', core.UNDEFINED),
+                reactions={k: tuple(v) for k, v in reactions.items()} if reactions is not None else core.UNDEFINED,
             ),
             before=None,
             after=None,
         )
 
     def parse_message_user_added_system_event(self, d: raw.UserAddedSystemMessage) -> UserAddedSystemEvent:
-        return UserAddedSystemEvent(id=d['id'], by=d['by'])
+        return UserAddedSystemEvent(user_id=d['id'], by_id=d['by'])
 
     def parse_message_user_banned_system_event(self, d: raw.UserBannedSystemMessage) -> UserBannedSystemEvent:
-        return UserBannedSystemEvent(id=d['id'])
+        return UserBannedSystemEvent(user_id=d['id'])
 
     def parse_message_user_joined_system_event(self, d: raw.UserJoinedSystemMessage) -> UserJoinedSystemEvent:
-        return UserJoinedSystemEvent(id=d['id'])
+        return UserJoinedSystemEvent(user_id=d['id'])
 
     def parse_message_user_kicked_system_event(self, d: raw.UserKickedSystemMessage) -> UserKickedSystemEvent:
-        return UserKickedSystemEvent(id=d['id'])
+        return UserKickedSystemEvent(user_id=d['id'])
 
     def parse_message_user_left_system_event(self, d: raw.UserLeftSystemMessage) -> UserLeftSystemEvent:
-        return UserLeftSystemEvent(id=d['id'])
+        return UserLeftSystemEvent(user_id=d['id'])
 
     def parse_message_user_remove_system_event(self, d: raw.UserRemoveSystemMessage) -> UserRemovedSystemEvent:
         return UserRemovedSystemEvent(
-            id=d['id'],
-            by=d['by'],
+            user_id=d['id'],
+            by_id=d['by'],
         )
 
     def parse_message_webhook(self, d: raw.MessageWebhook) -> MessageWebhook:

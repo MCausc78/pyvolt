@@ -36,6 +36,7 @@ class PartialMessage(typing.TypedDict):
     content: typing.NotRequired[str]
     edited: typing.NotRequired[str]
     embeds: typing.NotRequired[list[Embed]]
+    pinned: typing.NotRequired[bool]
     reactions: typing.NotRequired[dict[str, list[str]]]
 
 
@@ -210,6 +211,8 @@ class OptionsUnreact(typing.TypedDict):
     remove_all: typing.NotRequired[Bool]
 
 
+FieldsMessage = typing.Literal['Pinned']
+
 __all__ = (
     'Message',
     'PartialMessage',
@@ -241,4 +244,5 @@ __all__ = (
     'DataEditMessage',
     'OptionsBulkDelete',
     'OptionsUnreact',
+    'FieldsMessage',
 )

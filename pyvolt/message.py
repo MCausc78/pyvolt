@@ -77,12 +77,12 @@ class Masquerade:
 
     Parameters
     ----------
-    name: :class:`str` | `None`
+    name: Optional[:class:`str`]
         Replace the display name shown on this message.
-    avatar: :class:`str` | `None`
+    avatar: Optional[:class:`str`]
         Replace the avatar shown on this message (URL to image file).
-    colour: :class:`str` | `None`
-        Replace the display role colour shown on this message. Can be Any valid CSS colour.
+    colour: Optional[:class:`str`]
+        Replace the display role colour shown on this message. Can be any valid CSS colour.
         Must have `ManageRole` permission to use.
     """
 
@@ -115,17 +115,17 @@ class SendableEmbed:
 
     Parameters
     ----------
-    icon_url: :class:`str` | `None`
+    icon_url: Optional[:class:`str`]
         The embed icon URL.
-    url: :class:`str` | `None`
+    url: Optional[:class:`str`]
         The embed URL.
-    title: :class:`str` | `None`
+    title: Optional[:class:`str`]
         The title of the embed.
-    description: :class:`str` | `None`
+    description: Optional[:class:`str`]
         The description of the embed.
-    media: :class:`cdn.ResolvableResource` | `None`
+    media: Optional[:class:`cdn.ResolvableResource`]
         The file inside the embed, this is the ID of the file.
-    colour: :class:`str` | `None`
+    colour: Optional[:class:`str`]
         The embed color. This can be any valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
 
     """
@@ -259,16 +259,27 @@ class BaseMessage(Base):
     ) -> Message:
         """|coro|
 
-        Edits a message that you've previously sent.
+        Edits the message that you've previously sent.
 
         Parameters
         ----------
-        content: :class:`str` | None
-            New content.
-        embeds: list[`:class:`SendableEmbed`] | None
-            New embeds.
-        """
+        content: :class:`UndefinedOr`[:class:`str`]
+            The new content to replace the message with.
+        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+            The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
+        Raises
+        ------
+        Forbidden
+            Tried to suppress a message without permissions or edited a message's content or embed that isn't yours.
+        HTTPException
+            Editing the message failed.
+
+        Returns
+        -------
+        :class:`Message`
+            The newly edited message.
+        """
         return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
 
     async def pin(self) -> None:
@@ -292,16 +303,12 @@ class BaseMessage(Base):
     ) -> None:
         """|coro|
 
-        React to a given message.
+        Reacts to the message with given emoji.
 
         Parameters
         ----------
-        channel: :class:`ResolvableULID`
-            Channel to message was sent.
-        message: :class:`ResolvableULID`
-            Message react to.
         emoji: :class:`emojis.ResolvableEmoji`
-            Emoji to add.
+            The emoji to react with.
 
         Raises
         ------
@@ -432,6 +439,9 @@ class PartialMessage(BaseMessage):
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message embeds."""
 
+    pinned: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    """Whether the message was just pinned."""
+
     reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New message reactions."""
 
@@ -462,7 +472,6 @@ class MessageAppendData(BaseMessage):
         )
 
 
-@define(slots=True)
 class BaseSystemEvent(abc.ABC):
     """Representation of system event within message."""
 
@@ -475,71 +484,89 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserAddedSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that was added."""
 
-    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the user that added this user."""
 
 
 @define(slots=True)
 class UserRemovedSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that was removed."""
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that was removed."""
 
-    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that removed this user."""
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that removed this user."""
 
 
 @define(slots=True)
 class UserJoinedSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that joined this server/group."""
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that joined this server/group."""
 
 
 @define(slots=True)
 class UserLeftSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that left this server/group."""
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that left this server/group."""
 
 
 @define(slots=True)
 class UserKickedSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that was kicked from this server."""
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that was kicked from this server."""
 
 
 @define(slots=True)
 class UserBannedSystemEvent(BaseSystemEvent):
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that was banned from this server."""
+    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that was banned from this server."""
 
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(BaseSystemEvent):
-    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that renamed this group."""
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that renamed this group."""
 
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(BaseSystemEvent):
-    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that changed description of this group."""
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that changed description of this group."""
 
 
 @define(slots=True)
 class ChannelIconChangedSystemEvent(BaseSystemEvent):
-    by: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that changed icon of this group."""
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that changed icon of this group."""
 
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(BaseSystemEvent):
-    from_: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that was previous owner of this group."""
+    from_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that was previous owner of this group."""
 
-    to: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the user that became owner of this group."""
+    to_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that became owner of this group."""
+
+
+@define(slots=True)
+class MessagePinnedSystemEvent(BaseSystemEvent):
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the message that was pinned."""
+
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that pinned the message."""
+
+
+@define(slots=True)
+class MessageUnpinnedSystemEvent(BaseSystemEvent):
+    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the message that was pinned."""
+
+    by_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the user that pinned the message."""
 
 
 SystemEvent = (
@@ -553,6 +580,8 @@ SystemEvent = (
     | ChannelDescriptionChangedSystemEvent
     | ChannelIconChangedSystemEvent
     | ChannelOwnershipChangedSystemEvent
+    | MessagePinnedSystemEvent
+    | MessageUnpinnedSystemEvent
 )
 
 
@@ -720,6 +749,8 @@ __all__ = (
     'ChannelDescriptionChangedSystemEvent',
     'ChannelIconChangedSystemEvent',
     'ChannelOwnershipChangedSystemEvent',
+    'MessagePinnedSystemEvent',
+    'MessageUnpinnedSystemEvent',
     'SystemEvent',
     'MessageFlags',
     'Message',
