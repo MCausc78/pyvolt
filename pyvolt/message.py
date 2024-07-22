@@ -407,19 +407,21 @@ class BaseMessage(Base):
         Remove your own, someone else's or all of a given reaction.
         Requires `ManageMessages` permission if changing other's reactions.
 
-
         Parameters
         ----------
-        channel: :class:`ResolvableULID`
-            Channel to message was sent.
-        message: :class:`ResolvableULID`
-            Message to remove reactions from.
         emoji: :class:`ResolvableEmoji`
-            Emoji to remove.
-        user: :class:`ResolvableULID` | `None`
+            The emoji to remove.
+        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
             Remove reactions from this user. Requires `ManageMessages` permission if provided.
-        remove_all: :class:`bool` | `None`
+        remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. Requires `ManageMessages` permission if provided.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to remove reactions from message.
+        HTTPException
+            Removing reactions from message failed.
         """
         return await self.state.http.remove_reactions_from_message(
             self.channel_id, self.id, emoji, user=user, remove_all=remove_all
@@ -447,7 +449,7 @@ class PartialMessage(BaseMessage):
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """New message embeds."""
+        """:class:`UndefinedOr`[List[:class:`Embed`]]: New message embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
             if self.internal_embeds is not UNDEFINED
