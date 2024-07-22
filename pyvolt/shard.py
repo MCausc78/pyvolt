@@ -319,7 +319,7 @@ class Shard:
                     self._ws = None
                     try:
                         await _ws.close()
-                    except:
+                    except Exception:
                         pass
                     break
                 else:
@@ -327,7 +327,7 @@ class Shard:
                         if self.logged_out:
                             try:
                                 await ws.close()
-                            except:  # Ignore close
+                            except Exception:  # Ignore close error
                                 pass
                             return
                         exc = Reconnect()

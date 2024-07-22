@@ -10,7 +10,7 @@ from .emoji import ServerEmoji, Emoji
 from .user import User
 
 if typing.TYPE_CHECKING:
-    from .channel import ServerChannel, Channel
+    from .channel import Channel
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member

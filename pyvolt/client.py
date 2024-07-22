@@ -736,10 +736,11 @@ class Client:
 
         Closes all HTTP sessions, and websocket connections.
         """
-        try:
-            await self._state.shard.close()
-        except:
-            pass
+        if self._state.shard.ws:
+            try:
+                await self._state.shard.close()
+            except Exception:
+                pass
 
     async def create_group(
         self,

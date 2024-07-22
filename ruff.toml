@@ -6,3 +6,9 @@ docstring-code-format = true
 
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F403"]
+
+[lint.pyupgrade]
+keep-runtime-typing = false

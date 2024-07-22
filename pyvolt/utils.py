@@ -21,8 +21,6 @@ else:
 if typing.TYPE_CHECKING:
     from collections import abc as ca
 
-    from . import raw
-
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
 

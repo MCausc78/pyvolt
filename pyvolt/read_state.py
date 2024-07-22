@@ -3,8 +3,6 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
-from . import core
-
 if typing.TYPE_CHECKING:
     from .state import State
 

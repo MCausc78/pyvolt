@@ -1722,8 +1722,7 @@ class HTTPClient:
                 (False, [self.state.parser.parse_user(u) for u in d['users']]),
             )
         else:
-            _L.error('Invalid payload: %s', d)
-            raise NotImplemented
+            raise NotImplementedError(d)
 
     # Onboarding control
     async def complete_onboarding(self, username: str, /) -> SelfUser:

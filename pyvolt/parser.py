@@ -1474,7 +1474,7 @@ class Parser:
 
         avatar = d.get('avatar')
         status = d.get('status')
-        profile = d.get('profile')
+        # profile = d.get('profile')
         bot = d.get('bot')
 
         return User(
