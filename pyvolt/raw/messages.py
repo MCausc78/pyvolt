@@ -88,6 +88,7 @@ class UserBannedSystemMessage(typing.TypedDict):
 
 class ChannelRenamedSystemMessage(typing.TypedDict):
     type: typing.Literal['channel_renamed']
+    name: str
     by: str
 
 

@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class Base:
-    state: State = field(repr=False, hash=True, eq=True)
+    state: State = field(repr=False, hash=True, kw_only=True, eq=True)
     """State that controls this entity."""
 
     id: str = field(repr=True, hash=True, kw_only=True, eq=True)

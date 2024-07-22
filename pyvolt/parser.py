@@ -121,19 +121,19 @@ from .message import (
     PartialMessage,
     MessageAppendData,
     TextSystemEvent,
-    UserAddedSystemEvent,
-    UserRemovedSystemEvent,
-    UserJoinedSystemEvent,
-    UserLeftSystemEvent,
-    UserKickedSystemEvent,
-    UserBannedSystemEvent,
-    ChannelRenamedSystemEvent,
-    ChannelDescriptionChangedSystemEvent,
-    ChannelIconChangedSystemEvent,
-    ChannelOwnershipChangedSystemEvent,
-    MessagePinnedSystemEvent,
-    MessageUnpinnedSystemEvent,
-    SystemEvent,
+    StatelessUserAddedSystemEvent,
+    StatelessUserRemovedSystemEvent,
+    StatelessUserJoinedSystemEvent,
+    StatelessUserLeftSystemEvent,
+    StatelessUserKickedSystemEvent,
+    StatelessUserBannedSystemEvent,
+    StatelessChannelRenamedSystemEvent,
+    StatelessChannelDescriptionChangedSystemEvent,
+    StatelessChannelIconChangedSystemEvent,
+    StatelessChannelOwnershipChangedSystemEvent,
+    StatelessMessagePinnedSystemEvent,
+    StatelessMessageUnpinnedSystemEvent,
+    StatelessSystemEvent,
     MessageFlags,
     Message,
 )
@@ -762,7 +762,7 @@ class Parser:
             internal_author=author,
             webhook=self.parse_message_webhook(webhook) if webhook else None,
             content=d.get('content', ''),
-            system_event=self.parse_message_system_event(system) if system else None,
+            internal_system_event=self.parse_message_system_event(system, members, users) if system else None,
             internal_attachments=[self.parse_asset(a) for a in d.get('attachments', [])],
             edited_at=datetime.fromisoformat(edited_at) if edited_at else None,
             internal_embeds=[self.parse_embed(e) for e in d.get('embeds', [])],
@@ -790,28 +790,46 @@ class Parser:
         )
 
     def parse_message_channel_description_changed_system_event(
-        self, d: raw.ChannelDescriptionChangedSystemMessage
-    ) -> ChannelDescriptionChangedSystemEvent:
-        return ChannelDescriptionChangedSystemEvent(by_id=d['by'])
+        self,
+        d: raw.ChannelDescriptionChangedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessChannelDescriptionChangedSystemEvent:
+        by_id = d['by']
+
+        return StatelessChannelDescriptionChangedSystemEvent(internal_by=users.get(by_id, by_id))
 
     def parse_message_channel_icon_changed_system_event(
-        self, d: raw.ChannelIconChangedSystemMessage
-    ) -> ChannelIconChangedSystemEvent:
-        return ChannelIconChangedSystemEvent(by_id=d['by'])
+        self, d: raw.ChannelIconChangedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+    ) -> StatelessChannelIconChangedSystemEvent:
+        by_id = d['by']
+
+        return StatelessChannelIconChangedSystemEvent(internal_by=users.get(by_id, by_id))
 
     def parse_message_channel_renamed_system_event(
-        self, d: raw.ChannelRenamedSystemMessage
-    ) -> ChannelRenamedSystemEvent:
-        return ChannelRenamedSystemEvent(
-            by_id=d['by'],
+        self, d: raw.ChannelRenamedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+    ) -> StatelessChannelRenamedSystemEvent:
+        by_id = d['by']
+
+        return StatelessChannelRenamedSystemEvent(
+            name=d['name'],
+            internal_by=users.get(by_id, by_id),
         )
 
     def parse_message_channel_ownership_changed_system_event(
-        self, d: raw.ChannelOwnershipChangedSystemMessage
-    ) -> ChannelOwnershipChangedSystemEvent:
-        return ChannelOwnershipChangedSystemEvent(
-            from_id=d['from'],
-            to_id=d['to'],
+        self,
+        d: raw.ChannelOwnershipChangedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessChannelOwnershipChangedSystemEvent:
+        from_id = d['from']
+        to_id = d['to']
+
+        return StatelessChannelOwnershipChangedSystemEvent(
+            internal_from=users.get(from_id, from_id),
+            internal_to=users.get(to_id, to_id),
         )
 
     def parse_message_delete_event(self, shard: Shard, d: raw.ClientMessageDeleteEvent) -> MessageDeleteEvent:
@@ -833,18 +851,30 @@ class Parser:
     def parse_message_masquerade(self, d: raw.Masquerade) -> Masquerade:
         return Masquerade(name=d.get('name'), avatar=d.get('avatar'), colour=d.get('colour'))
 
-    def parse_message_message_pinned_system_event(self, d: raw.MessagePinnedSystemMessage) -> MessagePinnedSystemEvent:
-        return MessagePinnedSystemEvent(
-            message_id=d['id'],
-            by_id=d['by'],
+    def parse_message_message_pinned_system_event(
+        self,
+        d: raw.MessagePinnedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessMessagePinnedSystemEvent:
+        pinned_message_id = d['id']
+        by_id = d['by']
+
+        return StatelessMessagePinnedSystemEvent(
+            pinned_message_id=pinned_message_id,
+            internal_by=members.get(by_id, users.get(by_id, by_id)),
         )
 
     def parse_message_message_unpinned_system_event(
-        self, d: raw.MessageUnpinnedSystemMessage
-    ) -> MessageUnpinnedSystemEvent:
-        return MessageUnpinnedSystemEvent(
-            message_id=d['id'],
-            by_id=d['by'],
+        self, d: raw.MessageUnpinnedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+    ) -> StatelessMessageUnpinnedSystemEvent:
+        unpinned_message_id = d['id']
+        by_id = d['by']
+
+        return StatelessMessageUnpinnedSystemEvent(
+            unpinned_message_id=unpinned_message_id,
+            internal_by=members.get(by_id, users.get(by_id, by_id)),
         )
 
     def parse_message_react_event(self, shard: Shard, d: raw.ClientMessageReactEvent) -> MessageReactEvent:
@@ -866,10 +896,21 @@ class Parser:
             emoji=d['emoji_id'],
         )
 
-    def parse_message_system_event(self, d: raw.SystemMessage) -> SystemEvent:
-        return self._message_system_event_parsers[d['type']](d)
+    def parse_message_system_event(
+        self,
+        d: raw.SystemMessage,
+        members: dict[str, Member],
+        users: dict[str, User],
+        /,
+    ) -> StatelessSystemEvent:
+        return self._message_system_event_parsers[d['type']](d, members, users)
 
-    def parse_message_text_system_event(self, d: raw.TextSystemMessage) -> TextSystemEvent:
+    def parse_message_text_system_event(
+        self,
+        d: raw.TextSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+    ) -> TextSystemEvent:
         return TextSystemEvent(content=d['content'])
 
     def parse_message_unreact_event(self, shard: Shard, d: raw.ClientMessageUnreactEvent) -> MessageUnreactEvent:
@@ -906,25 +947,77 @@ class Parser:
             after=None,
         )
 
-    def parse_message_user_added_system_event(self, d: raw.UserAddedSystemMessage) -> UserAddedSystemEvent:
-        return UserAddedSystemEvent(user_id=d['id'], by_id=d['by'])
+    def parse_message_user_added_system_event(
+        self,
+        d: raw.UserAddedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessUserAddedSystemEvent:
+        user_id = d['id']
+        by_id = d['by']
 
-    def parse_message_user_banned_system_event(self, d: raw.UserBannedSystemMessage) -> UserBannedSystemEvent:
-        return UserBannedSystemEvent(user_id=d['id'])
+        return StatelessUserAddedSystemEvent(
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+            internal_by=members.get(by_id, users.get(by_id, by_id)),
+        )
 
-    def parse_message_user_joined_system_event(self, d: raw.UserJoinedSystemMessage) -> UserJoinedSystemEvent:
-        return UserJoinedSystemEvent(user_id=d['id'])
+    def parse_message_user_banned_system_event(
+        self,
+        d: raw.UserBannedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessUserBannedSystemEvent:
+        user_id = d['id']
 
-    def parse_message_user_kicked_system_event(self, d: raw.UserKickedSystemMessage) -> UserKickedSystemEvent:
-        return UserKickedSystemEvent(user_id=d['id'])
+        return StatelessUserBannedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
 
-    def parse_message_user_left_system_event(self, d: raw.UserLeftSystemMessage) -> UserLeftSystemEvent:
-        return UserLeftSystemEvent(user_id=d['id'])
+    def parse_message_user_joined_system_event(
+        self,
+        d: raw.UserJoinedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessUserJoinedSystemEvent:
+        user_id = d['id']
 
-    def parse_message_user_remove_system_event(self, d: raw.UserRemoveSystemMessage) -> UserRemovedSystemEvent:
-        return UserRemovedSystemEvent(
-            user_id=d['id'],
-            by_id=d['by'],
+        return StatelessUserJoinedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
+
+    def parse_message_user_kicked_system_event(
+        self,
+        d: raw.UserKickedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessUserKickedSystemEvent:
+        user_id = d['id']
+
+        return StatelessUserKickedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
+
+    def parse_message_user_left_system_event(
+        self,
+        d: raw.UserLeftSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessUserLeftSystemEvent:
+        user_id = d['id']
+
+        return StatelessUserLeftSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
+
+    def parse_message_user_remove_system_event(
+        self,
+        d: raw.UserRemoveSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+    ) -> StatelessUserRemovedSystemEvent:
+        user_id = d['id']
+        by_id = d['by']
+
+        return StatelessUserRemovedSystemEvent(
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+            internal_by=members.get(by_id, users.get(by_id, by_id)),
         )
 
     def parse_message_webhook(self, d: raw.MessageWebhook) -> MessageWebhook:
