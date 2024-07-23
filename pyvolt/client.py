@@ -396,44 +396,9 @@ class Client:
             exc_info=exc,
         )
 
-    async def _dispatch(
-        self,
-        handlers: list[utils.MaybeAwaitableFunc[[EventT], None]],
-        event: EventT,
-        name: str,
-        first: bool,
-        /,
-    ) -> None:
-        if first:
-            event.before_dispatch()
-            await event.abefore_dispatch()
-
-        for handler in handlers:
-            try:
-                await utils._maybe_coroutine(handler, event)
-            except Exception:
-                try:
-                    await utils._maybe_coroutine(self.on_error, event)
-                except Exception as exc:
-                    _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
-        # Prevent double-processing
-        if first:
-            if not event.is_cancelled:
-                _L.debug('Processing %s', event.__class__.__name__)
-
-                event.process()
-                await event.aprocess()
-            else:
-                _L.debug('%s processing was cancelled', event.__class__.__name__)
-
-    def dispatch(self, event: BaseEvent) -> None:
-        """Dispatches a event."""
-
-        et = builtins.type(event)
-        try:
-            types = self._types[et]
-        except KeyError:
-            types = self._types[et] = _parents_of(et)
+    async def _dispatch(self, types: list[type[BaseEvent]], event: BaseEvent, name: str, /) -> None:
+        event.before_dispatch()
+        await event.abefore_dispatch()
 
         for i, type in enumerate(types):
             handlers = self._handlers.get(type, [])
@@ -444,9 +409,34 @@ class Client:
                     len(handlers),
                     event.__class__.__name__,
                 )
+            for handler in handlers:
+                try:
+                    await utils._maybe_coroutine(handler, event)
+                except Exception:
+                    try:
+                        await utils._maybe_coroutine(self.on_error, event)
+                    except Exception as exc:
+                        _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
 
-            name = name = f'pyvolt-dispatch-{self._get_i()}'
-            asyncio.create_task(self._dispatch(handlers, event, name, i == 0), name=name)
+        if not event.is_cancelled:
+            _L.debug('Processing %s', event.__class__.__name__)
+
+            event.process()
+            await event.aprocess()
+        else:
+            _L.debug('%s processing was cancelled', event.__class__.__name__)
+
+    def dispatch(self, event: BaseEvent) -> None:
+        """Dispatches a event."""
+
+        et = builtins.type(event)
+        try:
+            types = self._types[et]
+        except KeyError:
+            types = self._types[et] = _parents_of(et)
+
+        name = f'pyvolt-dispatch-{self._get_i()}'
+        asyncio.create_task(self._dispatch(types, event, name), name=name)  # type: ignore
 
     def subscribe(
         self,

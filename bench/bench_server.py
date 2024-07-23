@@ -13,7 +13,7 @@ import voltage
 import voltage.internals
 
 async def bench_servers():
-    with open('./test/data/servers/server.json', 'r') as fp:
+    with open('./tests/data/servers/server.json', 'r') as fp:
         payload = json.load(fp)
 
     state = pyvolt.State()

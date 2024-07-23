@@ -13,7 +13,7 @@ import voltage
 import voltage.internals
 
 async def bench_users():
-    with open('./test/data/users/user.json', 'r') as fp:
+    with open('./tests/data/users/user.json', 'r') as fp:
         payload = json.load(fp)
 
     state = pyvolt.State()

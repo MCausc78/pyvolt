@@ -13,19 +13,19 @@ import voltage
 import voltage.internals
 
 async def bench_messages():
-    with open('./test/data/channels/messages/rules.json', 'r') as fp:
+    with open('./tests/data/channels/messages/rules.json', 'r') as fp:
         payload = json.load(fp)[0]
 
-    with open('./test/data/channels/rules_channel.json', 'r') as fp:
+    with open('./tests/data/channels/rules_channel.json', 'r') as fp:
         channel_payload = json.load(fp)
     
-    with open('./test/data/servers/server.json', 'r') as fp:
+    with open('./tests/data/servers/server.json', 'r') as fp:
         server_payload = json.load(fp)
     
-    with open('./test/data/users/user.json', 'r') as fp:
+    with open('./tests/data/users/user.json', 'r') as fp:
         user_payload = json.load(fp)
 
-    with open('./test/data/servers/member.json', 'r') as fp:
+    with open('./tests/data/servers/member.json', 'r') as fp:
         member_payload = json.load(fp)
     
     payload['reactions'] = {}

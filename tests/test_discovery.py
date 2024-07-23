@@ -4,13 +4,13 @@ import pytest_asyncio
 import pytest
 import pyvolt
 
-with open('./test/data/discovery/bots.json', 'r') as fp:
+with open('./tests/data/discovery/bots.json', 'r') as fp:
     bots = json.load(fp)
 
-with open('./test/data/discovery/servers.json', 'r') as fp:
+with open('./tests/data/discovery/servers.json', 'r') as fp:
     servers = json.load(fp)
 
-with open('./test/data/discovery/themes.json', 'r') as fp:
+with open('./tests/data/discovery/themes.json', 'r') as fp:
     themes = json.load(fp)
 
 

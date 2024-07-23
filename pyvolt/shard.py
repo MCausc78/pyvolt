@@ -26,12 +26,12 @@ else:
 _L = logging.getLogger(__name__)
 
 
-class Close(BaseException):
-    pass
+class Close(Exception):
+    __slots__ = ()
 
 
-class Reconnect(BaseException):
-    pass
+class Reconnect(Exception):
+    __slots__ = ()
 
 
 class EventHandler(abc.ABC):
