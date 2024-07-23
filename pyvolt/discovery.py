@@ -5,8 +5,9 @@ from attrs import define, field
 import logging
 import typing
 
-from . import cdn, core, utils
+from . import cdn, utils
 from .bot import BaseBot
+from .core import UNDEFINED, UndefinedOr, __version__ as version
 from .enums import Enum
 from .errors import DiscoveryError
 from .server import ServerFlags, BaseServer
@@ -15,10 +16,11 @@ from .user import StatelessUserProfile, UserProfile
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .user_settings import ReviteBaseTheme, ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
 
-DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {core.__version__})'
+DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 class ServerActivity(Enum):
@@ -152,28 +154,25 @@ class DiscoveryTheme:
     tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme tags."""
 
-    variables: dict[str, str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The theme color mapping in format `{css_class: css_color}`."""
+    overrides: dict[ReviteThemeVariable, str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The theme overrides in format `{css_class: css_color}`."""
 
     version: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The theme version."""
 
-    css: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The theme CSS."""
+    custom_css: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The theme CSS string."""
 
-    # TODO: Add `Theme.apply` method.
-    # The `theme` user setting has following JSON payload:
-    # - `appearance:theme:overrides` object, containing `Theme.variables` value
-    # - [Optional, if `Theme.css` is not none] `appearance:theme:css` object, containing `Theme.css` value
-    # Example:
-    # setting = {
-    #   "appearance:theme:base": "dark",
-    #   "appearance:theme:overrides": theme.variables,
-    # }
-    # if theme.css is not None:
-    #   setting["appearance:theme:css"] = theme.css
-    # payload = {"theme": to_json(setting)} # "Modify User Settings" payload
-    # await http.set_user_settings(payload)
+    async def apply(self, *, base_theme: UndefinedOr[ReviteBaseTheme] = UNDEFINED) -> None:
+        """|coro|
+
+        Applies the theme to current user account.
+        """
+        await self.state.settings.revite.edit(
+            overrides=self.overrides,
+            base_theme=base_theme,
+            custom_css=self.custom_css,
+        )
 
 
 @define(slots=True)

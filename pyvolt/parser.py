@@ -568,9 +568,9 @@ class Parser:
             creator=d['creator'],
             slug=d['slug'],
             tags=d['tags'],
-            variables=d['variables'],
+            overrides=d['variables'],
             version=d['version'],
-            css=d.get('css'),
+            custom_css=d.get('css'),
         )
 
     def parse_discovery_theme_search_result(self, d: raw.DiscoveryThemeSearchResult) -> discovery.ThemeSearchResult:

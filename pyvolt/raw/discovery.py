@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 
 from .files import File
+from .user_settings import ReviteThemeVariable
 from .users import UserProfile
 
 # Servers
@@ -71,7 +72,7 @@ class DiscoveryTheme(typing.TypedDict):
     creator: str
     description: str
     tags: list[str]
-    variables: dict[str, str]
+    variables: dict[ReviteThemeVariable, str]
     css: typing.NotRequired[str]
 
 
