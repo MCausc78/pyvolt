@@ -678,16 +678,22 @@ class ReviteUserSettings:
     def payload_for(
         self,
         *,
+        initial_changelog_payload: UndefinedOr[raw.ReviteChangelog] = UNDEFINED,
         last_viewed_changelog_entry: UndefinedOr[ReviteChangelogEntry | int] = UNDEFINED,
+        initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
+        initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions] = UNDEFINED,
         server_notifications: UndefinedOr[dict[ULIDOr[BaseServer], ReviteNotificationState]] = UNDEFINED,
         merge_server_notifications: bool = True,
         channel_notifications: UndefinedOr[dict[ULIDOr[Channel], ReviteNotificationState]] = UNDEFINED,
         merge_channel_notifications: bool = True,
+        initial_ordering_payload: UndefinedOr[raw.ReviteOrdering] = UNDEFINED,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
+        initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings] = UNDEFINED,
         emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
         seasonal: UndefinedOr[bool | None] = UNDEFINED,
         transparent: UndefinedOr[bool | None] = UNDEFINED,
+        initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings] = UNDEFINED,
         ligatures: UndefinedOr[bool | None] = UNDEFINED,
         base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
         custom_css: UndefinedOr[str | None] = UNDEFINED,
@@ -704,10 +710,16 @@ class ReviteUserSettings:
 
         Parameters
         ----------
+        initial_changelog_payload: :class:`UndefinedOr`[raw.ReviteChangelog]
+            The initial ``changelog`` payload.
         last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
             The last viewed changelog entry.
+        initial_locale_payload: :class:`UndefinedOr`[raw.ReviteLocaleOptions]
+            The initial ``locale`` payload.
         language: :class:`UndefinedOr`[:class:`Language`]
             The language.
+        initial_notifications_payload: :class:`UndefinedOr`[raw.ReviteNotificationOptions]
+            The initial ``notifications`` payload.
         server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
             The notification options for servers.
         merge_server_notifications: :class:`bool`
@@ -716,8 +728,12 @@ class ReviteUserSettings:
             The notification options for channels.
         merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
+        initial_ordering_payload: :class:`UndefinedOr`[raw.ReviteOrdering]
+            The initial ``ordering`` payload.
         ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
             The servers tab order.
+        initial_appearance_payload: :class:`UndefinedOr`[raw.ReviteAppearanceSettings]
+            The initial ``appearance`` payload.
         emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
             The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
         seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
@@ -726,6 +742,8 @@ class ReviteUserSettings:
         transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
             To enable transparency effects throughout the app or not.
             Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
+        initial_theme_payload: :class:`UndefinedOr`[raw.ReviteThemeSettings]
+            The initial ``theme`` payload.
         ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
             To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
             Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
@@ -753,27 +771,39 @@ class ReviteUserSettings:
         payload: raw.ReviteUserSettingsPayload = {}
 
         if last_viewed_changelog_entry is not UNDEFINED:
+            changelog_payload = (
+                self._changelog_payload if initial_changelog_payload is UNDEFINED else initial_changelog_payload
+            )
+
             viewed = (
                 last_viewed_changelog_entry.value
                 if isinstance(last_viewed_changelog_entry, ReviteChangelogEntry)
                 else last_viewed_changelog_entry
             )
 
-            if self._changelog_payload is not None:
-                changelog: raw.ReviteChangelog = self._changelog_payload | {'viewed': viewed}
+            if changelog_payload is not None:
+                changelog: raw.ReviteChangelog = changelog_payload | {'viewed': viewed}
             else:
                 changelog = {'viewed': viewed}
 
             payload['changelog'] = utils.to_json(changelog)
 
         if language is not UNDEFINED:
-            if self._locale_payload is not None:
-                locale: raw.ReviteLocaleOptions = self._locale_payload | {'lang': language.value}
+            locale_payload = self._locale_payload if initial_locale_payload is UNDEFINED else initial_locale_payload
+
+            if locale_payload is not None:
+                locale: raw.ReviteLocaleOptions = locale_payload | {'lang': language.value}
             else:
                 locale = {'lang': language.value}
             payload['locale'] = utils.to_json(locale)
 
         if server_notifications is not UNDEFINED or channel_notifications is not UNDEFINED:
+            notifications_payload = (
+                self._notifications_payload
+                if initial_notifications_payload is UNDEFINED
+                else initial_notifications_payload
+            )
+
             options = self._notification_options
             if options:
                 if merge_server_notifications:
@@ -793,8 +823,8 @@ class ReviteUserSettings:
                 servers = {}
                 channels = {}
 
-            if self._notifications_payload is not None:
-                notifications: raw.ReviteNotificationOptions = self._notifications_payload | {
+            if notifications_payload is not None:
+                notifications: raw.ReviteNotificationOptions = notifications_payload | {
                     'server': servers,
                     'channel': channels,
                 }
@@ -818,8 +848,12 @@ class ReviteUserSettings:
             payload['notifications'] = utils.to_json(notifications)
 
         if ordering is not UNDEFINED:
-            if self._ordering_payload is not None:
-                ordering_payload: raw.ReviteOrdering = self._ordering_payload | {
+            existing_ordering_payload = (
+                self._ordering_payload if initial_ordering_payload is UNDEFINED else initial_ordering_payload
+            )
+
+            if existing_ordering_payload is not None:
+                ordering_payload: raw.ReviteOrdering = existing_ordering_payload | {
                     'servers': [resolve_id(server_id) for server_id in ordering]
                 }
             else:
@@ -827,10 +861,13 @@ class ReviteUserSettings:
             payload['ordering'] = utils.to_json(ordering_payload)
 
         if emoji_pack is not UNDEFINED or seasonal is not UNDEFINED or transparent is not UNDEFINED:
-            if self._appearance_payload is not None:
-                appearance_payload: raw.ReviteAppearanceSettings = self._appearance_payload
+            if initial_appearance_payload is UNDEFINED:
+                if self._appearance_payload is not None:
+                    appearance_payload: raw.ReviteAppearanceSettings = self._appearance_payload
+                else:
+                    appearance_payload = {}
             else:
-                appearance_payload = {}
+                appearance_payload = initial_appearance_payload
 
             if emoji_pack is None:
                 try:
@@ -866,10 +903,13 @@ class ReviteUserSettings:
             or monofont is not UNDEFINED
             or overrides is not UNDEFINED
         ):
-            if self._theme_payload is not None:
-                theme_payload: raw.ReviteThemeSettings = self._theme_payload
+            if initial_theme_payload is UNDEFINED:
+                if self._theme_payload is not None:
+                    theme_payload: raw.ReviteThemeSettings = self._theme_payload
+                else:
+                    theme_payload = {}
             else:
-                theme_payload = {}
+                theme_payload = initial_theme_payload
 
             if ligatures is None:
                 try:
@@ -930,16 +970,22 @@ class ReviteUserSettings:
         self,
         *,
         edited_at: datetime | int | None = None,
+        initial_changelog_payload: UndefinedOr[raw.ReviteChangelog] = UNDEFINED,
         last_viewed_changelog_entry: UndefinedOr[ReviteChangelogEntry | int] = UNDEFINED,
+        initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
+        initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions] = UNDEFINED,
         server_notifications: UndefinedOr[dict[ULIDOr[BaseServer], ReviteNotificationState]] = UNDEFINED,
         merge_server_notifications: bool = True,
         channel_notifications: UndefinedOr[dict[ULIDOr[Channel], ReviteNotificationState]] = UNDEFINED,
         merge_channel_notifications: bool = True,
+        initial_ordering_payload: UndefinedOr[raw.ReviteOrdering] = UNDEFINED,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
+        initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings] = UNDEFINED,
         emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
         seasonal: UndefinedOr[bool | None] = UNDEFINED,
         transparent: UndefinedOr[bool | None] = UNDEFINED,
+        initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings] = UNDEFINED,
         ligatures: UndefinedOr[bool | None] = UNDEFINED,
         base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
         custom_css: UndefinedOr[str | None] = UNDEFINED,
@@ -955,10 +1001,16 @@ class ReviteUserSettings:
         ----------
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
             External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
+        initial_changelog_payload: :class:`UndefinedOr`[raw.ReviteChangelog]
+            The initial ``changelog`` payload.
         last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
             The last viewed changelog entry.
+        initial_locale_payload: :class:`UndefinedOr`[raw.ReviteLocaleOptions]
+            The initial ``locale`` payload.
         language: :class:`UndefinedOr`[:class:`Language`]
             The language.
+        initial_notifications_payload: :class:`UndefinedOr`[raw.ReviteNotificationOptions]
+            The initial ``notifications`` payload.
         server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
             The notification options for servers.
         merge_server_notifications: :class:`bool`
@@ -967,8 +1019,12 @@ class ReviteUserSettings:
             The notification options for channels.
         merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
+        initial_ordering_payload: :class:`UndefinedOr`[raw.ReviteOrdering]
+            The initial ``ordering`` payload.
         ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
             The servers tab order.
+        initial_appearance_payload: :class:`UndefinedOr`[raw.ReviteAppearanceSettings]
+            The initial ``appearance`` payload.
         emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
             The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
         seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
@@ -977,6 +1033,8 @@ class ReviteUserSettings:
         transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
             To enable transparency effects throughout the app or not.
             Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
+        initial_theme_payload: :class:`UndefinedOr`[raw.ReviteThemeSettings]
+            The initial ``theme`` payload.
         ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
             To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
             Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
@@ -997,17 +1055,23 @@ class ReviteUserSettings:
             Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
         """
 
-        payload = self.payload_for(
+        payload: raw.ReviteUserSettingsPayload = self.payload_for(
+            initial_changelog_payload=initial_changelog_payload,
             last_viewed_changelog_entry=last_viewed_changelog_entry,
+            initial_locale_payload=initial_locale_payload,
             language=language,
+            initial_notifications_payload=initial_notifications_payload,
             server_notifications=server_notifications,
             merge_server_notifications=merge_server_notifications,
             channel_notifications=channel_notifications,
             merge_channel_notifications=merge_channel_notifications,
+            initial_ordering_payload=initial_ordering_payload,
             ordering=ordering,
+            initial_appearance_payload=initial_appearance_payload,
             emoji_pack=emoji_pack,
             seasonal=seasonal,
             transparent=transparent,
+            initial_theme_payload=initial_theme_payload,
             ligatures=ligatures,
             base_theme=base_theme,
             custom_css=custom_css,
