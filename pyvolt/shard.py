@@ -92,7 +92,7 @@ class Shard:
         state: State,
         user_agent: str | None = None,
     ) -> None:
-        if format == ShardFormat.msgpack and not _HAS_MSGPACK:
+        if format is ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError('Cannot use msgpack format without dependency')
 
         self._closed = False
