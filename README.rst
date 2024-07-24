@@ -1,0 +1,50 @@
+pyvolt
+======
+
+A simple, flexible API wrapper for Revolt.
+
+.. warning::
+    This is alpha software. Please report bugs on GitHub issues if you will find any.
+
+Key Features
+-------------
+
+- Built on ``asyncio``.
+- Probably handles ratelimiting.
+- Fast. Really faster than Revolt.py and voltage.
+- Low memory usage.
+- Customizable architecture. Build object parser in Rust to achieve high speeds.
+- Focuses on supporting both, bot and user accounts.
+
+Quick Example
+--------------
+
+.. code:: py
+
+    from pyvolt import Client, ReadyEvent, MessageCreateEvent
+
+    class MyClient(Client):
+        @Client.listens_on(ReadyEvent)
+        async def on_ready(self, _):
+            print('Logged on as', self.me)
+
+        @Client.listens_on(MessageCreateEvent)
+        async def on_message(self, event):
+            message = event.message
+            # don't respond to ourselves
+            if message.author_id == self.me.id:
+                return
+
+            if message.content == 'ping':
+                await message.channel.send('pong')
+
+    # You can pass ``bot=False`` to run as user account
+    client = MyClient(token='token')
+    client.run()
+
+Links
+------
+
+- `Documentation <https://pyvolt.readthedocs.io/en/latest/index.html>`_
+- `Official Revolt Server <https://rvlt.gg/ZZQb4sxx>`_
+- `Revolt API <https://rvlt.gg/API>`_

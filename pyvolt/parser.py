@@ -169,7 +169,7 @@ from .user import (
     DisplayUser,
     BotUserInfo,
     User,
-    SelfUser,
+    OwnUser,
 )
 from .webhook import PartialWebhook, Webhook
 
@@ -1075,6 +1075,33 @@ class Parser:
     def parse_none_embed_special(self, _: raw.NoneSpecial) -> NoneEmbedSpecial:
         return _NONE_EMBED_SPECIAL
 
+    def parse_own_user(self, d: raw.User) -> OwnUser:
+        avatar = d.get('avatar')
+        status = d.get('status')
+        # profile = d.get("profile")
+        privileged = d.get('privileged')
+        bot = d.get('bot')
+
+        relations = [self.parse_relationship(r) for r in d.get('relations', [])]
+
+        return OwnUser(
+            state=self.state,
+            id=d['_id'],
+            name=d['username'],
+            discriminator=d['discriminator'],
+            display_name=d.get('display_name'),
+            internal_avatar=self.parse_asset(avatar) if avatar else None,
+            relations={relation.id: relation for relation in relations},
+            badges=UserBadges(d.get('badges', 0)),
+            status=self.parse_user_status(status) if status else None,
+            # internal_profile=self.parse_user_profile(profile) if profile else None,
+            flags=UserFlags(d.get('flags', 0)),
+            privileged=privileged or False,
+            bot=self.parse_bot_user_info(bot) if bot else None,
+            relationship=RelationshipStatus(d['relationship']),
+            online=d['online'],
+        )
+
     def parse_partial_account(self, d: raw.a.AccountInfo) -> PartialAccount:
         return PartialAccount(id=d['_id'], email=d['email'])
 
@@ -1138,13 +1165,13 @@ class Parser:
         read_states = [self.parse_read_state(rs) for rs in d.get('channel_unreads', [])]
 
         me = users[-1]
-        if me.__class__ is not SelfUser or not isinstance(me, SelfUser):
+        if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
             for user in users:
-                if me.__class__ is not SelfUser or isinstance(me, SelfUser):
+                if me.__class__ is not OwnUser or isinstance(me, OwnUser):
                     me = user
 
-        if me.__class__ is not SelfUser or not isinstance(me, SelfUser):
-            raise TypeError('Unable to find self user')
+        if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
+            raise TypeError('Unable to find own user')
 
         return ReadyEvent(
             shard=shard,
@@ -1225,33 +1252,6 @@ class Parser:
             state=self.state,
             id=d['_id'],
             user_id=d['user'],
-        )
-
-    def parse_self_user(self, d: raw.User) -> SelfUser:
-        avatar = d.get('avatar')
-        status = d.get('status')
-        # profile = d.get("profile")
-        privileged = d.get('privileged')
-        bot = d.get('bot')
-
-        relations = [self.parse_relationship(r) for r in d.get('relations', [])]
-
-        return SelfUser(
-            state=self.state,
-            id=d['_id'],
-            name=d['username'],
-            discriminator=d['discriminator'],
-            display_name=d.get('display_name'),
-            internal_avatar=self.parse_asset(avatar) if avatar else None,
-            relations={relation.id: relation for relation in relations},
-            badges=UserBadges(d.get('badges', 0)),
-            status=self.parse_user_status(status) if status else None,
-            # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=UserFlags(d.get('flags', 0)),
-            privileged=privileged or False,
-            bot=self.parse_bot_user_info(bot) if bot else None,
-            relationship=RelationshipStatus(d['relationship']),
-            online=d['online'],
         )
 
     def _parse_server(
@@ -1584,9 +1584,9 @@ class Parser:
     def parse_unknown_public_invite(self, d: dict[str, typing.Any]) -> UnknownPublicInvite:
         return UnknownPublicInvite(state=self.state, code=d['code'], payload=d)
 
-    def parse_user(self, d: raw.User) -> User | SelfUser:
+    def parse_user(self, d: raw.User) -> User | OwnUser:
         if d['relationship'] == 'User':
-            return self.parse_self_user(d)
+            return self.parse_own_user(d)
 
         avatar = d.get('avatar')
         status = d.get('status')

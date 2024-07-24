@@ -87,7 +87,7 @@ from .user import (
     Mutuals,
     BaseUser,
     User,
-    SelfUser,
+    OwnUser,
 )
 from .webhook import BaseWebhook, Webhook
 
@@ -1706,7 +1706,7 @@ class HTTPClient:
             raise NotImplementedError(d)
 
     # Onboarding control
-    async def complete_onboarding(self, username: str, /) -> SelfUser:
+    async def complete_onboarding(self, username: str, /) -> OwnUser:
         """|coro|
 
         Set a new username, complete onboarding and allow a user to start using Revolt.
@@ -1718,11 +1718,11 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`SelfUser`
+        :class:`OwnUser`
             The updated user.
         """
         j: raw.DataOnboard = {'username': username}
-        return self.state.parser.parse_self_user(await self.request(routes.ONBOARD_COMPLETE.compile(), json=j))
+        return self.state.parser.parse_own_user(await self.request(routes.ONBOARD_COMPLETE.compile(), json=j))
 
     async def onboarding_status(self) -> bool:
         """|coro|
@@ -2795,7 +2795,7 @@ class HTTPClient:
             await self.request(routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user)))
         )
 
-    async def change_username(self, username: str, /, *, current_password: str) -> SelfUser:
+    async def change_username(self, username: str, /, *, current_password: str) -> OwnUser:
         """|coro|
 
         Change your username.
@@ -2812,11 +2812,11 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`SelfUser`
+        :class:`OwnUser`
             The newly updated user.
         """
         j: raw.DataChangeUsername = {'username': username, 'password': current_password}
-        return self.state.parser.parse_self_user(
+        return self.state.parser.parse_own_user(
             await self.request(
                 routes.USERS_CHANGE_USERNAME.compile(),
                 json=j,
@@ -2871,7 +2871,7 @@ class HTTPClient:
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
         badges: UndefinedOr[UserBadges] = UNDEFINED,
         flags: UndefinedOr[UserFlags] = UNDEFINED,
-    ) -> SelfUser:
+    ) -> OwnUser:
         """|coro|
 
         Edits the user.
@@ -2898,7 +2898,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`SelfUser`
+        :class:`OwnUser`
             The newly updated authenticated user.
         """
         user = await self._edit_user(

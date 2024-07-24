@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
     from .http import HTTPClient
     from .parser import Parser
     from .shard import Shard
-    from .user import SelfUser
+    from .user import OwnUser
 
 
 class State:
@@ -43,7 +43,7 @@ class State:
         self._http = http
         self._parser = parser
         self._shard = shard
-        self._me: SelfUser | None = None
+        self._me: OwnUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None
         self._settings: UserSettings | None = None
         self.system = User(
@@ -108,14 +108,14 @@ class State:
         return self._shard
 
     @property
-    def me(self) -> SelfUser | None:
-        """:class:`SelfUser` | None: The currently logged in user."""
+    def me(self) -> OwnUser | None:
+        """Optional[:class:`OwnUser`]: The currently logged in user."""
         # assert self._me, "State has no current user attached"
         return self._me
 
     @property
     def saved_notes(self) -> SavedMessagesChannel | None:
-        """:class:`SavedMessagesChannel` | None: The Saved Notes channel."""
+        """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
         return self._saved_notes
 
     @property

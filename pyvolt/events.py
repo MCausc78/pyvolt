@@ -37,7 +37,7 @@ from .user import (
     Relationship,
     PartialUser,
     User,
-    SelfUser,
+    OwnUser,
 )
 from .webhook import Webhook, PartialWebhook
 
@@ -83,7 +83,7 @@ class ReadyEvent(BaseEvent):
     members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
     emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    me: SelfUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    me: OwnUser = field(repr=True, hash=True, kw_only=True, eq=True)
     user_settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
     read_states: list[ReadState] = field(repr=True, hash=True, kw_only=True, eq=True)
 

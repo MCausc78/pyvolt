@@ -575,6 +575,15 @@ class User(DisplayUser):
     online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
     """Whether this user is currently online."""
 
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def tag(self) -> str:
+        """:class:`str`: The tag of the user.
+        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``, example output would be ``'vlf#3510'``."""
+        return f'{self.name}#{self.discriminator}'
+
     def _update(self, data: PartialUser) -> None:
         if data.name is not UNDEFINED:
             self.name = data.name
@@ -676,8 +685,8 @@ class User(DisplayUser):
 
 
 @define(slots=True)
-class SelfUser(User):
-    """Representation of a user on Revolt."""
+class OwnUser(User):
+    """Representation of a current user on Revolt."""
 
     relations: dict[str, Relationship] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The dictionary of relationships with other users."""
@@ -740,5 +749,5 @@ __all__ = (
     'BotUserInfo',
     '_calculate_user_permissions',
     'User',
-    'SelfUser',
+    'OwnUser',
 )

@@ -1,3 +1,0 @@
-# pyvolt
-
-Revolt library

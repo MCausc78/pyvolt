@@ -29,10 +29,12 @@ from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
 from .user_settings import UserSettings
-from .user import BaseUser, User, SelfUser
+from .user import BaseUser, User, OwnUser
 
 
 if typing.TYPE_CHECKING:
+    from types import TracebackType
+    from typing_extensions import Self
     from . import raw
 
 
@@ -389,7 +391,20 @@ class Client:
         self._i += 1
         return self._i
 
-    async def on_error(self, event: BaseEvent) -> None:
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException],
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        await self.close()
+
+    async def on_user_error(self, event: BaseEvent) -> None:
+        """Handles user handler error. You can get current exception being raised via :func:`sys.exc_info`.
+        By default, this logs exception."""
         _, exc, _ = sys.exc_info()
         _L.exception(
             'one of %s handlers raised an exception',
@@ -415,7 +430,7 @@ class Client:
                     await utils._maybe_coroutine(handler, event)
                 except Exception:
                     try:
-                        await utils._maybe_coroutine(self.on_error, event)
+                        await utils._maybe_coroutine(self.on_user_error, event)
                     except Exception as exc:
                         _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
 
@@ -428,7 +443,13 @@ class Client:
             _L.debug('%s processing was cancelled', event.__class__.__name__)
 
     def dispatch(self, event: BaseEvent) -> None:
-        """Dispatches a event."""
+        """Dispatches a event.
+
+        Parameters
+        ----------
+        event: :class:`BaseEvent`
+            The event to dispatch.
+        """
 
         et = builtins.type(event)
         try:
@@ -444,7 +465,15 @@ class Client:
         event: type[EventT | EventToModel],
         callback: utils.MaybeAwaitableFunc[[EventT], None],
     ) -> None:
-        """Subscribes to event."""
+        """Subscribes to event.
+
+        Parameters
+        ----------
+        event: Type[Union[Event, EventToModel]]
+            The type of the event.
+        callback
+            The callback for the event.
+        """
         ev: typing.Any = event
         try:
             ev, converter = _COMMON_CONVERTERS[event](callback)  # type: ignore
@@ -495,13 +524,13 @@ class Client:
             self.subscribe(callback.__pyvolt_handles__, callback)
 
     @property
-    def me(self) -> SelfUser | None:
-        """:class:`SelfUser` | None: The currently logged in user. ``None`` if not logged in."""
+    def me(self) -> OwnUser | None:
+        """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in."""
         return self._state._me
 
     @property
     def saved_notes(self) -> SavedMessagesChannel | None:
-        """:class:`SavedMessagesChannel` | None: The Saved Notes channel."""
+        """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
         return self._state._saved_notes
 
     @property
@@ -521,7 +550,7 @@ class Client:
 
     @property
     def channels(self) -> ca.Mapping[str, Channel]:
-        """:class:`ca.Mapping`[:class:`str`, :class:`Channel`]: Retrieves all cached channels."""
+        """Mapping[:class:`str`, :class:`Channel`]: Retrieves all cached channels."""
         cache = self._state.cache
         if cache:
             return cache.get_channels_mapping()
@@ -529,7 +558,7 @@ class Client:
 
     @property
     def emojis(self) -> ca.Mapping[str, Emoji]:
-        """:class:`ca.Mapping`[:class:`str`, :class:`Emoji`]: Retrieves all cached emojis."""
+        """Mapping[:class:`str`, :class:`Emoji`]: Retrieves all cached emojis."""
         cache = self._state.cache
         if cache:
             return cache.get_emojis_mapping()
@@ -537,7 +566,7 @@ class Client:
 
     @property
     def servers(self) -> ca.Mapping[str, Server]:
-        """:class:`ca.Mapping`[:class:`str`, :class:`Server`]: Retrieves all cached servers."""
+        """Mapping[:class:`str`, :class:`Server`]: Retrieves all cached servers."""
         cache = self._state.cache
         if cache:
             return cache.get_servers_mapping()
@@ -545,7 +574,7 @@ class Client:
 
     @property
     def users(self) -> ca.Mapping[str, User]:
-        """:class:`ca.Mapping`[:class:`str`, :class:`User`]: Retrieves all cached users."""
+        """Mapping[:class:`str`, :class:`User`]: Retrieves all cached users."""
         cache = self._state.cache
         if cache:
             return cache.get_users_mapping()
@@ -731,6 +760,79 @@ class Client:
                 await self._state.shard.close()
             except Exception:
                 pass
+
+    def run(
+        self,
+        *,
+        log_handler: UndefinedOr[logging.Handler | None] = UNDEFINED,
+        log_formatter: UndefinedOr[logging.Formatter] = UNDEFINED,
+        log_level: UndefinedOr[int] = UNDEFINED,
+        root_logger: bool = False,
+        asyncio_debug: bool = False,
+    ) -> None:
+        """A blocking call that abstracts away the event loop
+        initialisation from you.
+
+        If you want more control over the event loop then this
+        function should not be used. Use :meth:`start` coroutine.
+
+        This function also sets up the logging library to make it easier
+        for beginners to know what is going on with the library. For more
+        advanced users, this can be disabled by passing ``None`` to
+        the ``log_handler`` parameter.
+
+        .. warning::
+
+            This function must be the last function to call due to the fact that it
+            is blocking. That means that registration of events or anything being
+            called after this function call will not execute until it returns.
+
+        Parameters
+        -----------
+        log_handler: Optional[:class:`logging.Handler`]
+            The log handler to use for the library's logger. If this is ``None``
+            then the library will not set up anything logging related. Logging
+            will still work if ``None`` is passed, though it is your responsibility
+            to set it up.
+
+            The default log handler if not provided is :class:`logging.StreamHandler`.
+        log_formatter: :class:`logging.Formatter`
+            The formatter to use with the given log handler. If not provided then it
+            defaults to a colour based logging formatter (if available).
+        log_level: :class:`int`
+            The default log level for the library's logger. This is only applied if the
+            ``log_handler`` parameter is not ``None``. Defaults to ``logging.INFO``.
+        root_logger: :class:`bool`
+            Whether to set up the root logger rather than the library logger.
+            By default, only the library logger (``'pyvolt'``) is set up. If this
+            is set to ``True`` then the root logger is set up as well.
+
+            Defaults to ``False``.
+        asyncio_debug: :class:`bool`
+            Whether to run with asyncio debug mode enabled or not.
+
+            Defaults to ``False``.
+        """
+
+        async def runner():
+            async with self:
+                await self.start()
+
+        if log_handler is not None:
+            utils.setup_logging(
+                handler=log_handler,
+                formatter=log_formatter,
+                level=log_level,
+                root=root_logger,
+            )
+
+        try:
+            asyncio.run(runner(), debug=asyncio_debug)
+        except KeyboardInterrupt:
+            # nothing to do here
+            # `asyncio.run` handles the loop cleanup
+            # and `self.start` closes all sockets and the HTTPClient instance.
+            return
 
     async def create_group(
         self,
