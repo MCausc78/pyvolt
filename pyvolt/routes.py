@@ -31,14 +31,11 @@ class CompiledRoute:
 class Route:
     """Represents Revolt API route."""
 
-    method: Method
-    path: str
-
     __slots__ = ('method', 'path')
 
     def __init__(self, method: Method, path: str, /) -> None:
-        self.method = method
-        self.path = path
+        self.method: Method = method
+        self.path: str = path
 
     def __repr__(self) -> str:
         return f'<Route method={self.method!r} path={self.path!r}>'

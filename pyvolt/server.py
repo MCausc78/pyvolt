@@ -8,12 +8,11 @@ import typing
 
 from . import (
     cache as caching,
-    cdn,
     utils,
 )
 from .base import Base
 from .bot import BaseBot
-from .cdn import ResolvableResource
+from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -134,7 +133,7 @@ class SystemMessageChannels:
         return d
 
 
-@define()
+@define(slots=True)
 class BaseRole(Base):
     """Base representation of a server role."""
 
@@ -170,12 +169,12 @@ class BaseRole(Base):
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`UndefinedOr`[:class:`str` | `None`]
-            New role colour.
+        colour: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New role colour. This should be valid CSS colour.
         hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
         rank: :class:`UndefinedOr`[:class:`int`]
-            Ranking position. Smaller values take priority.
+            The new ranking position. Smaller values take priority.
 
         Raises
         ------
@@ -183,9 +182,19 @@ class BaseRole(Base):
             You do not have permissions to edit the role.
         HTTPException
             Editing the role failed.
+
+        Returns
+        -------
+        :class:`Role`
+            The newly updated role.
         """
         return await self.state.http.edit_role(
-            self.server_id, self.id, name=name, colour=colour, hoist=hoist, rank=rank
+            self.server_id,
+            self.id,
+            name=name,
+            colour=colour,
+            hoist=hoist,
+            rank=rank,
         )
 
     async def set_permissions(
@@ -569,18 +578,20 @@ class PartialServer(BaseServer):
     categories: UndefinedOr[list[Category] | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     default_permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_banner: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     flags: UndefinedOr[ServerFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
     discoverable: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     analytics: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     @property
-    def icon(self) -> UndefinedOr[cdn.Asset | None]:
+    def icon(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
-    def banner(self) -> UndefinedOr[cdn.Asset | None]:
+    def banner(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
@@ -654,10 +665,10 @@ class Server(BaseServer):
     default_permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)
     """The default set of server and channel permissions."""
 
-    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server icon."""
 
-    internal_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server banner."""
 
     flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -715,18 +726,18 @@ class Server(BaseServer):
             role._update(data)
 
     @property
-    def icon(self) -> cdn.Asset | None:
-        """The server icon."""
+    def icon(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
-    def banner(self) -> cdn.Asset | None:
-        """The server banner."""
+    def banner(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
     @property
     def channel_ids(self) -> list[str]:
-        """IDs of channels within this server."""
+        """List[:class:`str`]: The IDs of channels within this server."""
         if self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
         else:
@@ -734,7 +745,7 @@ class Server(BaseServer):
 
     @property
     def channels(self) -> list[ServerChannel]:
-        """The channels within this server."""
+        """List[:class:`ServerChannel`]: The channels within this server."""
 
         if not self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
@@ -757,7 +768,7 @@ class Server(BaseServer):
 
     @property
     def emojis(self) -> ca.Mapping[str, ServerEmoji]:
-        """:class:`~ca.Mapping`[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
         cache = self.state.cache
         if cache:
             return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
@@ -765,7 +776,7 @@ class Server(BaseServer):
 
     @property
     def members(self) -> ca.Mapping[str, Member]:
-        """:class:`~ca.Mapping`[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
         cache = self.state.cache
         if cache:
             return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
@@ -810,7 +821,7 @@ class Server(BaseServer):
 
         Returns
         -------
-        :class:`ServerEmoji` | None:
+        Optional[:class:`ServerEmoji`]
             The emoji or ``None`` if not found.
         """
         cache = self.state.cache
@@ -830,7 +841,7 @@ class Server(BaseServer):
 
         Returns
         -------
-        :class:`Member` | None:
+        Optional[:class:`Member`]
             The member or ``None`` if not found.
         """
         cache = self.state.cache
@@ -855,7 +866,7 @@ class Server(BaseServer):
         with_ownership: bool = True,
         include_timeout: bool = True,
     ) -> Permissions:
-        """:class:`Permissions`: Calculate permissions for given member.
+        """Calculate permissions for given member.
 
         Parameters
         ----------
@@ -867,6 +878,11 @@ class Server(BaseServer):
             Whether to account for ownership.
         include_timeout: :class:`bool`
             Whether to account for timeout.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
         """
 
         if with_ownership and member.id == self.owner_id:
@@ -994,12 +1010,12 @@ class PartialMember(BaseMember):
     """Partial representation of a member of a server on Revolt."""
 
     nick: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     roles: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
     timed_out_until: UndefinedOr[datetime | None] = field(repr=True, hash=True, kw_only=True, eq=True)
 
-    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+    def server_avatar(self) -> UndefinedOr[Asset | None]:
+        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
 
 
 @define(slots=True)
@@ -1012,7 +1028,7 @@ class Member(BaseMember):
     nick: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's nick."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The member's avatar on server."""
 
     roles: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -1024,19 +1040,20 @@ class Member(BaseMember):
     def _update(self, data: PartialMember) -> None:
         if data.nick is not UNDEFINED:
             self.nick = data.nick
-        if data.internal_avatar is not UNDEFINED:
-            self.internal_avatar = data.internal_avatar
+        if data.internal_server_avatar is not UNDEFINED:
+            self.internal_server_avatar = data.internal_server_avatar
         if data.roles is not UNDEFINED:
             self.roles = data.roles or []
         if data.timed_out_until is not UNDEFINED:
             self.timed_out_until = data.timed_out_until
 
     @property
-    def avatar(self) -> cdn.Asset | None:
-        """The member's avatar on server."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+    def server_avatar(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The member's avatar on server."""
+        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
 
     def get_user(self) -> User | None:
+        """Optional[:class:`User`]: Grabs the user from cache."""
         if isinstance(self._user, User):
             return self._user
         cache = self.state.cache
@@ -1044,7 +1061,9 @@ class Member(BaseMember):
             return None
         return cache.get_user(self._user, caching._USER_REQUEST)
 
+    @property
     def user(self) -> User:
+        """:class:`User`: The member user."""
         user = self.get_user()
         if not user:
             raise NoData(self.id, 'member user')
@@ -1052,12 +1071,14 @@ class Member(BaseMember):
 
     @property
     def display_name(self) -> str | None:
+        """Optional[:class:`str`]: The user display name."""
         user = self.get_user()
         if user:
             return user.display_name
 
     @property
     def badges(self) -> UserBadges:
+        """:class:`UserBadges`: The user badges."""
         user = self.get_user()
         if user:
             return user.badges
@@ -1065,12 +1086,14 @@ class Member(BaseMember):
 
     @property
     def status(self) -> UserStatus | None:
+        """Optional[:class:`UserStatus`]: The current user's status."""
         user = self.get_user()
         if user:
             return user.status
 
     @property
     def user_flags(self) -> UserFlags:
+        """Optional[:class:`UserFlags`]: The user flags."""
         user = self.get_user()
         if user:
             return user.flags
@@ -1078,6 +1101,7 @@ class Member(BaseMember):
 
     @property
     def privileged(self) -> bool:
+        """:class:`bool`: Whether this user is privileged."""
         user = self.get_user()
         if user:
             return user.privileged
@@ -1085,12 +1109,14 @@ class Member(BaseMember):
 
     @property
     def bot(self) -> BotUserInfo | None:
+        """Optional[:class:`BotUserInfo`]: The information about the bot."""
         user = self.get_user()
         if user:
             return user.bot
 
     @property
     def relationship(self) -> RelationshipStatus:
+        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
         user = self.get_user()
         if user:
             return user.relationship
@@ -1098,6 +1124,7 @@ class Member(BaseMember):
 
     @property
     def online(self) -> bool:
+        """:class:`bool`: Whether this user is currently online."""
         user = self.get_user()
         if user:
             return user.online

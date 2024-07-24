@@ -18,6 +18,9 @@ from .message import *
 from .parser import *
 from .permissions import *
 from .read_state import *
+
+# Explicitly re-export, this is public API.
+from . import routes as routes
 from .safety_reports import *
 from .server import *
 from .shard import *

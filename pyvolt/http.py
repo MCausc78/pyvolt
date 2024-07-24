@@ -115,13 +115,15 @@ _STATUS_TO_ERRORS = {
 class HTTPClient:
     """The Revolt HTTP API client."""
 
+    # To prevent unexpected 200's with HTML page the user must pass cookie with ``cf_clearance`` key.
+
     __slots__ = (
         'token',
         'bot',
         'state',
         '_session',
         'base',
-        'cf_clearance',
+        'cookie',
         'max_retries',
         'user_agent',
     )
@@ -132,10 +134,10 @@ class HTTPClient:
         *,
         base: str | None = None,
         bot: bool = True,
-        cf_clearance: str | None = None,
+        cookie: str | None = None,
         max_retries: int | None = None,
         state: State,
-        session: (utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession),
+        session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
         user_agent: str | None = None,
     ) -> None:
         self.token = token
@@ -146,33 +148,72 @@ class HTTPClient:
             base = 'https://api.revolt.chat'
         self._session = session
         self.base = base
-        self.cf_clearance = cf_clearance
+        self.cookie = cookie
         self.max_retries = max_retries or 3
         self.user_agent = user_agent or DEFAULT_HTTP_USER_AGENT
 
-    async def _request(
+    def url_for(self, route: routes.CompiledRoute) -> str:
+        """Returns a URL for route.
+
+        Parameters
+        ----------
+        route: :class:`~routes.CompiledRoute`
+            The route.
+
+        Returns
+        -------
+        :class:`str`
+            The URL for the route.
+        """
+        return self.base.rstrip('/') + route.build()
+
+    async def raw_request(
         self,
         route: routes.CompiledRoute,
         *,
         authenticated: bool = True,
-        manual_accept: bool = False,
+        accept_json: bool = True,
         user_agent: str = '',
         mfa_ticket: str | None = None,
         **kwargs,
     ) -> aiohttp.ClientResponse:
+        """|coro|
+
+        Perform a HTTP request, with ratelimiting and errors handling.
+
+        Parameters
+        ----------
+        route: :class:`~routes.CompiledRoute`
+            The route.
+        authenticated: :class:`bool`
+            Whether this route should have provided authentication or not. Defaults to ``True``.
+        accept_json: :class:`bool`
+            Whether to explicitly receive JSON or not. Defaults to ``True``.
+        user_agent: :class:`str`
+            The user agent to use for HTTP request. This is reserved field.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+
+        Raises
+        ------
+        HTTPException
+            Something went wrong during request.
+
+        Returns
+        -------
+        :class:`aiohttp.ClientResponse`
+            The aiohttp response.
+        """
         headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
 
-        # Prevent UnderAttackMode error
-        cf_clearance = kwargs.pop('cf_clearance', self.cf_clearance)
-        if cf_clearance:
-            if 'cookie' not in headers:
-                headers['cookie'] = f'cf_clearance={cf_clearance}'
-            else:
-                pass
+        # Allow users to set cookie if Revolt is under attack mode
+        cookie = kwargs.pop('cookie', self.cookie)
+        if cookie:
+            headers['cookie'] = cookie
 
         if self.token is not None and authenticated:
             headers['x-bot-token' if self.bot else 'x-session-token'] = self.token
-        if not manual_accept:
+        if accept_json:
             headers['accept'] = 'application/json'
         headers['user-agent'] = user_agent or self.user_agent
         if mfa_ticket is not None:
@@ -180,10 +221,10 @@ class HTTPClient:
         retries = 0
 
         method = route.route.method
-        url = self.base.rstrip('/') + route.build()
+        url = self.url_for(route)
 
         while True:
-            _L.debug('sending request to %s, body=%s', route, kwargs.get('json'))
+            _L.debug('sending request to %s %s, body=%s', method, url, kwargs.get('json'))
 
             session = self._session
             if callable(session):
@@ -243,15 +284,42 @@ class HTTPClient:
         route: routes.CompiledRoute,
         *,
         authenticated: bool = True,
-        manual_accept: bool = False,
+        accept_json: bool = True,
         user_agent: str = '',
         mfa_ticket: str | None = None,
         **kwargs,
     ) -> typing.Any:
-        response = await self._request(
+        """|coro|
+
+        Perform a HTTP request, with ratelimiting and errors handling.
+
+        Parameters
+        ----------
+        route: :class:`~routes.CompiledRoute`
+            The route.
+        authenticated: :class:`bool`
+            Whether this route should have provided authentication or not. Defaults to ``True``.
+        accept_json: :class:`bool`
+            Whether to explicitly receive JSON or not. Defaults to ``True``.
+        user_agent: :class:`str`
+            The user agent to use for HTTP request. This is reserved field.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+
+        Raises
+        ------
+        HTTPException
+            Something went wrong during request.
+
+        Returns
+        -------
+        Any
+            The parsed JSON response.
+        """
+        response = await self.raw_request(
             route,
             authenticated=authenticated,
-            manual_accept=manual_accept,
+            accept_json=accept_json,
             user_agent=user_agent,
             mfa_ticket=mfa_ticket,
             **kwargs,
@@ -3073,9 +3141,10 @@ class HTTPClient:
 
         Returns a default avatar based on the given ID.
         """
-        response = await self._request(
+        response = await self.raw_request(
             routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user)[-1]),
             authenticated=False,
+            accept_json=False,
         )
         avatar = await response.read()
         if not response.closed:
