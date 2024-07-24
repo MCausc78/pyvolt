@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from attrs import define, field
 from copy import copy
+from datetime import datetime
 import typing
 
 from . import cache as caching
@@ -383,14 +384,33 @@ class BulkMessageDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerCreateEvent(BaseEvent):
+    joined_at: datetime = field(repr=True, hash=True, kw_only=True, eq=True)
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
     emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+
+        cache = state.cache
         if not cache:
             return False
         cache.store_server(self.server, caching._SERVER_CREATE)
+
+        if state.me:
+            cache.store_server_member(
+                Member(
+                    state=state,
+                    server_id=self.server.id,
+                    _user=state.me.id,
+                    joined_at=self.joined_at,
+                    nick=None,
+                    internal_avatar=None,
+                    roles=[],
+                    timed_out_until=None,
+                ),
+                caching._SERVER_CREATE,
+            )
+
         for emoji in self.emojis:
             cache.store_emoji(emoji, caching._SERVER_CREATE)
         return True

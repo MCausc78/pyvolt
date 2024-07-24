@@ -144,7 +144,8 @@ class ClientEventHandler(EventHandler):
         self.dispatch(event)
 
     def handle_server_create(self, shard: Shard, payload: raw.ClientServerCreateEvent, /) -> None:
-        event = self._state.parser.parse_server_create_event(shard, payload)
+        joined_at = utils.utcnow()
+        event = self._state.parser.parse_server_create_event(shard, payload, joined_at)
         self.dispatch(event)
 
     def handle_server_update(self, shard: Shard, payload: raw.ClientServerUpdateEvent, /) -> None:

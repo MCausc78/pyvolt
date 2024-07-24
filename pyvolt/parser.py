@@ -1305,9 +1305,12 @@ class Parser:
         )
         return self._parse_server(d, internal_channels)
 
-    def parse_server_create_event(self, shard: Shard, d: raw.ClientServerCreateEvent) -> ServerCreateEvent:
+    def parse_server_create_event(
+        self, shard: Shard, d: raw.ClientServerCreateEvent, joined_at: datetime, /
+    ) -> ServerCreateEvent:
         return ServerCreateEvent(
             shard=shard,
+            joined_at=joined_at,
             server=self.parse_server(d['server'], (False, d['channels'])),
             emojis=[self.parse_server_emoji(e) for e in d['emojis']],
         )
