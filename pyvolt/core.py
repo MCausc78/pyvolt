@@ -52,7 +52,7 @@ def resolve_id(resolvable: ULIDOr) -> str:
 # zero ID
 ZID = '00000000000000000000000000'
 
-__version__: str = '1.0.0'
+__version__: str = '0.7.0'
 
 __all__ = (
     'Undefined',
