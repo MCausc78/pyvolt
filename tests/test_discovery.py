@@ -312,7 +312,7 @@ async def test_themes():
     assert theme.creator == 'Meow'
     assert theme.description == "Purple... based on spinfish's amethyst betterdiscord theme."
     assert theme.tags == ['dark', 'purple']
-    assert theme.variables == {
+    assert theme.overrides == {
         'accent': '#ff9100',
         'background': '#230431',
         'foreground': '#ffffff',
@@ -338,7 +338,7 @@ async def test_themes():
         'status-busy': '#ed4245',
         'status-invisible': '#747f8d',
     }
-    assert not theme.css
+    assert not theme.custom_css
 
     theme = page.themes[1]
     assert theme.name == 'AMOLED'
@@ -347,7 +347,7 @@ async def test_themes():
     assert theme.creator == 'insert'
     assert theme.description == 'Pure black, perfect for mobile.'
     assert theme.tags == ['oled', 'dark']
-    assert theme.variables == {
+    assert theme.overrides == {
         'accent': '#FD6671',
         'background': '#000000',
         'foreground': '#FFFFFF',
@@ -373,6 +373,6 @@ async def test_themes():
         'status-streaming': '#977EFF',
         'status-invisible': '#A5A5A5',
     }
-    assert not theme.css
+    assert not theme.custom_css
 
     await site.stop()

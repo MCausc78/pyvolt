@@ -6,7 +6,8 @@ import asyncio
 import logging
 import typing
 
-from . import core, utils
+from . import utils
+from .core import ULIDOr, resolve_id, __version__ as version
 from .enums import Enum
 from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
@@ -39,7 +40,7 @@ class EventHandler(abc.ABC):
     async def handle_raw(self, shard: Shard, d: raw.ClientEvent) -> None: ...
 
 
-DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {core.__version__})'
+DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 class ShardFormat(Enum):
@@ -48,6 +49,8 @@ class ShardFormat(Enum):
 
 
 class Shard:
+    """Implementation of Revolt WebSocket client."""
+
     _closing_future: asyncio.Future[None] | None
     _ws: aiohttp.ClientWebSocketResponse | None
 
@@ -131,20 +134,73 @@ class Shard:
             raise TypeError('No websocket')
         return self._ws
 
-    async def begin_typing(self, channel: core.ULIDOr[TextChannel]) -> None:
-        await self.send({'type': 'BeginTyping', 'channel': core.resolve_id(channel)})
+    async def authenticate(self) -> None:
+        """|coro|
 
-    async def end_typing(self, channel: core.ULIDOr[TextChannel]) -> None:
-        await self.send({'type': 'EndTyping', 'channel': core.resolve_id(channel)})
+        Authenticates the currently connected WebSocket. This is called right after successful WebSocket handshake.
+        """
+        payload: raw.ServerAuthenticateEvent = {
+            'type': 'Authenticate',
+            'token': self.token,
+        }
+        await self.send(payload)
 
-    async def subscribe_to(self, server: core.ULIDOr[BaseServer]) -> None:
-        await self.send({'type': 'Subscribe', 'server_id': core.resolve_id(server)})
+    async def ping(self) -> None:
+        """|coro|
 
-    async def _send_json(self, d: raw.ServerEvent) -> None:
+        Pings the WebSocket.
+        """
+        self._heartbeat_sequence += 1
+        payload: raw.ServerPingEvent = {
+            'type': 'Ping',
+            'data': self._heartbeat_sequence,
+        }
+        await self.send(payload)
+
+    async def begin_typing(self, channel: ULIDOr[TextChannel]) -> None:
+        """|coro|
+
+        Begins typing in a channel.
+
+        Parameters
+        ----------
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
+            The channel to begin typing in.
+        """
+        payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
+        await self.send(payload)
+
+    async def end_typing(self, channel: ULIDOr[TextChannel]) -> None:
+        """|coro|
+
+        Ends typing in a channel.
+
+        Parameters
+        ----------
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
+            The channel to end typing in.
+        """
+        payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
+        await self.send(payload)
+
+    async def subscribe_to(self, server: ULIDOr[BaseServer]) -> None:
+        """|coro|
+
+        Subscribes to a server. After calling this method, you'll receive :class:`UserUpdateEvent`'s.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server to subscribe to.
+        """
+        payload: raw.ServerSubscribeEvent = {'type': 'Subscribe', 'server_id': resolve_id(server)}
+        await self.send(payload)
+
+    async def _send_json(self, d: raw.ServerEvent, /) -> None:
         _L.debug('sending %s', d)
         await self.ws.send_str(utils.to_json(d))
 
-    async def _send_msgpack(self, d: raw.ServerEvent) -> None:
+    async def _send_msgpack(self, d: raw.ServerEvent, /) -> None:
         _L.debug('sending %s', d)
 
         # Will never none according to stubs: https://github.com/sbdchd/msgpack-types/blob/a9ab1c861933fa11aff706b21c303ee52a2ee359/msgpack-stubs/__init__.pyi#L40-L49
@@ -221,14 +277,6 @@ class Shard:
             _L.debug('received %s', k)
         return k
 
-    async def ping(self) -> None:
-        self._heartbeat_sequence += 1
-        d: raw.ServerPingEvent = {
-            'type': 'Ping',
-            'data': self._heartbeat_sequence,
-        }
-        await self.send(d)
-
     def _headers(self) -> dict[str, str]:
         return {'user-agent': self.user_agent}
 
@@ -283,11 +331,7 @@ class Shard:
             ws = await self._ws_connect()
 
             self._ws = ws
-            payload: raw.ServerAuthenticateEvent = {
-                'type': 'Authenticate',
-                'token': self.token,
-            }
-            await self.send(payload)
+            await self.authenticate()
 
             message = await self.recv()
             if message is None or message['type'] != 'Authenticated':
