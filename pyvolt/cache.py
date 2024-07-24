@@ -173,6 +173,9 @@ class Cache(abc.ABC):
     def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, ServerEmoji] | None: ...
 
     @abc.abstractmethod
+    def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
     def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
@@ -235,6 +238,9 @@ class Cache(abc.ABC):
 
     @abc.abstractmethod
     def delete_server_member(self, server_id: str, user_id: str, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
+    def delete_server_members_of(self, server_id: str, ctx: BaseContext, /) -> None: ...
 
     #########
     # Users #
@@ -306,6 +312,9 @@ class EmptyCache(Cache):
     def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, ServerEmoji] | None:
         return None
 
+    def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None:
+        pass
+
     def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
         pass
 
@@ -359,6 +368,9 @@ class EmptyCache(Cache):
         pass
 
     def delete_server_member(self, server_id: str, user_id: str, ctx: BaseContext, /) -> None:
+        pass
+
+    def delete_server_members_of(self, server_id: str, ctx: BaseContext, /) -> None:
         pass
 
     #########
@@ -519,6 +531,12 @@ class MapCache(Cache):
     def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, ServerEmoji] | None:
         return self._server_emojis.get(server_id)
 
+    def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None:
+        try:
+            del self._server_emojis[server_id]
+        except KeyError:
+            pass
+
     def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
         if isinstance(emoji, ServerEmoji):
             server_id = emoji.server_id
@@ -628,6 +646,12 @@ class MapCache(Cache):
                 del members[user_id]
             except KeyError:
                 pass
+
+    def delete_server_members_of(self, server_id: str, ctx: BaseContext, /) -> None:
+        try:
+            del self._server_members[server_id]
+        except KeyError:
+            pass
 
     #########
     # Users #

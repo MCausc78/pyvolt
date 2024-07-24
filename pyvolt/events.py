@@ -473,6 +473,8 @@ class ServerDeleteEvent(BaseEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
+        cache.delete_server_emojis_of(self.server_id, caching._SERVER_DELETE)
+        cache.delete_server_members_of(self.server_id, caching._SERVER_DELETE)
         cache.delete_server(self.server_id, caching._SERVER_DELETE)
         return True
 

@@ -442,7 +442,7 @@ class GroupChannel(TextChannel):
 
     @property
     def recipient_ids(self) -> list[str]:
-        """The IDs of users participating in channel."""
+        """List[:class:`str`]: The IDs of users participating in channel."""
         if self._recipients[0]:
             return self._recipients[1]  # type: ignore
         else:
@@ -450,7 +450,7 @@ class GroupChannel(TextChannel):
 
     @property
     def recipients(self) -> list[User]:
-        """The users participating in channel."""
+        """List[:class:`User`]: The users participating in channel."""
         if self._recipients[0]:
             cache = self.state.cache
             if not cache:

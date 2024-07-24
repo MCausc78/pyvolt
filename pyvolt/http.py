@@ -218,7 +218,7 @@ class HTTPClient:
                         if isinstance(j, dict):
                             retry_after: float = j['retry_after'] / 1000.0
                         else:
-                            retry_after = float('nan')
+                            retry_after = 1
                         _L.debug(
                             'ratelimited on %s %s, retrying in %.3f seconds',
                             method,
