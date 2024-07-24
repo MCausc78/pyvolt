@@ -711,7 +711,7 @@ class Parser:
             server_id=id['server'],
             joined_at=datetime.fromisoformat(d['joined_at']),
             nick=d.get('nickname'),
-            internal_avatar=self.parse_asset(avatar) if avatar else None,
+            internal_server_avatar=self.parse_asset(avatar) if avatar else None,
             roles=d.get('roles') or [],
             timed_out_until=datetime.fromisoformat(timeout) if timeout else None,
         )
@@ -1353,7 +1353,7 @@ class Parser:
                 _user=d['user'],
                 joined_at=joined_at,
                 nick=None,
-                internal_avatar=None,
+                internal_server_avatar=None,
                 roles=[],
                 timed_out_until=None,
             ),
@@ -1387,9 +1387,13 @@ class Parser:
                 state=self.state,
                 server_id=id['server'],
                 _user=id['user'],
-                nick=(None if 'Nickname' in clear else data.get('nickname', core.UNDEFINED)),
-                internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else core.UNDEFINED),
-                roles=([] if 'Roles' in clear else (roles if roles is not None else core.UNDEFINED)),
+                nick=None if 'Nickname' in clear else data.get('nickname', core.UNDEFINED),
+                internal_server_avatar=None
+                if 'Avatar' in clear
+                else self.parse_asset(avatar)
+                if avatar
+                else core.UNDEFINED,
+                roles=[] if 'Roles' in clear else roles if roles is not None else core.UNDEFINED,
                 timed_out_until=(
                     None if 'Timeout' in clear else datetime.fromisoformat(timeout) if timeout else core.UNDEFINED
                 ),

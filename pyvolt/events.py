@@ -404,7 +404,7 @@ class ServerCreateEvent(BaseEvent):
                     _user=state.me.id,
                     joined_at=self.joined_at,
                     nick=None,
-                    internal_avatar=None,
+                    internal_server_avatar=None,
                     roles=[],
                     timed_out_until=None,
                 ),
