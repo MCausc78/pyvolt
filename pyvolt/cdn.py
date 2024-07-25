@@ -32,7 +32,8 @@ import logging
 import typing
 from urllib.parse import quote
 
-from . import core, utils
+from . import utils
+from .core import __version__ as version
 from .enums import Enum
 from .errors import HTTPException
 
@@ -198,7 +199,7 @@ class Resource(abc.ABC):
 
 _cdn_session: aiohttp.ClientSession | None = None
 
-DEFAULT_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {core.__version__})'
+DEFAULT_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 def _get_session() -> aiohttp.ClientSession:

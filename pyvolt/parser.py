@@ -29,7 +29,7 @@ from datetime import datetime
 import logging
 import typing
 
-from . import core, discovery
+from . import discovery
 from .auth import (
     PartialAccount,
     MFATicket,
@@ -58,6 +58,7 @@ from .channel import (
     ServerChannel,
     Channel,
 )
+from .core import UNDEFINED
 from .embed import (
     EmbedSpecial,
     NoneEmbedSpecial,
@@ -471,24 +472,24 @@ class Parser:
             channel=PartialChannel(
                 state=self.state,
                 id=d['id'],
-                name=data.get('name', core.UNDEFINED),
-                owner_id=owner if owner else core.UNDEFINED,
-                description=(None if 'Description' in clear else data.get('description', core.UNDEFINED)),
-                internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else core.UNDEFINED),
-                nsfw=data.get('nsfw', core.UNDEFINED),
-                active=data.get('active', core.UNDEFINED),
-                permissions=(Permissions(permissions) if permissions is not None else core.UNDEFINED),
+                name=data.get('name', UNDEFINED),
+                owner_id=owner if owner else UNDEFINED,
+                description=(None if 'Description' in clear else data.get('description', UNDEFINED)),
+                internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
+                nsfw=data.get('nsfw', UNDEFINED),
+                active=data.get('active', UNDEFINED),
+                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
                 role_permissions=(
                     {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
                     if role_permissions is not None
-                    else core.UNDEFINED
+                    else UNDEFINED
                 ),
                 default_permissions=(
                     self.parse_permission_override_field(default_permissions)
                     if default_permissions is not None
-                    else core.UNDEFINED
+                    else UNDEFINED
                 ),
-                last_message_id=last_message_id or core.UNDEFINED,
+                last_message_id=last_message_id or UNDEFINED,
             ),
             before=None,
             after=None,
@@ -508,7 +509,7 @@ class Parser:
         )
 
     def parse_disabled_response_login(self, d: raw.a.DisabledResponseLogin) -> AccountDisabled:
-        return AccountDisabled(user_id=core.resolve_id(d['user_id']))
+        return AccountDisabled(user_id=d['user_id'])
 
     def parse_direct_message_channel(self, d: raw.DirectMessageChannel) -> DMChannel:
         recipient_ids = d['recipients']
@@ -809,7 +810,7 @@ class Parser:
                 state=self.state,
                 id=d['id'],
                 channel_id=d['channel'],
-                internal_embeds=([self.parse_embed(e) for e in embeds] if embeds is not None else core.UNDEFINED),
+                internal_embeds=([self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED),
             ),
         )
 
@@ -961,11 +962,11 @@ class Parser:
                 state=self.state,
                 id=d['id'],
                 channel_id=d['channel'],
-                content=content if content is not None else core.UNDEFINED,
-                edited_at=datetime.fromisoformat(edited_at) if edited_at else core.UNDEFINED,
-                internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else core.UNDEFINED,
-                pinned=False if 'Pinned' in clear else data.get('pinned', core.UNDEFINED),
-                reactions={k: tuple(v) for k, v in reactions.items()} if reactions is not None else core.UNDEFINED,
+                content=content if content is not None else UNDEFINED,
+                edited_at=datetime.fromisoformat(edited_at) if edited_at else UNDEFINED,
+                internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED,
+                pinned=False if 'Pinned' in clear else data.get('pinned', UNDEFINED),
+                reactions={k: tuple(v) for k, v in reactions.items()} if reactions is not None else UNDEFINED,
             ),
             before=None,
             after=None,
@@ -1137,9 +1138,9 @@ class Parser:
 
         return PartialUserProfile(
             state=self.state,
-            content=(None if 'ProfileContent' in clear else d.get('content') or core.UNDEFINED),
+            content=(None if 'ProfileContent' in clear else d.get('content') or UNDEFINED),
             internal_background=(
-                None if 'ProfileBackground' in clear else self.parse_asset(background) if background else core.UNDEFINED
+                None if 'ProfileBackground' in clear else self.parse_asset(background) if background else UNDEFINED
             ),
         )
 
@@ -1411,15 +1412,11 @@ class Parser:
                 state=self.state,
                 server_id=id['server'],
                 _user=id['user'],
-                nick=None if 'Nickname' in clear else data.get('nickname', core.UNDEFINED),
-                internal_server_avatar=None
-                if 'Avatar' in clear
-                else self.parse_asset(avatar)
-                if avatar
-                else core.UNDEFINED,
-                roles=[] if 'Roles' in clear else roles if roles is not None else core.UNDEFINED,
+                nick=None if 'Nickname' in clear else data.get('nickname', UNDEFINED),
+                internal_server_avatar=None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED,
+                roles=[] if 'Roles' in clear else roles if roles is not None else UNDEFINED,
                 timed_out_until=(
-                    None if 'Timeout' in clear else datetime.fromisoformat(timeout) if timeout else core.UNDEFINED
+                    None if 'Timeout' in clear else datetime.fromisoformat(timeout) if timeout else UNDEFINED
                 ),
             ),
             before=None,  # filled on dispatch
@@ -1470,11 +1467,11 @@ class Parser:
                 state=self.state,
                 id=d['role_id'],
                 server_id=d['id'],
-                name=data.get('name') or core.UNDEFINED,
-                permissions=(self.parse_permission_override_field(permissions) if permissions else core.UNDEFINED),
-                colour=(None if 'Colour' in clear else data.get('colour', core.UNDEFINED)),
-                hoist=data.get('hoist', core.UNDEFINED),
-                rank=data.get('rank', core.UNDEFINED),
+                name=data.get('name') or UNDEFINED,
+                permissions=(self.parse_permission_override_field(permissions) if permissions else UNDEFINED),
+                colour=(None if 'Colour' in clear else data.get('colour', UNDEFINED)),
+                hoist=data.get('hoist', UNDEFINED),
+                rank=data.get('rank', UNDEFINED),
             ),
             old_role=None,
             new_role=None,
@@ -1498,16 +1495,14 @@ class Parser:
             server=PartialServer(
                 state=self.state,
                 id=d['id'],
-                owner_id=d.get('owner', core.UNDEFINED),
-                name=data.get('name', core.UNDEFINED),
-                description=(
-                    None if 'Description' in clear else description if description is not None else core.UNDEFINED
-                ),
-                channel_ids=data.get('channels', core.UNDEFINED),
+                owner_id=d.get('owner', UNDEFINED),
+                name=data.get('name', UNDEFINED),
+                description=(None if 'Description' in clear else description if description is not None else UNDEFINED),
+                channel_ids=data.get('channels', UNDEFINED),
                 categories=(
                     []
                     if 'Categories' in clear
-                    else ([self.parse_category(c) for c in categories] if categories is not None else core.UNDEFINED)
+                    else ([self.parse_category(c) for c in categories] if categories is not None else UNDEFINED)
                 ),
                 system_messages=(
                     None
@@ -1515,17 +1510,17 @@ class Parser:
                     else (
                         self.parse_system_message_channels(system_messages)
                         if system_messages is not None
-                        else core.UNDEFINED
+                        else UNDEFINED
                     )
                 ),
                 default_permissions=(
-                    Permissions(default_permissions) if default_permissions is not None else core.UNDEFINED
+                    Permissions(default_permissions) if default_permissions is not None else UNDEFINED
                 ),
-                internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else core.UNDEFINED),
-                internal_banner=(None if 'Banner' in clear else self.parse_asset(banner) if banner else core.UNDEFINED),
-                flags=(ServerFlags(flags) if flags is not None else core.UNDEFINED),
-                discoverable=d.get('discoverable', core.UNDEFINED),
-                analytics=d.get('analytics', core.UNDEFINED),
+                internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
+                internal_banner=(None if 'Banner' in clear else self.parse_asset(banner) if banner else UNDEFINED),
+                flags=(ServerFlags(flags) if flags is not None else UNDEFINED),
+                discoverable=d.get('discoverable', UNDEFINED),
+                analytics=d.get('analytics', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
@@ -1706,8 +1701,8 @@ class Parser:
         presence = d.get('presence')
 
         return UserStatusEdit(
-            text=None if 'StatusText' in clear else d.get('text', core.UNDEFINED),
-            presence=(None if 'StatusPresence' in clear else Presence(presence) if presence else core.UNDEFINED),
+            text=None if 'StatusText' in clear else d.get('text', UNDEFINED),
+            presence=(None if 'StatusPresence' in clear else Presence(presence) if presence else UNDEFINED),
         )
 
     def parse_user_update_event(self, shard: Shard, d: raw.ClientUserUpdateEvent) -> UserUpdateEvent:
@@ -1726,15 +1721,15 @@ class Parser:
             user=PartialUser(
                 state=self.state,
                 id=user_id,
-                name=data.get('username', core.UNDEFINED),
-                discriminator=data.get('discriminator', core.UNDEFINED),
-                display_name=(None if 'DisplayName' in clear else data.get('display_name') or core.UNDEFINED),
-                internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else core.UNDEFINED),
-                badges=UserBadges(badges) if badges is not None else core.UNDEFINED,
-                status=(self.parse_user_status_edit(status, clear) if status is not None else core.UNDEFINED),
-                profile=(self.parse_partial_user_profile(profile, clear) if profile is not None else core.UNDEFINED),
-                flags=UserFlags(flags) if flags is not None else core.UNDEFINED,
-                online=d.get('online', core.UNDEFINED),
+                name=data.get('username', UNDEFINED),
+                discriminator=data.get('discriminator', UNDEFINED),
+                display_name=(None if 'DisplayName' in clear else data.get('display_name') or UNDEFINED),
+                internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED),
+                badges=UserBadges(badges) if badges is not None else UNDEFINED,
+                status=(self.parse_user_status_edit(status, clear) if status is not None else UNDEFINED),
+                profile=(self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED),
+                flags=UserFlags(flags) if flags is not None else UNDEFINED,
+                online=d.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
@@ -1797,11 +1792,9 @@ class Parser:
             new_webhook=PartialWebhook(
                 state=self.state,
                 id=d['id'],
-                name=data.get('name', core.UNDEFINED),
-                internal_avatar=(
-                    None if 'Avatar' in remove else self.parse_asset(avatar) if avatar else core.UNDEFINED
-                ),
-                permissions=(Permissions(permissions) if permissions is not None else core.UNDEFINED),
+                name=data.get('name', UNDEFINED),
+                internal_avatar=(None if 'Avatar' in remove else self.parse_asset(avatar) if avatar else UNDEFINED),
+                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
             ),
         )
 

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import typing
 
-from . import core
+from .core import ZID
 from .user_settings import UserSettings
 from .user import UserBadges, UserFlags, RelationshipStatus, User
 
@@ -74,7 +74,7 @@ class State:
         self._settings: UserSettings | None = None
         self.system = User(
             state=self,
-            id=core.ZID,
+            id=ZID,
             name='Revolt',
             discriminator='0000',
             internal_avatar=None,

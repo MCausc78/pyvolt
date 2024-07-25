@@ -29,7 +29,7 @@ from datetime import datetime
 import typing
 
 
-from . import core
+from .core import ulid_time
 
 if typing.TYPE_CHECKING:
     from .state import State
@@ -45,7 +45,7 @@ class Base:
 
     @property
     def created_at(self) -> datetime:
-        return core.ulid_time(self.id)
+        return ulid_time(self.id)
 
 
 __all__ = ('Base',)

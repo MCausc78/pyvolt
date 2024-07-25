@@ -342,7 +342,7 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        cache: (ca.Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None]) = UNDEFINED,
+        cache: ca.Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
         cdn_base: str | None = None,
         cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
