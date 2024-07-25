@@ -57,6 +57,12 @@ target-version = "py39"
 quote-style = "single"
 docstring-code-format = true
 
+[tool.ruff.lint]
+select = ["UP037"]
+
+[tool.ruff.lint.flake8-copyright]
+author = "MCausc78"
+
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 section-order = ["future", "standard-library", "first-party", "local-folder", "third-party"]

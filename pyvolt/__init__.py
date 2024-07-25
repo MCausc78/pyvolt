@@ -1,3 +1,14 @@
+"""
+Revolt API Wrapper
+~~~~~~~~~~~~~~~~~~~
+
+A basic wrapper for the Revolt API.
+
+:copyright: (c) 2024-present MCausc78
+:license: MIT, see LICENSE for more details.
+
+"""
+
 from .auth import *
 from .base import *
 from .bot import *

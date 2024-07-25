@@ -100,7 +100,7 @@ class Account(typing.TypedDict):
     password_reset: PasswordReset | None
     deletion: DeletionInfo | None
     lockout: Lockout | None
-    mfa: 'MultiFactorAuthentication'
+    mfa: MultiFactorAuthentication
 
 
 # >> /models/session.rs
