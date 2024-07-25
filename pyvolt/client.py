@@ -1141,7 +1141,7 @@ class Client:
 
 
 __all__ = (
-    'EventSubscriptions',
+    'EventSubscription',
     'TemporarySubscription',
     'ClientEventHandler',
     'Client',
