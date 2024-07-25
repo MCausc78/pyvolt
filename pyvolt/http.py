@@ -1960,14 +1960,14 @@ class HTTPClient:
     ) -> Ban:
         """|coro|
 
-        Ban a user.
+        Bans a user from the guild.
 
         Parameters
         ----------
         server: :class:`ULIDOr`[:class:`BaseServer`]
             The server.
         user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
-            The user to ban.
+            The user to ban from the server.
         reason: Optional[:class:`str`]
             The ban reason. Should be between 1 and 1024 chars long.
 
@@ -2009,7 +2009,14 @@ class HTTPClient:
     async def unban(self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]) -> None:
         """|coro|
 
-        Remove a user's ban.
+        Unbans a user from the server.
+
+        Parameters
+        ----------
+        server: :class:`ULIDOr`[:class:`BaseServer`]
+            The server.
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to unban from the server.
 
         Raises
         ------
@@ -2428,7 +2435,6 @@ class HTTPClient:
             You do not have permissions to create the role.
         HTTPException
             Creating the role failed.
-
         """
         server_id = resolve_id(server)
         j: raw.DataCreateRole = {'name': name, 'rank': rank}

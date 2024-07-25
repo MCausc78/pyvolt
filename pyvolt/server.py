@@ -334,6 +334,27 @@ class BaseServer(Base):
         """
         return await self.state.http.invite_bot(bot, server=self.id)
 
+    async def ban(self, user: str | BaseUser | BaseMember, *, reason: str | None = None) -> Ban:
+        """|coro|
+
+        Ban a user.
+
+        Parameters
+        ----------
+        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The user to ban.
+        reason: Optional[:class:`str`]
+            The ban reason. Should be between 1 and 1024 chars long.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to ban the user.
+        HTTPException
+            Banning the user failed.
+        """
+        return await self.state.http.ban(self.id, user, reason=reason)
+
     async def create_channel(
         self,
         *,
@@ -402,9 +423,9 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        name: :class:`str` | `None`
+        name: :class:`str`
             The role name. Should be between 1 and 32 chars long.
-        rank: :class:`int` | `None`
+        rank: Optional[:class:`int`]
             The ranking position. Smaller values take priority.
 
         Raises
@@ -589,6 +610,25 @@ class BaseServer(Base):
         Subscribes to this server.
         """
         await self.state.shard.subscribe_to(self.id)
+
+    async def unban(self, user: ULIDOr[BaseUser]) -> None:
+        """|coro|
+
+        Unbans a user from the server.
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to unban from the server.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to unban the user.
+        HTTPException
+            Unbanning the user failed.
+        """
+        return await self.state.http.unban(self.id, user)
 
 
 @define(slots=True)
@@ -964,8 +1004,8 @@ class BaseMember:
 
         Parameters
         ----------
-        reason: :class:`str` | `None`
-            Ban reason. Should be between 1 and 1024 chars long.
+        reason: Optional[:class:`str`]
+            The ban reason. Should be between 1 and 1024 chars long.
 
         Raises
         ------

@@ -27,7 +27,7 @@ from __future__ import annotations
 import aiohttp
 import asyncio
 import builtins
-from collections import abc as ca
+from collections.abc import Callable, Coroutine, Generator, Mapping
 import inspect
 from functools import wraps
 import logging
@@ -44,7 +44,7 @@ from .core import (
     ULIDOr,
 )
 from .emoji import Emoji
-from .events import BaseEvent, MessageCreateEvent
+from .events import BaseEvent
 from .http import HTTPClient
 from .message import Message
 from .parser import Parser
@@ -301,10 +301,111 @@ def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
     return tmp
 
 
-EventToModel = Message
-_COMMON_CONVERTERS: dict[type[EventToModel], ca.Callable] = {
-    Message: (lambda callback: (MessageCreateEvent, lambda event: callback(event.message)))
-}
+class EventSubscription(typing.Generic[EventT]):
+    """Represents a event subscription.
+
+    Attributes
+    ----------
+    client: :class:`Client`
+        The client that this subscription is tied to.
+    id: :class:`int`
+        The ID of the subscription.
+    callback
+        The callback.
+    """
+
+    __slots__ = (
+        'client',
+        'id',
+        'callback',
+        'event',
+    )
+
+    def __init__(
+        self,
+        *,
+        client: Client,
+        id: int,
+        callback: utils.MaybeAwaitableFunc[[EventT], None],
+        event: type[EventT],
+    ) -> None:
+        self.client = client
+        self.id = id
+        self.callback = callback
+        self.event = event
+
+    def __call__(self, arg: EventT, /) -> utils.MaybeAwaitable[None]:
+        return self.callback(arg)
+
+    async def _handle(self, arg: EventT, name: str, /) -> None:
+        try:
+            await utils._maybe_coroutine(self.callback, arg)
+        except Exception:
+            try:
+                await utils._maybe_coroutine(self.client.on_user_error, arg)
+            except Exception as exc:
+                _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
+
+    def remove(self) -> None:
+        """Removes the event subscription."""
+        self.client._handlers[self.event][0].pop(self.id, None)
+
+
+class TemporarySubscription(typing.Generic[EventT]):
+    """Represents a temporary event subscription."""
+
+    __slots__ = (
+        'client',
+        'id',
+        'event',
+        'future',
+        'check',
+        'coro',
+    )
+
+    def __init__(
+        self,
+        *,
+        client: Client,
+        id: int,
+        event: type[EventT],
+        future: asyncio.Future[EventT],
+        coro: Coroutine[typing.Any, typing.Any, EventT],
+        check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+    ) -> None:
+        self.client = client
+        self.id = id
+        self.event = event
+        self.future = future
+        self.check = check
+        self.coro = coro
+
+    def __await__(self) -> Generator[typing.Any, typing.Any, EventT]:
+        return self.coro.__await__()
+
+    async def _handle(self, arg: EventT, name: str, /) -> bool:
+        try:
+            can = self.check(arg)
+            if inspect.isawaitable(can):
+                can = await can
+
+            if can:
+                self.future.set_result(arg)
+            return can
+        except Exception as exc:
+            try:
+                self.future.set_exception(exc)
+            except Exception as exc:
+                _L.exception('Checker function (task: %s) raised an exception', name, exc_info=exc)
+            return True
+
+    def cancel(self) -> None:
+        """Cancels the subscription."""
+        self.future.cancel()
+        self.client._handlers[self.event][1].pop(self.id, None)
+
+
+_DEFAULT_HANDLERS = ({}, {})
 
 
 class Client:
@@ -318,7 +419,7 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        state: ca.Callable[[Client], State] | State | None = None,
+        state: Callable[[Client], State] | State | None = None,
     ) -> None: ...
 
     @typing.overload
@@ -327,13 +428,13 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        cache: ca.Callable[[Client, State], UndefinedOr[Cache | None]] | None = None,
+        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | None = None,
         cdn_base: str | None = None,
-        cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
+        cdn_client: Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
-        http: ca.Callable[[Client, State], HTTPClient] | None = None,
-        parser: ca.Callable[[Client, State], Parser] | None = None,
-        shard: ca.Callable[[Client, State], Shard] | None = None,
+        http: Callable[[Client, State], HTTPClient] | None = None,
+        parser: Callable[[Client, State], Parser] | None = None,
+        shard: Callable[[Client, State], Shard] | None = None,
         websocket_base: str | None = None,
     ) -> None: ...
 
@@ -342,20 +443,23 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        cache: ca.Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
+        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
         cdn_base: str | None = None,
-        cdn_client: ca.Callable[[Client, State], CDNClient] | None = None,
+        cdn_client: Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
-        http: ca.Callable[[Client, State], HTTPClient] | None = None,
-        parser: ca.Callable[[Client, State], Parser] | None = None,
-        shard: ca.Callable[[Client, State], Shard] | None = None,
+        http: Callable[[Client, State], HTTPClient] | None = None,
+        parser: Callable[[Client, State], Parser] | None = None,
+        shard: Callable[[Client, State], Shard] | None = None,
         websocket_base: str | None = None,
-        state: ca.Callable[[Client], State] | State | None = None,
+        state: Callable[[Client], State] | State | None = None,
     ) -> None:
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
         self._handlers: dict[
             type[BaseEvent],
-            list[utils.MaybeAwaitableFunc[[BaseEvent], None]],
+            tuple[
+                dict[int, EventSubscription[BaseEvent]],
+                dict[int, TemporarySubscription[BaseEvent]],
+            ],
         ] = {}
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
         self._types: dict[type[BaseEvent], tuple[type[BaseEvent], ...]] = {}
@@ -427,8 +531,9 @@ class Client:
         await self.close()
 
     async def on_user_error(self, event: BaseEvent) -> None:
-        """Handles user handler error. You can get current exception being raised via :func:`sys.exc_info`.
-        By default, this logs exception."""
+        """Handles user errors that came from handlers. You can get current exception being raised via :func:`sys.exc_info`.
+        By default, this logs exception.
+        """
         _, exc, _ = sys.exc_info()
         _L.exception(
             'one of %s handlers raised an exception',
@@ -441,7 +546,7 @@ class Client:
         await event.abefore_dispatch()
 
         for i, type in enumerate(types):
-            handlers = self._handlers.get(type, [])
+            handlers, temporary_handlers = self._handlers.get(type, _DEFAULT_HANDLERS)
             if _L.isEnabledFor(logging.DEBUG):
                 _L.debug(
                     'Dispatching %s (%i handlers, originating from %s)',
@@ -449,30 +554,35 @@ class Client:
                     len(handlers),
                     event.__class__.__name__,
                 )
-            for handler in handlers:
-                try:
-                    await utils._maybe_coroutine(handler, event)
-                except Exception:
-                    try:
-                        await utils._maybe_coroutine(self.on_user_error, event)
-                    except Exception as exc:
-                        _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
 
-        if not event.is_cancelled:
-            _L.debug('Processing %s', event.__class__.__name__)
+            for handler in temporary_handlers.values():
+                if await handler._handle(event, name):
+                    temporary_handlers.pop(handler.id, None)
+                    break
 
-            event.process()
-            await event.aprocess()
-        else:
+            for handler in handlers.values():
+                await handler._handle(event, name)
+
+        if event.is_cancelled:
             _L.debug('%s processing was cancelled', event.__class__.__name__)
+            return
 
-    def dispatch(self, event: BaseEvent) -> None:
+        _L.debug('Processing %s', event.__class__.__name__)
+        event.process()
+        await event.aprocess()
+
+    def dispatch(self, event: BaseEvent) -> asyncio.Task[None]:
         """Dispatches a event.
 
         Parameters
         ----------
         event: :class:`BaseEvent`
             The event to dispatch.
+
+        Returns
+        -------
+        :class:`asyncio.Task`[None]
+            The asyncio task.
         """
 
         et = builtins.type(event)
@@ -482,52 +592,53 @@ class Client:
             types = self._types[et] = _parents_of(et)
 
         name = f'pyvolt-dispatch-{self._get_i()}'
-        asyncio.create_task(self._dispatch(types, event, name), name=name)  # type: ignore
+        return asyncio.create_task(self._dispatch(types, event, name), name=name)  # type: ignore
 
     def subscribe(
         self,
-        event: type[EventT | EventToModel],
+        event: type[EventT],
         callback: utils.MaybeAwaitableFunc[[EventT], None],
-    ) -> None:
+    ) -> EventSubscription[EventT]:
         """Subscribes to event.
 
         Parameters
         ----------
-        event: Type[Union[Event, EventToModel]]
+        event: Type[EventT]
             The type of the event.
         callback
             The callback for the event.
         """
-        ev: typing.Any = event
-        try:
-            ev, converter = _COMMON_CONVERTERS[event](callback)  # type: ignore
-            tmp: typing.Any = converter
-        except KeyError:
-            tmp: typing.Any = callback
+        sub: EventSubscription[EventT] = EventSubscription(
+            client=self,
+            id=self._get_i(),
+            callback=callback,
+            event=event,
+        )
 
+        # The actual generic of value type is same as key
         try:
-            self._handlers[ev].append(tmp)
+            self._handlers[event][0][sub.id] = sub  # type: ignore
         except KeyError:
-            self._handlers[ev] = [tmp]
+            self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
+        return sub
 
     def on(
-        self, event: type[EventT | EventToModel]
-    ) -> ca.Callable[
+        self, event: type[EventT]
+    ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
-        utils.MaybeAwaitableFunc[[EventT], None],
+        EventSubscription[EventT],
     ]:
         def decorator(
             handler: utils.MaybeAwaitableFunc[[EventT], None],
-        ) -> utils.MaybeAwaitableFunc[[EventT], None]:
-            self.subscribe(event, handler)
-            return handler
+        ) -> EventSubscription[EventT]:
+            return self.subscribe(event, handler)
 
         return decorator
 
     @staticmethod
     def listens_on(
-        event: type[EventT | EventToModel],
-    ) -> ca.Callable[
+        event: type[EventT],
+    ) -> Callable[
         [utils.MaybeAwaitableFunc[[ClientT, EventT], None]],
         utils.MaybeAwaitableFunc[[ClientT, EventT], None],
     ]:
@@ -546,6 +657,117 @@ class Client:
     def _subscribe_methods(self) -> None:
         for _, callback in inspect.getmembers(self, lambda func: hasattr(func, '__pyvolt_handles__')):
             self.subscribe(callback.__pyvolt_handles__, callback)
+
+    def wait_for(
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        timeout: float | None = None,
+    ) -> TemporarySubscription[EventT]:
+        """|coro|
+
+        Waits for a WebSocket event to be dispatched.
+
+        This could be used to wait for a user to reply to a message,
+        or to react to a message, or to edit a message in a self-contained
+        way.
+
+        The ``timeout`` parameter is passed onto :func:`asyncio.wait_for`. By default,
+        it does not timeout. Note that this does propagate the
+        :exc:`asyncio.TimeoutError` for you in case of timeout and is provided for
+        ease of use.
+
+        This function returns the **first event that meets the requirements**.
+
+        Examples
+        ---------
+
+        Waiting for a user reply: ::
+
+            @client.on(pyvolt.MessageCreateEvent)
+            async def on_message_create(event):
+                message = event.message
+                if message.content.startswith('$greet'):
+                    channel = message.channel
+                    await channel.send('Say hello!')
+
+                    def check(event):
+                        return event.message.content == 'hello' and event.message.channel.id == channel.id
+
+                    msg = await client.wait_for(pyvolt.MessageCreateEvent, check=check)
+                    await channel.send(f'Hello {msg.author}!')
+
+        Waiting for a thumbs up reaction from the message author: ::
+
+            @client.on(pyvolt.MessageCreateEvent)
+            async def on_message_create(event):
+                message = event.message
+                if message.content.startswith('$thumb'):
+                    channel = message.channel
+                    await channel.send('Send me that \N{THUMBS UP SIGN} reaction, mate')
+
+                    def check(event):
+                        return event.user_id == message.author.id and event.emoji == '\N{THUMBS UP SIGN}'
+
+                    try:
+                        await client.wait_for(pyvolt.MessageReactEvent, timeout=60.0, check=check)
+                    except asyncio.TimeoutError:
+                        await channel.send('\N{THUMBS DOWN SIGN}')
+                    else:
+                        await channel.send('\N{THUMBS UP SIGN}')
+
+        .. versionchanged:: 2.0
+
+            ``event`` parameter is now positional-only.
+
+
+        Parameters
+        ------------
+        event: :class:`str`
+            The event name, similar to the :ref:`event reference <discord-api-events>`,
+            but without the ``on_`` prefix, to wait for.
+        check: Optional[Callable[EventT, :class:`bool`]]
+            A predicate to check what to wait for. The arguments must meet the
+            parameters of the event being waited for.
+        timeout: Optional[:class:`float`]
+            The number of seconds to wait before timing out and raising
+            :exc:`asyncio.TimeoutError`.
+
+        Raises
+        -------
+        asyncio.TimeoutError
+            If a timeout is provided and it was reached.
+
+        Returns
+        --------
+        Any
+            Returns no arguments, a single argument, or a :class:`tuple` of multiple
+            arguments that mirrors the parameters passed in the
+            :ref:`event reference <discord-api-events>`.
+        """
+
+        if not check:
+            check = lambda _: True
+
+        future = asyncio.get_running_loop().create_future()
+
+        coro = asyncio.wait_for(future, timeout=timeout)
+        sub = TemporarySubscription(
+            client=self,
+            id=self._get_i(),
+            event=event,
+            future=future,
+            check=check,
+            coro=coro,
+        )
+
+        try:
+            self._handlers[event][1][sub.id] = sub  # type: ignore
+        except KeyError:
+            self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
+        return sub
 
     @property
     def me(self) -> OwnUser | None:
@@ -573,7 +795,7 @@ class Client:
         return self._state
 
     @property
-    def channels(self) -> ca.Mapping[str, Channel]:
+    def channels(self) -> Mapping[str, Channel]:
         """Mapping[:class:`str`, :class:`Channel`]: Retrieves all cached channels."""
         cache = self._state.cache
         if cache:
@@ -581,7 +803,7 @@ class Client:
         return {}
 
     @property
-    def emojis(self) -> ca.Mapping[str, Emoji]:
+    def emojis(self) -> Mapping[str, Emoji]:
         """Mapping[:class:`str`, :class:`Emoji`]: Retrieves all cached emojis."""
         cache = self._state.cache
         if cache:
@@ -589,7 +811,7 @@ class Client:
         return {}
 
     @property
-    def servers(self) -> ca.Mapping[str, Server]:
+    def servers(self) -> Mapping[str, Server]:
         """Mapping[:class:`str`, :class:`Server`]: Retrieves all cached servers."""
         cache = self._state.cache
         if cache:
@@ -597,7 +819,7 @@ class Client:
         return {}
 
     @property
-    def users(self) -> ca.Mapping[str, User]:
+    def users(self) -> Mapping[str, User]:
         """Mapping[:class:`str`, :class:`User`]: Retrieves all cached users."""
         cache = self._state.cache
         if cache:
@@ -919,6 +1141,8 @@ class Client:
 
 
 __all__ = (
+    'EventSubscriptions',
+    'TemporarySubscription',
     'ClientEventHandler',
     'Client',
 )

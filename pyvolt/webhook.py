@@ -80,14 +80,16 @@ class BaseWebhook(Base):
     ) -> Webhook:
         """|coro|
 
-        Edits a webhook. If webhook token wasn't given, the library will attempt edit webhook with bot/user token.
+        Edits a webhook. If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str` | `None`]
+        token: Optional[:class:`str`]
+            The webhook token.
+        name: :class:`UndefinedOr`[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: :class:`UndefinedOr`[:class:`str` | `None`]
-            New webhook avatar. Pass attachment ID given by Autumn.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New webhook avatar.
         permissions: :class:`UndefinedOr`[:class:`Permissions`]
             New webhook permissions.
 
@@ -97,8 +99,12 @@ class BaseWebhook(Base):
             You do not have permissions to edit the webhook.
         HTTPException
             Editing the webhook failed.
-        """
 
+        Returns
+        -------
+        :class:`Webhook`
+            The newly updated webhook.
+        """
         if by_token:
             token = self._token()
 
