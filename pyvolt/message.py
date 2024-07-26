@@ -135,7 +135,7 @@ class Masquerade:
 
 
 class SendableEmbed:
-    """Representation of a text embed before it is sent.
+    """Represents a text embed before it is sent.
 
     Parameters
     ----------
@@ -151,7 +151,6 @@ class SendableEmbed:
         The file inside the embed, this is the ID of the file.
     colour: Optional[:class:`str`]
         The embed color. This can be any valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
-
     """
 
     icon_url: str | None
@@ -486,11 +485,11 @@ class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """New message appended stateless embeds."""
+    """Appended stateless embeds."""
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """New message appended embeds."""
+        """:class:`UndefinedOr`[List[:class:`Embed`]]: Appended embeds."""
         return (
             [e._stateful(self.state) for e in self.internal_embeds]
             if self.internal_embeds is not UNDEFINED
@@ -499,7 +498,7 @@ class MessageAppendData(BaseMessage):
 
 
 class BaseSystemEvent(abc.ABC):
-    """Representation of system event within message."""
+    """Represents system event within message."""
 
 
 @define(slots=True)

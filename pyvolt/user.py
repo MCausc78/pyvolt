@@ -112,9 +112,9 @@ class UserStatusEdit:
 
     def build(self) -> raw.UserStatus:
         j: raw.UserStatus = {}
-        if self.text is not None and self.text is not UNDEFINED:
+        if self.text not in (None, UNDEFINED):
             j['text'] = self.text
-        if self.presence is not None and self.presence is not UNDEFINED:
+        if self.presence not in (None, UNDEFINED):
             j['presence'] = self.presence.value
         return j
 
@@ -348,6 +348,8 @@ class BaseUser(Base):
             channel = cache.get_channel(dm_channel_id, USER_REQUEST)
             if isinstance(channel, DMChannel):
                 return channel
+
+    pm = dm_channel
 
     async def accept_friend_request(self) -> User:
         """|coro|
