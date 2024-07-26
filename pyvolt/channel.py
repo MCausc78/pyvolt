@@ -437,7 +437,7 @@ class DMChannel(TextChannel):
             return ''
 
         a = self.recipient_ids[0]
-        b = self.recipient_ids[0]
+        b = self.recipient_ids[1]
 
         return a if me.id == a else b
 
@@ -449,7 +449,7 @@ class DMChannel(TextChannel):
             return ''
 
         a = self.recipient_ids[0]
-        b = self.recipient_ids[0]
+        b = self.recipient_ids[1]
 
         return a if me.id != a else b
 

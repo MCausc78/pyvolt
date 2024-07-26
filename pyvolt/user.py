@@ -28,7 +28,7 @@ from attrs import define, field
 from enum import IntFlag
 import typing
 
-from . import cache as caching, cdn
+from . import cdn
 from .base import Base
 from .core import (
     UNDEFINED,
@@ -330,7 +330,9 @@ class BaseUser(Base):
         """Optional[:class:`str`]: The ID of the private channel with this user."""
         cache = self.state.cache
         if cache:
-            return cache.get_private_channel_by_user(self.id, caching._USER_REQUEST)
+            from .cache import _USER_REQUEST as USER_REQUEST
+
+            return cache.get_private_channel_by_user(self.id, USER_REQUEST)
 
     pm_id = dm_channel_id
 
@@ -341,7 +343,9 @@ class BaseUser(Base):
 
         cache = self.state.cache
         if cache and dm_channel_id:
-            channel = cache.get_channel(dm_channel_id, caching._USER_REQUEST)
+            from .cache import _USER_REQUEST as USER_REQUEST
+
+            channel = cache.get_channel(dm_channel_id, USER_REQUEST)
             if isinstance(channel, DMChannel):
                 return channel
 
