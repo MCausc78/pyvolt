@@ -34,7 +34,7 @@ from .emoji import ServerEmoji, Emoji
 from .user import User
 
 if typing.TYPE_CHECKING:
-    from .channel import Channel
+    from .channel import DMChannel, Channel
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
@@ -285,6 +285,25 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None: ...
 
+    ############################
+    # Private Channels by User #
+    ############################
+    @abc.abstractmethod
+    def get_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> str | None: ...
+
+    def get_all_private_channels_by_users(self, ctx: BaseContext, /) -> list[str]:
+        return list(self.get_private_channels_by_users_mapping().values())
+
+    @abc.abstractmethod
+    def get_private_channels_by_users_mapping(self) -> dict[str, str]: ...
+
+    @abc.abstractmethod
+    def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None: ...
+
+    # Should be implemented in `delete_channel`, or in event
+    @abc.abstractmethod
+    def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None: ...
+
 
 class EmptyCache(Cache):
     ############
@@ -413,6 +432,21 @@ class EmptyCache(Cache):
     def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None:
         pass
 
+    ############################
+    # Private Channels by User #
+    ############################
+    def get_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> str | None:
+        return None
+
+    def get_private_channels_by_users_mapping(self) -> dict[str, str]:
+        return {}
+
+    def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None:
+        pass
+
+    def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None:
+        pass
+
 
 V = typing.TypeVar('V')
 
@@ -454,6 +488,8 @@ class MapCache(Cache):
     _server_members_max_size: int
     _users: dict[str, User]
     _users_max_size: int
+    _private_channels_by_user: dict[str, str]
+    _private_channels_by_user_max_size: int
 
     __slots__ = (
         '_channels',
@@ -470,6 +506,8 @@ class MapCache(Cache):
         '_server_members_max_size',
         '_users',
         '_users_max_size',
+        '_private_channels_by_user',
+        '_private_channels_by_user_max_size',
     )
 
     def __init__(
@@ -482,6 +520,7 @@ class MapCache(Cache):
         servers_max_size: int = -1,
         server_members_max_size: int = -1,
         users_max_size: int = -1,
+        private_channels_by_user_max_size: int = -1,
     ) -> None:
         self._channels = {}
         self._channels_max_size = channels_max_size
@@ -497,6 +536,8 @@ class MapCache(Cache):
         self._server_members_max_size = server_members_max_size
         self._users = {}
         self._users_max_size = users_max_size
+        self._private_channels_by_user = {}
+        self._private_channels_by_user_max_size = private_channels_by_user_max_size
 
     ############
     # Channels #
@@ -512,10 +553,7 @@ class MapCache(Cache):
         _put1(self._channels, channel.id, channel, self._channels_max_size)
 
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
-        try:
-            del self._channels[channel_id]
-        except KeyError:
-            pass
+        self._channels.pop(channel_id, None)
 
     ###############
     # Read States #
@@ -535,7 +573,7 @@ class MapCache(Cache):
         )
 
     def delete_read_state(self, channel_id: str, ctx: BaseContext, /) -> None:
-        del self._read_states[channel_id]
+        self._read_states.pop(channel_id, None)
 
     ##########
     # Emojis #
@@ -556,10 +594,7 @@ class MapCache(Cache):
         return self._server_emojis.get(server_id)
 
     def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None:
-        try:
-            del self._server_emojis[server_id]
-        except KeyError:
-            pass
+        self._server_emojis.pop(server_id)
 
     def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
         if isinstance(emoji, ServerEmoji):
@@ -572,12 +607,7 @@ class MapCache(Cache):
         _put1(self._emojis, emoji.id, emoji, self._emojis_max_size)
 
     def delete_emoji(self, emoji_id: str, server_id: str | None, ctx: BaseContext, /) -> None:
-        emoji = self._emojis.get(emoji_id)
-
-        try:
-            del self._emojis[emoji_id]
-        except KeyError:
-            pass
+        emoji = self._emojis.pop(emoji_id, None)
 
         server_ids: tuple[str, ...] = ()
         if isinstance(emoji, ServerEmoji):
@@ -588,10 +618,7 @@ class MapCache(Cache):
 
         for server_id in server_ids:
             server_emojis = self._server_emojis.get(server_id, {})
-            try:
-                del server_emojis[emoji_id]
-            except KeyError:
-                pass
+            server_emojis.pop(emoji_id, None)
 
     ###########
     # Servers #
@@ -614,10 +641,7 @@ class MapCache(Cache):
         _put1(self._servers, server.id, server, self._servers_max_size)
 
     def delete_server(self, server_id: str, ctx: BaseContext, /) -> None:
-        try:
-            del self._servers[server_id]
-        except KeyError:
-            pass
+        self._servers.pop(server_id, None)
 
     ##################
     # Server Members #
@@ -666,16 +690,10 @@ class MapCache(Cache):
     def delete_server_member(self, server_id: str, user_id: str, ctx: BaseContext, /) -> None:
         members = self._server_members.get(server_id)
         if members:
-            try:
-                del members[user_id]
-            except KeyError:
-                pass
+            members.pop(user_id, None)
 
     def delete_server_members_of(self, server_id: str, ctx: BaseContext, /) -> None:
-        try:
-            del self._server_members[server_id]
-        except KeyError:
-            pass
+        self._server_members.pop(server_id, None)
 
     #########
     # Users #
@@ -692,6 +710,21 @@ class MapCache(Cache):
 
     def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None:
         self._users.update(users)
+
+    ############################
+    # Private Channels by User #
+    ############################
+    def get_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> str | None:
+        return self._private_channels_by_user.get(user_id)
+
+    def get_private_channels_by_users_mapping(self) -> dict[str, str]:
+        return self._private_channels_by_user
+
+    def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None:
+        _put1(self._private_channels_by_user, channel.target_id, channel.id, self._private_channels_by_user_max_size)
+
+    def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None:
+        self._private_channels_by_user.pop(user_id, None)
 
 
 # re-export internal functions as well for future usage

@@ -130,8 +130,10 @@ class ReadyEvent(BaseEvent):
         for s in self.servers:
             cache.store_server(s, caching._READY)
 
-        for c in self.channels:
-            cache.store_channel(c, caching._READY)
+        for channel in self.channels:
+            cache.store_channel(channel, caching._READY)
+            if channel.__class__ is DMChannel or isinstance(channel, DMChannel):
+                cache.store_private_channel_by_user(channel, caching._READY)  # type: ignore
 
         for m in self.members:
             cache.store_server_member(m, caching._READY)

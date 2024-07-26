@@ -29,13 +29,11 @@ from attrs import define, field
 import contextlib
 import typing
 
-from . import (
-    cache as caching,
-    cdn,
-)
+from . import cache as caching
 
 from .base import Base
 from .bot import BaseBot
+from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -110,7 +108,7 @@ class BaseChannel(Base, abc.ABC):
 
         Parameters
         ----------
-        silent: :class:`bool`
+        silent: Optional[:class:`bool`]
             Whether to not send message when leaving group.
 
         Raises
@@ -137,12 +135,34 @@ class BaseChannel(Base, abc.ABC):
 
         Edits the channel.
 
+        Parameters
+        ----------
+        name: :class:`UndefinedOr`[:class:`str`]
+            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        owner: :class:`UndefinedOr`[:clsas:`ULIDOr`[:class:`BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
+        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        nsfw: :class:`UndefinedOr`[:class:`bool`]
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        archived: :class:`UndefinedOr`[:class:`bool`]
+            To mark the channel as archived or not.
+        default_permissions: :class:`UndefinedOr`[None]
+            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+
         Raises
         ------
         Forbidden
             You do not have permissions to edit the channel.
         HTTPException
             Editing the channel failed.
+
+        Returns
+        -------
+        :class:`Channel`
+            The newly updated channel.
         """
         return await self.state.http.edit_channel(
             self.id,
@@ -180,7 +200,7 @@ class PartialChannel(BaseChannel):
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     description: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_icon: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     nsfw: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     active: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
     permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -325,7 +345,7 @@ class TextChannel(BaseChannel):
         content: str | None = None,
         *,
         nonce: str | None = None,
-        attachments: list[cdn.ResolvableResource] | None = None,
+        attachments: list[ResolvableResource] | None = None,
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
@@ -337,15 +357,36 @@ class TextChannel(BaseChannel):
         Sends a message to the given channel.
         You must have `SendMessages` permission.
 
+        Parameters
+        ----------
+        content: Optional[:class:`str`]
+            The message content.
+        nonce: Optional[:class:`str`]
+            The message nonce.
+        attachments: Optional[List[:class:`ResolvableResource`]]
+            The message attachments.
+        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+            The message replies.
+        embeds: Optional[List[:class:`SendableEmbed`]]
+            The message embeds.
+        masquearde: Optional[:class:`Masquerade`]
+            The message masquerade.
+        interactions: Optional[:class:`Interactions`]
+            The message interactions.
+        silent: Optional[:class:`bool`]
+            Whether to suppress notifications or not.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to send
+        HTTPException
+            Sending the message failed.
+
         Returns
         -------
         :class:`Message`
-            The message sent.
-
-        Forbidden
-            You do not have permissions to send messages.
-        HTTPException
-            Sending the message failed.
+            The message that was sent.
         """
         return await self.state.http.send_message(
             self.id,
@@ -388,6 +429,30 @@ class DMChannel(TextChannel):
     last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """ID of the last message sent in this channel."""
 
+    @property
+    def initiator_id(self) -> str:
+        me = self.state.me
+
+        if not me:
+            return ''
+
+        a = self.recipient_ids[0]
+        b = self.recipient_ids[0]
+
+        return a if me.id == a else b
+
+    @property
+    def target_id(self) -> str:
+        me = self.state.me
+
+        if not me:
+            return ''
+
+        a = self.recipient_ids[0]
+        b = self.recipient_ids[0]
+
+        return a if me.id != a else b
+
     def _update(self, data: PartialChannel) -> None:
         if data.active is not UNDEFINED:
             self.active = data.active
@@ -412,7 +477,7 @@ class GroupChannel(TextChannel):
         repr=True, hash=True, eq=True, alias='internal_recipients'
     )
 
-    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless group icon."""
 
     last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -460,7 +525,7 @@ class GroupChannel(TextChannel):
             )
 
     @property
-    def icon(self) -> cdn.Asset | None:
+    def icon(self) -> Asset | None:
         """The group icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
@@ -574,7 +639,7 @@ class BaseServerChannel(BaseChannel):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The channel description."""
 
-    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless custom channel icon."""
 
     default_permissions: PermissionOverride | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -601,7 +666,7 @@ class BaseServerChannel(BaseChannel):
             self.default_permissions = data.default_permissions
 
     @property
-    def icon(self) -> cdn.Asset | None:
+    def icon(self) -> Asset | None:
         """The custom channel icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 

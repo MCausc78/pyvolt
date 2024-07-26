@@ -28,7 +28,7 @@ from attrs import define, field
 from enum import IntFlag
 import typing
 
-from . import cdn
+from . import cache as caching, cdn
 from .base import Base
 from .core import (
     UNDEFINED,
@@ -324,6 +324,26 @@ class BaseUser(Base):
     def mention(self) -> str:
         """:class:`str`: The user mention."""
         return f'<@{self.id}>'
+
+    @property
+    def dm_channel_id(self) -> str | None:
+        """Optional[:class:`str`]: The ID of the private channel with this user."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_private_channel_by_user(self.id, caching._USER_REQUEST)
+
+    pm_id = dm_channel_id
+
+    @property
+    def dm_channel(self) -> DMChannel | None:
+        """Optional[:class:`DMChannel`]: The private channel with this user."""
+        dm_channel_id = self.dm_channel_id
+
+        cache = self.state.cache
+        if cache and dm_channel_id:
+            channel = cache.get_channel(dm_channel_id, caching._USER_REQUEST)
+            if isinstance(channel, DMChannel):
+                return channel
 
     async def accept_friend_request(self) -> User:
         """|coro|
