@@ -26,11 +26,11 @@ from __future__ import annotations
 
 import abc
 from attrs import define, field
-from enum import Enum, auto
 import logging
 import typing
 
 from .emoji import ServerEmoji, Emoji
+from .enums import Enum
 from .user import User
 
 if typing.TYPE_CHECKING:
@@ -43,55 +43,55 @@ _L = logging.getLogger(__name__)
 
 
 class ContextType(Enum):
-    UNDEFINED = auto()
+    UNDEFINED = 'UNDEFINED'
     """Context is not provided."""
 
-    USER_REQUEST = auto()
+    USER_REQUEST = 'USER_REQUEST'
     """The end user is asking for object."""
 
-    LIBRARY_REQUEST = auto()
+    LIBRARY_REQUEST = 'LIBRARY_REQUEST'
     """Library needs the object for internal purposes."""
 
-    READY = auto()
+    READY = 'READY'
     """Populated data from Ready event."""
 
-    MESSAGE_ACK = auto()
-    MESSAGE_CREATE = auto()
-    MESSAGE_UPDATE = auto()
-    MESSAGE_APPEND = auto()
-    MESSAGE_DELETE = auto()
-    MESSAGE_REACT = auto()
-    MESSAGE_UNREACT = auto()
-    MESSAGE_REMOVE_REACTION = auto()
-    MESSAGE_BULK_DELETE = auto()
+    message_ack = 'MESSAGE_ACK'
+    message_create = 'MESSAGE_CREATE'
+    message_update = 'MESSAGE_UPDATE'
+    message_append = 'MESSAGE_APPEND'
+    message_delete = 'MESSAGE_DELETE'
+    message_react = 'MESSAGE_REACT'
+    message_unreact = 'MESSAGE_UNREACT'
+    message_remove_reaction = 'MESSAGE_REMOVE_REACTION'
+    message_bulk_delete = 'MESSAGE_BULK_DELETE'
 
-    SERVER_CREATE = auto()
-    SERVER_UPDATE = auto()
-    SERVER_DELETE = auto()
+    server_create = 'SERVER_CREATE'
+    server_update = 'SERVER_UPDATE'
+    server_delete = 'SERVER_DELETE'
 
-    SERVER_MEMBER_CREATE = auto()
-    SERVER_MEMBER_UPDATE = auto()
-    SERVER_MEMBER_DELETE = auto()
+    server_member_create = 'SERVER_MEMBER_CREATE'
+    server_member_update = 'SERVER_MEMBER_UPDATE'
+    server_member_delete = 'SERVER_MEMBER_DELETE'
 
-    SERVER_ROLE_UPDATE = auto()
-    SERVER_ROLE_DELETE = auto()
+    server_role_update = 'SERVER_ROLE_UPDATE'
+    server_role_delete = 'SERVER_ROLE_DELETE'
 
-    USER_UPDATE = auto()
-    USER_RELATIONSHIP_UPDATE = auto()
-    USER_PLATFORM_WIPE = auto()
+    user_update = 'USER_UPDATE'
+    user_relationship_update = 'USER_RELATIONSHIP_UPDATE'
+    user_platform_wipe = 'USER_PLATFORM_WIPE'
 
-    EMOJI_CREATE = auto()
-    EMOJI_DELETE = auto()
+    emoji_create = 'EMOJI_CREATE'
+    emoji_delete = 'EMOJI_DELETE'
 
-    CHANNEL_CREATE = auto()
-    CHANNEL_UPDATE = auto()
-    CHANNEL_DELETE = auto()
+    channel_create = 'CHANNEL_CREATE'
+    channel_update = 'CHANNEL_UPDATE'
+    channel_delete = 'CHANNEL_DELETE'
 
-    CHANNEL_GROUP_JOIN = auto()
-    CHANNEL_GROUP_LEAVE = auto()
+    channel_group_join = 'CHANNEL_GROUP_JOIN'
+    channel_group_leave = 'CHANNEL_GROUP_LEAVE'
     """Data from websocket event."""
 
-    MESSAGE = auto()
+    message = 'MESSAGE'
     """The library asks for object to provide value for `message.get_x()`."""
 
 
@@ -108,33 +108,46 @@ class MessageContext(BaseContext):
 _UNDEFINED = BaseContext(type=ContextType.UNDEFINED)
 _USER_REQUEST = BaseContext(type=ContextType.USER_REQUEST)
 _READY = BaseContext(type=ContextType.READY)
-_MESSAGE_ACK = BaseContext(type=ContextType.MESSAGE_ACK)
-_MESSAGE_CREATE = BaseContext(type=ContextType.MESSAGE_CREATE)
-_MESSAGE_UPDATE = BaseContext(type=ContextType.MESSAGE_UPDATE)
-_MESSAGE_APPEND = BaseContext(type=ContextType.MESSAGE_APPEND)
-_MESSAGE_DELETE = BaseContext(type=ContextType.MESSAGE_DELETE)
-_MESSAGE_REACT = BaseContext(type=ContextType.MESSAGE_REACT)
-_MESSAGE_UNREACT = BaseContext(type=ContextType.MESSAGE_UNREACT)
-_MESSAGE_REMOVE_REACTION = BaseContext(type=ContextType.MESSAGE_REMOVE_REACTION)
-_MESSAGE_BULK_DELETE = BaseContext(type=ContextType.MESSAGE_BULK_DELETE)
-_SERVER_CREATE = BaseContext(type=ContextType.SERVER_CREATE)
-_SERVER_UPDATE = BaseContext(type=ContextType.SERVER_UPDATE)
-_SERVER_DELETE = BaseContext(type=ContextType.SERVER_DELETE)
-_SERVER_MEMBER_CREATE = BaseContext(type=ContextType.SERVER_MEMBER_CREATE)
-_SERVER_MEMBER_UPDATE = BaseContext(type=ContextType.SERVER_MEMBER_UPDATE)
-_SERVER_MEMBER_DELETE = BaseContext(type=ContextType.SERVER_MEMBER_DELETE)
-_SERVER_ROLE_UPDATE = BaseContext(type=ContextType.SERVER_ROLE_UPDATE)
-_SERVER_ROLE_DELETE = BaseContext(type=ContextType.SERVER_ROLE_DELETE)
-_USER_UPDATE = BaseContext(type=ContextType.USER_UPDATE)
-_USER_RELATIONSHIP_UPDATE = BaseContext(type=ContextType.USER_RELATIONSHIP_UPDATE)
-_USER_PLATFORM_WIPE = BaseContext(type=ContextType.USER_PLATFORM_WIPE)
-_EMOJI_CREATE = BaseContext(type=ContextType.EMOJI_CREATE)
-_EMOJI_DELETE = BaseContext(type=ContextType.EMOJI_DELETE)
-_CHANNEL_CREATE = BaseContext(type=ContextType.CHANNEL_CREATE)
-_CHANNEL_UPDATE = BaseContext(type=ContextType.CHANNEL_UPDATE)
-_CHANNEL_DELETE = BaseContext(type=ContextType.CHANNEL_DELETE)
-_CHANNEL_GROUP_JOIN = BaseContext(type=ContextType.CHANNEL_GROUP_JOIN)
-_CHANNEL_GROUP_LEAVE = BaseContext(type=ContextType.CHANNEL_GROUP_LEAVE)
+_MESSAGE_ACK = BaseContext(type=ContextType.message_ack)
+_MESSAGE_CREATE = BaseContext(type=ContextType.message_create)
+_MESSAGE_UPDATE = BaseContext(type=ContextType.message_update)
+_MESSAGE_APPEND = BaseContext(type=ContextType.message_append)
+_MESSAGE_DELETE = BaseContext(type=ContextType.message_delete)
+_MESSAGE_REACT = BaseContext(type=ContextType.message_react)
+_MESSAGE_UNREACT = BaseContext(type=ContextType.message_unreact)
+_MESSAGE_REMOVE_REACTION = BaseContext(type=ContextType.message_remove_reaction)
+_MESSAGE_BULK_DELETE = BaseContext(type=ContextType.message_bulk_delete)
+_SERVER_CREATE = BaseContext(type=ContextType.server_create)
+_SERVER_UPDATE = BaseContext(type=ContextType.server_update)
+_SERVER_DELETE = BaseContext(type=ContextType.server_delete)
+_SERVER_MEMBER_CREATE = BaseContext(type=ContextType.server_member_create)
+_SERVER_MEMBER_UPDATE = BaseContext(type=ContextType.server_member_update)
+_SERVER_MEMBER_DELETE = BaseContext(type=ContextType.server_member_delete)
+_SERVER_ROLE_UPDATE = BaseContext(type=ContextType.server_role_update)
+_SERVER_ROLE_DELETE = BaseContext(type=ContextType.server_role_delete)
+_USER_UPDATE = BaseContext(type=ContextType.user_update)
+_USER_RELATIONSHIP_UPDATE = BaseContext(type=ContextType.user_relationship_update)
+_USER_PLATFORM_WIPE = BaseContext(type=ContextType.user_platform_wipe)
+_EMOJI_CREATE = BaseContext(type=ContextType.emoji_create)
+_EMOJI_DELETE = BaseContext(type=ContextType.emoji_delete)
+_CHANNEL_CREATE = BaseContext(type=ContextType.channel_create)
+_CHANNEL_UPDATE = BaseContext(type=ContextType.channel_update)
+_CHANNEL_DELETE = BaseContext(type=ContextType.channel_delete)
+_CHANNEL_GROUP_JOIN = BaseContext(type=ContextType.channel_group_join)
+_CHANNEL_GROUP_LEAVE = BaseContext(type=ContextType.channel_group_leave)
+
+
+ProvideContextIn = typing.Literal[
+    'DMChannel.recipients',
+    'DMChannel.initiator',
+    'DMChannel.target',
+    'GroupChannel.get_owner',
+    'GroupChannel.last_message',
+    'GroupChannel.recipients',
+    'BaseServerChannel.get_server',
+    'ServerEmoji.get_server',
+    # TODO: events
+]
 
 
 class Cache(abc.ABC):
@@ -762,6 +775,7 @@ __all__ = (
     '_CHANNEL_DELETE',
     '_CHANNEL_GROUP_JOIN',
     '_CHANNEL_GROUP_LEAVE',
+    'ProvideContextIn',
     'Cache',
     'EmptyCache',
     '_put0',
