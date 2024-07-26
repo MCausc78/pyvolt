@@ -37,7 +37,7 @@ import typing
 from . import cache as caching, utils
 from .cache import Cache, MapCache
 from .cdn import CDNClient
-from .channel import SavedMessagesChannel, GroupChannel, Channel
+from .channel import SavedMessagesChannel, DMChannel, GroupChannel, Channel
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -791,12 +791,12 @@ class Client:
 
     @property
     def state(self) -> State:
-        """:class:`State`: The controller for all entities and managers."""
+        """:class:`State`: The controller for all entities and components."""
         return self._state
 
     @property
     def channels(self) -> Mapping[str, Channel]:
-        """Mapping[:class:`str`, :class:`Channel`]: Retrieves all cached channels."""
+        """Mapping[:class:`str`, :class:`Channel`]: Mapping of cached channels."""
         cache = self._state.cache
         if cache:
             return cache.get_channels_mapping()
@@ -804,7 +804,7 @@ class Client:
 
     @property
     def emojis(self) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`Emoji`]: Retrieves all cached emojis."""
+        """Mapping[:class:`str`, :class:`Emoji`]: Mapping of cached emojis."""
         cache = self._state.cache
         if cache:
             return cache.get_emojis_mapping()
@@ -812,7 +812,7 @@ class Client:
 
     @property
     def servers(self) -> Mapping[str, Server]:
-        """Mapping[:class:`str`, :class:`Server`]: Retrieves all cached servers."""
+        """Mapping[:class:`str`, :class:`Server`]: Mapping of cached servers."""
         cache = self._state.cache
         if cache:
             return cache.get_servers_mapping()
@@ -820,11 +820,34 @@ class Client:
 
     @property
     def users(self) -> Mapping[str, User]:
-        """Mapping[:class:`str`, :class:`User`]: Retrieves all cached users."""
+        """Mapping[:class:`str`, :class:`User`]: Mapping of cached users."""
         cache = self._state.cache
         if cache:
             return cache.get_users_mapping()
         return {}
+
+    @property
+    def dm_channel_ids(self) -> Mapping[str, str]:
+        """Mapping[:class:`str`, :class:`str`]: Mapping of user IDs to cached DM channel IDs."""
+        cache = self._state.cache
+        if cache:
+            return cache.get_private_channels_by_users_mapping()
+        return {}
+
+    @property
+    def dm_channels(self) -> Mapping[str, DMChannel]:
+        """Mapping[:class:`str`, :class:`DMChannel`]: Mapping of user IDs to cached DM channels."""
+
+        cache = self._state.cache
+        if not cache:
+            return {}
+
+        result = {}
+        for k, v in self.dm_channel_ids.items():
+            channel = cache.get_channel(v, caching._USER_REQUEST)
+            if channel and channel.__class__ is DMChannel or isinstance(channel, DMChannel):
+                result[k] = channel
+        return result
 
     def get_channel(self, channel_id: str, /) -> Channel | None:
         """Retrieves a channel from cache.
