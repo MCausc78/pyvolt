@@ -28,7 +28,7 @@ from attrs import define, field
 from enum import IntFlag
 import typing
 
-from . import cdn
+from . import cdn, routes
 from .base import Base
 from .core import (
     UNDEFINED,
@@ -324,6 +324,11 @@ class BaseUser(Base):
     def mention(self) -> str:
         """:class:`str`: The user mention."""
         return f'<@{self.id}>'
+
+    @property
+    def default_avatar_url(self) -> str:
+        """:class:`str`: The URL to user's default avatar."""
+        return self.state.http.url_for(routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=self.id))
 
     @property
     def dm_channel_id(self) -> str | None:
