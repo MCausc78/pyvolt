@@ -6,11 +6,11 @@
 
 * TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L225C11-L225C94
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L235C11-L235C94
 
 * TODO: What we should do in case of mentions? This solution sucks.
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L311C15-L311C80
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L322C15-L322C80
 
 * TODO: Handle 10053?
 

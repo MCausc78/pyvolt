@@ -18,7 +18,7 @@ async def on_message(event: pyvolt.MessageCreateEvent):
     message = event.message
 
     # don't respond to ourselves/others
-    if not client.me or (client.me != message.author_id) ^ self_bot:
+    if (message.author.relationship is pyvolt.RelationshipStatus.user) ^ self_bot:
         return
 
     if message.content == 'ping':

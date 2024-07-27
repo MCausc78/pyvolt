@@ -34,7 +34,7 @@ from .enums import Enum
 from .user import User
 
 if typing.TYPE_CHECKING:
-    from .channel import DMChannel, Channel
+    from .channel import DMChannel, GroupChannel, Channel
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
@@ -193,6 +193,9 @@ class Cache(abc.ABC):
 
     @abc.abstractmethod
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
+    def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]: ...
 
     ###############
     # Read States #
@@ -358,6 +361,9 @@ class EmptyCache(Cache):
 
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
         pass
+
+    def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]:
+        return {}
 
     ###############
     # Read States #
@@ -531,6 +537,8 @@ class MapCache(Cache):
     __slots__ = (
         '_channels',
         '_channels_max_size',
+        '_private_channels',
+        '_private_channels_max_size',
         '_read_states',
         '_read_states_max_size',
         '_emojis',
@@ -551,6 +559,7 @@ class MapCache(Cache):
         self,
         *,
         channels_max_size: int = -1,
+        private_channels_max_size: int = -1,
         read_states_max_size: int = -1,
         emojis_max_size: int = -1,
         server_emojis_max_size: int = -1,
@@ -561,6 +570,8 @@ class MapCache(Cache):
     ) -> None:
         self._channels = {}
         self._channels_max_size = channels_max_size
+        self._private_channels = {}
+        self._private_channels_max_size = private_channels_max_size
         self._read_states = {}
         self._read_states_max_size = read_states_max_size
         self._emojis = {}
@@ -589,8 +600,14 @@ class MapCache(Cache):
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
         _put1(self._channels, channel.id, channel, self._channels_max_size)
 
+        if isinstance(channel, (DMChannel, GroupChannel)):
+            _put1(self._private_channels, channel.id, channel, self._private_channels_max_size)
+
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
         self._channels.pop(channel_id, None)
+
+    def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]:
+        return self._private_channels
 
     ###############
     # Read States #

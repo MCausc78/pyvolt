@@ -949,7 +949,7 @@ class Parser:
 
     def parse_message_update_event(self, shard: Shard, d: raw.ClientMessageUpdateEvent) -> MessageUpdateEvent:
         data = d['data']
-        clear = d['clear']
+        clear = d.get('clear', [])
 
         content = data.get('content')
         edited_at = data.get('edited')

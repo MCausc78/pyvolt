@@ -149,13 +149,7 @@ class ReadyEvent(BaseEvent):
 
 @define(slots=True)
 class BaseChannelCreateEvent(BaseEvent):
-    def _process(self, channel: Channel) -> bool:
-        cache = self.shard.state.cache
-        if not cache:
-            return False
-
-        cache.store_channel(channel, caching._CHANNEL_CREATE)
-        return True
+    pass
 
 
 @define(slots=True)
@@ -163,7 +157,17 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
     channel: PrivateChannel = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
-        return self._process(self.channel)
+        cache = self.shard.state.cache
+        if not cache:
+            return False
+
+        channel = self.channel
+        cache.store_channel(channel, caching._CHANNEL_CREATE)
+
+        if isinstance(channel, DMChannel):
+            cache.store_private_channel_by_user(channel, caching._CHANNEL_CREATE)
+
+        return True
 
 
 @define(slots=True)
@@ -171,7 +175,12 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
     channel: ServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
 
     def process(self) -> bool:
-        return self._process(self.channel)
+        cache = self.shard.state.cache
+        if not cache:
+            return False
+
+        cache.store_channel(self.channel, caching._CHANNEL_CREATE)
+        return True
 
 
 ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
@@ -222,6 +231,7 @@ class ChannelDeleteEvent(BaseEvent):
         if not cache:
             return False
 
+        cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
         # TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
         if isinstance(self.channel, ServerChannel):
             server = cache.get_server(self.channel.server_id, caching._CHANNEL_DELETE)
@@ -232,8 +242,9 @@ class ChannelDeleteEvent(BaseEvent):
                     pass
                 else:
                     cache.store_server(server, caching._CHANNEL_DELETE)
+        elif isinstance(self.channel, DMChannel):
+            cache.delete_private_channel_by_user(self.channel.target_id, caching._CHANNEL_DELETE)
 
-        cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
         return True
 
 

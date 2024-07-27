@@ -408,6 +408,14 @@ class TemporarySubscription(typing.Generic[EventT]):
 _DEFAULT_HANDLERS = ({}, {})
 
 
+def _private_channel_sort_old(channel: DMChannel | GroupChannel) -> str:
+    return channel.last_message_id or '0'
+
+
+def _private_channel_sort_new(channel: DMChannel | GroupChannel) -> str:
+    return channel.last_message_id or channel.id
+
+
 class Client:
     """A Revolt client."""
 
@@ -849,6 +857,27 @@ class Client:
                 result[k] = channel
         return result
 
+    @property
+    def private_channels(self) -> Mapping[str, DMChannel | GroupChannel]:
+        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels.
+        Useful when developing Revolt client."""
+        cache = self._state.cache
+        if not cache:
+            return {}
+        return cache.get_private_channels_mapping()
+
+    @property
+    def ordered_private_channels_old(self) -> list[DMChannel | GroupChannel]:
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order.
+        Useful when developing Revolt client."""
+        return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
+
+    @property
+    def ordered_private_channels(self) -> list[DMChannel | GroupChannel]:
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new web client order.
+        Useful when developing Revolt client."""
+        return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
+
     def get_channel(self, channel_id: str, /) -> Channel | None:
         """Retrieves a channel from cache.
 
@@ -1167,5 +1196,7 @@ __all__ = (
     'EventSubscription',
     'TemporarySubscription',
     'ClientEventHandler',
+    '_private_channel_sort_old',
+    '_private_channel_sort_new',
     'Client',
 )

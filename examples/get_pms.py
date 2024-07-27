@@ -12,13 +12,7 @@ async def on_ready(event: pyvolt.ReadyEvent):
     event.process()
     event.cancel()
 
-    unsorted_private_channels = [
-        channel for channel in event.channels if isinstance(channel, (pyvolt.DMChannel, pyvolt.GroupChannel))
-    ]
-
-    sorted_private_channels = sorted(unsorted_private_channels, key=sort_private_channel, reverse=True)
-
-    for channel in sorted_private_channels:
+    for channel in client.ordered_private_channels:
         if isinstance(channel, pyvolt.DMChannel):
             target_id = channel.target_id
             target = client.get_user(target_id) or await client.fetch_user(target_id)
