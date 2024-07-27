@@ -50,7 +50,7 @@ test = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 # convert-typed-dict-functional-to-class = true
 
 [tool.ruff.format]

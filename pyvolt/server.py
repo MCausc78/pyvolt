@@ -816,6 +816,8 @@ class Server(BaseServer):
         cache = self.state.cache
         if not cache:
             return []
+        from .channel import ServerTextChannel, VoiceChannel
+
         channels = []
         for channel_id in self.internal_channels[1]:
             id: str = channel_id  # type: ignore
@@ -866,7 +868,7 @@ class Server(BaseServer):
         from .channel import ServerChannel
 
         channel = cache.get_channel(channel_id, caching._USER_REQUEST)
-        if channel and isinstance(channel, ServerChannel) and channel.server_id == self.id:
+        if channel and isinstance(channel, ServerChannel) and (channel.server_id == self.id or channel.server_id == ''):
             return channel
 
         if not self.internal_channels[0]:
