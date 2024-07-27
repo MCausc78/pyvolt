@@ -600,6 +600,8 @@ class MapCache(Cache):
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
         _put1(self._channels, channel.id, channel, self._channels_max_size)
 
+        from .channel import DMChannel, GroupChannel
+
         if isinstance(channel, (DMChannel, GroupChannel)):
             _put1(self._private_channels, channel.id, channel, self._private_channels_max_size)
 
