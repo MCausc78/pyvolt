@@ -137,7 +137,7 @@ _CHANNEL_GROUP_JOIN = BaseContext(type=ContextType.channel_group_join)
 _CHANNEL_GROUP_LEAVE = BaseContext(type=ContextType.channel_group_leave)
 
 
-ProvideContextIn = typing.Literal[
+ProvideCacheContextIn = typing.Literal[
     'DMChannel.recipients',
     'DMChannel.get_initiator',
     'DMChannel.get_target',
@@ -816,7 +816,7 @@ __all__ = (
     '_CHANNEL_DELETE',
     '_CHANNEL_GROUP_JOIN',
     '_CHANNEL_GROUP_LEAVE',
-    'ProvideContextIn',
+    'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',
     '_put0',

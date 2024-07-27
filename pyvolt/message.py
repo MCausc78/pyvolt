@@ -1412,22 +1412,25 @@ class Message(BaseMessage):
             return self._author
         if self._author == ZID:
             return self.state.system
-        if not self.state.cache:
+        state = self.state
+        cache = state.cache
+        if not cache:
             return None
 
-        cache = self.state.cache
         channel = self.channel
         if not isinstance(channel, ServerChannel):
             return cache.get_user(
                 self._author,
-                # PROVIDE_CTX: caching.MessageContext(type=caching.ContextType.MESSAGE, message=self),
-                caching._UNDEFINED,
+                caching.MessageContext(type=caching.ContextType.message, message=self)
+                if 'Message.get_author' in state.provide_cache_context_in
+                else caching._UNDEFINED,
             )
         return cache.get_server_member(
             channel.server_id,
             self._author,
-            # PROVIDE_CTX: caching.MessageContext(type=caching.ContextType.MESSAGE, message=self),
-            caching._UNDEFINED,
+            caching.MessageContext(type=caching.ContextType.message, message=self)
+            if 'Message.get_author' in state.provide_cache_context_in
+            else caching._UNDEFINED,
         )
 
     def system_event(self) -> SystemEvent | None:

@@ -31,7 +31,7 @@ from .user_settings import UserSettings
 from .user import UserBadges, UserFlags, RelationshipStatus, User
 
 if typing.TYPE_CHECKING:
-    from .cache import Cache
+    from .cache import ProvideCacheContextIn, Cache
     from .cdn import CDNClient
     from .channel import SavedMessagesChannel
     from .http import HTTPClient
@@ -41,10 +41,19 @@ if typing.TYPE_CHECKING:
 
 
 class State:
-    """Represents a manager for all pyvolt objects."""
+    """Represents a manager for all pyvolt objects.
+
+    Attributes
+    ----------
+    provide_cache_context_in: List[:class:`ProvideCacheContextIn`]
+        The methods/properties that do provide cache context.
+    system: :class:`User`
+        The Revolt#0000 sentinel user.
+    """
 
     __slots__ = (
         '_cache',
+        'provide_cache_context_in',
         '_cdn_client',
         '_http',
         '_parser',
@@ -59,12 +68,14 @@ class State:
         self,
         *,
         cache: Cache | None = None,
+        provide_cache_context_in: list[ProvideCacheContextIn] | None = None,
         cdn_client: CDNClient | None = None,
         http: HTTPClient | None = None,
         parser: Parser | None = None,
         shard: Shard | None = None,
     ) -> None:
         self._cache = cache
+        self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
         self._cdn_client = cdn_client
         self._http = http
         self._parser = parser
