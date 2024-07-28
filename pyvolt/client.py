@@ -436,13 +436,14 @@ class Client:
         *,
         token: str,
         bot: bool = True,
-        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | None = None,
+        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
         cdn_base: str | None = None,
         cdn_client: Callable[[Client, State], CDNClient] | None = None,
         http_base: str | None = None,
         http: Callable[[Client, State], HTTPClient] | None = None,
         parser: Callable[[Client, State], Parser] | None = None,
         shard: Callable[[Client, State], Shard] | None = None,
+        request_user_settings: list[str] | None = None,
         websocket_base: str | None = None,
     ) -> None: ...
 
@@ -458,8 +459,9 @@ class Client:
         http: Callable[[Client, State], HTTPClient] | None = None,
         parser: Callable[[Client, State], Parser] | None = None,
         shard: Callable[[Client, State], Shard] | None = None,
-        websocket_base: str | None = None,
         state: Callable[[Client], State] | State | None = None,
+        request_user_settings: list[str] | None = None,
+        websocket_base: str | None = None,
     ) -> None:
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
         self._handlers: dict[
@@ -516,6 +518,7 @@ class Client:
                         token,
                         base=websocket_base,
                         handler=ClientEventHandler(self),
+                        request_user_settings=request_user_settings,
                         session=_session_factory,
                         state=state,
                     )

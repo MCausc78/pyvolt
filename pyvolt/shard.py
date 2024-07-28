@@ -84,6 +84,7 @@ class Shard:
         '_heartbeat_sequence',
         '_last_close_code',
         '_sequence',
+        '_session',
         '_ws',
         'base',
         'bot',
@@ -92,8 +93,8 @@ class Shard:
         'handler',
         'logged_out',
         'reconnect_on_timeout',
+        'request_user_settings',
         'retries',
-        '_session',
         'state',
         'token',
         'user_agent',
@@ -111,6 +112,7 @@ class Shard:
         format: ShardFormat = ShardFormat.json,
         handler: EventHandler | None = None,
         reconnect_on_timeout: bool = True,
+        request_user_settings: list[str] | None = None,
         retries: int | None = None,
         session: utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession] | aiohttp.ClientSession,
         state: State,
@@ -132,6 +134,7 @@ class Shard:
         self.handler = handler
         self.logged_out = False
         self.reconnect_on_timeout = reconnect_on_timeout
+        self.request_user_settings = request_user_settings
         self.retries = retries or 150
         self._session = session
         self.state = state
@@ -322,29 +325,34 @@ class Shard:
             # Do not call factory on future requests
             self._session = session
 
-        es = []
+        params: raw.BonfireConnectionParameters = {
+            'version': '1',
+            'format': self.format.value,
+        }
+        if self.request_user_settings is not None:
+            params['__user_settings_keys'] = ','.join(self.request_user_settings)
+
+        errors = []
         for i in range(self.retries):
             try:
-                _L.debug('connecting to %s, format=json, try=%i', self.base, i)
+                _L.debug('Connecting to %s, format=%s, try=%i', self.base, self.format, i)
                 return await session.ws_connect(
                     self.base,
                     headers=self._headers(),
-                    params={
-                        'version': '1',
-                        'format': self.format.value,
-                    },
+                    params=params,  # type: ignore # Not true
                 )
             except OSError as exc:
                 # TODO: Handle 10053?
                 if exc.errno in (54, 10054):  # Connection reset by peer
                     await asyncio.sleep(1.5)
                     continue
+                errors.append(exc)
             except Exception as exc:
-                es.append(exc)
+                errors.append(exc)
                 _L.debug('connection failed on try=%i: %s', i, exc)
                 if self.connect_delay is not None:
                     await asyncio.sleep(self.connect_delay)
-        raise ConnectError(self.retries, es)
+        raise ConnectError(self.retries, errors)
 
     async def _connect(self) -> None:
         if self._ws:

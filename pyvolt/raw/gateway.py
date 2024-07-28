@@ -389,3 +389,70 @@ class ServerPingEvent(typing.TypedDict):
 ServerEvent = (
     ServerAuthenticateEvent | ServerBeginTypingEvent | ServerEndTypingEvent | ServerSubscribeEvent | ServerPingEvent
 )
+
+
+class BonfireConnectionParameters(typing.TypedDict):
+    version: typing.Literal['1']
+    format: typing.Literal['json', 'msgpack']
+    token: typing.NotRequired[str]
+    __user_settings_keys: typing.NotRequired[str]
+
+
+__all__ = (
+    'ClientBulkEvent',
+    'ClientAuthenticatedEvent',
+    'ClientLogoutEvent',
+    'ClientReadyEvent',
+    'Ping',
+    'ClientPongEvent',
+    'ClientMessageEvent',
+    'ClientMessageUpdateEvent',
+    'ClientMessageAppendEvent',
+    'ClientMessageDeleteEvent',
+    'ClientMessageReactEvent',
+    'ClientMessageUnreactEvent',
+    'ClientMessageRemoveReactionEvent',
+    'ClientBulkMessageDeleteEvent',
+    'ClientServerCreateEvent',
+    'ClientServerUpdateEvent',
+    'ClientServerDeleteEvent',
+    'ClientServerMemberUpdateEvent',
+    'ClientServerMemberJoinEvent',
+    'ClientServerMemberLeaveEvent',
+    'ClientServerRoleUpdateEvent',
+    'ClientServerRoleDeleteEvent',
+    'ClientUserUpdateEvent',
+    'ClientUserRelationshipEvent',
+    'ClientUserSettingsUpdateEvent',
+    'ClientUserPlatformWipeEvent',
+    'ClientEmojiCreateEvent',
+    'ClientEmojiDeleteEvent',
+    'ClientSavedMessagesChannelCreateEvent',
+    'ClientDirectMessageChannelCreateEvent',
+    'ClientGroupChannelCreateEvent',
+    'ClientTextChannelCreateEvent',
+    'ClientVoiceChannelCreateEvent',
+    'ClientChannelCreateEvent',
+    'ClientChannelUpdateEvent',
+    'ClientChannelDeleteEvent',
+    'ClientChannelGroupJoinEvent',
+    'ClientChannelGroupLeaveEvent',
+    'ClientChannelStartTypingEvent',
+    'ClientChannelStopTypingEvent',
+    'ClientChannelAckEvent',
+    'ClientWebhookCreateEvent',
+    'ClientWebhookUpdateEvent',
+    'ClientWebhookDeleteEvent',
+    'ClientCreateSessionAuthEvent',
+    'ClientDeleteSessionAuthEvent',
+    'ClientDeleteAllSessionsAuthEvent',
+    'ClientAuthEvent',
+    'ClientEvent',
+    'ServerAuthenticateEvent',
+    'ServerBeginTypingEvent',
+    'ServerEndTypingEvent',
+    'ServerSubscribeEvent',
+    'ServerPingEvent',
+    'ServerEvent',
+    'BonfireConnectionParameters',
+)

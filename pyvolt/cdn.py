@@ -156,26 +156,9 @@ class Asset(StatelessAsset):
         max_side: int | None = None,
     ) -> str:
         """:class:`str`: The asset URL."""
-        url = f'{self.state.cdn_client.base}/{quote(self.tag)}/{quote(self.id)}'
-
-        params = []
-
-        if size is not None:
-            params.append(f'size={size}')
-
-        if width is not None:
-            params.append(f'width={width}')
-
-        if height is not None:
-            params.append(f'height={height}')
-
-        if max_side is not None:
-            params.append(f'max_side={max_side}')
-
-        if params:
-            url += '?' + '&'.join(params)
-
-        return url
+        return self.state.cdn_client.url_for(
+            self.id, self.tag, size=size, width=width, height=height, max_side=max_side
+        )
 
     async def read(
         self,
@@ -324,9 +307,8 @@ class CDNClient:
     async def request(self, method: str, route: str, **kwargs) -> aiohttp.ClientResponse:
         headers: dict[str, typing.Any] = kwargs.pop('headers', {})
         if not kwargs.pop('manual_accept', False):
-            headers['Accept'] = 'application/json'
-        if 'User-Agent' not in headers:
-            headers['User-Agent'] = self.user_agent
+            headers['accept'] = 'application/json'
+        headers['user-agent'] = self.user_agent
 
         url = self._base + route
 
@@ -361,6 +343,39 @@ class CDNClient:
 
             raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
         return response
+
+    def url_for(
+        self,
+        id: str,
+        tag: Tag,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> str:
+        """:class:`str`: Generates asset URL."""
+
+        url = f'{self._base}/{tag}/{quote(id)}'
+
+        params = []
+
+        if size is not None:
+            params.append(f'size={size}')
+
+        if width is not None:
+            params.append(f'width={width}')
+
+        if height is not None:
+            params.append(f'height={height}')
+
+        if max_side is not None:
+            params.append(f'max_side={max_side}')
+
+        if params:
+            url += '?' + '&'.join(params)
+
+        return url
 
     async def read(
         self,

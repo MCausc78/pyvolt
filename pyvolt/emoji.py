@@ -27,17 +27,15 @@ from __future__ import annotations
 from attrs import define, field
 
 from .base import Base
+from .cdn import AssetMetadataType, AssetMetadata, Asset
 
 
 @define(slots=True)
 class BaseEmoji(Base):
     """Representation of an emoji on Revolt."""
 
-    id: str = field(repr=True, kw_only=True)
-    """Unique emoji ID."""
-
     creator_id: str = field(repr=True, kw_only=True)
-    """Uploader user ID."""
+    """The user ID of the uploader."""
 
     name: str = field(repr=True, kw_only=True)
     """Emoji name."""
@@ -47,6 +45,32 @@ class BaseEmoji(Base):
 
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether the emoji is marked as NSFW."""
+
+    def __str__(self) -> str:
+        return f':{self.id}:'
+
+    @property
+    def image(self) -> Asset:
+        """:class:`Asset`: The emoji asset."""
+        return Asset(
+            id=self.id,
+            filename='',
+            metadata=AssetMetadata(
+                type=AssetMetadataType.video if self.animated else AssetMetadataType.image,
+                width=0,
+                height=0,
+            ),
+            content_type='',
+            size=0,
+            deleted=False,
+            reported=False,
+            message_id=None,
+            user_id=None,
+            server_id=None,
+            object_id=None,
+            state=self.state,
+            tag='emojis',
+        )
 
 
 @define(slots=True)
