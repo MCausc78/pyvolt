@@ -56,11 +56,15 @@ if typing.TYPE_CHECKING:
 
 
 class Reply:
-    id: str
-    """The message ID reply to."""
+    """Represents a message reply.
 
-    mention: bool
-    """Whether to mention author of that message."""
+    Attributes
+    ----------
+    id: :class:`str`
+        The ID of the message that being replied to.
+    mention: :class:`bool`
+        To mention author of reference message.
+    """
 
     __slots__ = ('id', 'mention')
 
@@ -76,13 +80,15 @@ class Reply:
 
 
 class Interactions:
-    """Information to guide interactions on this message."""
+    """Represents information how to guide interactions on the message.
 
-    reactions: list[str]
-    """Reactions which should always appear and be distinct."""
-
-    restrict_reactions: bool
-    """Whether reactions should be restricted to the given list. Can only be set to `True` if `reactions` list is of at least length 1. Defaults to `False`."""
+    Attributes
+    ----------
+    reactions: List[:class:`str`]
+        Reactions which should always appear and be distinct.
+    restrict_reactions: :class:`bool`
+        Whether reactions should be restricted to the given list. Can only be set to `True` if `reactions` list is of at least length 1. Defaults to `False`.
+    """
 
     __slots__ = ('reactions', 'restrict_reactions')
 
@@ -98,9 +104,9 @@ class Interactions:
 
 
 class Masquerade:
-    """Name and / or avatar override information.
+    """Represents a override of name and/or avatar.
 
-    Parameters
+    Attributes
     ----------
     name: Optional[:class:`str`]
         Replace the display name shown on this message.
@@ -125,14 +131,14 @@ class Masquerade:
         self.colour = colour
 
     def build(self) -> raw.Masquerade:
-        j: raw.Masquerade = {}
+        payload: raw.Masquerade = {}
         if self.name is not None:
-            j['name'] = self.name
+            payload['name'] = self.name
         if self.avatar is not None:
-            j['avatar'] = self.avatar
+            payload['avatar'] = self.avatar
         if self.colour is not None:
-            j['colour'] = self.colour
-        return j
+            payload['colour'] = self.colour
+        return payload
 
 
 class SendableEmbed:
@@ -200,10 +206,10 @@ class MessageSort(Enum):
 class MessageWebhook:
     """Information about the webhook bundled with Message."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The name of the webhook - 1 to 32 chars."""
 
-    avatar: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    avatar: str | None = field(repr=True, kw_only=True)
     """The ID of the avatar of the webhook, if it has one."""
 
 
@@ -211,8 +217,19 @@ class MessageWebhook:
 class BaseMessage(Base):
     """Represents a message in channel on Revolt."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """The ID of the channel this message was sent in."""
+
+    def __hash__(self) -> int:
+        return hash((self.channel_id, self.id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, BaseMessage)
+            and self.channel_id == other.channel_id
+            and self.id == other.id
+        )
 
     @property
     def channel(self) -> TextChannel:
@@ -450,19 +467,19 @@ class BaseMessage(Base):
 class PartialMessage(BaseMessage):
     """Partial representation of message in channel on Revolt."""
 
-    content: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: UndefinedOr[str] = field(repr=True, kw_only=True)
     """New message content."""
 
-    edited_at: UndefinedOr[datetime] = field(repr=True, hash=True, kw_only=True, eq=True)
+    edited_at: UndefinedOr[datetime] = field(repr=True, kw_only=True)
     """When message was edited."""
 
-    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
     """New message embeds."""
 
-    pinned: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    pinned: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether the message was just pinned."""
 
-    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, kw_only=True)
     """New message reactions."""
 
     @property
@@ -479,7 +496,7 @@ class PartialMessage(BaseMessage):
 class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
-    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
     """Appended stateless embeds."""
 
     @property
@@ -496,9 +513,9 @@ class BaseSystemEvent(abc.ABC):
     """Represents system event within message."""
 
 
-@define(slots=True)
+@define(slots=True, eq=True)
 class TextSystemEvent(BaseSystemEvent):
-    content: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: str = field(repr=True, kw_only=True, eq=True)
     """The event contents."""
 
     def _stateful(self, message: Message) -> TextSystemEvent:
@@ -507,7 +524,15 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class StatelessUserAddedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessUserAddedSystemEvent)
+            and self.user_id == other.user_id
+            and self.by_id == other.by_id
+        )
 
     @property
     def user_id(self) -> str:
@@ -521,7 +546,7 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    _by: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
     @property
     def by_id(self) -> str:
@@ -605,7 +630,15 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 
 @define(slots=True)
 class StatelessUserRemovedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessUserRemovedSystemEvent)
+            and self.user_id == other.user_id
+            and self.by_id == other.by_id
+        )
 
     @property
     def user_id(self) -> str:
@@ -619,7 +652,7 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    _by: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
     @property
     def by_id(self) -> str:
@@ -703,7 +736,10 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 
 @define(slots=True)
 class StatelessUserJoinedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessUserJoinedSystemEvent) and self.user_id == other.user_id
 
     @property
     def user_id(self) -> str:
@@ -726,7 +762,7 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -759,7 +795,10 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
 
 @define(slots=True)
 class StatelessUserLeftSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessUserLeftSystemEvent) and self.user_id == other.user_id
 
     @property
     def user_id(self) -> str:
@@ -815,7 +854,10 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 
 @define(slots=True)
 class StatelessUserKickedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessUserKickedSystemEvent) and self.user_id == other.user_id
 
     @property
     def user_id(self) -> str:
@@ -871,7 +913,10 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 
 @define(slots=True)
 class StatelessUserBannedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_user')
+    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessUserBannedSystemEvent) and self.user_id == other.user_id
 
     @property
     def user_id(self) -> str:
@@ -927,10 +972,18 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The new name of this group."""
 
-    _by: User | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessChannelRenamedSystemEvent)
+            and self.name == other.name
+            and self.by_id == other.by_id
+        )
 
     @property
     def by_id(self) -> str:
@@ -980,7 +1033,14 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
-    _by: User | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessChannelDescriptionChangedSystemEvent)
+            and self.by_id == other.by_id
+        )
 
     @property
     def by_id(self) -> str:
@@ -1029,7 +1089,10 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
 
 @define(slots=True)
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
-    _by: User | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessChannelIconChangedSystemEvent) and self.by_id == other.by_id
 
     @property
     def by_id(self) -> str:
@@ -1078,8 +1141,16 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
-    _from: User | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_from')
-    _to: User | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_to')
+    _from: User | str = field(repr=False, kw_only=True, alias='internal_from')
+    _to: User | str = field(repr=False, kw_only=True, alias='internal_to')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessChannelOwnershipChangedSystemEvent)
+            and self.from_id == other.from_id
+            and self.to_id == other.to_id
+        )
 
     @property
     def from_id(self) -> str:
@@ -1161,10 +1232,18 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
 
 @define(slots=True)
 class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
-    pinned_message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    pinned_message_id: str = field(repr=True, kw_only=True)
     """The ID of the message that was pinned."""
 
-    _by: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessMessagePinnedSystemEvent)
+            and self.pinned_message_id == other.pinned_message_id
+            and self.by_id == other.by_id
+        )
 
     @property
     def by_id(self) -> str:
@@ -1221,10 +1300,18 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
 
 @define(slots=True)
 class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
-    unpinned_message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    unpinned_message_id: str = field(repr=True, kw_only=True)
     """The ID of the message that was unpinned."""
 
-    _by: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_by')
+    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, StatelessMessageUnpinnedSystemEvent)
+            and self.unpinned_message_id == other.unpinned_message_id
+            and self.by_id == other.by_id
+        )
 
     @property
     def by_id(self) -> str:
@@ -1319,51 +1406,51 @@ class MessageFlags(IntFlag):
 class Message(BaseMessage):
     """Representation of message in channel on Revolt."""
 
-    nonce: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    nonce: str | None = field(repr=True, kw_only=True)
     """Unique value generated by client sending this message."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """ID of the channel this message was sent in."""
 
-    _author: User | Member | str = field(repr=False, hash=True, kw_only=True, eq=True, alias='internal_author')
+    _author: User | Member | str = field(repr=False, kw_only=True, alias='internal_author')
 
-    webhook: MessageWebhook | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook: MessageWebhook | None = field(repr=True, kw_only=True)
     """The webhook that sent this message."""
 
-    content: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: str = field(repr=True, kw_only=True)
     """The message content."""
 
-    internal_system_event: StatelessSystemEvent | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_system_event: StatelessSystemEvent | None = field(repr=True, kw_only=True)
     """The stateless system event information, occured in this message, if any."""
 
-    internal_attachments: list[StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_attachments: list[StatelessAsset] = field(repr=True, kw_only=True)
     """The stateless attachments on this message."""
 
-    edited_at: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    edited_at: datetime | None = field(repr=True, kw_only=True)
     """Timestamp at which this message was last edited."""
 
-    internal_embeds: list[StatelessEmbed] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_embeds: list[StatelessEmbed] = field(repr=True, kw_only=True)
     """The attached stateless embeds to this message."""
 
-    mention_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    mention_ids: list[str] = field(repr=True, kw_only=True)
     """The list of user IDs mentioned in this message."""
 
-    replies: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    replies: list[str] = field(repr=True, kw_only=True)
     """The list of message ID this message is replying to."""
 
-    reactions: dict[str, tuple[str, ...]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    reactions: dict[str, tuple[str, ...]] = field(repr=True, kw_only=True)
     """Mapping of emojis to array of user IDs."""
 
-    interactions: Interactions | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    interactions: Interactions | None = field(repr=True, kw_only=True)
     """The information about how this message should be interacted with."""
 
-    masquerade: Masquerade | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    masquerade: Masquerade | None = field(repr=True, kw_only=True)
     """The name and / or avatar overrides for this message."""
 
-    pinned: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    pinned: bool = field(repr=True, kw_only=True)
     """Whether this message is pinned."""
 
-    flags: MessageFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: MessageFlags = field(repr=True, kw_only=True)
     """The message flags."""
 
     def _append(self, data: MessageAppendData) -> None:
@@ -1440,6 +1527,7 @@ class Message(BaseMessage):
 
     @property
     def author(self) -> User | Member:
+        """Union[:class:`User`, :class:`Member`]: The user that sent this message."""
         author = self.get_author()
         if not author:
             raise NoData(self.author_id, 'message author')

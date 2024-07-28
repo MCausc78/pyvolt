@@ -1727,7 +1727,9 @@ class Parser:
                 internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED),
                 badges=UserBadges(badges) if badges is not None else UNDEFINED,
                 status=(self.parse_user_status_edit(status, clear) if status is not None else UNDEFINED),
-                profile=(self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED),
+                internal_profile=(
+                    self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
+                ),
                 flags=UserFlags(flags) if flags is not None else UNDEFINED,
                 online=d.get('online', UNDEFINED),
             ),

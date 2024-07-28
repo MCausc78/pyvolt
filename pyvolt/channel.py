@@ -41,6 +41,7 @@ from .core import (
     resolve_id,
 )
 from .enums import Enum
+from .errors import NoData
 from .invite import Invite
 from .permissions import (
     Permissions,
@@ -197,16 +198,16 @@ class BaseChannel(Base, abc.ABC):
 class PartialChannel(BaseChannel):
     """Partial representation of a channel on Revolt."""
 
-    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    nsfw: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    active: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
-    role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    last_message_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    description: UndefinedOr[str | None] = field(repr=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True, eq=True)
+    nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
+    active: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
+    permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True, eq=True)
+    role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
+    default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, kw_only=True, eq=True)
+    last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
 
 
 def _calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str) -> Permissions:
@@ -405,8 +406,19 @@ class TextChannel(BaseChannel):
 class SavedMessagesChannel(TextChannel):
     """Personal "Saved Notes" channel which allows users to save messages."""
 
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, kw_only=True)
     """ID of the user this channel belongs to."""
+
+    def __hash__(self) -> int:
+        return hash((self.id, self.user_id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, SavedMessagesChannel)
+            and self.id == other.id
+            and self.user_id == other.user_id
+        )
 
     def _update(self, data: PartialChannel) -> None:
         # PartialChannel has no fields that are related to SavedMessages yet
@@ -420,13 +432,13 @@ class SavedMessagesChannel(TextChannel):
 class DMChannel(TextChannel):
     """Direct message channel between two users."""
 
-    active: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    active: bool = field(repr=True, kw_only=True)
     """Whether this DM channel is currently open on both sides."""
 
-    recipient_ids: tuple[str, str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    recipient_ids: tuple[str, str] = field(repr=True, kw_only=True)
     """2-tuple of user IDs participating in DM."""
 
-    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    last_message_id: str | None = field(repr=True, kw_only=True)
     """ID of the last message sent in this channel."""
 
     @property
@@ -464,29 +476,29 @@ class DMChannel(TextChannel):
 class GroupChannel(TextChannel):
     """Group channel between 1 or more participants."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """Display name of the channel."""
 
-    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, kw_only=True)
     """User ID of the owner of the group."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True)
     """Channel description."""
 
     _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
-        repr=True, hash=True, eq=True, alias='internal_recipients'
+        repr=True, alias='internal_recipients'
     )
 
-    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless group icon."""
 
-    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    last_message_id: str | None = field(repr=True, kw_only=True)
     """ID of the last message sent in this channel."""
 
-    permissions: Permissions | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    permissions: Permissions | None = field(repr=True, kw_only=True)
     """Permissions assigned to members of this group. (does not apply to the owner of the group)"""
 
-    nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
 
     def _update(self, data: PartialChannel) -> None:
@@ -526,7 +538,7 @@ class GroupChannel(TextChannel):
 
     @property
     def icon(self) -> Asset | None:
-        """The group icon."""
+        """Optional[:class:`Asset`]: The group icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
@@ -564,7 +576,7 @@ class GroupChannel(TextChannel):
 
         Parameters
         ----------
-        user: :class:`ResolvableULID`
+        user: :class:`ULIDOr`[:class:`BaseUser`]
             The user to add.
 
         Raises
@@ -630,25 +642,25 @@ PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
 
 @define(slots=True)
 class BaseServerChannel(BaseChannel):
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """The server ID that channel belongs to."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The display name of the channel."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True)
     """The channel description."""
 
-    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless custom channel icon."""
 
-    default_permissions: PermissionOverride | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    default_permissions: PermissionOverride | None = field(repr=True, kw_only=True)
     """Default permissions assigned to users in this channel."""
 
-    role_permissions: dict[str, PermissionOverride] = field(repr=True, hash=True, kw_only=True, eq=True)
+    role_permissions: dict[str, PermissionOverride] = field(repr=True, kw_only=True)
     """Permissions assigned based on role to this channel."""
 
-    nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: bool = field(repr=True, kw_only=True)
     """Whether this channel is marked as not safe for work."""
 
     def _update(self, data: PartialChannel) -> None:
@@ -667,19 +679,19 @@ class BaseServerChannel(BaseChannel):
 
     @property
     def icon(self) -> Asset | None:
-        """The custom channel icon."""
+        """Optional[:class:`Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def server(self) -> Server:
-        """The server that channel belongs to."""
+        """:class:`Server`: The server that channel belongs to."""
         server = self.get_server()
         if server:
             return server
-        raise TypeError('Server is not in cache')
+        raise NoData(self.server_id, 'channel server')
 
     def get_server(self) -> Server | None:
-        """The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server that channel belongs to."""
         if not self.state.cache:
             return None
         return self.state.cache.get_server(self.server_id, caching._USER_REQUEST)
@@ -687,8 +699,10 @@ class BaseServerChannel(BaseChannel):
     async def create_invite(self) -> Invite:
         """|coro|
 
-        Creates an invite to this channel.
-        Channel must be a `TextChannel`.
+        Creates an invite to channel. The destination channel must be a server channel.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Raises
         ------
@@ -696,6 +710,11 @@ class BaseServerChannel(BaseChannel):
             You do not have permissions to create invite in that channel.
         HTTPException
             Creating invite failed.
+
+        Returns
+        -------
+        :class:`Invite`
+            The invite that was created.
         """
         return await self.state.http.create_invite(self.id)
 
@@ -727,7 +746,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        role: :class:`ResolvableULID`
+        role: :class:`ULIDOr`[:class:`BaseRole`]
             The role.
 
         Raises
@@ -762,7 +781,7 @@ class BaseServerChannel(BaseChannel):
 class ServerTextChannel(BaseServerChannel, TextChannel):
     """Text channel belonging to a server."""
 
-    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    last_message_id: str | None = field(repr=True, kw_only=True)
     """ID of the last message sent in this channel."""
 
     def _update(self, data: PartialChannel) -> None:

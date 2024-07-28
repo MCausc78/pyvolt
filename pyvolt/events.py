@@ -68,8 +68,8 @@ from .webhook import Webhook, PartialWebhook
 
 @define(slots=True)
 class BaseEvent:
-    shard: Shard = field(repr=True, hash=True, kw_only=True, eq=True)
-    is_cancelled: bool = field(default=False, repr=True, hash=True, kw_only=True, eq=True)
+    shard: Shard = field(repr=True, kw_only=True)
+    is_cancelled: bool = field(default=False, repr=True, kw_only=True)
 
     def set_cancelled(self, value: bool, /) -> bool:
         """Whether to cancel event processing (updating cache) or not."""
@@ -101,15 +101,15 @@ class BaseEvent:
 
 @define(slots=True)
 class ReadyEvent(BaseEvent):
-    users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
-    servers: list[Server] = field(repr=True, hash=True, kw_only=True, eq=True)
-    channels: list[Channel] = field(repr=True, hash=True, kw_only=True, eq=True)
-    members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
-    emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
+    users: list[User] = field(repr=True, kw_only=True)
+    servers: list[Server] = field(repr=True, kw_only=True)
+    channels: list[Channel] = field(repr=True, kw_only=True)
+    members: list[Member] = field(repr=True, kw_only=True)
+    emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
 
-    me: OwnUser = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_settings: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
-    read_states: list[ReadState] = field(repr=True, hash=True, kw_only=True, eq=True)
+    me: OwnUser = field(repr=True, kw_only=True)
+    user_settings: UserSettings = field(repr=True, kw_only=True)
+    read_states: list[ReadState] = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
@@ -154,7 +154,7 @@ class BaseChannelCreateEvent(BaseEvent):
 
 @define(slots=True)
 class PrivateChannelCreateEvent(BaseChannelCreateEvent):
-    channel: PrivateChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: PrivateChannel = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -172,7 +172,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
 
 @define(slots=True)
 class ServerChannelCreateEvent(BaseChannelCreateEvent):
-    channel: ServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: ServerChannel = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -188,10 +188,10 @@ ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
 
 @define(slots=True)
 class ChannelUpdateEvent(BaseEvent):
-    channel: PartialChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: PartialChannel = field(repr=True, kw_only=True)
 
-    before: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Channel | None = field(repr=True, kw_only=True)
+    after: Channel | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -216,9 +216,9 @@ class ChannelUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelDeleteEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
 
-    channel: Channel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: Channel | None = field(repr=True, kw_only=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -250,10 +250,10 @@ class ChannelDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientAddEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
-    group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    group: GroupChannel | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -273,10 +273,10 @@ class GroupRecipientAddEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientRemoveEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
-    group: GroupChannel | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    group: GroupChannel | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -296,21 +296,21 @@ class GroupRecipientRemoveEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelStartTypingEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class ChannelStopTypingEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class MessageAckEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -334,7 +334,7 @@ class MessageAckEvent(BaseEvent):
 
 @define(slots=True)
 class MessageCreateEvent(BaseEvent):
-    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: Message = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -367,63 +367,63 @@ class MessageCreateEvent(BaseEvent):
 
 @define(slots=True)
 class MessageUpdateEvent(BaseEvent):
-    message: PartialMessage = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: PartialMessage = field(repr=True, kw_only=True)
 
-    before: Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: Message | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Message | None = field(repr=True, kw_only=True)
+    after: Message | None = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class MessageAppendEvent(BaseEvent):
-    data: MessageAppendData = field(repr=True, hash=True, kw_only=True, eq=True)
+    data: MessageAppendData = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class MessageDeleteEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class MessageReactEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
-    emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
 
 @define(slots=True)
 class MessageUnreactEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
-    emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
 
 @define(slots=True)
 class MessageClearReactionEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_id: str = field(repr=True, kw_only=True)
 
-    emoji: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
 
 @define(slots=True)
 class BulkMessageDeleteEvent(BaseEvent):
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    message_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
+    message_ids: list[str] = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class ServerCreateEvent(BaseEvent):
-    joined_at: datetime = field(repr=True, hash=True, kw_only=True, eq=True)
-    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    emojis: list[ServerEmoji] = field(repr=True, hash=True, kw_only=True, eq=True)
+    joined_at: datetime = field(repr=True, kw_only=True)
+    server: Server = field(repr=True, kw_only=True)
+    emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         state = self.shard.state
@@ -455,7 +455,7 @@ class ServerCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiCreateEvent(BaseEvent):
-    emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: ServerEmoji = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -467,9 +467,9 @@ class ServerEmojiCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiDeleteEvent(BaseEvent):
-    emoji: ServerEmoji | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    server_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    emoji_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: ServerEmoji | None = field(repr=True, kw_only=True)
+    server_id: str | None = field(repr=True, kw_only=True)
+    emoji_id: str = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -489,10 +489,10 @@ class ServerEmojiDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerUpdateEvent(BaseEvent):
-    server: PartialServer = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: PartialServer = field(repr=True, kw_only=True)
 
-    before: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Server | None = field(repr=True, kw_only=True)
+    after: Server | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -517,8 +517,8 @@ class ServerUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerDeleteEvent(BaseEvent):
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
+    server: Server | None = field(repr=True, kw_only=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -538,7 +538,7 @@ class ServerDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberJoinEvent(BaseEvent):
-    member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: Member = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -550,10 +550,10 @@ class ServerMemberJoinEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberUpdateEvent(BaseEvent):
-    member: PartialMember = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: PartialMember = field(repr=True, kw_only=True)
 
-    before: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: Member | None = field(repr=True, kw_only=True)
+    after: Member | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -578,11 +578,11 @@ class ServerMemberUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberRemoveEvent(BaseEvent):
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
-    member: Member | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    reason: MemberRemovalIntention = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: Member | None = field(repr=True, kw_only=True)
+    reason: MemberRemovalIntention = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -607,12 +607,12 @@ class ServerMemberRemoveEvent(BaseEvent):
 
 @define(slots=True)
 class RawServerRoleUpdateEvent(BaseEvent):
-    role: PartialRole = field(repr=True, hash=True, kw_only=True, eq=True)
+    role: PartialRole = field(repr=True, kw_only=True)
 
-    old_role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    new_role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    old_role: Role | None = field(repr=True, kw_only=True)
+    new_role: Role | None = field(repr=True, kw_only=True)
 
-    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server | None = field(repr=True, kw_only=True)
 
     def before_process(self) -> None:
         self.new_role = self.role.into_full()
@@ -636,11 +636,11 @@ class RawServerRoleUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerRoleDeleteEvent(BaseEvent):
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    role_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
+    role_id: str = field(repr=True, kw_only=True)
 
-    server: Server | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    role: Role | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server | None = field(repr=True, kw_only=True)
+    role: Role | None = field(repr=True, kw_only=True)
 
     def before_process(self) -> None:
         cache = self.shard.state.cache
@@ -666,10 +666,10 @@ class ServerRoleDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class UserUpdateEvent(BaseEvent):
-    user: PartialUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: PartialUser = field(repr=True, kw_only=True)
 
-    before: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: User | None = field(repr=True, kw_only=True)
+    after: User | None = field(repr=True, kw_only=True)
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -694,13 +694,13 @@ class UserUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class UserRelationshipUpdateEvent(BaseEvent):
-    current_user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    current_user_id: str = field(repr=True, kw_only=True)
     """The current user ID."""
 
-    old_user: User | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    new_user: User = field(repr=True, hash=True, kw_only=True, eq=True)
+    old_user: User | None = field(repr=True, kw_only=True)
+    new_user: User = field(repr=True, kw_only=True)
 
-    before: RelationshipStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: RelationshipStatus | None = field(repr=True, kw_only=True)
     """Old relationship found in cache."""
 
     @property
@@ -747,13 +747,13 @@ class UserRelationshipUpdateEvent(BaseEvent):
 class UserSettingsUpdateEvent(BaseEvent):
     """User settings were updated remotely."""
 
-    current_user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    current_user_id: str = field(repr=True, kw_only=True)
     """The current user ID."""
 
-    partial: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+    partial: UserSettings = field(repr=True, kw_only=True)
 
-    before: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
-    after: UserSettings = field(repr=True, hash=True, kw_only=True, eq=True)
+    before: UserSettings = field(repr=True, kw_only=True)
+    after: UserSettings = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
         settings = self.shard.state.settings
@@ -777,24 +777,24 @@ class UserPlatformWipeEvent(BaseEvent):
     User flags are specified to explain why a wipe is occurring though not all reasons will necessarily ever appear.
     """
 
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, kw_only=True)
+    flags: UserFlags = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class WebhookCreateEvent(BaseEvent):
-    webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook: Webhook = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class WebhookUpdateEvent(BaseEvent):
-    new_webhook: PartialWebhook = field(repr=True, hash=True, kw_only=True, eq=True)
+    new_webhook: PartialWebhook = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class WebhookDeleteEvent(BaseEvent):
-    webhook: Webhook | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    webhook_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook: Webhook | None = field(repr=True, kw_only=True)
+    webhook_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
@@ -804,19 +804,19 @@ class AuthifierEvent(BaseEvent):
 
 @define(slots=True)
 class SessionCreateEvent(AuthifierEvent):
-    session: Session = field(repr=True, hash=True, kw_only=True, eq=True)
+    session: Session = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class SessionDeleteEvent(AuthifierEvent):
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    session_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, kw_only=True)
+    session_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class SessionDeleteAllEvent(AuthifierEvent):
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    exclude_session_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str = field(repr=True, kw_only=True)
+    exclude_session_id: str | None = field(repr=True, kw_only=True)
 
 
 @define(slots=True)

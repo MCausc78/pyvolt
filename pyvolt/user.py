@@ -67,13 +67,13 @@ class Presence(Enum):
 
 @define(slots=True)
 class UserStatus:
-    """User's active status."""
+    """Represents user's active status."""
 
-    text: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Custom status text."""
+    text: str | None = field(repr=True, kw_only=True)
+    """The custom status text."""
 
-    presence: Presence | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Current presence option."""
+    presence: Presence | None = field(repr=True, kw_only=True)
+    """The current presence option."""
 
     def _update(self, data: UserStatusEdit) -> None:
         if data.text is not UNDEFINED:
@@ -83,13 +83,15 @@ class UserStatus:
 
 
 class UserStatusEdit:
-    """Patrial user's status."""
+    """Represents partial user's status.
 
-    text: UndefinedOr[str | None]
-    """Custom status text."""
-
-    presence: UndefinedOr[Presence | None]
-    """Current presence option."""
+    Attributes
+    ----------
+    text: :class:`UndefinedOr`[Optional[:class:`str`]]
+        The new custom status text.
+    presence: :class:`UndefinedOr`[Optional[:class:`Presence`]]
+        The presence to use.
+    """
 
     __slots__ = ('text', 'presence')
 
@@ -122,12 +124,12 @@ class UserStatusEdit:
 
 @define(slots=True)
 class StatelessUserProfile:
-    """Stateless user's profile."""
+    """The stateless user's profile."""
 
-    content: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: str | None = field(repr=True, kw_only=True)
     """The user's profile content."""
 
-    internal_background: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_background: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless background visible on user's profile."""
 
     def _stateful(self, state: State, user_id: str) -> UserProfile:
@@ -143,8 +145,8 @@ class StatelessUserProfile:
 class UserProfile(StatelessUserProfile):
     """User's profile."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    state: State = field(repr=False, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
     @property
     def background(self) -> Asset | None:
@@ -156,35 +158,38 @@ class UserProfile(StatelessUserProfile):
 class PartialUserProfile:
     """The user's profile."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, kw_only=True)
     """The state."""
 
-    content: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """The user's profile content."""
 
-    internal_background: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_background: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     """The stateless background visible on user's profile."""
 
     @property
     def background(self) -> UndefinedOr[Asset | None]:
-        """Background visible on user's profile."""
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The background visible on user's profile."""
         return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
 class UserProfileEdit:
-    """Partial user's profile."""
+    """Partially represents user's profile.
 
-    content: UndefinedOr[str | None]
-    """Text to set as user profile description."""
-
-    background: UndefinedOr[ResolvableResource | None]
-    """New background visible on user's profile."""
+    Attributes
+    ----------
+    content: :class:`UndefinedOr`[Optional[:class:`str`]]
+        The text to use in user profile description.
+    background: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        The background to use on user's profile.
+    """
 
     __slots__ = ('content', 'background')
 
     def __init__(
         self,
         content: UndefinedOr[str | None] = UNDEFINED,
+        *,
         background: UndefinedOr[ResolvableResource | None] = UNDEFINED,
     ) -> None:
         self.content = content
@@ -296,21 +301,27 @@ class RelationshipStatus(Enum):
 class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True)
     """Other user's ID."""
 
-    status: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: RelationshipStatus = field(repr=True, kw_only=True)
     """Relationship status with them."""
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, Relationship) and self.id == other.id and self.status == other.status
 
 
 @define(slots=True)
 class Mutuals:
     """Mutual friends and servers response."""
 
-    user_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_ids: list[str] = field(repr=True, kw_only=True)
     """Array of mutual user IDs that both users are friends with."""
 
-    server_ids: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_ids: list[str] = field(repr=True, kw_only=True)
     """Array of mutual server IDs that both users are in."""
 
 
@@ -457,6 +468,18 @@ class BaseUser(Base):
         """
         return await self.state.http.open_dm(self.id)
 
+    async def fetch_profile(self) -> UserProfile:
+        """|coro|
+
+        Retrives user profile.
+
+        Returns
+        -------
+        :class`UserProfile`
+            The user's profile page.
+        """
+        return await self.state.http.get_user_profile(self.id)
+
     async def remove_friend(self) -> User:
         """|coro|
 
@@ -510,31 +533,31 @@ class BaseUser(Base):
 class PartialUser(BaseUser):
     """Partially represents a user on Revolt."""
 
-    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """New username of the user."""
 
-    discriminator: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    discriminator: UndefinedOr[str] = field(repr=True, kw_only=True)
     """New discriminator of the user."""
 
-    display_name: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    display_name: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """New display name of the user."""
 
-    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     """New stateless avatar of the user."""
 
-    badges: UndefinedOr[UserBadges] = field(repr=True, hash=True, kw_only=True, eq=True)
+    badges: UndefinedOr[UserBadges] = field(repr=True, kw_only=True)
     """New user badges."""
 
-    status: UndefinedOr[UserStatusEdit] = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: UndefinedOr[UserStatusEdit] = field(repr=True, kw_only=True)
     """New user's status."""
 
-    profile: UndefinedOr[PartialUserProfile] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
     """New user's profile page."""
 
-    flags: UndefinedOr[UserFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: UndefinedOr[UserFlags] = field(repr=True, kw_only=True)
     """The user flags."""
 
-    online: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    online: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this user came online."""
 
     @property
@@ -547,13 +570,13 @@ class PartialUser(BaseUser):
 class DisplayUser(BaseUser):
     """Represents a user on Revolt that can be easily displayed in UI."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The username of the user."""
 
-    discriminator: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    discriminator: str = field(repr=True, kw_only=True)
     """The discriminator of the user."""
 
-    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless avatar of the user."""
 
     @property
@@ -571,8 +594,11 @@ class DisplayUser(BaseUser):
 
 @define(slots=True)
 class BotUserInfo:
-    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, kw_only=True)
     """The ID of the owner of this bot."""
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
 
 
 def _calculate_user_permissions(
@@ -607,28 +633,28 @@ def _calculate_user_permissions(
 class User(DisplayUser):
     """Represents a user on Revolt."""
 
-    display_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    display_name: str | None = field(repr=True, kw_only=True)
     """The user display name."""
 
-    badges: UserBadges = field(repr=True, hash=True, kw_only=True, eq=True)
+    badges: UserBadges = field(repr=True, kw_only=True)
     """The user badges."""
 
-    status: UserStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: UserStatus | None = field(repr=True, kw_only=True)
     """The current user's status."""
 
-    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: UserFlags = field(repr=True, kw_only=True)
     """The user flags."""
 
-    privileged: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    privileged: bool = field(repr=True, kw_only=True)
     """Whether this user is privileged."""
 
-    bot: BotUserInfo | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    bot: BotUserInfo | None = field(repr=True, kw_only=True)
     """The information about the bot."""
 
-    relationship: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
+    relationship: RelationshipStatus = field(repr=True, kw_only=True)
     """The current session user's relationship with this user."""
 
-    online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    online: bool = field(repr=True, kw_only=True)
     """Whether this user is currently online."""
 
     def __str__(self) -> str:
@@ -727,24 +753,12 @@ class User(DisplayUser):
         """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
         return UserBadges.RESERVED_RELEVANT_JOKE_BADGE_2 in self.badges
 
-    async def profile(self) -> UserProfile:
-        """|coro|
-
-        Retrives user profile.
-
-        Returns
-        -------
-        :class`UserProfile`
-            The user's profile page.
-        """
-        return await self.state.http.get_user_profile(self.id)
-
 
 @define(slots=True)
 class OwnUser(User):
     """Representation of a current user on Revolt."""
 
-    relations: dict[str, Relationship] = field(repr=True, hash=True, kw_only=True, eq=True)
+    relations: dict[str, Relationship] = field(repr=True, kw_only=True)
     """The dictionary of relationships with other users."""
 
     async def edit(

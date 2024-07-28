@@ -107,6 +107,12 @@ class Category:
         self.title = title
         self.channels = [resolve_id(channel) for channel in channels]
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, Category) and self.id == other.id
+
     def build(self) -> raw.Category:
         return {
             'id': self.id,
@@ -116,7 +122,7 @@ class Category:
 
 
 class SystemMessageChannels:
-    """Represeents system message channel assignments in a Revolt server.
+    """Represents system message channel assignments in a Revolt server.
 
     Attributes
     ----------
@@ -145,6 +151,18 @@ class SystemMessageChannels:
         self.user_kicked = None if user_kicked is None else resolve_id(user_kicked)
         self.user_banned = None if user_banned is None else resolve_id(user_banned)
 
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, SystemMessageChannels)
+            and (
+                self.user_joined == other.user_joined
+                and self.user_left == other.user_left
+                and self.user_kicked == other.user_kicked
+                and self.user_banned == other.user_banned
+            )
+        )
+
     def build(self) -> raw.SystemMessageChannels:
         payload: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
@@ -162,7 +180,15 @@ class SystemMessageChannels:
 class BaseRole(Base):
     """Base representation of a server role."""
 
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other or isinstance(other, BaseRole) and (self.id == other.id and self.server_id == other.server_id)
+        )
 
     async def delete(self) -> None:
         """|coro|
@@ -253,19 +279,19 @@ class BaseRole(Base):
 class PartialRole(BaseRole):
     """Partial representation of a server role."""
 
-    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """The new role name."""
 
-    permissions: UndefinedOr[PermissionOverride] = field(repr=True, hash=True, kw_only=True, eq=True)
+    permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
     """The permissions available to this role."""
 
-    colour: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    colour: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """New colour used for this. This can be any valid CSS colour."""
 
-    hoist: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
-    rank: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
+    rank: UndefinedOr[int] = field(repr=True, kw_only=True)
     """New ranking of this role."""
 
     def into_full(self) -> Role | None:
@@ -293,19 +319,19 @@ class PartialRole(BaseRole):
 class Role(BaseRole):
     """Representation of a server role."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """Role name."""
 
-    permissions: PermissionOverride = field(repr=True, hash=True, kw_only=True, eq=True)
+    permissions: PermissionOverride = field(repr=True, kw_only=True)
     """Permissions available to this role."""
 
-    colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    colour: str | None = field(repr=True, kw_only=True)
     """Colour used for this. This can be any valid CSS colour."""
 
-    hoist: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    hoist: bool = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
-    rank: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    rank: int = field(repr=True, kw_only=True)
     """Ranking of this role."""
 
     def _update(self, data: PartialRole) -> None:
@@ -636,18 +662,18 @@ class BaseServer(Base):
 class PartialServer(BaseServer):
     """Partial representation of a server on Revolt."""
 
-    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    description: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    channel_ids: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    categories: UndefinedOr[list[Category] | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    default_permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    flags: UndefinedOr[ServerFlags] = field(repr=True, hash=True, kw_only=True, eq=True)
-    discoverable: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
-    analytics: UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    description: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    categories: UndefinedOr[list[Category] | None] = field(repr=True, kw_only=True)
+    system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, kw_only=True)
+    default_permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True)
+    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    flags: UndefinedOr[ServerFlags] = field(repr=True, kw_only=True)
+    discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
@@ -705,47 +731,47 @@ def _calculate_server_permissions(
 class Server(BaseServer):
     """Representation of a server on Revolt."""
 
-    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the owner."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The name of the server."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True)
     """The description for the server."""
 
     internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
-        field(repr=True, hash=True, kw_only=True, eq=True)
+        field(repr=True, kw_only=True)
     )
 
-    categories: list[Category] | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    categories: list[Category] | None = field(repr=True, kw_only=True)
     """The categories for this server."""
 
-    system_messages: SystemMessageChannels | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_messages: SystemMessageChannels | None = field(repr=True, kw_only=True)
     """The configuration for sending system event messages."""
 
-    roles: dict[str, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
+    roles: dict[str, Role] = field(repr=True, kw_only=True)
     """The roles for this server."""
 
-    default_permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)
+    default_permissions: Permissions = field(repr=True, kw_only=True)
     """The default set of server and channel permissions."""
 
-    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server icon."""
 
-    internal_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server banner."""
 
-    flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: ServerFlags = field(repr=True, kw_only=True)
     """The server flags."""
 
-    nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: bool = field(repr=True, kw_only=True)
     """Whether this server is flagged as not safe for work."""
 
-    analytics: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    analytics: bool = field(repr=True, kw_only=True)
     """Whether to enable analytics."""
 
-    discoverable: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    discoverable: bool = field(repr=True, kw_only=True)
     """Whether this server should be publicly discoverable."""
 
     def _update(self, data: PartialServer) -> None:
@@ -970,17 +996,27 @@ class Server(BaseServer):
 class Ban:
     """Representation of a server ban on Revolt."""
 
-    server_id: str = field(repr=False, hash=False, kw_only=True, eq=False)
+    server_id: str = field(repr=False, kw_only=True)
     """The server ID."""
 
-    user_id: str = field(repr=False, hash=False, kw_only=True, eq=False)
+    user_id: str = field(repr=False, kw_only=True)
     """The user ID that was banned."""
 
-    reason: str | None = field(repr=False, hash=False, kw_only=True, eq=False)
+    reason: str | None = field(repr=False, kw_only=True)
     """Reason for ban creation."""
 
-    user: DisplayUser | None = field(repr=False, hash=False, kw_only=True, eq=False)
+    user: DisplayUser | None = field(repr=False, kw_only=True)
     """The user that was banned."""
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.user_id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, Ban)
+            and (self.server_id == other.server_id and self.user_id == other.user_id)
+        )
 
 
 @define(slots=True)
@@ -990,15 +1026,25 @@ class BaseMember:
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     """State that controls this member."""
 
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """ID of the server that member is on."""
 
-    _user: User | str = field(repr=True, hash=True, kw_only=True, eq=True, alias='_user')
+    _user: User | str = field(repr=True, kw_only=True, alias='_user')
 
     @property
     def id(self) -> str:
         """The member's user ID."""
         return self._user.id if isinstance(self._user, User) else self._user
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, BaseMember)
+            and (self.id == other.id and self.server_id == other.server_id)
+        )
 
     async def ban(self, *, reason: str | None = None) -> Ban:
         """|coro|
@@ -1076,10 +1122,10 @@ class BaseMember:
 class PartialMember(BaseMember):
     """Partial representation of a member of a server on Revolt."""
 
-    nick: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    roles: UndefinedOr[list[str]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    timed_out_until: UndefinedOr[datetime | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    nick: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    roles: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    timed_out_until: UndefinedOr[datetime | None] = field(repr=True, kw_only=True)
 
     def server_avatar(self) -> UndefinedOr[Asset | None]:
         return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
@@ -1089,19 +1135,19 @@ class PartialMember(BaseMember):
 class Member(BaseMember):
     """Representation of a member of a server on Revolt."""
 
-    joined_at: datetime = field(repr=True, hash=True, kw_only=True, eq=True)
+    joined_at: datetime = field(repr=True, kw_only=True)
     """Time at which this user joined the server."""
 
-    nick: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    nick: str | None = field(repr=True, kw_only=True)
     """The member's nick."""
 
-    internal_server_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The member's avatar on server."""
 
-    roles: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    roles: list[str] = field(repr=True, kw_only=True)
     """The member's roles."""
 
-    timed_out_until: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    timed_out_until: datetime | None = field(repr=True, kw_only=True)
     """The timestamp this member is timed out until."""
 
     def _update(self, data: PartialMember) -> None:
@@ -1202,8 +1248,8 @@ class Member(BaseMember):
 class MemberList:
     """A member list of a server."""
 
-    members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
-    users: list[User] = field(repr=True, hash=True, kw_only=True, eq=True)
+    members: list[Member] = field(repr=True, kw_only=True)
+    users: list[User] = field(repr=True, kw_only=True)
 
 
 class MemberRemovalIntention(Enum):

@@ -42,6 +42,9 @@ class _Sentinel(Enum):
     def __repr__(self) -> typing.Literal['UNDEFINED']:
         return self.value
 
+    def __eq__(self, other) -> bool:
+        return self is other
+
 
 Undefined: typing.TypeAlias = typing.Literal[_Sentinel._undefined]
 UNDEFINED: Undefined = _Sentinel._undefined

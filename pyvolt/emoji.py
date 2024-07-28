@@ -33,19 +33,19 @@ from .base import Base
 class BaseEmoji(Base):
     """Representation of an emoji on Revolt."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True)
     """Unique emoji ID."""
 
-    creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    creator_id: str = field(repr=True, kw_only=True)
     """Uploader user ID."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """Emoji name."""
 
-    animated: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    animated: bool = field(repr=True, kw_only=True)
     """Whether the emoji is animated."""
 
-    nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: bool = field(repr=True, kw_only=True)
     """Whether the emoji is marked as NSFW."""
 
 
@@ -53,7 +53,7 @@ class BaseEmoji(Base):
 class ServerEmoji(BaseEmoji):
     """Representation of an emoji in server on Revolt."""
 
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """What server owns this emoji."""
 
 
@@ -67,7 +67,7 @@ ResolvableEmoji = Emoji | str
 
 
 def resolve_emoji(resolvable: ResolvableEmoji) -> str:
-    return str(resolvable.id if isinstance(resolvable, (ServerEmoji, DetachedEmoji)) else resolvable)
+    return str(resolvable.id) if isinstance(resolvable, (ServerEmoji, DetachedEmoji)) else resolvable
 
 
 __all__ = (

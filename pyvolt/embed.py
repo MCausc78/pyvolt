@@ -65,10 +65,10 @@ _GIF_EMBED_SPECIAL = GifEmbedSpecial()
 class YouTubeEmbedSpecial(EmbedSpecial):
     """Represents information about Youtube video."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The video ID."""
 
-    timestamp: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    timestamp: str | None = field(repr=True, kw_only=True, eq=True)
     """The video timestamp."""
 
 
@@ -82,10 +82,10 @@ class LightspeedContentType(Enum):
 class LightspeedEmbedSpecial(EmbedSpecial):
     """Represents information about Lightspeed.tv stream."""
 
-    content_type: LightspeedContentType = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: LightspeedContentType = field(repr=True, kw_only=True, eq=True)
     """The Lightspeed.tv content type."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The Lightspeed.tv stream ID."""
 
 
@@ -101,10 +101,10 @@ class TwitchContentType(Enum):
 class TwitchEmbedSpecial(EmbedSpecial):
     """Represents information about Twitch stream or clip."""
 
-    content_type: TwitchContentType = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: TwitchContentType = field(repr=True, kw_only=True, eq=True)
     """The Twitch content type."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The Twitch content ID."""
 
 
@@ -112,10 +112,10 @@ class TwitchEmbedSpecial(EmbedSpecial):
 class SpotifyEmbedSpecial(EmbedSpecial):
     """Represents information about Spotify track."""
 
-    content_type: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: str = field(repr=True, kw_only=True, eq=True)
     """The Spotify content type."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The Spotify content ID."""
 
 
@@ -137,10 +137,10 @@ class BandcampContentType(Enum):
 class BandcampEmbedSpecial(EmbedSpecial):
     """Represents information about Bandcamp track."""
 
-    content_type: BandcampContentType = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: BandcampContentType = field(repr=True, kw_only=True, eq=True)
     """The Bandcamp content type."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The Bandcamp content ID."""
 
 
@@ -148,7 +148,7 @@ class BandcampEmbedSpecial(EmbedSpecial):
 class StreamableEmbedSpecial(EmbedSpecial):
     """Represents information about Streamable video."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True, eq=True)
     """The video ID."""
 
 
@@ -166,16 +166,16 @@ class ImageSize(Enum):
 class ImageEmbed(_BaseEmbed):
     """Represents an image in a embed."""
 
-    url: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    url: str = field(repr=True, kw_only=True, eq=True)
     """The URL to the original image."""
 
-    width: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    width: int = field(repr=True, kw_only=True, eq=True)
     """The width of the image."""
 
-    height: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    height: int = field(repr=True, kw_only=True, eq=True)
     """The height of the image."""
 
-    size: ImageSize = field(repr=True, hash=True, kw_only=True, eq=True)
+    size: ImageSize = field(repr=True, kw_only=True, eq=True)
     """The positioning and size of the image."""
 
     def _stateful(self, state: State) -> Embed:
@@ -186,13 +186,13 @@ class ImageEmbed(_BaseEmbed):
 class VideoEmbed(_BaseEmbed):
     """Represents an video in a embed."""
 
-    url: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    url: str = field(repr=True, kw_only=True, eq=True)
     """The URL to the original video."""
 
-    width: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    width: int = field(repr=True, kw_only=True, eq=True)
     """The width of the video."""
 
-    height: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    height: int = field(repr=True, kw_only=True, eq=True)
     """The height of the video."""
 
     def _stateful(self, state: State) -> Embed:
@@ -203,34 +203,34 @@ class VideoEmbed(_BaseEmbed):
 class WebsiteEmbed(_BaseEmbed):
     """Representation of website embed within Revolt message."""
 
-    url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    url: str | None = field(repr=True, kw_only=True, eq=True)
     """The direct URL to web page."""
 
-    original_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    original_url: str | None = field(repr=True, kw_only=True, eq=True)
     """The original direct URL."""
 
-    special: EmbedSpecial | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    special: EmbedSpecial | None = field(repr=True, kw_only=True, eq=True)
     """The remote content."""
 
-    title: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    title: str | None = field(repr=True, kw_only=True, eq=True)
     """The title of website."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True, eq=True)
     """The description of website."""
 
-    image: ImageEmbed | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    image: ImageEmbed | None = field(repr=True, kw_only=True, eq=True)
     """The embedded image."""
 
-    video: VideoEmbed | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    video: VideoEmbed | None = field(repr=True, kw_only=True, eq=True)
     """The embedded video."""
 
-    site_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    site_name: str | None = field(repr=True, kw_only=True, eq=True)
     """The site name."""
 
-    icon_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    icon_url: str | None = field(repr=True, kw_only=True, eq=True)
     """The URL to site icon."""
 
-    colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    colour: str | None = field(repr=True, kw_only=True, eq=True)
     """The CSS colour of this embed."""
 
     def _stateful(self, state: State) -> Embed:
@@ -241,22 +241,22 @@ class WebsiteEmbed(_BaseEmbed):
 class StatelessTextEmbed(_BaseEmbed):
     """Stateless representation of text embed within Revolt message."""
 
-    icon_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    icon_url: str | None = field(repr=True, kw_only=True, eq=True)
     """The URL to site icon."""
 
-    url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    url: str | None = field(repr=True, kw_only=True, eq=True)
     """The direct URL to web page."""
 
-    title: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    title: str | None = field(repr=True, kw_only=True, eq=True)
     """The title of text embed."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True, eq=True)
     """The description of text embed."""
 
-    internal_media: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_media: StatelessAsset | None = field(repr=True, kw_only=True, eq=True)
     """The stateless embed media."""
 
-    colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    colour: str | None = field(repr=True, kw_only=True, eq=True)
     """The CSS colour of this embed."""
 
     def _stateful(self, state: State) -> Embed:

@@ -59,52 +59,52 @@ class ServerActivity(Enum):
 class DiscoveryServer(BaseServer):
     """Representation of a server on Revolt Discovery. The ID is a invite code."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The server name."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True)
     """The server description."""
 
-    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server icon."""
 
-    internal_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server banner."""
 
-    flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: ServerFlags = field(repr=True, kw_only=True)
     """The server flags."""
 
-    tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    tags: list[str] = field(repr=True, kw_only=True)
     """The server tags."""
 
-    member_count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    member_count: int = field(repr=True, kw_only=True)
     """The server member count."""
 
-    activity: ServerActivity = field(repr=True, hash=True, kw_only=True, eq=True)
+    activity: ServerActivity = field(repr=True, kw_only=True)
     """The server activity."""
 
     @property
     def icon(self) -> Asset | None:
-        """The server icon."""
+        """Optional[:class:`Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def invite_code(self) -> str:
-        """The server invite code. As an implementation detail, right now it returns server ID, but don't depend on that in future."""
+        """:class:`str`: The server invite code. As an implementation detail, right now it returns server ID, but don't depend on that in future."""
         return self.id
 
     @property
     def banner(self) -> Asset | None:
-        """The server banner."""
+        """Optional[:class:`Asset`]: The server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 @define(slots=True)
 class DiscoveryServersPage:
-    servers: list[DiscoveryServer] = field(repr=True, hash=True, kw_only=True, eq=True)
+    servers: list[DiscoveryServer] = field(repr=True, kw_only=True)
     """The listed servers, up to 200 servers."""
 
-    popular_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    popular_tags: list[str] = field(repr=True, kw_only=True)
     """Popular tags used in discovery servers."""
 
 
@@ -116,77 +116,88 @@ class BotUsage(Enum):
 
 @define(slots=True)
 class DiscoveryBot(BaseBot):
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The bot's name."""
 
-    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless bot's avatar."""
 
-    internal_profile: StatelessUserProfile = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_profile: StatelessUserProfile = field(repr=True, kw_only=True)
     """The stateless bot's profile."""
 
-    tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    tags: list[str] = field(repr=True, kw_only=True)
     """The bot's tags."""
 
-    server_count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_count: int = field(repr=True, kw_only=True)
     """The bot's servers count."""
 
-    usage: BotUsage = field(repr=True, hash=True, kw_only=True, eq=True)
+    usage: BotUsage = field(repr=True, kw_only=True)
     """How frequently is bot being used."""
 
     @property
     def avatar(self) -> Asset | None:
-        """The bot's avatar."""
+        """Optional[:class:`Asset`]: The bot's avatar."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def description(self) -> str:
-        """The bot's profile description."""
+        """:class:`str`: The bot's profile description."""
         return self.internal_profile.content or ''
 
     @property
     def profile(self) -> UserProfile:
-        """The bot's profile."""
+        """:class:`UserProfile`: The bot's profile."""
         return self.internal_profile._stateful(self.state, self.id)
 
 
 @define(slots=True)
 class DiscoveryBotsPage:
-    bots: list[DiscoveryBot] = field(repr=True, hash=True, kw_only=True, eq=True)
+    bots: list[DiscoveryBot] = field(repr=True, kw_only=True)
     """The listed bots, up to 200 bots."""
 
-    popular_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    popular_tags: list[str] = field(repr=True, kw_only=True)
     """Popular tags used in discovery bots."""
 
 
 @define(slots=True)
 class DiscoveryTheme:
-    state: State = field(repr=False, hash=True, eq=True)
+    state: State = field(repr=False)
     """State that controls this theme."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The theme name."""
 
-    description: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str = field(repr=True, kw_only=True)
     """The theme description."""
 
-    creator: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    creator: str = field(repr=True, kw_only=True)
     """The theme creator."""
 
-    slug: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    slug: str = field(repr=True, kw_only=True)
     """The theme slug."""
 
-    tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    tags: list[str] = field(repr=True, kw_only=True)
     """The theme tags."""
 
-    overrides: dict[ReviteThemeVariable, str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    overrides: dict[ReviteThemeVariable, str] = field(repr=True, kw_only=True)
     """The theme overrides in format `{css_class: css_color}`."""
 
-    version: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    version: str = field(repr=True, kw_only=True)
     """The theme version."""
 
-    custom_css: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    custom_css: str | None = field(repr=True, kw_only=True)
     """The theme CSS string."""
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.creator))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, DiscoveryTheme)
+            and self.name == other.name
+            and self.creator == other.creator
+        )
 
     async def apply(self, *, base_theme: UndefinedOr[ReviteBaseTheme] = UNDEFINED) -> None:
         """|coro|
@@ -202,10 +213,13 @@ class DiscoveryTheme:
 
 @define(slots=True)
 class DiscoveryThemesPage:
-    themes: list[DiscoveryTheme] = field(repr=True, hash=True, kw_only=True, eq=True)
+    themes: list[DiscoveryTheme] = field(
+        repr=True,
+        kw_only=True,
+    )
     """The listed themes, up to 200 themes."""
 
-    popular_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    popular_tags: list[str] = field(repr=True, kw_only=True)
     """Popular tags used in discovery themes."""
 
 
@@ -223,16 +237,16 @@ class DiscoveryThemesPage:
 class ServerSearchResult:
     """The server search result object."""
 
-    query: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    query: str = field(repr=True, kw_only=True)
     """The lower-cased query."""
 
-    count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    count: int = field(repr=True, kw_only=True)
     """The servers count."""
 
-    servers: list[DiscoveryServer] = field(repr=True, hash=True, kw_only=True, eq=True)
+    servers: list[DiscoveryServer] = field(repr=True, kw_only=True)
     """The listed servers."""
 
-    related_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    related_tags: list[str] = field(repr=True, kw_only=True)
     """All of tags that listed servers have."""
 
 
@@ -240,16 +254,16 @@ class ServerSearchResult:
 class BotSearchResult:
     """The bot search result object."""
 
-    query: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    query: str = field(repr=True, kw_only=True)
     """The lower-cased query."""
 
-    count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    count: int = field(repr=True, kw_only=True)
     """The bots count."""
 
-    bots: list[DiscoveryBot] = field(repr=True, hash=True, kw_only=True, eq=True)
+    bots: list[DiscoveryBot] = field(repr=True, kw_only=True)
     """The listed bots."""
 
-    related_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    related_tags: list[str] = field(repr=True, kw_only=True)
     """All of tags that listed bots have."""
 
 
@@ -257,16 +271,16 @@ class BotSearchResult:
 class ThemeSearchResult:
     """The theme search result object."""
 
-    query: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    query: str = field(repr=True, kw_only=True)
     """The lower-cased query."""
 
-    count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    count: int = field(repr=True, kw_only=True)
     """The themes count."""
 
-    themes: list[DiscoveryTheme] = field(repr=True, hash=True, kw_only=True, eq=True)
+    themes: list[DiscoveryTheme] = field(repr=True, kw_only=True)
     """The listed themes."""
 
-    related_tags: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    related_tags: list[str] = field(repr=True, kw_only=True)
     """All of tags that listed themes have."""
 
 

@@ -66,9 +66,9 @@ class AssetMetadataType(Enum):
 class AssetMetadata:
     """Metadata associated with a file."""
 
-    type: AssetMetadataType = field(repr=True, hash=True, kw_only=True, eq=True)
-    width: int | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    height: int | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    type: AssetMetadataType = field(repr=True, kw_only=True, eq=True)
+    width: int | None = field(repr=True, kw_only=True, eq=True)
+    height: int | None = field(repr=True, kw_only=True, eq=True)
 
 
 Tag = typing.Literal['icons', 'banners', 'emojis', 'backgrounds', 'avatars', 'attachments']
@@ -81,38 +81,44 @@ class StatelessAsset:
     For better user experience, prefer using `parent.foo` rather than `parent.internal_foo`.
     """
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True)
     """Unique ID."""
 
-    filename: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    filename: str = field(repr=True, kw_only=True)
     """Original filename."""
 
-    metadata: AssetMetadata = field(repr=True, hash=True, kw_only=True, eq=True)
+    metadata: AssetMetadata = field(repr=True, kw_only=True)
     """Parsed metadata of this file."""
 
-    content_type: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: str = field(repr=True, kw_only=True)
     """Raw content type of this file."""
 
-    size: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    size: int = field(repr=True, kw_only=True)
     """Size of this file (in bytes)."""
 
-    deleted: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    deleted: bool = field(repr=True, kw_only=True)
     """Whether this file was deleted."""
 
-    reported: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    reported: bool = field(repr=True, kw_only=True)
     """Whether this file was reported."""
 
-    message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str | None = field(repr=True, kw_only=True)
     """ID of the message this file is associated with."""
 
-    user_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str | None = field(repr=True, kw_only=True)
     """ID of the user this file is associated with."""
 
-    server_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str | None = field(repr=True, kw_only=True)
     """ID of the server this file is associated with."""
 
-    object_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    object_id: str | None = field(repr=True, kw_only=True)
     """ID of the object this file is associated with."""
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessAsset) and self.id == other.id
 
     def _stateful(self, state: State, tag: Tag) -> Asset:
         return Asset(
@@ -136,7 +142,10 @@ class StatelessAsset:
 @define(slots=True)
 class Asset(StatelessAsset):
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
-    tag: Tag = field(repr=True, hash=True, kw_only=True, eq=True)
+    tag: Tag = field(repr=True, kw_only=True)
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
     def url(
         self,
@@ -223,17 +232,24 @@ def resolve_content(content: Content) -> bytes | io.IOBase:
 
 
 class Upload(Resource):
-    """A file upload."""
+    """Represents a file upload.
 
-    content: bytes | io.IOBase
-    tag: Tag | None
-    filename: str
+    Attributes
+    ----------
+    content: Union[:class:`bytes`, :class:`~io.IOBase`]
+        The file contents.
+    tag: Optional[Tag]
+        The attachment tag. If none, this is determined automatically.
+    filename: :class:`str`
+        The file name.
+    """
 
     __slots__ = ('tag', 'content', 'filename')
 
     def __init__(self, content: Content, *, tag: Tag | None = None, filename: str) -> None:
         self.content = resolve_content(content)
-        self.tag = tag
+        # Pyright sucks massive balls here.
+        self.tag: Tag | None = tag
         self.filename = filename
 
     @classmethod

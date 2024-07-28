@@ -39,11 +39,17 @@ if typing.TYPE_CHECKING:
 class BaseInvite:
     """Representation of a invite on Revolt."""
 
-    state: State = field(repr=False, hash=True, eq=True)
+    state: State = field(repr=False, kw_only=True)
     """State that controls this invite."""
 
-    code: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    code: str = field(repr=True, kw_only=True)
     """The invite code."""
+
+    def __hash__(self) -> int:
+        return hash(self.code)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseInvite) and self.code == other.code
 
     async def accept(self) -> Server | GroupChannel:
         """|coro|
@@ -95,45 +101,45 @@ class BaseInvite:
 class ServerPublicInvite(BaseInvite):
     """Server channel invite."""
 
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """The ID of the server."""
 
-    server_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_name: str = field(repr=True, kw_only=True)
     """The name of the server."""
 
-    internal_server_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless icon of the server."""
 
-    internal_server_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_banner: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless banner of the server."""
 
-    flags: ServerFlags | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: ServerFlags | None = field(repr=True, kw_only=True)
     """The server flags."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """The ID of destination channel."""
 
-    channel_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_name: str = field(repr=True, kw_only=True)
     """The name of destination channel."""
 
-    channel_description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_description: str | None = field(repr=True, kw_only=True)
     """The description of destination channel."""
 
-    user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_name: str = field(repr=True, kw_only=True)
     """The name of inviter."""
 
-    internal_user_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless avatar of the inviter."""
 
-    members_count: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    members_count: int = field(repr=True, kw_only=True)
     """The count of members in this server."""
 
     def server_icon(self) -> Asset | None:
-        """The icon of the server."""
+        """Optional[:class:`Asset`]: The icon of the server."""
         return self.internal_server_icon and self.internal_server_icon._stateful(self.state, 'icons')
 
     def server_banner(self) -> Asset | None:
-        """The banner of the server."""
+        """Optional[:class:`Asset`]: The banner of the server."""
         return self.internal_server_banner and self.internal_server_banner._stateful(self.state, 'banners')
 
     async def accept(self) -> Server:
@@ -159,24 +165,24 @@ class ServerPublicInvite(BaseInvite):
 class GroupPublicInvite(BaseInvite):
     """Group channel invite."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """The ID of the destination channel."""
 
-    channel_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_name: str = field(repr=True, kw_only=True)
     """The name of destination channel."""
 
-    channel_description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_description: str | None = field(repr=True, kw_only=True)
     """The description of destination channel."""
 
-    user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_name: str = field(repr=True, kw_only=True)
     """The name of inviter."""
 
-    internal_user_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless avatar of the inviter."""
 
     @property
     def user_avatar(self) -> Asset | None:
-        """The avatar of the inviter."""
+        """Optional[:class:`Asset`]: The avatar of the inviter."""
         return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
 
     async def accept(self) -> GroupChannel:
@@ -200,7 +206,7 @@ class GroupPublicInvite(BaseInvite):
 
 @define(slots=True)
 class UnknownPublicInvite(BaseInvite):
-    payload: dict[str, typing.Any] = field(repr=True, hash=True, kw_only=True, eq=True)
+    payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """The raw invite data."""
 
 
@@ -208,7 +214,7 @@ class UnknownPublicInvite(BaseInvite):
 class PrivateBaseInvite(BaseInvite):
     """Representation of a invite on Revolt."""
 
-    creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    creator_id: str = field(repr=True, kw_only=True)
     """The ID of the user who created this invite."""
 
 
@@ -216,7 +222,7 @@ class PrivateBaseInvite(BaseInvite):
 class GroupInvite(PrivateBaseInvite):
     """Representation of a group invite on Revolt."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """ID of the server/group channel this invite points to."""
 
     async def accept(self) -> GroupChannel:
@@ -242,10 +248,10 @@ class GroupInvite(PrivateBaseInvite):
 class ServerInvite(PrivateBaseInvite):
     """Representation of a server invite on Revolt."""
 
-    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """ID of the server this invite points to."""
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel_id: str = field(repr=True, kw_only=True)
     """ID of the server channel this invite points to."""
 
     async def accept(self) -> Server:

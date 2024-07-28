@@ -49,5 +49,16 @@ class ReadState:
     mentioned_in: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The list of message IDs that mention the user."""
 
+    def __hash__(self) -> int:
+        return hash((self.channel_id, self.user_id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, ReadState)
+            and self.channel_id == other.channel_id
+            and self.user_id == self.user_id
+        )
+
 
 __all__ = ('ReadState',)

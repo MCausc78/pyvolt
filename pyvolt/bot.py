@@ -78,34 +78,34 @@ class BaseBot(Base):
 class Bot(BaseBot):
     """Partial representation of a bot on Revolt."""
 
-    owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the bot owner."""
 
-    token: str = field(repr=False, hash=True, eq=True)
+    token: str = field(repr=False)
     """Token used to authenticate requests for this bot."""
 
-    public: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    public: bool = field(repr=True, kw_only=True)
     """Whether the bot is public (may be invited by anyone)."""
 
-    analytics: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    analytics: bool = field(repr=True, kw_only=True)
     """Whether to enable analytics."""
 
-    discoverable: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    discoverable: bool = field(repr=True, kw_only=True)
     """Whether this bot should be publicly discoverable."""
 
-    interactions_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    interactions_url: str | None = field(repr=True, kw_only=True)
     """Reserved; URL for handling interactions."""
 
-    terms_of_service_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    terms_of_service_url: str | None = field(repr=True, kw_only=True)
     """URL for terms of service."""
 
-    privacy_policy_url: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    privacy_policy_url: str | None = field(repr=True, kw_only=True)
     """URL for privacy policy."""
 
-    flags: BotFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: BotFlags = field(repr=True, kw_only=True)
     """Enum of bot flags."""
 
-    user: User = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: User = field(repr=True, kw_only=True)
     """The user associated with this bot."""
 
 
@@ -113,13 +113,13 @@ class Bot(BaseBot):
 class PublicBot(BaseBot):
     """Representation of a public bot on Revolt."""
 
-    username: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    username: str = field(repr=True, kw_only=True)
     """The bot username."""
 
-    internal_avatar_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar_id: str | None = field(repr=True, kw_only=True)
     """The bot avatar ID."""
 
-    description: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str = field(repr=True, kw_only=True)
     """The bot description."""
 
 

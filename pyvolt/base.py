@@ -37,11 +37,17 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class Base:
-    state: State = field(repr=False, hash=True, kw_only=True, eq=True)
+    state: State = field(repr=False, kw_only=True)
     """State that controls this entity."""
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The unique ID of the entity."""
+    id: str = field(repr=True, kw_only=True)
+    """The ID of the entity."""
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, Base) and self.id == other.id
 
     @property
     def created_at(self) -> datetime:
