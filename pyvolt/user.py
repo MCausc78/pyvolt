@@ -28,8 +28,9 @@ from attrs import define, field
 from enum import IntFlag
 import typing
 
-from . import cdn, routes
+from . import routes
 from .base import Base
+from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -103,20 +104,20 @@ class UserStatusEdit:
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
-        r = []
+        remove: list[raw.FieldsUser] = []
         if self.text is None:
-            r.append('StatusText')
+            remove.append('StatusText')
         if self.presence is None:
-            r.append('StatusPresence')
-        return r
+            remove.append('StatusPresence')
+        return remove
 
     def build(self) -> raw.UserStatus:
-        j: raw.UserStatus = {}
+        payload: raw.UserStatus = {}
         if self.text not in (None, UNDEFINED):
-            j['text'] = self.text
+            payload['text'] = self.text
         if self.presence not in (None, UNDEFINED):
-            j['presence'] = self.presence.value
-        return j
+            payload['presence'] = self.presence.value
+        return payload
 
 
 @define(slots=True)
@@ -126,7 +127,7 @@ class StatelessUserProfile:
     content: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user's profile content."""
 
-    internal_background: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_background: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless background visible on user's profile."""
 
     def _stateful(self, state: State, user_id: str) -> UserProfile:
@@ -146,7 +147,7 @@ class UserProfile(StatelessUserProfile):
     user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
 
     @property
-    def background(self) -> cdn.Asset | None:
+    def background(self) -> Asset | None:
         """Background visible on user's profile."""
         return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
@@ -161,11 +162,11 @@ class PartialUserProfile:
     content: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The user's profile content."""
 
-    internal_background: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_background: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless background visible on user's profile."""
 
     @property
-    def background(self) -> UndefinedOr[cdn.Asset | None]:
+    def background(self) -> UndefinedOr[Asset | None]:
         """Background visible on user's profile."""
         return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
@@ -176,7 +177,7 @@ class UserProfileEdit:
     content: UndefinedOr[str | None]
     """Text to set as user profile description."""
 
-    background: UndefinedOr[cdn.ResolvableResource | None]
+    background: UndefinedOr[ResolvableResource | None]
     """New background visible on user's profile."""
 
     __slots__ = ('content', 'background')
@@ -184,27 +185,27 @@ class UserProfileEdit:
     def __init__(
         self,
         content: UndefinedOr[str | None] = UNDEFINED,
-        background: UndefinedOr[cdn.ResolvableResource | None] = UNDEFINED,
+        background: UndefinedOr[ResolvableResource | None] = UNDEFINED,
     ) -> None:
         self.content = content
         self.background = background
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
-        r = []
+        remove: list[raw.FieldsUser] = []
         if self.content is None:
-            r.append('ProfileContent')
+            remove.append('ProfileContent')
         if self.background is None:
-            r.append('ProfileBackground')
-        return r
+            remove.append('ProfileBackground')
+        return remove
 
     async def build(self, state: State) -> raw.DataUserProfile:
-        j: raw.DataUserProfile = {}
+        payload: raw.DataUserProfile = {}
         if self.content:
-            j['content'] = self.content
+            payload['content'] = self.content
         if self.background:
-            j['background'] = await cdn.resolve_resource(state, self.background, tag='backgrounds')
-        return j
+            payload['background'] = await resolve_resource(state, self.background, tag='backgrounds')
+        return payload
 
 
 class UserBadges(IntFlag):
@@ -518,7 +519,7 @@ class PartialUser(BaseUser):
     display_name: UndefinedOr[str | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New display name of the user."""
 
-    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """New stateless avatar of the user."""
 
     badges: UndefinedOr[UserBadges] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -537,7 +538,7 @@ class PartialUser(BaseUser):
     """Whether this user came online."""
 
     @property
-    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[Asset | None]:
         """The avatar of the user."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
@@ -552,12 +553,12 @@ class DisplayUser(BaseUser):
     discriminator: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The discriminator of the user."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the user."""
 
     @property
-    def avatar(self) -> cdn.Asset | None:
-        """The avatar of the user."""
+    def avatar(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The avatar of the user."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     async def send_friend_request(self) -> User:
@@ -571,7 +572,7 @@ class DisplayUser(BaseUser):
 @define(slots=True)
 class BotUserInfo:
     owner_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the owner of this bot."""
+    """The ID of the owner of this bot."""
 
 
 def _calculate_user_permissions(

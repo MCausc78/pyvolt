@@ -26,8 +26,8 @@ from __future__ import annotations
 
 from attrs import define, field
 
-from . import cdn
 from .base import Base
+from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -123,7 +123,7 @@ class BaseWebhook(Base):
         content: str | None = None,
         *,
         nonce: str | None = None,
-        attachments: list[cdn.ResolvableResource] | None = None,
+        attachments: list[ResolvableResource] | None = None,
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
@@ -158,14 +158,14 @@ class PartialWebhook(BaseWebhook):
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new name of the webhook."""
 
-    internal_avatar: UndefinedOr[cdn.StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new stateless avatar of the webhook."""
 
     permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The new permissions for the webhook."""
 
     @property
-    def avatar(self) -> UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[Asset | None]:
         """The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
@@ -175,7 +175,7 @@ class Webhook(BaseWebhook):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of the webhook."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the webhook."""
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -196,8 +196,8 @@ class Webhook(BaseWebhook):
             self.permissions = data.permissions
 
     @property
-    def avatar(self) -> cdn.Asset | None:
-        """The avatar of the webhook."""
+    def avatar(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 

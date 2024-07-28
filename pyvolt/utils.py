@@ -46,13 +46,13 @@ else:
     HAS_ORJSON = True
 
 if typing.TYPE_CHECKING:
-    from collections import abc as ca
+    from collections.abc import Awaitable, Callable
 
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
 
-    MaybeAwaitable = T | ca.Awaitable[T]
-    MaybeAwaitableFunc = ca.Callable[P, MaybeAwaitable[T]]
+    MaybeAwaitable = T | Awaitable[T]
+    MaybeAwaitableFunc = Callable[P, MaybeAwaitable[T]]
 
 
 from .core import UNDEFINED, UndefinedOr

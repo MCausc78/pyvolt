@@ -27,9 +27,7 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
-
-from . import cdn
-
+from .cdn import StatelessAsset, Asset
 from .server import ServerFlags, Server
 from .state import State
 
@@ -103,10 +101,10 @@ class ServerPublicInvite(BaseInvite):
     server_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of the server."""
 
-    internal_server_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless icon of the server."""
 
-    internal_server_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_server_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless banner of the server."""
 
     flags: ServerFlags | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -124,17 +122,17 @@ class ServerPublicInvite(BaseInvite):
     user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of inviter."""
 
-    internal_user_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_user_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the inviter."""
 
     members_count: int = field(repr=True, hash=True, kw_only=True, eq=True)
     """The count of members in this server."""
 
-    def server_icon(self) -> cdn.Asset | None:
+    def server_icon(self) -> Asset | None:
         """The icon of the server."""
         return self.internal_server_icon and self.internal_server_icon._stateful(self.state, 'icons')
 
-    def server_banner(self) -> cdn.Asset | None:
+    def server_banner(self) -> Asset | None:
         """The banner of the server."""
         return self.internal_server_banner and self.internal_server_banner._stateful(self.state, 'banners')
 
@@ -173,11 +171,11 @@ class GroupPublicInvite(BaseInvite):
     user_name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The name of inviter."""
 
-    internal_user_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_user_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless avatar of the inviter."""
 
     @property
-    def user_avatar(self) -> cdn.Asset | None:
+    def user_avatar(self) -> Asset | None:
         """The avatar of the inviter."""
         return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
 

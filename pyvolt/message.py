@@ -31,9 +31,10 @@ from enum import IntFlag
 import typing
 
 
-from . import cache as caching, cdn
+from . import cache as caching
 from .base import Base
 from .channel import TextChannel, ServerChannel
+from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -137,7 +138,7 @@ class Masquerade:
 class SendableEmbed:
     """Represents a text embed before it is sent.
 
-    Parameters
+    Attributes
     ----------
     icon_url: Optional[:class:`str`]
         The embed icon URL.
@@ -147,28 +148,22 @@ class SendableEmbed:
         The title of the embed.
     description: Optional[:class:`str`]
         The description of the embed.
-    media: Optional[:class:`cdn.ResolvableResource`]
-        The file inside the embed, this is the ID of the file.
+    media: Optional[:class:`ResolvableResource`]
+        The file inside the embed.
     colour: Optional[:class:`str`]
-        The embed color. This can be any valid [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
+        The embed color. This can be any valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
     """
-
-    icon_url: str | None
-    url: str | None
-    title: str | None
-    description: str | None
-    media: cdn.ResolvableResource | None
-    colour: str | None
 
     __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'colour')
 
     def __init__(
         self,
-        icon_url: str | None = None,
-        url: str | None = None,
         title: str | None = None,
         description: str | None = None,
-        media: cdn.ResolvableResource | None = None,
+        *,
+        icon_url: str | None = None,
+        url: str | None = None,
+        media: ResolvableResource | None = None,
         colour: str | None = None,
     ) -> None:
         self.icon_url = icon_url
@@ -179,20 +174,20 @@ class SendableEmbed:
         self.colour = colour
 
     async def build(self, state: State) -> raw.SendableEmbed:
-        j: raw.SendableEmbed = {}
+        payload: raw.SendableEmbed = {}
         if self.icon_url is not None:
-            j['icon_url'] = self.icon_url
+            payload['icon_url'] = self.icon_url
         if self.url is not None:
-            j['url'] = self.url
+            payload['url'] = self.url
         if self.title is not None:
-            j['title'] = self.title
+            payload['title'] = self.title
         if self.description is not None:
-            j['description'] = self.description
+            payload['description'] = self.description
         if self.media is not None:
-            j['media'] = await cdn.resolve_resource(state, self.media, tag='attachments')
+            payload['media'] = await resolve_resource(state, self.media, tag='attachments')
         if self.colour is not None:
-            j['colour'] = self.colour
-        return j
+            payload['colour'] = self.colour
+        return payload
 
 
 class MessageSort(Enum):
@@ -214,14 +209,14 @@ class MessageWebhook:
 
 @define(slots=True)
 class BaseMessage(Base):
-    """Base representation of message in channel on Revolt."""
+    """Represents a message in channel on Revolt."""
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the channel this message was sent in."""
+    """The ID of the channel this message was sent in."""
 
     @property
     def channel(self) -> TextChannel:
-        """The channel this message was sent in."""
+        """:class:`TextChannel`: The channel this message was sent in."""
 
         cache = self.state.cache
         if not cache:
@@ -347,7 +342,7 @@ class BaseMessage(Base):
         content: str | None = None,
         *,
         idempotency_key: str | None = None,
-        attachments: list[cdn.ResolvableResource] | None = None,
+        attachments: list[ResolvableResource] | None = None,
         mention: bool = True,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
@@ -1341,7 +1336,7 @@ class Message(BaseMessage):
     internal_system_event: StatelessSystemEvent | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless system event information, occured in this message, if any."""
 
-    internal_attachments: list[cdn.StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_attachments: list[StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless attachments on this message."""
 
     edited_at: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -1439,8 +1434,8 @@ class Message(BaseMessage):
             return self.internal_system_event._stateful(self)
 
     @property
-    def attachments(self) -> list[cdn.Asset]:
-        """List[:class:`~cdn.Asset`]: The attachments on this message."""
+    def attachments(self) -> list[Asset]:
+        """List[:class:`Asset`]: The attachments on this message."""
         return [a._stateful(self.state, 'attachments') for a in self.internal_attachments]
 
     @property

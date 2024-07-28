@@ -29,8 +29,9 @@ from attrs import define, field
 import logging
 import typing
 
-from . import cdn, utils
+from . import utils
 from .bot import BaseBot
+from .cdn import StatelessAsset, Asset
 from .core import UNDEFINED, UndefinedOr, __version__ as version
 from .enums import Enum
 from .errors import DiscoveryError
@@ -64,10 +65,10 @@ class DiscoveryServer(BaseServer):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The server description."""
 
-    internal_icon: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_icon: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server icon."""
 
-    internal_banner: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_banner: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless server banner."""
 
     flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -83,7 +84,7 @@ class DiscoveryServer(BaseServer):
     """The server activity."""
 
     @property
-    def icon(self) -> cdn.Asset | None:
+    def icon(self) -> Asset | None:
         """The server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
@@ -93,7 +94,7 @@ class DiscoveryServer(BaseServer):
         return self.id
 
     @property
-    def banner(self) -> cdn.Asset | None:
+    def banner(self) -> Asset | None:
         """The server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
@@ -118,7 +119,7 @@ class DiscoveryBot(BaseBot):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """The bot's name."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless bot's avatar."""
 
     internal_profile: StatelessUserProfile = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -134,7 +135,7 @@ class DiscoveryBot(BaseBot):
     """How frequently is bot being used."""
 
     @property
-    def avatar(self) -> cdn.Asset | None:
+    def avatar(self) -> Asset | None:
         """The bot's avatar."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 

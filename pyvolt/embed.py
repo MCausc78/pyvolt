@@ -28,7 +28,7 @@ import abc
 from attrs import define, field
 import typing
 
-from . import cdn
+from .cdn import StatelessAsset, Asset
 from .enums import Enum
 
 if typing.TYPE_CHECKING:
@@ -253,7 +253,7 @@ class StatelessTextEmbed(_BaseEmbed):
     description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The description of text embed."""
 
-    internal_media: cdn.StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_media: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The stateless embed media."""
 
     colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -278,8 +278,8 @@ class TextEmbed(StatelessTextEmbed):
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     @property
-    def media(self) -> cdn.Asset | None:
-        """The embed media."""
+    def media(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The embed media."""
         return self.internal_media._stateful(self.state, 'attachments') if self.internal_media else None
 
 

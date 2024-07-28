@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from attrs import define, field
-from collections import abc as ca
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import IntFlag
 import typing
@@ -83,16 +83,17 @@ class ServerFlags(IntFlag):
 
 
 class Category:
-    """Representation of channel category on Revolt server."""
+    """Represents a category containing channels in Revolt server.
 
-    id: str
-    """Unique ID for this category."""
-
-    title: str
-    """Title for this category."""
-
-    channels: list[str]
-    """Channel in this category."""
+    Attributes
+    ----------
+    id: :class:`str`
+        The category's ID.
+    title: :class:`str`
+        The category's title.
+    channels: List[:class:`str`]
+        The IDs of channels in this category.
+    """
 
     __slots__ = ('id', 'title', 'channels')
 
@@ -115,19 +116,19 @@ class Category:
 
 
 class SystemMessageChannels:
-    """System message channel assignments."""
+    """Represeents system message channel assignments in a Revolt server.
 
-    user_joined: str | None
-    """ID of channel to send user join messages in."""
-
-    user_left: str | None
-    """ID of channel to send user left messages in."""
-
-    user_kicked: str | None
-    """ID of channel to send user kicked messages in."""
-
-    user_banned: str | None
-    """ID of channel to send user banned messages in."""
+    Attributes
+    ----------
+    user_joined: Optional[:class:`str`]
+        The ID of channel to send user join messages in.
+    user_left: Optional[:class:`str`]
+        The ID of channel to send user left messages in.
+    user_kicked: Optional[:class:`str`]
+        The ID of channel to send user kicked messages in.
+    user_banned: Optional[:class:`str`]
+        The ID of channel to send user banned messages in.
+    """
 
     __slots__ = ('user_joined', 'user_left', 'user_kicked', 'user_banned')
 
@@ -145,16 +146,16 @@ class SystemMessageChannels:
         self.user_banned = None if user_banned is None else resolve_id(user_banned)
 
     def build(self) -> raw.SystemMessageChannels:
-        d: raw.SystemMessageChannels = {}
+        payload: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
-            d['user_joined'] = self.user_joined
+            payload['user_joined'] = self.user_joined
         if self.user_left is not None:
-            d['user_left'] = self.user_left
+            payload['user_left'] = self.user_left
         if self.user_kicked is not None:
-            d['user_kicked'] = self.user_kicked
+            payload['user_kicked'] = self.user_kicked
         if self.user_banned is not None:
-            d['user_banned'] = self.user_banned
-        return d
+            payload['user_banned'] = self.user_banned
+        return payload
 
 
 @define(slots=True)
@@ -166,7 +167,7 @@ class BaseRole(Base):
     async def delete(self) -> None:
         """|coro|
 
-        Delete a server role.
+        Deletes the role.
 
         Raises
         ------
@@ -268,7 +269,7 @@ class PartialRole(BaseRole):
     """New ranking of this role."""
 
     def into_full(self) -> Role | None:
-        """Tries transform this partial role into full object. This is useful when caching role."""
+        """Optional[:class:`Role`]: Tries transform this partial role into full object. This is useful when caching role."""
         if (
             self.name is not UNDEFINED
             and self.permissions is not UNDEFINED
@@ -833,7 +834,7 @@ class Server(BaseServer):
         return channels
 
     @property
-    def emojis(self) -> ca.Mapping[str, ServerEmoji]:
+    def emojis(self) -> Mapping[str, ServerEmoji]:
         """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
         cache = self.state.cache
         if cache:
@@ -841,7 +842,7 @@ class Server(BaseServer):
         return {}
 
     @property
-    def members(self) -> ca.Mapping[str, Member]:
+    def members(self) -> Mapping[str, Member]:
         """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
         cache = self.state.cache
         if cache:
