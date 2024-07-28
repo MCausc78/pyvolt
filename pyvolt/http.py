@@ -199,6 +199,7 @@ class HTTPClient:
         accept_json: bool = True,
         user_agent: str = '',
         mfa_ticket: str | None = None,
+        json: UndefinedOr[typing.Any] = UNDEFINED,
         **kwargs,
     ) -> aiohttp.ClientResponse:
         """|coro|
@@ -217,6 +218,8 @@ class HTTPClient:
             The user agent to use for HTTP request. This is reserved field.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        json: :class:`UndefinedOr`[typing.Any]
+            The JSON payload to pass in.
 
         Raises
         ------
@@ -244,11 +247,15 @@ class HTTPClient:
             headers['x-mfa-ticket'] = mfa_ticket
         retries = 0
 
+        if json is not UNDEFINED:
+            headers['content-type'] = 'application/json'
+            kwargs['data'] = utils.to_json(json)
+
         method = route.route.method
         url = self.url_for(route)
 
         while True:
-            _L.debug('sending request to %s %s, body=%s', method, url, kwargs.get('json'))
+            _L.debug('sending request to %s %s with %s', method, url, kwargs.get('data'))
 
             session = self._session
             if callable(session):
@@ -272,7 +279,10 @@ class HTTPClient:
                     await asyncio.sleep(1.5)
                     continue
                 raise
+
             if response.status >= 400:
+                _L.debug('%s %s has returned %s', method, url, kwargs.get('data'), response.status)
+
                 if response.status == 502:
                     if retries >= self.max_retries:
                         raise BadGateway(response, await utils._json_or_text(response))
@@ -311,6 +321,8 @@ class HTTPClient:
         accept_json: bool = True,
         user_agent: str = '',
         mfa_ticket: str | None = None,
+        json: UndefinedOr[typing.Any] = UNDEFINED,
+        log: bool = True,
         **kwargs,
     ) -> typing.Any:
         """|coro|
@@ -329,6 +341,10 @@ class HTTPClient:
             The user agent to use for HTTP request. This is reserved field.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        json: :class:`UndefinedOr`[typing.Any]
+            The JSON payload to pass in.
+        log: :class:`bool`
+            Whether to log successful response or not. This option is intended to avoid catastrophic spam.
 
         Raises
         ------
@@ -346,9 +362,16 @@ class HTTPClient:
             accept_json=accept_json,
             user_agent=user_agent,
             mfa_ticket=mfa_ticket,
+            json=json,
             **kwargs,
         )
         result = await utils._json_or_text(response)
+
+        if log:
+            method = response.request_info.method
+            url = response.request_info.url
+
+            _L.debug('%s %s has received %s', method, url, result)
         response.close()
         return result
 
@@ -371,9 +394,13 @@ class HTTPClient:
         :class:`Bot`
             The created bot.
         """
-        j: raw.DataCreateBot = {'name': name}
-        d: raw.BotWithUserResponse = await self.request(routes.BOTS_CREATE.compile(), json=j)
-        return self.state.parser.parse_bot(d, d['user'])
+        payload: raw.DataCreateBot = {'name': name}
+        resp: raw.BotWithUserResponse = await self.request(routes.BOTS_CREATE.compile(), json=payload)
+
+        # TODO: Remove when Revolt will fix this
+        if resp['user']['relationship'] == 'User':
+            resp['user']['relationship'] = 'None'
+        return self.state.parser.parse_bot(resp, resp['user'])
 
     async def delete_bot(self, bot: ULIDOr[BaseBot]) -> None:
         """|coro|
@@ -424,28 +451,35 @@ class HTTPClient:
         :class:`Bot`
             The updated bot.
         """
-        j: raw.DataEditBot = {}
-        r: list[raw.FieldsBot] = []
+        payload: raw.DataEditBot = {}
+        remove: list[raw.FieldsBot] = []
         if name is not UNDEFINED:
-            j['name'] = name
+            payload['name'] = name
         if public is not UNDEFINED:
-            j['public'] = public
+            payload['public'] = public
         if analytics is not UNDEFINED:
-            j['analytics'] = analytics
+            payload['analytics'] = analytics
         if interactions_url is not UNDEFINED:
             if interactions_url is None:
-                r.append('InteractionsURL')
+                remove.append('InteractionsURL')
             else:
-                j['interactions_url'] = interactions_url
+                payload['interactions_url'] = interactions_url
         if reset_token:
-            r.append('Token')
-        if len(r) > 0:
-            j['remove'] = r
+            remove.append('Token')
+        if len(remove) > 0:
+            payload['remove'] = remove
 
-        d: raw.BotWithUserResponse = await self.request(routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=j)
+        resp: raw.BotWithUserResponse = await self.request(
+            routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=payload
+        )
+
+        # TODO: Remove when Revolt will fix this
+        if resp['user']['relationship'] == 'User':
+            resp['user']['relationship'] = 'None'
+
         return self.state.parser.parse_bot(
-            d,
-            d['user'],
+            resp,
+            resp['user'],
         )
 
     async def get_bot(self, bot: ULIDOr[BaseBot]) -> Bot:
@@ -468,8 +502,8 @@ class HTTPClient:
         :class:`Bot`
             The retrieved bot.
         """
-        d: raw.FetchBotResponse = await self.request(routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)))
-        return self.state.parser.parse_bot(d['bot'], d['user'])
+        resp: raw.FetchBotResponse = await self.request(routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)))
+        return self.state.parser.parse_bot(resp['bot'], resp['user'])
 
     async def get_owned_bots(self) -> list[Bot]:
         """|coro|
@@ -716,7 +750,7 @@ class HTTPClient:
         Raises
         ------
         NotFound
-            The channel is not found.
+            The channel does not exist.
         HTTPException
             Getting the channel failed.
 
@@ -1089,7 +1123,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ResolvableULID`
+        channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
         limit: Optional[:class:`int`]
             Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
@@ -1436,7 +1470,7 @@ class HTTPClient:
             params=params,
         )
 
-    async def set_role_channel_permissions(
+    async def set_channel_permissions_for_role(
         self,
         channel: ULIDOr[ServerChannel],
         role: ULIDOr[BaseRole],
@@ -1508,7 +1542,7 @@ class HTTPClient:
         Returns
         -------
         Union[:class:`GroupChannel`, :class:`ServerChannel`]
-            The updated server channel with new permissions.
+            The updated group/server channel with new permissions.
         """
         payload: raw.DataDefaultChannelPermissions = {
             'permissions': (permissions.build() if isinstance(permissions, PermissionOverride) else int(permissions))
@@ -2187,15 +2221,15 @@ class HTTPClient:
                 payload['timeout'] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
         if len(remove) > 0:
             payload['remove'] = remove
-        return self.state.parser.parse_member(
-            await self.request(
-                routes.SERVERS_MEMBER_EDIT.compile(
-                    server_id=resolve_id(server),
-                    member_id=resolve_id(member),
-                ),
-                json=payload,
-            )
+
+        resp: raw.Member = await self.request(
+            routes.SERVERS_MEMBER_EDIT.compile(
+                server_id=resolve_id(server),
+                member_id=resolve_id(member),
+            ),
+            json=payload,
         )
+        return self.state.parser.parse_member(resp)
 
     async def query_members_by_name(self, server: ULIDOr[BaseServer], query: str, /) -> list[Member]:
         """|coro|
@@ -2232,7 +2266,7 @@ class HTTPClient:
     ) -> Member:
         """|coro|
 
-        Retrieves a Member from a server ID, and a member ID.
+        Retrieves a Member from a server ID, and a user ID.
 
         Parameters
         ----------
@@ -2241,15 +2275,18 @@ class HTTPClient:
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The ID of the user.
 
+        Returns
+        -------
+        :class:`Member`
+            The retrieved member.
         """
-        return self.state.parser.parse_member(
-            await self.request(
-                routes.SERVERS_MEMBER_FETCH.compile(
-                    server_id=resolve_id(server),
-                    member_id=resolve_id(member),
-                )
+        resp: raw.Member = await self.request(
+            routes.SERVERS_MEMBER_FETCH.compile(
+                server_id=resolve_id(server),
+                member_id=resolve_id(member),
             )
         )
+        return self.state.parser.parse_member(resp)
 
     async def get_members(self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None) -> list[Member]:
         """|coro|
@@ -2271,12 +2308,12 @@ class HTTPClient:
         params: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
             params['exclude_offline'] = utils._bool(exclude_offline)
-        return self.state.parser.parse_members_with_users(
-            await self.request(
-                routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
-                params=params,
-            )
+        resp: raw.AllMemberResponse = await self.request(
+            routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
+            log=False,
+            params=params,
         )
+        return self.state.parser.parse_members_with_users(resp)
 
     async def get_member_list(
         self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
@@ -2300,12 +2337,12 @@ class HTTPClient:
         params: raw.OptionsFetchAllMembers = {}
         if exclude_offline is not None:
             params['exclude_offline'] = utils._bool(exclude_offline)
-        return self.state.parser.parse_member_list(
-            await self.request(
-                routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
-                params=params,
-            )
+        resp: raw.AllMemberResponse = await self.request(
+            routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
+            log=False,
+            params=params,
         )
+        return self.state.parser.parse_member_list(resp)
 
     async def kick_member(self, server: ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /) -> None:
         """|coro|
@@ -2330,7 +2367,7 @@ class HTTPClient:
             routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=resolve_id(member))
         )
 
-    async def set_role_server_permissions(
+    async def set_server_permissions_for_role(
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
@@ -2377,7 +2414,7 @@ class HTTPClient:
             (True, d['channels']),
         )
 
-    async def set_default_role_permissions(
+    async def set_default_server_permissions(
         self,
         server: ULIDOr[BaseServer],
         permissions: Permissions,

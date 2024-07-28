@@ -61,7 +61,7 @@ class Reconnect(Exception):
 
 class EventHandler(abc.ABC):
     @abc.abstractmethod
-    async def handle_raw(self, shard: Shard, d: raw.ClientEvent) -> None: ...
+    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> None: ...
 
 
 DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {version})'
@@ -417,10 +417,10 @@ class Shard:
             self._closing_future.set_result(None)
         self._last_close_code = None
 
-    async def _handle(self, d: raw.ClientEvent) -> bool:
+    async def _handle(self, payload: raw.ClientEvent, /) -> bool:
         authenticated = True
-        if d['type'] == 'Pong':
-            nonce = d['data']
+        if payload['type'] == 'Pong':
+            nonce = payload['data']
             if nonce != self._heartbeat_sequence:
                 extra = ''
                 if isinstance(nonce, int) and nonce < self._heartbeat_sequence:
@@ -440,13 +440,13 @@ class Shard:
                         extra,
                     )
                 return not self.reconnect_on_timeout
-        elif d['type'] == 'Logout':
+        elif payload['type'] == 'Logout':
             authenticated = False
 
         if self.handler is not None:
             # asyncio.create_task(self.handler.handle_raw(self, d), name=f"pyvolt-eht-{self._sequence}")
             try:
-                await self.handler.handle_raw(self, d)
+                await self.handler.handle_raw(self, payload)
             except Exception as exc:
                 _L.exception('error occured on seq=%s', self._sequence, exc_info=exc)
             self._sequence += 1

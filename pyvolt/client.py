@@ -271,6 +271,12 @@ class ClientEventHandler(EventHandler):
         event = self._state.parser.parse_auth_event(shard, payload)
         self.dispatch(event)
 
+    async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:
+        try:
+            await utils._maybe_coroutine(self._client.on_library_error, shard, payload, exc)
+        except Exception as exc:
+            _L.exception('on_library_error (task: %s) raised an exception', name, exc_info=exc)
+
     async def _handle(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
         type = payload['type']
         try:
@@ -282,10 +288,17 @@ class ClientEventHandler(EventHandler):
             try:
                 await utils._maybe_coroutine(handler, shard, payload)
             except Exception as exc:
+                if type == 'Ready':
+                    # This is fatal
+                    raise
+
                 _L.exception('%s handler raised an exception', type, exc_info=exc)
 
-    async def handle_raw(self, shard: Shard, d: raw.ClientEvent) -> None:
-        return await self._handle(shard, d)
+                name = f'pyvolt-dispatch-{self._client._get_i()}'
+                asyncio.create_task(self._handle_library_error(shard, payload, exc, name), name=name)
+
+    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent) -> None:
+        return await self._handle(shard, payload)
 
 
 # OOP in Python sucks.
@@ -344,7 +357,7 @@ class EventSubscription(typing.Generic[EventT]):
             try:
                 await utils._maybe_coroutine(self.client.on_user_error, arg)
             except Exception as exc:
-                _L.exception('on_error (task: %s) raised an exception', name, exc_info=exc)
+                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
 
     def remove(self) -> None:
         """Removes the event subscription."""
@@ -542,15 +555,27 @@ class Client:
         await self.close()
 
     async def on_user_error(self, event: BaseEvent) -> None:
-        """Handles user errors that came from handlers. You can get current exception being raised via :func:`sys.exc_info`.
+        """Handles user errors that came from handlers.
+        You can get current exception being raised via :func:`sys.exc_info`.
         By default, this logs exception.
         """
         _, exc, _ = sys.exc_info()
         _L.exception(
-            'one of %s handlers raised an exception',
+            'One of %s handlers raised an exception',
             event.__class__.__name__,
             exc_info=exc,
         )
+
+    async def on_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception) -> None:
+        """Handles library errors. By default, this logs exception.
+
+        .. note::
+            This won't be called if handling `Ready` will raise a exception as it is fatal.
+        """
+
+        type = payload['type']
+
+        _L.exception('%s handler raised an exception', type, exc_info=exc)
 
     async def _dispatch(self, types: list[type[BaseEvent]], event: BaseEvent, name: str, /) -> None:
         event.before_dispatch()
@@ -729,19 +754,12 @@ class Client:
                     else:
                         await channel.send('\N{THUMBS UP SIGN}')
 
-        .. versionchanged:: 2.0
-
-            ``event`` parameter is now positional-only.
-
-
         Parameters
         ------------
-        event: :class:`str`
-            The event name, similar to the :ref:`event reference <discord-api-events>`,
-            but without the ``on_`` prefix, to wait for.
-        check: Optional[Callable[EventT, :class:`bool`]]
-            A predicate to check what to wait for. The arguments must meet the
-            parameters of the event being waited for.
+        event: Type[EventT]
+            The event to wait for.
+        check: Optional[Callable[[EventT], :class:`bool`]]
+            A predicate to check what to wait for.
         timeout: Optional[:class:`float`]
             The number of seconds to wait before timing out and raising
             :exc:`asyncio.TimeoutError`.
@@ -753,10 +771,8 @@ class Client:
 
         Returns
         --------
-        Any
-            Returns no arguments, a single argument, or a :class:`tuple` of multiple
-            arguments that mirrors the parameters passed in the
-            :ref:`event reference <discord-api-events>`.
+        :class:`TemporarySubscription`[EventT]
+            The subscription. This can be ``await``'ed.
         """
 
         if not check:

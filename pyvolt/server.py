@@ -272,7 +272,7 @@ class BaseRole(Base):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(self.server_id, self.id, allow=allow, deny=deny)
+        return await self.state.http.set_server_permissions_for_role(self.server_id, self.id, allow=allow, deny=deny)
 
 
 @define(slots=True)
@@ -615,7 +615,7 @@ class BaseServer(Base):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(self.id, role, allow=allow, deny=deny)
+        return await self.state.http.set_server_permissions_for_role(self.id, role, allow=allow, deny=deny)
 
     async def set_default_permissions(self, permissions: Permissions, /) -> Server:
         """|coro|
@@ -629,7 +629,7 @@ class BaseServer(Base):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_default_role_permissions(self.id, permissions)
+        return await self.state.http.set_default_server_permissions(self.id, permissions)
 
     async def subscribe(self) -> None:
         """|coro|

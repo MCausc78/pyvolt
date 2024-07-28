@@ -636,6 +636,32 @@ class GroupChannel(TextChannel):
         """
         return await self.close(silent=silent)
 
+    async def set_default_permissions(self, permissions: Permissions, /) -> GroupChannel:
+        """|coro|
+
+        Sets default permissions in a channel.
+
+        Parameters
+        ----------
+        permissions: :class:`Permissions`
+            The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to set default permissions on the channel.
+        HTTPException
+            Setting permissions failed.
+
+        Returns
+        -------
+        :class:`GroupChannel`
+            The updated group with new permissions.
+        """
+        result = await self.state.http.set_default_channel_permissions(self.id, permissions)
+        assert isinstance(result, GroupChannel)
+        return result
+
 
 PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
 
@@ -758,14 +784,15 @@ class BaseServerChannel(BaseChannel):
         """
         return await self.state.http.set_role_channel_permissions(self.id, role, allow=allow, deny=deny)  # type: ignore
 
-    async def set_default_permissions(
-        self,
-        permissions: Permissions | PermissionOverride,
-    ) -> ServerChannel:
+    async def set_default_permissions(self, permissions: PermissionOverride, /) -> ServerChannel:
         """|coro|
 
-        Sets permissions for the default role in this channel.
-        Channel must be a `Group`, `TextChannel` or `VoiceChannel`.
+        Sets permissions for the default role in a channel.
+
+        Parameters
+        ----------
+        permissions: :class:`PermissionOverride`
+            The new permissions.
 
         Raises
         ------
@@ -773,8 +800,14 @@ class BaseServerChannel(BaseChannel):
             You do not have permissions to set default permissions on the channel.
         HTTPException
             Setting permissions failed.
+
+        Returns
+        -------
+        :class:`ServerChannel`
+            The updated server channel with new permissions.
         """
-        return await self.state.http.set_default_channel_permissions(self.id, permissions)  # type: ignore
+        result = await self.state.http.set_default_channel_permissions(self.id, permissions)
+        return result  # type: ignore
 
 
 @define(slots=True)
