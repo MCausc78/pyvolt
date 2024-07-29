@@ -430,28 +430,20 @@ class SavedMessagesChannel(TextChannel):
 
 @define(slots=True)
 class DMChannel(TextChannel):
-    """Direct message channel between two users."""
+    """The PM channel between two users."""
 
     active: bool = field(repr=True, kw_only=True)
     """Whether this DM channel is currently open on both sides."""
 
     recipient_ids: tuple[str, str] = field(repr=True, kw_only=True)
-    """2-tuple of user IDs participating in DM."""
+    """The tuple of user IDs participating in DM."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """ID of the last message sent in this channel."""
+    """The ID of the last message sent in this channel."""
 
     @property
     def initiator_id(self) -> str:
-        me = self.state.me
-
-        if not me:
-            return ''
-
-        a = self.recipient_ids[0]
-        b = self.recipient_ids[1]
-
-        return a if me.id == a else b
+        return self.recipient_ids[0]
 
     @property
     def target_id(self) -> str:
