@@ -14,9 +14,17 @@
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L270C19-L270C38
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L277C19-L277C38
+
+* TODO: Remove when Revolt will fix this
+
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L400C11-L400C49
+
+* TODO: Remove when Revolt will fix this
+
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L476C11-L476C49
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/shard.py#L338C19-L338C38
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/shard.py#L345C19-L345C38
 
