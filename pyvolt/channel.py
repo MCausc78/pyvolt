@@ -443,10 +443,12 @@ class DMChannel(TextChannel):
 
     @property
     def initiator_id(self) -> str:
+        """:class:`str`: The user's ID that started this PM."""
         return self.recipient_ids[0]
 
     @property
-    def target_id(self) -> str:
+    def recipient_id(self) -> str:
+        """:class:`str`: The recipient's ID."""
         me = self.state.me
 
         if not me:
@@ -478,7 +480,7 @@ class GroupChannel(TextChannel):
     """Channel description."""
 
     _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
-        repr=True, alias='internal_recipients'
+        repr=True, kw_only=True, alias='internal_recipients'
     )
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
