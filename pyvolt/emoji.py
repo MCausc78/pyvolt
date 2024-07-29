@@ -91,7 +91,7 @@ ResolvableEmoji = Emoji | str
 
 
 def resolve_emoji(resolvable: ResolvableEmoji) -> str:
-    return str(resolvable.id) if isinstance(resolvable, (ServerEmoji, DetachedEmoji)) else resolvable
+    return resolvable.id if isinstance(resolvable, BaseEmoji) else resolvable
 
 
 __all__ = (
