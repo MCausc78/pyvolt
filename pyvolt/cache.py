@@ -687,13 +687,14 @@ class MapCache(Cache):
         return self._servers
 
     def store_server(self, server: Server, ctx: BaseContext, /) -> None:
-        _put1(self._server_emojis, server.id, {}, self._server_emojis_max_size)
+        if server.id not in self._server_emojis:
+            _put1(self._server_emojis, server.id, {}, self._server_emojis_max_size)
+
         if (
             _put0(self._server_members, server.id, self._server_members_max_size)
             and server.id not in self._server_members
         ):
             self._server_members[server.id] = {}
-        server._ensure_cached()
         _put1(self._servers, server.id, server, self._servers_max_size)
 
     def delete_server(self, server_id: str, ctx: BaseContext, /) -> None:

@@ -431,6 +431,9 @@ class ServerCreateEvent(BaseEvent):
         cache = state.cache
         if not cache:
             return False
+
+        for channel in self.server._prepare_cached():
+            cache.store_channel(channel, caching._SERVER_CREATE)
         cache.store_server(self.server, caching._SERVER_CREATE)
 
         if state.me:

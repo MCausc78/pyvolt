@@ -400,7 +400,7 @@ class BaseUser(Base):
         ----------
         display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.

@@ -1133,7 +1133,7 @@ class HTTPClient:
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             The message sort direction.
-        nearby: :class:`ResolvableULID`
+        nearby: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
             The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
@@ -3013,7 +3013,7 @@ class HTTPClient:
         ----------
         display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.

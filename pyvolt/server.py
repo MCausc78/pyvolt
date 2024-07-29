@@ -351,6 +351,60 @@ class Role(BaseRole):
 class BaseServer(Base):
     """Base representation of a server on Revolt."""
 
+    @property
+    def emojis(self) -> Mapping[str, ServerEmoji]:
+        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
+    @property
+    def members(self) -> Mapping[str, Member]:
+        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
+    def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
+        """Retrieves a server emoji from cache.
+
+        Parameters
+        ----------
+        emoji_id: :class:`str`
+            The emoji ID.
+
+        Returns
+        -------
+        Optional[:class:`ServerEmoji`]
+            The emoji or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        emoji = cache.get_emoji(emoji_id, caching._USER_REQUEST)
+        if emoji and isinstance(emoji, ServerEmoji) and emoji.server_id == self.id:
+            return emoji
+
+    def get_member(self, user_id: str, /) -> Member | None:
+        """Retrieves a server member from cache.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user ID.
+
+        Returns
+        -------
+        Optional[:class:`Member`]
+            The member or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
+
     async def add_bot(
         self,
         bot: ULIDOr[BaseBot | BaseUser],
@@ -774,6 +828,42 @@ class Server(BaseServer):
     discoverable: bool = field(repr=True, kw_only=True)
     """Whether this server should be publicly discoverable."""
 
+    def get_channel(self, channel_id: str, /) -> ServerChannel | None:
+        """Retrieves a server channel from cache.
+
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID.
+
+        Returns
+        -------
+        Optional[:class:`ServerChannel`]
+            The channel or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+
+        from .channel import ServerChannel
+
+        channel = cache.get_channel(channel_id, caching._USER_REQUEST)
+        if channel and isinstance(channel, ServerChannel) and (channel.server_id == self.id or channel.server_id == ''):
+            return channel
+
+        if not self.internal_channels[0]:
+            for ch in self.internal_channels[1]:
+                t: ServerChannel = ch  # type: ignore
+                if t.id == channel_id:
+                    return t
+
+    def _prepare_cached(self) -> list[ServerChannel]:
+        if not self.internal_channels[0]:
+            channels = self.internal_channels[1]
+            self.internal_channels = (True, self.channel_ids)
+            return channels  # type: ignore
+        return []
+
     def _update(self, data: PartialServer) -> None:
         if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
@@ -859,89 +949,6 @@ class Server(BaseServer):
                 channels.append(channel)
         return channels
 
-    @property
-    def emojis(self) -> Mapping[str, ServerEmoji]:
-        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
-
-    @property
-    def members(self) -> Mapping[str, Member]:
-        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
-
-    def get_channel(self, channel_id: str, /) -> ServerChannel | None:
-        """Retrieves a server channel from cache.
-
-        Parameters
-        ----------
-        channel_id: :class:`str`
-            The channel ID.
-
-        Returns
-        -------
-        Optional[:class:`ServerChannel`]
-            The channel or ``None`` if not found.
-        """
-        cache = self.state.cache
-        if not cache:
-            return
-
-        from .channel import ServerChannel
-
-        channel = cache.get_channel(channel_id, caching._USER_REQUEST)
-        if channel and isinstance(channel, ServerChannel) and (channel.server_id == self.id or channel.server_id == ''):
-            return channel
-
-        if not self.internal_channels[0]:
-            for ch in self.internal_channels[1]:
-                t: ServerChannel = ch  # type: ignore
-                if t.id == channel_id:
-                    return t
-
-    def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
-        """Retrieves a server emoji from cache.
-
-        Parameters
-        ----------
-        emoji_id: :class:`str`
-            The emoji ID.
-
-        Returns
-        -------
-        Optional[:class:`ServerEmoji`]
-            The emoji or ``None`` if not found.
-        """
-        cache = self.state.cache
-        if not cache:
-            return
-        emoji = cache.get_emoji(emoji_id, caching._USER_REQUEST)
-        if emoji and isinstance(emoji, ServerEmoji) and emoji.server_id == self.id:
-            return emoji
-
-    def get_member(self, user_id: str, /) -> Member | None:
-        """Retrieves a server member from cache.
-
-        Parameters
-        ----------
-        user_id: :class:`str`
-            The user ID.
-
-        Returns
-        -------
-        Optional[:class:`Member`]
-            The member or ``None`` if not found.
-        """
-        cache = self.state.cache
-        if not cache:
-            return
-        return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
-
     def is_verified(self) -> bool:
         """:class:`bool`: Whether the server is verified."""
         return ServerFlags.VERIFIED in self.flags
@@ -987,10 +994,6 @@ class Server(BaseServer):
             default_permissions=self.default_permissions,
         )
 
-    def _ensure_cached(self) -> None:
-        if not self.internal_channels[0]:
-            self.internal_channels = (True, self.channel_ids)
-
 
 @define(slots=True)
 class Ban:
@@ -1023,7 +1026,7 @@ class Ban:
 class BaseMember:
     """Base representation of a member of a server on Revolt."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, kw_only=True)
     """State that controls this member."""
 
     server_id: str = field(repr=True, kw_only=True)
@@ -1031,20 +1034,100 @@ class BaseMember:
 
     _user: User | str = field(repr=True, kw_only=True, alias='_user')
 
+    def get_user(self) -> User | None:
+        """Optional[:class:`User`]: Grabs the user from cache."""
+        if isinstance(self._user, User):
+            return self._user
+        cache = self.state.cache
+        if not cache:
+            return None
+        return cache.get_user(self._user, caching._USER_REQUEST)
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other or isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.id))
+
+    def __str__(self) -> str:
+        user = self.get_user()
+        return str(user) if user else ''
+
     @property
     def id(self) -> str:
         """The member's user ID."""
         return self._user.id if isinstance(self._user, User) else self._user
 
-    def __hash__(self) -> int:
-        return hash((self.server_id, self.id))
+    @property
+    def user(self) -> User:
+        """:class:`User`: The member user."""
+        user = self.get_user()
+        if not user:
+            raise NoData(self.id, 'member user')
+        return user
 
-    def __eq__(self, other: object) -> bool:
-        return (
-            self is other
-            or isinstance(other, BaseMember)
-            and (self.id == other.id and self.server_id == other.server_id)
-        )
+    @property
+    def display_name(self) -> str | None:
+        """Optional[:class:`str`]: The user display name."""
+        user = self.get_user()
+        if user:
+            return user.display_name
+
+    @property
+    def badges(self) -> UserBadges:
+        """:class:`UserBadges`: The user badges."""
+        user = self.get_user()
+        if user:
+            return user.badges
+        return UserBadges.NONE
+
+    @property
+    def status(self) -> UserStatus | None:
+        """Optional[:class:`UserStatus`]: The current user's status."""
+        user = self.get_user()
+        if user:
+            return user.status
+
+    @property
+    def user_flags(self) -> UserFlags:
+        """Optional[:class:`UserFlags`]: The user flags."""
+        user = self.get_user()
+        if user:
+            return user.flags
+        return UserFlags.NONE
+
+    @property
+    def privileged(self) -> bool:
+        """:class:`bool`: Whether this user is privileged."""
+        user = self.get_user()
+        if user:
+            return user.privileged
+        return False
+
+    @property
+    def bot(self) -> BotUserInfo | None:
+        """Optional[:class:`BotUserInfo`]: The information about the bot."""
+        user = self.get_user()
+        if user:
+            return user.bot
+
+    @property
+    def relationship(self) -> RelationshipStatus:
+        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
+        user = self.get_user()
+        if user:
+            return user.relationship
+        return RelationshipStatus.none
+
+    @property
+    def online(self) -> bool:
+        """:class:`bool`: Whether this user is currently online."""
+        user = self.get_user()
+        if user:
+            return user.online
+        return False
 
     async def ban(self, *, reason: str | None = None) -> Ban:
         """|coro|
@@ -1128,6 +1211,7 @@ class PartialMember(BaseMember):
     timed_out_until: UndefinedOr[datetime | None] = field(repr=True, kw_only=True)
 
     def server_avatar(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
 
 
@@ -1164,84 +1248,6 @@ class Member(BaseMember):
     def server_avatar(self) -> Asset | None:
         """Optional[:class:`Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
-
-    def get_user(self) -> User | None:
-        """Optional[:class:`User`]: Grabs the user from cache."""
-        if isinstance(self._user, User):
-            return self._user
-        cache = self.state.cache
-        if not cache:
-            return None
-        return cache.get_user(self._user, caching._USER_REQUEST)
-
-    @property
-    def user(self) -> User:
-        """:class:`User`: The member user."""
-        user = self.get_user()
-        if not user:
-            raise NoData(self.id, 'member user')
-        return user
-
-    @property
-    def display_name(self) -> str | None:
-        """Optional[:class:`str`]: The user display name."""
-        user = self.get_user()
-        if user:
-            return user.display_name
-
-    @property
-    def badges(self) -> UserBadges:
-        """:class:`UserBadges`: The user badges."""
-        user = self.get_user()
-        if user:
-            return user.badges
-        return UserBadges.NONE
-
-    @property
-    def status(self) -> UserStatus | None:
-        """Optional[:class:`UserStatus`]: The current user's status."""
-        user = self.get_user()
-        if user:
-            return user.status
-
-    @property
-    def user_flags(self) -> UserFlags:
-        """Optional[:class:`UserFlags`]: The user flags."""
-        user = self.get_user()
-        if user:
-            return user.flags
-        return UserFlags.NONE
-
-    @property
-    def privileged(self) -> bool:
-        """:class:`bool`: Whether this user is privileged."""
-        user = self.get_user()
-        if user:
-            return user.privileged
-        return False
-
-    @property
-    def bot(self) -> BotUserInfo | None:
-        """Optional[:class:`BotUserInfo`]: The information about the bot."""
-        user = self.get_user()
-        if user:
-            return user.bot
-
-    @property
-    def relationship(self) -> RelationshipStatus:
-        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
-        user = self.get_user()
-        if user:
-            return user.relationship
-        return RelationshipStatus.none
-
-    @property
-    def online(self) -> bool:
-        """:class:`bool`: Whether this user is currently online."""
-        user = self.get_user()
-        if user:
-            return user.online
-        return False
 
 
 @define(slots=True)
