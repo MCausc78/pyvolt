@@ -604,6 +604,8 @@ class ServerMemberRemoveEvent(BaseEvent):
 
         cache.delete_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE)
         if is_me:
+            cache.delete_server_emojis_of(self.server_id, caching._SERVER_MEMBER_DELETE)
+            cache.delete_server_members_of(self.server_id, caching._SERVER_MEMBER_DELETE)
             cache.delete_server(self.server_id, caching._SERVER_MEMBER_DELETE)
         return True
 
