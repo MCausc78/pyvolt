@@ -261,7 +261,7 @@ class BaseMessage(Base):
     async def ack(self) -> None:
         """|coro|
 
-        Alias to :meth:`BaseMessage.acknowledge`.
+        Alias to :meth:`.acknowledge`.
 
         Raises
         ------

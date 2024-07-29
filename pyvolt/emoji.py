@@ -80,14 +80,28 @@ class ServerEmoji(BaseEmoji):
     server_id: str = field(repr=True, kw_only=True)
     """What server owns this emoji."""
 
+    async def delete_emoji(self) -> None:
+        """|coro|
+
+        Deletes the emoji.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to delete emojis.
+        HTTPException
+            Deleting the emoji failed.
+        """
+        return await self.state.http.delete_emoji(self.id)
+
 
 @define(slots=True)
 class DetachedEmoji(BaseEmoji):
-    """Representation of an deleted emoji on Revolt."""
+    """Represents of an deleted emoji on Revolt."""
 
 
 Emoji = ServerEmoji | DetachedEmoji
-ResolvableEmoji = Emoji | str
+ResolvableEmoji = BaseEmoji | str
 
 
 def resolve_emoji(resolvable: ResolvableEmoji) -> str:

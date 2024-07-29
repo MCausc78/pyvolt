@@ -1091,7 +1091,7 @@ class Client:
         initialisation from you.
 
         If you want more control over the event loop then this
-        function should not be used. Use :meth:`start` coroutine.
+        function should not be used. Use :meth:`.start` coroutine.
 
         This function also sets up the logging library to make it easier
         for beginners to know what is going on with the library. For more

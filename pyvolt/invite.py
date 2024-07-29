@@ -80,12 +80,12 @@ class BaseInvite:
         HTTPException
             Deleting the invite failed.
         """
-        await self.state.http.delete_invite(self.code)
+        return await self.state.http.delete_invite(self.code)
 
     async def revoke(self) -> None:
         """|coro|
 
-        Alias to :meth:`BaseInvite.delete`.
+        Alias to :meth:`.delete`.
 
         Raises
         ------
@@ -94,7 +94,7 @@ class BaseInvite:
         HTTPException
             Deleting the invite failed.
         """
-        return await self.delete()
+        return await self.state.http.delete_invite(self.code)
 
 
 @define(slots=True)

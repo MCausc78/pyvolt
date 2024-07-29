@@ -105,7 +105,7 @@ class PartialSession(Base):
 
         Deletes this session.
         """
-        await self.state.http.revoke_session(self.id)
+        return await self.state.http.revoke_session(self.id)
 
 
 @define(slots=True)
