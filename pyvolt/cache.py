@@ -778,7 +778,7 @@ class MapCache(Cache):
         return self._private_channels_by_user
 
     def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None:
-        _put1(self._private_channels_by_user, channel.target_id, channel.id, self._private_channels_by_user_max_size)
+        _put1(self._private_channels_by_user, channel.recipient_id, channel.id, self._private_channels_by_user_max_size)
 
     def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None:
         self._private_channels_by_user.pop(user_id, None)

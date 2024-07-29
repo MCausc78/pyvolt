@@ -243,7 +243,7 @@ class ChannelDeleteEvent(BaseEvent):
                 else:
                     cache.store_server(server, caching._CHANNEL_DELETE)
         elif isinstance(self.channel, DMChannel):
-            cache.delete_private_channel_by_user(self.channel.target_id, caching._CHANNEL_DELETE)
+            cache.delete_private_channel_by_user(self.channel.recipient_id, caching._CHANNEL_DELETE)
 
         return True
 

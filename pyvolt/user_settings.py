@@ -287,37 +287,25 @@ class AndroidUserSettings:
 
         if theme is not UNDEFINED:
             if theme is None:
-                try:
-                    del payload['theme']
-                except KeyError:
-                    pass
+                payload.pop('theme', None)
             else:
                 payload['theme'] = theme.value
 
         if colour_overrides is not UNDEFINED:
             if colour_overrides is None:
-                try:
-                    del payload['colourOverrides']
-                except KeyError:
-                    pass
+                payload.pop('colourOverrides', None)
             else:
                 payload['colourOverrides'] = colour_overrides
 
         if reply_style is not UNDEFINED:
             if reply_style is None:
-                try:
-                    del payload['messageReplyStyle']
-                except KeyError:
-                    pass
+                payload.pop('messageReplyStyle', None)
             else:
                 payload['messageReplyStyle'] = reply_style.value
 
         if avatar_radius is not UNDEFINED:
             if avatar_radius is None:
-                try:
-                    del payload['avatarRadius']
-                except KeyError:
-                    pass
+                payload.pop('avatarRadius', None)
             elif isinstance(avatar_radius, AndroidProfilePictureShape):
                 payload['avatarRadius'] = avatar_radius.value
             else:
@@ -894,26 +882,17 @@ class ReviteUserSettings:
                 appearance_payload = initial_appearance_payload
 
             if emoji_pack is None:
-                try:
-                    del appearance_payload['appearance:emoji']
-                except KeyError:
-                    pass
+                appearance_payload.pop('appearance:emoji', None)
             elif emoji_pack is not UNDEFINED:
                 appearance_payload['appearance:emoji'] = emoji_pack.value
 
             if seasonal is None:
-                try:
-                    del appearance_payload['appearance:seasonal']
-                except KeyError:
-                    pass
+                appearance_payload.pop('appearance:seasonal', None)
             elif seasonal is not UNDEFINED:
                 appearance_payload['appearance:seasonal'] = seasonal
 
             if transparent is None:
-                try:
-                    del appearance_payload['appearance:transparency']
-                except KeyError:
-                    pass
+                appearance_payload.pop('appearance:transparency', None)
             elif transparent is not UNDEFINED:
                 appearance_payload['appearance:transparency'] = transparent
 
@@ -936,53 +915,32 @@ class ReviteUserSettings:
                 theme_payload = initial_theme_payload
 
             if ligatures is None:
-                try:
-                    del theme_payload['appearance:ligatures']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:ligatures', None)
             elif ligatures is not UNDEFINED:
                 theme_payload['appearance:ligatures'] = ligatures
 
             if base_theme is None:
-                try:
-                    del theme_payload['appearance:theme:base']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:theme:base', None)
             elif base_theme is not UNDEFINED:
                 theme_payload['appearance:theme:base'] = base_theme.value
 
             if custom_css is None:
-                try:
-                    del theme_payload['appearance:theme:css']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:theme:css', None)
             elif custom_css is not UNDEFINED:
                 theme_payload['appearance:theme:css'] = custom_css
 
             if font is None:
-                try:
-                    del theme_payload['appearance:theme:font']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:theme:font', None)
             elif font is not UNDEFINED:
-                try:
-                    del theme_payload['appearance:theme:font']
-                except KeyError:
-                    pass
+                theme_payload['appearance:theme:font'] = font.value
 
             if monofont is None:
-                try:
-                    del theme_payload['appearance:theme:monoFont']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:theme:monoFont', None)
             elif monofont is not UNDEFINED:
                 theme_payload['appearance:theme:monoFont'] = monofont.value
 
             if overrides is None:
-                try:
-                    del theme_payload['appearance:theme:overrides']
-                except KeyError:
-                    pass
+                theme_payload.pop('appearance:theme:overrides', None)
             elif overrides is not UNDEFINED:
                 theme_payload['appearance:theme:overrides'] = overrides
 
