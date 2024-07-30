@@ -191,6 +191,19 @@ class HTTPClient:
         """
         return self.base.rstrip('/') + route.build()
 
+    def with_credentials(self, token: str, *, bot: bool = True) -> None:
+        """Modifies HTTP client credentials.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The authentication token.
+        bot: :class:`bool`
+            Whether the token belongs to bot account or not.
+        """
+        self.token = token
+        self.bot = bot
+
     async def raw_request(
         self,
         route: routes.CompiledRoute,

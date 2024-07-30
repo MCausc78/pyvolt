@@ -161,6 +161,19 @@ class Shard:
             raise TypeError('No websocket')
         return self._ws
 
+    def with_credentials(self, token: str, *, bot: bool = True) -> None:
+        """Modifies HTTP client credentials.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The authentication token.
+        bot: :class:`bool`
+            Whether the token belongs to bot account or not.
+        """
+        self.token = token
+        self.bot = bot
+
     async def authenticate(self) -> None:
         """|coro|
 
@@ -444,11 +457,7 @@ class Shard:
             authenticated = False
 
         if self.handler is not None:
-            # asyncio.create_task(self.handler.handle_raw(self, d), name=f"pyvolt-eht-{self._sequence}")
-            try:
-                await self.handler.handle_raw(self, payload)
-            except Exception as exc:
-                _L.exception('error occured on seq=%s', self._sequence, exc_info=exc)
+            await self.handler.handle_raw(self, payload)
             self._sequence += 1
         return authenticated
 

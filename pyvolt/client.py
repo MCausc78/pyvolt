@@ -432,13 +432,13 @@ def _private_channel_sort_new(channel: DMChannel | GroupChannel) -> str:
 class Client:
     """A Revolt client."""
 
-    __slots__ = ('_handlers', '_types', '_i', '_state', 'extra')
+    __slots__ = ('_handlers', '_types', '_i', '_state', 'extra', '_token', 'bot')
 
     @typing.overload
     def __init__(
         self,
         *,
-        token: str,
+        token: str = '',
         bot: bool = True,
         state: Callable[[Client], State] | State | None = None,
     ) -> None: ...
@@ -447,7 +447,7 @@ class Client:
     def __init__(
         self,
         *,
-        token: str,
+        token: str = '',
         bot: bool = True,
         cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
         cdn_base: str | None = None,
@@ -463,7 +463,7 @@ class Client:
     def __init__(
         self,
         *,
-        token: str,
+        token: str = '',
         bot: bool = True,
         cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
         cdn_base: str | None = None,
@@ -537,6 +537,8 @@ class Client:
                     )
                 )
             )
+        self._token = token
+        self.bot = bot
         self._subscribe_methods()
 
     def _get_i(self) -> int:
@@ -1080,7 +1082,9 @@ class Client:
 
     def run(
         self,
+        token: str = '',
         *,
+        bot: UndefinedOr[bool] = UNDEFINED,
         log_handler: UndefinedOr[logging.Handler | None] = UNDEFINED,
         log_formatter: UndefinedOr[logging.Formatter] = UNDEFINED,
         log_level: UndefinedOr[int] = UNDEFINED,
@@ -1130,6 +1134,14 @@ class Client:
 
             Defaults to ``False``.
         """
+
+        if token:
+            bot = self.bot if bot is UNDEFINED else bot
+
+            self.http.with_credentials(token, bot=bot)
+            self.shard.with_credentials(token, bot=bot)
+        elif not self._token:
+            raise TypeError('No token was provided')
 
         async def runner():
             async with self:
