@@ -660,10 +660,7 @@ class ServerRoleDeleteEvent(BaseEvent):
         if not cache or not self.server:
             return False
 
-        try:
-            del self.server.roles[self.role_id]
-        except KeyError:
-            pass
+        self.server.roles.pop(self.role_id, None)
 
         cache.store_server(self.server, caching._SERVER_ROLE_DELETE)
         return True
@@ -727,10 +724,7 @@ class UserRelationshipUpdateEvent(BaseEvent):
 
         if me:
             if self.new_user.relationship is RelationshipStatus.none:
-                try:
-                    del me.relations[self.new_user.id]
-                except KeyError:
-                    pass
+                me.relations.pop(self.new_user.id, None)
             else:
                 relation = me.relations.get(self.new_user.id)
 
