@@ -73,3 +73,11 @@ section-order = ["future", "standard-library", "first-party", "local-folder", "t
 [tool.ruff.lint.pyupgrade]
 keep-runtime-typing = false
 # quoted-annotation = false
+
+[tool.setuptools]
+packages = [
+    "pyvolt",
+    "pyvolt.raw",
+    "pyvolt.routes",
+]
+include-package-data = true
