@@ -78,6 +78,5 @@ keep-runtime-typing = false
 packages = [
     "pyvolt",
     "pyvolt.raw",
-    "pyvolt.routes",
 ]
 include-package-data = true

@@ -71,10 +71,10 @@ class UserSettings:
         mocked: bool,
         partial: bool,
     ) -> None:
-        self.state = state
-        self.data = data
-        self.mocked = mocked
-        self.partial = partial
+        self.state: State = state
+        self.data: dict[str, tuple[int, str]] = data
+        self.mocked: bool = mocked
+        self.partial: bool = partial
         self._parse(partial=None)
 
     def as_dict(self) -> dict[str, str]:
@@ -203,9 +203,9 @@ class AndroidUserSettings:
     )
 
     def __init__(self, parent: UserSettings) -> None:
-        self.parent = parent
+        self.parent: UserSettings = parent
         payload: raw.AndroidUserSettings = utils.from_json(parent.get('android', '{}'))
-        self._payload = payload
+        self._payload: raw.AndroidUserSettings = payload
 
         self._update(payload)
 
@@ -476,7 +476,7 @@ class ReviteUserSettings:
     )
 
     def __init__(self, parent: UserSettings) -> None:
-        self.parent = parent
+        self.parent: UserSettings = parent
         self._update(parent, full=True)
 
     def __repr__(self) -> str:
@@ -1061,8 +1061,8 @@ class ReviteUserSettings:
             monofont=monofont,
             overrides=overrides,
         )
-        # how????????????
-        await self.parent.edit(payload, edited_at)  # type: ignore
+        # It works tho
+        await self.parent.edit({}, edited_at, **payload)
 
 
 __all__ = (
