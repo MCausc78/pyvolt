@@ -40,7 +40,7 @@ from .core import (
     ULIDOr,
     resolve_id,
 )
-from .enums import Enum
+from .enums import MessageSort
 from .errors import NoData
 from .invite import Invite
 from .permissions import (
@@ -60,19 +60,10 @@ if typing.TYPE_CHECKING:
         Interactions,
         Masquerade,
         SendableEmbed,
-        MessageSort,
         BaseMessage,
         Message,
     )
     from .shard import Shard
-
-
-class ChannelType(Enum):
-    text = 'Text'
-    """Text channel."""
-
-    voice = 'Voice'
-    """Voice channel."""
 
 
 class Typing(contextlib.AbstractAsyncContextManager):
@@ -827,7 +818,6 @@ ServerChannel = ServerTextChannel | VoiceChannel
 Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
 
 __all__ = (
-    'ChannelType',
     'BaseChannel',
     'PartialChannel',
     'Typing',

@@ -33,7 +33,7 @@ from . import utils
 from .bot import BaseBot
 from .cdn import StatelessAsset, Asset
 from .core import UNDEFINED, UndefinedOr, __version__ as version
-from .enums import Enum
+from .enums import ServerActivity, BotUsage, ReviteBaseTheme
 from .errors import DiscoveryError
 from .server import ServerFlags, BaseServer
 from .state import State
@@ -41,18 +41,11 @@ from .user import StatelessUserProfile, UserProfile
 
 if typing.TYPE_CHECKING:
     from . import raw
-    from .user_settings import ReviteBaseTheme, ReviteThemeVariable
+    from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
 
 DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'
-
-
-class ServerActivity(Enum):
-    high = 'high'
-    medium = 'medium'
-    low = 'low'
-    no = 'no'
 
 
 @define(slots=True)
@@ -106,12 +99,6 @@ class DiscoveryServersPage:
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
     """Popular tags used in discovery servers."""
-
-
-class BotUsage(Enum):
-    high = 'high'
-    medium = 'medium'
-    low = 'low'
 
 
 @define(slots=True)
@@ -443,10 +430,8 @@ class DiscoveryClient:
 
 
 __all__ = (
-    'ServerActivity',
     'DiscoveryServer',
     'DiscoveryServersPage',
-    'BotUsage',
     'DiscoveryBot',
     'DiscoveryBotsPage',
     'DiscoveryTheme',

@@ -29,7 +29,7 @@ import typing
 
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
-from .enums import Enum
+from .enums import MFAMethod
 from .state import State
 
 if typing.TYPE_CHECKING:
@@ -120,12 +120,6 @@ class Session(PartialSession):
 
     subscription: WebPushSubscription | None = field(repr=True, kw_only=True)
     """The Web Push subscription."""
-
-
-class MFAMethod(Enum):
-    password = 'Password'
-    recovery = 'Recovery'
-    totp = 'Totp'
 
 
 @define(slots=True)
@@ -222,7 +216,6 @@ __all__ = (
     'WebPushSubscription',
     'PartialSession',
     'Session',
-    'MFAMethod',
     'MFARequired',
     'AccountDisabled',
     'MFAStatus',

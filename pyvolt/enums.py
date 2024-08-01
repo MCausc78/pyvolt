@@ -153,7 +153,390 @@ else:
                 return value
 
 
+class MFAMethod(Enum):
+    password = 'Password'
+    recovery = 'Recovery'
+    totp = 'Totp'
+
+
+class AssetMetadataType(Enum):
+    file = 'File'
+    """File is just a generic uncategorised file."""
+
+    text = 'Text'
+    """File contains textual data and should be displayed as such."""
+
+    image = 'Image'
+    """File is an image with specific dimensions."""
+
+    video = 'Video'
+    """File is a video with specific dimensions."""
+
+    audio = 'Audio'
+    """File is audio."""
+
+
+class ChannelType(Enum):
+    text = 'Text'
+    """Text channel."""
+
+    voice = 'Voice'
+    """Voice channel."""
+
+
+class ServerActivity(Enum):
+    high = 'high'
+    medium = 'medium'
+    low = 'low'
+    no = 'no'
+
+
+class BotUsage(Enum):
+    high = 'high'
+    medium = 'medium'
+    low = 'low'
+
+
+class LightspeedContentType(Enum):
+    """Type of remote Lightspeed.tv content."""
+
+    channel = 'Channel'
+
+
+class TwitchContentType(Enum):
+    """Type of remote Twitch content."""
+
+    channel = 'Channel'
+    video = 'Video'
+    clip = 'Clip'
+
+
+class BandcampContentType(Enum):
+    """Type of remote Bandcamp content."""
+
+    album = 'Album'
+    track = 'Track'
+
+
+class ImageSize(Enum):
+    """Controls image positioning and size."""
+
+    large = 'Large'
+    """Show large preview at the bottom of the embed."""
+
+    preview = 'Preview'
+    """Show small preview to the side of the embed."""
+
+
+class Language(Enum):
+    english = 'en'
+    english_simplified = 'en_US'
+
+    arabic = 'ar'
+    assamese = 'as'
+    azerbaijani = 'az'
+    belarusian = 'be'
+    bulgarian = 'bg'
+    bengali = 'bn'
+    breton = 'br'
+    catalonian = 'ca'
+    cebuano = 'ceb'
+    central_kurdish = 'ckb'
+    czech = 'cs'
+    danish = 'da'
+    german = 'de'
+    greek = 'el'
+    spanish = 'es'
+    spanish_latin_america = 'es_419'
+    estonian = 'et'
+    finnish = 'fi'
+    filipino = 'fil'
+    french = 'fr'
+    irish = 'ga'
+    hindi = 'hi'
+    croatian = 'hr'
+    hungarian = 'hu'
+    armenian = 'hy'
+    indonesian = 'id'
+    icelandic = 'is'
+    italian = 'it'
+    japanese = 'ja'
+    korean = 'ko'
+    luxembourgish = 'lb'
+    lithuanian = 'lt'
+    macedonian = 'mk'
+    malay = 'ms'
+    norwegian_bokmal = 'nb_NO'
+    dutch = 'nl'
+    persian = 'fa'
+    polish = 'pl'
+    portuguese_brazil = 'pt_BR'
+    portuguese_portugal = 'pt_PT'
+    romanian = 'ro'
+    russian = 'ru'
+    slovak = 'sk'
+    slovenian = 'sl'
+    albanian = 'sq'
+    serbian = 'sr'
+    sinhalese = 'si'
+    swedish = 'sv'
+    tamil = 'ta'
+    thai = 'th'
+    turkish = 'tr'
+    ukranian = 'uk'
+    urdu = 'ur'
+    venetian = 'vec'
+    vietnamese = 'vi'
+    chinese_simplified = 'zh_Hans'
+    chinese_traditional = 'zh_Hant'
+    latvian = 'lv'
+
+    tokipona = 'tokipona'
+    esperanto = 'esperanto'
+
+    owo = 'owo'
+    pirate = 'pr'
+    bottom = 'bottom'
+    leet = 'leet'
+    piglatin = 'piglatin'
+    enchantment_table = 'enchantment'
+
+
+class MessageSort(Enum):
+    relevance = 'Relevance'
+    latest = 'Latest'
+    oldest = 'Oldest'
+
+
+class ContentReportReason(Enum):
+    """The reason for reporting content (message or server)."""
+
+    none = 'NoneSpecified'
+    """No reason has been specified."""
+
+    illegal = 'Illegal'
+    """Illegal content catch-all reason."""
+
+    illegal_goods = 'IllegalGoods'
+    """Selling or facilitating use of drugs or other illegal goods."""
+
+    illegal_extortion = 'IllegalExtortion'
+    """Extortion or blackmail."""
+
+    illegal_pornography = 'IllegalPornography'
+    """Revenge or child pornography."""
+
+    illegal_hacking = 'IllegalHacking'
+    """Illegal hacking activity."""
+
+    extreme_violence = 'ExtremeViolence'
+    """Extreme violence, gore, or animal cruelty. With exception to violence potrayed in media / creative arts."""
+
+    promotes_harm = 'PromotesHarm'
+    """Content that promotes harm to others / self."""
+
+    unsolicited_spam = 'UnsolicitedSpam'
+    """Unsolicited advertisements."""
+
+    raid = 'Raid'
+    """This is a raid."""
+
+    spam_abuse = 'SpamAbuse'
+    """Spam or platform abuse."""
+
+    scams_fraud = 'ScamsFraud'
+    """Scams or fraud."""
+
+    malware = 'Malware'
+    """Distribution of malware or malicious links."""
+
+    harassment = 'Harassment'
+    """Harassment or abuse targeted at another user."""
+
+
+class UserReportReason(Enum):
+    """Reason for reporting a user."""
+
+    none = 'NoneSpecified'
+    """No reason has been specified."""
+
+    unsolicited_spam = 'UnsolicitedSpam'
+    """Unsolicited advertisements."""
+
+    spam_abuse = 'SpamAbuse'
+    """User is sending spam or otherwise abusing the platform."""
+
+    inappropriate_profile = 'InappropriateProfile'
+    """User's profile contains inappropriate content for a general audience."""
+
+    impersonation = 'Impersonation'
+    """User is impersonating another user."""
+
+    ban_evasion = 'BanEvasion'
+    """User is evading a ban."""
+
+    underage = 'Underage'
+    """User is not of minimum age to use the platform."""
+
+
+class MemberRemovalIntention(Enum):
+    """Reason why member was removed from server."""
+
+    leave = 'Leave'
+    kick = 'Kick'
+    ban = 'Ban'
+
+
+class ShardFormat(Enum):
+    json = 'json'
+    msgpack = 'msgpack'
+
+
+class AndroidTheme(Enum):
+    revolt = 'Revolt'
+    light = 'Light'
+    pure_black = 'Amoled'
+    system = 'None'
+    material_you = 'M3Dynamic'
+
+
+class AndroidProfilePictureShape(Enum):
+    sharp = 0
+    rounded = 15
+    circular = 50
+
+
+class AndroidMessageReplyStyle(Enum):
+    long_press_to_reply = 'None'
+    swipe_to_reply = 'SwipeFromEnd'
+    double_tap_to_reply = 'DoubleTap'
+
+
+class ReviteChangelogEntry(Enum):
+    mfa_feature = 1
+    """Title: Secure your account with 2FA."""
+
+    iar_reporting_feature = 2
+    """Title: In-App Reporting Is Here"""
+
+    discriminators_feature = 3
+    """Title: Usernames are Changing"""
+
+
+class ReviteNotificationState(Enum):
+    all_messages = 'all'
+    mentions_only = 'mention'
+    none = 'none'
+    muted = 'muted'
+
+
+class ReviteEmojiPack(Enum):
+    mutant_remix = 'mutant'
+    twemoji = 'twemoji'
+    openmoji = 'openmoji'
+    noto_emoji = 'noto'
+
+
+class ReviteBaseTheme(Enum):
+    dark = 'dark'
+    light = 'light'
+
+
+class ReviteFont(Enum):
+    open_sans = 'Open Sans'
+    opendyslexic = 'OpenDyslexic'
+    inter = 'Inter'
+    atkinson_hyperlegible = 'Atkinson Hyperlegible'
+    roboto = 'Roboto'
+    noto_sans = 'Noto Sans'
+    lato = 'Lato'
+    bitter = 'Bitter'
+    montserrat = 'Montserrat'
+    poppins = 'Poppins'
+    raleway = 'Raleway'
+    ubuntu = 'Ubuntu'
+    comic_neue = 'Comic Neue'
+    lexend = 'Lexend'
+
+
+class ReviteMonoFont(Enum):
+    fira_code = 'Fira Code'
+    roboto_mono = 'Robot Mono'
+    source_code_pro = 'Source Code Pro'
+    space_mono = 'Space Mono'
+    ubuntu_mono = 'Ubuntu Mono'
+    jetbrains_mono = 'JetBrains Mono'
+
+
+class Presence(Enum):
+    online = 'Online'
+    """User is online."""
+
+    idle = 'Idle'
+    """User is not currently available."""
+
+    focus = 'Focus'
+    """User is focusing / will only receive mentions."""
+
+    busy = 'Busy'
+    """User is busy / will not receive any notifications."""
+
+    invisible = 'Invisible'
+    """User appears to be offline."""
+
+
+class RelationshipStatus(Enum):
+    """User's relationship with another user (or themselves)."""
+
+    none = 'None'
+    """No relationship with other user."""
+
+    user = 'User'
+    """Other user is us."""
+
+    friend = 'Friend'
+    """Friends with the other user."""
+
+    outgoing = 'Outgoing'
+    """Pending friend request to user."""
+
+    incoming = 'Incoming'
+    """Incoming friend request from user."""
+
+    blocked = 'Blocked'
+    """Blocked this user."""
+
+    blocked_other = 'BlockedOther'
+    """Blocked by this user."""
+
+
 __all__ = (
     'EnumMeta',
     'Enum',
+    'MFAMethod',
+    'AssetMetadataType',
+    'ChannelType',
+    'ServerActivity',
+    'BotUsage',
+    'LightspeedContentType',
+    'TwitchContentType',
+    'BandcampContentType',
+    'ImageSize',
+    'Language',
+    'MessageSort',
+    'ContentReportReason',
+    'UserReportReason',
+    'MemberRemovalIntention',
+    'ShardFormat',
+    'AndroidTheme',
+    'AndroidProfilePictureShape',
+    'AndroidMessageReplyStyle',
+    'ReviteChangelogEntry',
+    'ReviteNotificationState',
+    'ReviteEmojiPack',
+    'ReviteBaseTheme',
+    'ReviteFont',
+    'ReviteMonoFont',
+    'Presence',
+    'RelationshipStatus',
 )

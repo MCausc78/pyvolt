@@ -44,9 +44,8 @@ from .core import (
 )
 from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
-from .enums import Enum
+from .enums import ContentReportReason
 from .errors import NoData
-from .safety_reports import ContentReportReason
 from .server import Member
 from .user import BaseUser, User
 
@@ -194,12 +193,6 @@ class SendableEmbed:
         if self.colour is not None:
             payload['colour'] = self.colour
         return payload
-
-
-class MessageSort(Enum):
-    relevance = 'Relevance'
-    latest = 'Latest'
-    oldest = 'Oldest'
 
 
 @define(slots=True)
@@ -1555,7 +1548,6 @@ __all__ = (
     'Interactions',
     'Masquerade',
     'SendableEmbed',
-    'MessageSort',
     'MessageWebhook',
     'BaseMessage',
     'PartialMessage',

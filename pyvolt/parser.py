@@ -36,7 +36,6 @@ from .auth import (
     WebPushSubscription,
     PartialSession,
     Session,
-    MFAMethod,
     MFARequired,
     AccountDisabled,
     MFAStatus,
@@ -44,7 +43,6 @@ from .auth import (
 )
 from .bot import BotFlags, Bot, PublicBot
 from .cdn import (
-    AssetMetadataType,
     AssetMetadata,
     StatelessAsset,
 )
@@ -66,14 +64,11 @@ from .embed import (
     GifEmbedSpecial,
     _GIF_EMBED_SPECIAL,
     YouTubeEmbedSpecial,
-    LightspeedContentType,
     LightspeedEmbedSpecial,
-    TwitchContentType,
     TwitchEmbedSpecial,
     SpotifyEmbedSpecial,
     SoundcloudEmbedSpecial,
     _SOUNDCLOUD_EMBED_SPECIAL,
-    BandcampContentType,
     BandcampEmbedSpecial,
     StreamableEmbedSpecial,
     ImageSize,
@@ -86,6 +81,19 @@ from .embed import (
     Embed,
 )
 from .emoji import ServerEmoji, DetachedEmoji, Emoji
+from .enums import (
+    MFAMethod,
+    AssetMetadataType,
+    ServerActivity,
+    BotUsage,
+    LightspeedContentType,
+    TwitchContentType,
+    BandcampContentType,
+    ImageSize,
+    MemberRemovalIntention,
+    Presence,
+    RelationshipStatus,
+)
 from .events import (
     ReadyEvent,
     PrivateChannelCreateEvent,
@@ -176,18 +184,15 @@ from .server import (
     PartialMember,
     Member,
     MemberList,
-    MemberRemovalIntention,
 )
 from .user_settings import UserSettings
 from .user import (
-    Presence,
     UserStatus,
     UserStatusEdit,
     StatelessUserProfile,
     PartialUserProfile,
     UserBadges,
     UserFlags,
-    RelationshipStatus,
     Relationship,
     Mutuals,
     PartialUser,
@@ -537,7 +542,7 @@ class Parser:
             internal_profile=self.parse_user_profile(d['profile']),
             tags=d['tags'],
             server_count=d['servers'],
-            usage=discovery.BotUsage(d['usage']),
+            usage=BotUsage(d['usage']),
         )
 
     def parse_discovery_bot_search_result(self, d: raw.DiscoveryBotSearchResult) -> discovery.BotSearchResult:
@@ -568,7 +573,7 @@ class Parser:
             flags=ServerFlags(d.get('flags') or 0),
             tags=d['tags'],
             member_count=d['members'],
-            activity=discovery.ServerActivity(d['activity']),
+            activity=ServerActivity(d['activity']),
         )
 
     def parse_discovery_servers_page(self, d: raw.DiscoveryServersPage) -> discovery.DiscoveryServersPage:

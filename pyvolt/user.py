@@ -36,9 +36,8 @@ from .core import (
     UndefinedOr,
     ULIDOr,
 )
-from .enums import Enum
+from .enums import UserReportReason, Presence, RelationshipStatus
 from .permissions import UserPermissions
-from .safety_reports import UserReportReason
 
 
 if typing.TYPE_CHECKING:
@@ -46,23 +45,6 @@ if typing.TYPE_CHECKING:
     from .channel import SavedMessagesChannel, DMChannel
     from .message import BaseMessage
     from .state import State
-
-
-class Presence(Enum):
-    online = 'Online'
-    """User is online."""
-
-    idle = 'Idle'
-    """User is not currently available."""
-
-    focus = 'Focus'
-    """User is focusing / will only receive mentions."""
-
-    busy = 'Busy'
-    """User is busy / will not receive any notifications."""
-
-    invisible = 'Invisible'
-    """User appears to be offline."""
 
 
 @define(slots=True)
@@ -270,31 +252,6 @@ class UserFlags(IntFlag):
 
     SPAM = 1 << 3
     """User was marked as spam and removed from platform."""
-
-
-class RelationshipStatus(Enum):
-    """User's relationship with another user (or themselves)."""
-
-    none = 'None'
-    """No relationship with other user."""
-
-    user = 'User'
-    """Other user is us."""
-
-    friend = 'Friend'
-    """Friends with the other user."""
-
-    outgoing = 'Outgoing'
-    """Pending friend request to user."""
-
-    incoming = 'Incoming'
-    """Incoming friend request from user."""
-
-    blocked = 'Blocked'
-    """Blocked this user."""
-
-    blocked_other = 'BlockedOther'
-    """Blocked by this user."""
 
 
 @define(slots=True)
@@ -801,7 +758,6 @@ class OwnUser(User):
 
 
 __all__ = (
-    'Presence',
     'UserStatus',
     'UserStatusEdit',
     'StatelessUserProfile',
@@ -810,7 +766,6 @@ __all__ = (
     'UserProfileEdit',
     'UserBadges',
     'UserFlags',
-    'RelationshipStatus',
     'Relationship',
     'Mutuals',
     'BaseUser',

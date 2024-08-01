@@ -29,7 +29,7 @@ from attrs import define, field
 import typing
 
 from .cdn import StatelessAsset, Asset
-from .enums import Enum
+from .enums import LightspeedContentType, TwitchContentType, BandcampContentType, ImageSize
 
 if typing.TYPE_CHECKING:
     from .state import State
@@ -72,12 +72,6 @@ class YouTubeEmbedSpecial(EmbedSpecial):
     """The video timestamp."""
 
 
-class LightspeedContentType(Enum):
-    """Type of remote Lightspeed.tv content."""
-
-    channel = 'Channel'
-
-
 @define(slots=True)
 class LightspeedEmbedSpecial(EmbedSpecial):
     """Represents information about Lightspeed.tv stream."""
@@ -87,14 +81,6 @@ class LightspeedEmbedSpecial(EmbedSpecial):
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """The Lightspeed.tv stream ID."""
-
-
-class TwitchContentType(Enum):
-    """Type of remote Twitch content."""
-
-    channel = 'Channel'
-    video = 'Video'
-    clip = 'Clip'
 
 
 @define(slots=True)
@@ -126,13 +112,6 @@ class SoundcloudEmbedSpecial(EmbedSpecial):
 _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 
 
-class BandcampContentType(Enum):
-    """Type of remote Bandcamp content."""
-
-    album = 'Album'
-    track = 'Track'
-
-
 @define(slots=True)
 class BandcampEmbedSpecial(EmbedSpecial):
     """Represents information about Bandcamp track."""
@@ -150,16 +129,6 @@ class StreamableEmbedSpecial(EmbedSpecial):
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """The video ID."""
-
-
-class ImageSize(Enum):
-    """Controls image positioning and size."""
-
-    large = 'Large'
-    """Show large preview at the bottom of the embed."""
-
-    preview = 'Preview'
-    """Show small preview to the side of the embed."""
 
 
 @define(slots=True)
@@ -303,17 +272,13 @@ __all__ = (
     'GifEmbedSpecial',
     '_GIF_EMBED_SPECIAL',
     'YouTubeEmbedSpecial',
-    'LightspeedContentType',
     'LightspeedEmbedSpecial',
-    'TwitchContentType',
     'TwitchEmbedSpecial',
     'SpotifyEmbedSpecial',
     'SoundcloudEmbedSpecial',
     '_SOUNDCLOUD_EMBED_SPECIAL',
-    'BandcampContentType',
     'BandcampEmbedSpecial',
     'StreamableEmbedSpecial',
-    'ImageSize',
     'ImageEmbed',
     'VideoEmbed',
     'WebsiteEmbed',

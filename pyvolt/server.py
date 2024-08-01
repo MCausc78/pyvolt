@@ -44,16 +44,14 @@ from .core import (
     resolve_id,
 )
 from .emoji import ServerEmoji
-from .enums import Enum
+from .enums import ChannelType, ContentReportReason, RelationshipStatus
 from .errors import NoData
 from .permissions import Permissions, PermissionOverride
-from .safety_reports import ContentReportReason
 from .state import State
 from .user import (
     UserStatus,
     UserBadges,
     UserFlags,
-    RelationshipStatus,
     BaseUser,
     DisplayUser,
     BotUserInfo,
@@ -64,7 +62,6 @@ from .user import (
 if typing.TYPE_CHECKING:
     from . import raw
     from .channel import (
-        ChannelType,
         TextChannel,
         ServerTextChannel,
         VoiceChannel,
@@ -473,8 +470,6 @@ class BaseServer(Base):
         HTTPException
             Creating the channel failed.
         """
-        from .channel import ChannelType
-
         channel = await self.create_channel(type=ChannelType.text, name=name, description=description, nsfw=nsfw)
         return channel  # type: ignore
 
@@ -492,8 +487,6 @@ class BaseServer(Base):
         HTTPException
             Creating the channel failed.
         """
-        from .channel import ChannelType
-
         channel = await self.create_channel(type=ChannelType.voice, name=name, description=description, nsfw=nsfw)
         return channel  # type: ignore
 
@@ -1258,14 +1251,6 @@ class MemberList:
     users: list[User] = field(repr=True, kw_only=True)
 
 
-class MemberRemovalIntention(Enum):
-    """Reason why member was removed from server."""
-
-    leave = 'Leave'
-    kick = 'Kick'
-    ban = 'Ban'
-
-
 __all__ = (
     'ServerFlags',
     'Category',
@@ -1283,5 +1268,4 @@ __all__ = (
     'PartialMember',
     'Member',
     'MemberList',
-    'MemberRemovalIntention',
 )

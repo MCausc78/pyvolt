@@ -42,6 +42,7 @@ from .channel import (
     Channel,
 )
 from .emoji import ServerEmoji, DetachedEmoji
+from .enums import MemberRemovalIntention, RelationshipStatus
 from .message import PartialMessage, MessageAppendData, Message
 from .read_state import ReadState
 from .server import (
@@ -51,13 +52,11 @@ from .server import (
     Server,
     PartialMember,
     Member,
-    MemberRemovalIntention,
 )
 from .shard import Shard
 from .user_settings import UserSettings
 from .user import (
     UserFlags,
-    RelationshipStatus,
     Relationship,
     PartialUser,
     User,

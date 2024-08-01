@@ -29,8 +29,18 @@ import typing
 
 from . import utils
 from .core import UNDEFINED, UndefinedOr, ULIDOr, resolve_id
-from .enums import Enum
-from .localization import Language
+from .enums import (
+    Language,
+    AndroidTheme,
+    AndroidMessageReplyStyle,
+    AndroidProfilePictureShape,
+    ReviteNotificationState,
+    ReviteEmojiPack,
+    ReviteBaseTheme,
+    ReviteFont,
+    ReviteMonoFont,
+    ReviteChangelogEntry,
+)
 
 if typing.TYPE_CHECKING:
     from . import raw
@@ -162,26 +172,6 @@ class UserSettings:
             This can only be used by non-bot accounts.
         """
         return await self.state.http.edit_user_settings(dict_settings, edited_at, **kwargs)
-
-
-class AndroidTheme(Enum):
-    revolt = 'Revolt'
-    light = 'Light'
-    pure_black = 'Amoled'
-    system = 'None'
-    material_you = 'M3Dynamic'
-
-
-class AndroidProfilePictureShape(Enum):
-    sharp = 0
-    rounded = 15
-    circular = 50
-
-
-class AndroidMessageReplyStyle(Enum):
-    long_press_to_reply = 'None'
-    swipe_to_reply = 'SwipeFromEnd'
-    double_tap_to_reply = 'DoubleTap'
 
 
 class AndroidUserSettings:
@@ -348,24 +338,6 @@ class AndroidUserSettings:
         await self.parent.edit({'android': utils.to_json(payload)}, edited_at)
 
 
-class ReviteChangelogEntry(Enum):
-    mfa_feature = 1
-    """Title: Secure your account with 2FA."""
-
-    iar_reporting_feature = 2
-    """Title: In-App Reporting Is Here"""
-
-    discriminators_feature = 3
-    """Title: Usernames are Changing"""
-
-
-class ReviteNotificationState(Enum):
-    all_messages = 'all'
-    mentions_only = 'mention'
-    none = 'none'
-    muted = 'muted'
-
-
 class ReviteNotificationOptions:
     """Represents Revite notification options.
 
@@ -389,44 +361,6 @@ class ReviteNotificationOptions:
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} servers={self.servers!r} channels={self.channels!r}>'
-
-
-class ReviteEmojiPack(Enum):
-    mutant_remix = 'mutant'
-    twemoji = 'twemoji'
-    openmoji = 'openmoji'
-    noto_emoji = 'noto'
-
-
-class ReviteBaseTheme(Enum):
-    dark = 'dark'
-    light = 'light'
-
-
-class ReviteFont(Enum):
-    open_sans = 'Open Sans'
-    opendyslexic = 'OpenDyslexic'
-    inter = 'Inter'
-    atkinson_hyperlegible = 'Atkinson Hyperlegible'
-    roboto = 'Roboto'
-    noto_sans = 'Noto Sans'
-    lato = 'Lato'
-    bitter = 'Bitter'
-    montserrat = 'Montserrat'
-    poppins = 'Poppins'
-    raleway = 'Raleway'
-    ubuntu = 'Ubuntu'
-    comic_neue = 'Comic Neue'
-    lexend = 'Lexend'
-
-
-class ReviteMonoFont(Enum):
-    fira_code = 'Fira Code'
-    roboto_mono = 'Robot Mono'
-    source_code_pro = 'Source Code Pro'
-    space_mono = 'Space Mono'
-    ubuntu_mono = 'Ubuntu Mono'
-    jetbrains_mono = 'JetBrains Mono'
 
 
 ReviteThemeVariable: typing.TypeAlias = 'raw.ReviteThemeVariable'
@@ -1067,17 +1001,8 @@ class ReviteUserSettings:
 
 __all__ = (
     'UserSettings',
-    'AndroidTheme',
-    'AndroidProfilePictureShape',
-    'AndroidMessageReplyStyle',
     'AndroidUserSettings',
-    'ReviteChangelogEntry',
-    'ReviteNotificationState',
     'ReviteNotificationOptions',
-    'ReviteEmojiPack',
-    'ReviteBaseTheme',
-    'ReviteFont',
-    'ReviteMonoFont',
     'ReviteThemeVariable',
     'ReviteUserSettings',
 )

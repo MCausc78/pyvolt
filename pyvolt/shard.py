@@ -32,7 +32,7 @@ import typing
 
 from . import utils
 from .core import ULIDOr, resolve_id, __version__ as version
-from .enums import Enum
+from .enums import ShardFormat
 from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
@@ -65,11 +65,6 @@ class EventHandler(abc.ABC):
 
 
 DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {version})'
-
-
-class ShardFormat(Enum):
-    json = 'json'
-    msgpack = 'msgpack'
 
 
 class Shard:
@@ -312,7 +307,7 @@ class Shard:
             raise Reconnect
 
         # `msgpack` wont be unbound here
-        k = msgpack.unpackb(message.data, use_list=True)  # type: ignore
+        k: raw.ClientEvent = msgpack.unpackb(message.data, use_list=True)  # type: ignore
         if k['type'] != 'Ready':
             _L.debug('received %s', k)
         return k

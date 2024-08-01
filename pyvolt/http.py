@@ -46,7 +46,6 @@ from .auth import (
 )
 from .bot import BaseBot, Bot, PublicBot
 from .channel import (
-    ChannelType,
     BaseChannel,
     TextChannel,
     SavedMessagesChannel,
@@ -65,6 +64,7 @@ from .core import (
     __version__ as version,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
+from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
 from .errors import (
     HTTPException,
     Unauthorized,
@@ -80,14 +80,12 @@ from .message import (
     Interactions,
     Masquerade,
     SendableEmbed,
-    MessageSort,
     BaseMessage,
     MessageFlags,
     Message,
 )
 from .permissions import Permissions, PermissionOverride
 from .read_state import ReadState
-from .safety_reports import ContentReportReason, UserReportReason
 from .server import (
     ServerFlags,
     Category,

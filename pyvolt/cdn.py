@@ -34,7 +34,7 @@ from urllib.parse import quote
 
 from . import utils
 from .core import __version__ as version
-from .enums import Enum
+from .enums import AssetMetadataType
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
@@ -43,23 +43,6 @@ if typing.TYPE_CHECKING:
 
 
 _L = logging.getLogger(__name__)
-
-
-class AssetMetadataType(Enum):
-    file = 'File'
-    """File is just a generic uncategorised file."""
-
-    text = 'Text'
-    """File contains textual data and should be displayed as such."""
-
-    image = 'Image'
-    """File is an image with specific dimensions."""
-
-    video = 'Video'
-    """File is a video with specific dimensions."""
-
-    audio = 'Audio'
-    """File is audio."""
 
 
 @define(slots=True)
@@ -418,7 +401,6 @@ class CDNClient:
 
 
 __all__ = (
-    'AssetMetadataType',
     'AssetMetadata',
     'StatelessAsset',
     'Asset',
