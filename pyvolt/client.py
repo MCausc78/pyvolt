@@ -895,7 +895,7 @@ class Client:
 
     @property
     def ordered_private_channels(self) -> list[DMChannel | GroupChannel]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new web client order.
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order.
         Useful when developing Revolt client."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
@@ -1069,16 +1069,18 @@ class Client:
         """
         await self._state.shard.connect()
 
-    async def close(self) -> None:
+    async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
         """|coro|
 
         Closes all HTTP sessions, and websocket connections.
         """
-        if self._state.shard.ws:
-            try:
-                await self._state.shard.close()
-            except Exception:
-                pass
+
+        await self.shard.close()
+        if cleanup_websocket:
+            await self.shard.cleanup()
+
+        if http:
+            await self.http.cleanup()
 
     def run(
         self,
@@ -1090,6 +1092,7 @@ class Client:
         log_level: UndefinedOr[int] = UNDEFINED,
         root_logger: bool = False,
         asyncio_debug: bool = False,
+        cleanup: bool = True,
     ) -> None:
         """A blocking call that abstracts away the event loop
         initialisation from you.
@@ -1133,6 +1136,10 @@ class Client:
             Whether to run with asyncio debug mode enabled or not.
 
             Defaults to ``False``.
+        cleanup: :class:`bool`
+            Whether to close aiohttp sessions or not.
+
+            Defaults to ``True``.
         """
 
         if token:
@@ -1144,8 +1151,9 @@ class Client:
             raise TypeError('No token was provided')
 
         async def runner():
-            async with self:
-                await self.start()
+            await self.start()
+            if cleanup:
+                await self.close()
 
         if log_handler is not None:
             utils.setup_logging(
@@ -1160,7 +1168,8 @@ class Client:
         except KeyboardInterrupt:
             # nothing to do here
             # `asyncio.run` handles the loop cleanup
-            # and `self.start` closes all sockets and the HTTPClient instance.
+            # NOTE: not true
+            # > and `self.start` closes all sockets and the HTTPClient instance.
             return
 
     async def create_group(

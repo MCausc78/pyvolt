@@ -142,7 +142,19 @@ class Shard:
     def is_closed(self) -> bool:
         return self._closed and not self._ws
 
+    async def cleanup(self) -> None:
+        """|coro|
+
+        Closes the aiohttp session.
+        """
+        if not callable(self._session):
+            await self._session.close()
+
     async def close(self) -> None:
+        """|coro|
+
+        Closes the connection to Revolt.
+        """
         if self._ws:
             if self._closed:
                 raise ShardError('Already closed')

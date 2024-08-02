@@ -34,6 +34,7 @@ from . import cache as caching
 from .auth import Session
 from .channel import (
     PartialChannel,
+    SavedMessagesChannel,
     DMChannel,
     GroupChannel,
     PrivateChannel,
@@ -133,6 +134,8 @@ class ReadyEvent(BaseEvent):
             cache.store_channel(channel, caching._READY)
             if channel.__class__ is DMChannel or isinstance(channel, DMChannel):
                 cache.store_private_channel_by_user(channel, caching._READY)  # type: ignore
+            elif channel.__class__ is SavedMessagesChannel or isinstance(channel, SavedMessagesChannel):
+                state._saved_notes = channel  # type: ignore
 
         for m in self.members:
             cache.store_server_member(m, caching._READY)

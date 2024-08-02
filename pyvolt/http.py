@@ -383,6 +383,14 @@ class HTTPClient:
         response.close()
         return result
 
+    async def cleanup(self) -> None:
+        """|coro|
+
+        Closes the aiohttp session.
+        """
+        if not callable(self._session):
+            await self._session.close()
+
     # Bots control
     async def create_bot(self, name: str) -> Bot:
         """|coro|
