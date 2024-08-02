@@ -136,6 +136,15 @@ class MFARequired:
     state: State = field(repr=True, kw_only=True)
     internal_friendly_name: str | None = field(repr=True, kw_only=True)
 
+    async def use_recovery_code(self, code: str, /) -> Session | AccountDisabled:
+        """|coro|
+
+        Login to an account.
+        """
+        return await self.state.http.login_with_mfa(
+            self.ticket, ByRecoveryCode(code), friendly_name=self.internal_friendly_name
+        )
+
     async def use_totp(self, code: str, /) -> Session | AccountDisabled:
         """|coro|
 

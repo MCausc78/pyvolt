@@ -81,17 +81,20 @@ class BaseFlags:
 
         ALL: typing.ClassVar[Self]
         NONE: typing.ClassVar[Self]
+        FLAGS: typing.ClassVar[dict[str, flag]]
 
     __slots__ = ('value',)
 
     def __init_subclass__(cls, *, inverted: bool = False, support_kwargs: bool = True) -> None:
         valid_flags = {}
+        flags = {}
         for k, f in inspect.getmembers(cls):
             if isinstance(f, flag):
                 f.value = f._func(cls)
                 if f.alias:
                     continue
                 valid_flags[f.name] = f.value
+                flags[f.name] = f
                 f._parent = cls
 
         default = 0
@@ -138,6 +141,7 @@ class BaseFlags:
             cls._set = cls._set2
         cls.ALL = cls(cls.ALL_VALUE)
         cls.NONE = cls(cls.NONE_VALUE)
+        cls.FLAGS = flags
 
     if typing.TYPE_CHECKING:
 
@@ -153,24 +157,36 @@ class BaseFlags:
     # used if flag is inverted
     def _get1(self, other: flag[Self], /) -> bool:
         if other.use_any and other.inverted:
-            return (self.value & ~other.value) == 0
+            # (ANY & INVERTED)
+            return (~self.value & ~other.value) != 0
         elif other.use_any:
-            return (self.value & ~other.value) != 0
+            # (ANY)
+            return (~self.value & other.value) != 0
         elif other.inverted:
-            return (self.value & ~other.value) == other.value
+            # (INVERTED)
+            ov = other.value
+            return (~self.value & ~ov) == ov
         else:
-            return (self.value & ~other.value) != other.value
+            # ()
+            ov = other.value
+            return (~self.value & ov) == ov
 
     # used if flag is uninverted
     def _get2(self, other: flag[Self], /) -> bool:
         if other.use_any and other.inverted:
-            return (self.value & other.value) == 0
+            # (ANY & INVERTED)
+            return (self.value & ~other.value) != 0
         elif other.use_any:
+            # (ANY)
             return (self.value & other.value) != 0
         elif other.inverted:
-            return (self.value & other.value) == other.value
+            # (INVERTED)
+            ov = other.value
+            return (self.value & ~ov) == ov
         else:
-            return (self.value & other.value) != other.value
+            # ()
+            ov = other.value
+            return (self.value & ov) == ov
 
     # used if flag is inverted
     def _set1(self, flag: flag[Self], value: bool, /) -> None:

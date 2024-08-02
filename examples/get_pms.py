@@ -14,7 +14,7 @@ async def on_ready(event: pyvolt.ReadyEvent):
 
     for channel in client.ordered_private_channels:
         if isinstance(channel, pyvolt.DMChannel):
-            target_id = channel.target_id
+            target_id = channel.recipient_id
             target = client.get_user(target_id) or await client.fetch_user(target_id)
             if channel.active:
                 print('DM with', target.display_name or target.name)

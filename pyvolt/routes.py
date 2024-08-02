@@ -46,7 +46,7 @@ class CompiledRoute:
         return f'<CompiledRoute route={self.route!r} args={self.args!r}>'
 
     def __str__(self) -> str:
-        return f'CompiledRoute(route={self.route}, args={self.args})'
+        return f'CompiledRoute({self.route}, **{self.args!r})'
 
     def build(self) -> str:
         return self.route.path.format(**dict(map(lambda p: (p[0], quote(str(p[1]))), self.args.items())))
@@ -65,7 +65,7 @@ class Route:
         return f'<Route method={self.method!r} path={self.path!r}>'
 
     def __str__(self) -> str:
-        return f'Route({self.method!r}, {self.path!r})'
+        return f'{self.method} {self.path}'
 
     def compile(self, **args: typing.Any) -> CompiledRoute:
         """Compiles route."""

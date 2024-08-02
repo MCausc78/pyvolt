@@ -3106,14 +3106,14 @@ class HTTPClient:
 
     async def get_private_channels(
         self,
-    ) -> list[DMChannel | GroupChannel]:
+    ) -> list[SavedMessagesChannel | DMChannel | GroupChannel]:
         """|coro|
 
         Get all DMs and groups conversations.
 
         Returns
         -------
-        List[Union[:class:`DMChannel`, :class:`GroupChannel`]]
+        List[Union[:class:`SavedMessagesChannel`, :class:`DMChannel`, :class:`GroupChannel`]]
             The private channels.
         """
         result = [self.state.parser.parse_channel(e) for e in await self.request(routes.USERS_FETCH_DMS.compile())]
@@ -3299,12 +3299,12 @@ class HTTPClient:
         if discriminator is not None:
             username += '#' + discriminator
         payload: raw.DataSendFriendRequest = {'username': username}
-        return self.state.parser.parse_user(
-            await self.request(
-                routes.USERS_SEND_FRIEND_REQUEST.compile(),
-                json=payload,
-            )
+
+        resp: raw.User = await self.request(
+            routes.USERS_SEND_FRIEND_REQUEST.compile(),
+            json=payload,
         )
+        return self.state.parser.parse_user(resp)
 
     async def unblock_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
@@ -3897,16 +3897,16 @@ class HTTPClient:
 
         Gets MFA status of an account.
         """
-        return self.state.parser.parse_multi_factor_status(
-            await self.request(routes.AUTH_MFA_FETCH_STATUS.compile()),
-        )
+        resp: raw.a.MultiFactorStatus = await self.request(routes.AUTH_MFA_FETCH_STATUS.compile())
+        return self.state.parser.parse_multi_factor_status(resp)
 
     async def generate_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
         """|coro|
 
         Regenerates recovery codes for an account.
         """
-        return await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket)
+        resp: list[str] = await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket)
+        return resp
 
     async def get_mfa_methods(self) -> list[MFAMethod]:
         """|coro|
