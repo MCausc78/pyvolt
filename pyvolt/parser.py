@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime
+from functools import partial
 import logging
 import typing
 
@@ -217,6 +218,10 @@ _L = logging.getLogger(__name__)
 
 _EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 
+_new_server_flags = ServerFlags.__new__
+_new_user_badges = UserBadges.__new__
+_new_user_flags = UserFlags.__new__
+
 
 class Parser:
     def __init__(self, state: State) -> None:
@@ -395,7 +400,7 @@ class Parser:
             message_ids=d['ids'],
         )
 
-    def parse_category(self, d: raw.Category) -> Category:
+    def parse_category(self, d: raw.Category, /) -> Category:
         return Category(
             id=d['id'],
             title=d['title'],
@@ -1271,7 +1276,7 @@ class Parser:
             token=None,
         )
 
-    def parse_role(self, d: raw.Role, role_id: str, server_id: str) -> Role:
+    def parse_role(self, d: raw.Role, role_id: str, server_id: str, /) -> Role:
         return Role(
             state=self.state,
             id=role_id,
@@ -1309,6 +1314,9 @@ class Parser:
         icon = d.get('icon')
         banner = d.get('banner')
 
+        flags = _new_server_flags(ServerFlags)
+        flags.value = d.get('flags', 0)
+
         return Server(
             state=self.state,
             id=server_id,
@@ -1322,7 +1330,7 @@ class Parser:
             default_permissions=Permissions(d['default_permissions']),
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=ServerFlags(d.get('flags', 0)),
+            flags=flags,
             nsfw=d.get('nsfw', False),
             analytics=d.get('analytics', False),
             discoverable=d.get('discoverable', False),
@@ -1563,10 +1571,7 @@ class Parser:
     def parse_streamable_embed_special(self, d: raw.StreamableSpecial) -> StreamableEmbedSpecial:
         return StreamableEmbedSpecial(id=d['id'])
 
-    def parse_system_message_channels(
-        self,
-        d: raw.SystemMessageChannels,
-    ) -> SystemMessageChannels:
+    def parse_system_message_channels(self, d: raw.SystemMessageChannels, /) -> SystemMessageChannels:
         return SystemMessageChannels(
             user_joined=d.get('user_joined'),
             user_left=d.get('user_left'),
@@ -1574,7 +1579,7 @@ class Parser:
             user_banned=d.get('user_banned'),
         )
 
-    def parse_text_channel(self, d: raw.TextChannel) -> ServerTextChannel:
+    def parse_text_channel(self, d: raw.TextChannel, /) -> ServerTextChannel:
         icon = d.get('icon')
         default_permissions = d.get('default_permissions')
         role_permissions = d.get('role_permissions', {})
@@ -1626,7 +1631,13 @@ class Parser:
 
         avatar = d.get('avatar')
         status = d.get('status')
-        # profile = d.get('profile')
+
+        badges = _new_user_badges(UserBadges)
+        badges.value = d.get('badges', 0)
+
+        flags = _new_user_flags(UserFlags)
+        flags.value = d.get('flags', 0)
+
         bot = d.get('bot')
 
         return User(
@@ -1636,10 +1647,10 @@ class Parser:
             discriminator=d['discriminator'],
             display_name=d.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            badges=UserBadges(d.get('badges', 0)),
+            badges=badges,
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=UserFlags(d.get('flags', 0)),
+            flags=flags,
             privileged=d.get('privileged', False),
             bot=self.parse_bot_user_info(bot) if bot else None,
             relationship=RelationshipStatus(d['relationship']),

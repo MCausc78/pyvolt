@@ -7,12 +7,26 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing_extensions import Self
 
+
+class _MissingSentinel:
+    __slots__ = ()
+
+    def __bool__(self) -> typing.Literal[False]:
+        return False
+
+    def __repr__(self) -> typing.Literal['...']:
+        return '...'
+
+
+MISSING: typing.Any = _MissingSentinel()
+
 BF = typing.TypeVar('BF', bound='BaseFlags')
 
 
-class _Flag(typing.Generic[BF]):
+class flag(typing.Generic[BF]):
     __slots__ = (
         '_func',
+        '_parent',
         'doc',
         'name',
         'value',
@@ -21,36 +35,44 @@ class _Flag(typing.Generic[BF]):
         'use_any',
     )
 
-    def __init__(self, func: Callable[[BF], int], *, inverted: bool, use_any: bool, alias: bool) -> None:
-        self._func: Callable[[BF], int] = func
-        self.doc: str | None = func.__doc__
-        self.name: str = func.__name__
+    def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
+        self._func: Callable[[BF], int] = MISSING
+        self._parent: type[BF] = MISSING
+        self.doc: str | None = None
+        self.name: str = ''
         self.value: int = 0
         self.alias: bool = alias
         self.inverted: bool = inverted
         self.use_any: bool = use_any
 
+    def __call__(self, func: Callable[[BF], int], /) -> Self:
+        self._func = func
+        self.doc = func.__doc__
+        self.name = func.__name__
+        return self
 
-class _MissingSentinel:
-    __slots__ = ()
+    @typing.overload
+    def __get__(self, instance: BF, owner: type[BF], /) -> bool: ...
 
-    def __repr__(self) -> typing.Literal['IGNORE_THIS']:
-        return 'IGNORE_THIS'
+    @typing.overload
+    def __get__(self, instance: None, owner: type[BF], /) -> int: ...
 
+    def __get__(self, instance: BF | None, owner: type[BF], /) -> bool | int:
+        if instance is None:
+            if self._parent:
+                return self.value
+            # Needs to be here to allow prepare class
+            return self  # type: ignore
+        else:
+            return instance._get(self)
 
-MISSING: typing.Any = _MissingSentinel()
-
-
-def flag(
-    *, inverted: bool = False, use_any: bool = False, alias: bool = False, sentinel: BF = MISSING
-) -> Callable[[Callable[[BF], int]], bool]:
-    def decorator(func: Callable[[BF], int]) -> _Flag[BF]:
-        return _Flag(func, inverted=inverted, use_any=use_any, alias=alias)
-
-    return decorator  # type: ignore
+    def __set__(self, instance: BF, value: bool) -> None:
+        instance._set(self, value)
 
 
 class BaseFlags:
+    """Base class for flags."""
+
     if typing.TYPE_CHECKING:
         ALL_VALUE: typing.ClassVar[int]
         INVERTED: typing.ClassVar[bool]
@@ -65,45 +87,12 @@ class BaseFlags:
     def __init_subclass__(cls, *, inverted: bool = False, support_kwargs: bool = True) -> None:
         valid_flags = {}
         for k, f in inspect.getmembers(cls):
-            if isinstance(f, _Flag):
+            if isinstance(f, flag):
                 f.value = f._func(cls)
+                if f.alias:
+                    continue
                 valid_flags[f.name] = f.value
-
-                bits = f.value
-
-                if f.use_any and f.inverted:
-
-                    def fget(self: Self) -> bool:
-                        return (self.value & bits) == 0
-                elif f.use_any:
-
-                    def fget(self: Self) -> bool:
-                        return (self.value & bits) != 0
-                elif f.inverted:
-
-                    def fget(self: Self) -> bool:
-                        return (self.value & bits) == bits
-                else:
-
-                    def fget(self: Self) -> bool:
-                        return (self.value & bits) != bits
-
-                if f.inverted:
-
-                    def fset(self, value: bool) -> None:
-                        self &= ~value
-                else:
-
-                    def fset(self, value: bool) -> None:
-                        self |= value
-
-                prop = property(
-                    fget=fget,
-                    fset=fset,
-                    doc=f.doc,
-                )
-
-                setattr(cls, k, prop)
+                f._parent = cls
 
         default = 0
         if inverted:
@@ -140,6 +129,13 @@ class BaseFlags:
             cls.__init__ = init_without_kwargs  # type: ignore
 
         cls.__slots__ = ('value',)
+
+        if cls.INVERTED:
+            cls._get = cls._get1
+            cls._set = cls._set1
+        else:
+            cls._get = cls._get2
+            cls._set = cls._set2
         cls.ALL = cls(cls.ALL_VALUE)
         cls.NONE = cls(cls.NONE_VALUE)
 
@@ -147,6 +143,48 @@ class BaseFlags:
 
         def __init__(self, value: int = 0, /, **kwargs: bool) -> None:
             pass
+
+        def _get(self, other: flag[Self], /) -> bool:
+            return False
+
+        def _set(self, flag: flag[Self], value: bool, /) -> None:
+            pass
+
+    # used if flag is inverted
+    def _get1(self, other: flag[Self], /) -> bool:
+        if other.use_any and other.inverted:
+            return (self.value & ~other.value) == 0
+        elif other.use_any:
+            return (self.value & ~other.value) != 0
+        elif other.inverted:
+            return (self.value & ~other.value) == other.value
+        else:
+            return (self.value & ~other.value) != other.value
+
+    # used if flag is uninverted
+    def _get2(self, other: flag[Self], /) -> bool:
+        if other.use_any and other.inverted:
+            return (self.value & other.value) == 0
+        elif other.use_any:
+            return (self.value & other.value) != 0
+        elif other.inverted:
+            return (self.value & other.value) == other.value
+        else:
+            return (self.value & other.value) != other.value
+
+    # used if flag is inverted
+    def _set1(self, flag: flag[Self], value: bool, /) -> None:
+        if flag.inverted:
+            self.value &= ~flag.value
+        else:
+            self.value |= flag.value
+
+    # used if flag is uninverted
+    def _set2(self, flag: flag[Self], value: bool, /) -> None:
+        if flag.inverted:
+            self.value |= flag.value
+        else:
+            self.value &= ~flag.value
 
     @classmethod
     def all(cls) -> Self:
@@ -167,7 +205,7 @@ class BaseFlags:
 
     def __iter__(self) -> Iterator[tuple[str, bool]]:
         for name, value in self.__class__.__dict__.items():
-            if isinstance(value, _Flag):
+            if isinstance(value, flag):
                 if value.alias:
                     continue
                 yield (name, getattr(self, name))
@@ -263,16 +301,13 @@ class BaseFlags:
         return self.__class__(self.value ^ other)
 
 
-F = typing.TypeVar('F', bound='BaseFlags')
-
-
 def doc_flags(
     intro: str,
     /,
     *,
     added_in: str | None = None,
-) -> Callable[[type[F]], type[F]]:
-    def decorator(cls: type[F]) -> type[F]:
+) -> Callable[[type[BF]], type[BF]]:
+    def decorator(cls: type[BF]) -> type[BF]:
         directives = ''
 
         if added_in:
@@ -709,7 +744,6 @@ class UserFlags(BaseFlags, support_kwargs=True):
 
 
 __all__ = (
-    '_Flag',
     'flag',
     'BaseFlags',
     'doc_flags',
