@@ -220,11 +220,12 @@ class BaseFlags:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, self.__class__) and self.value == other.value
 
-    def __iand__(self, other: Self | int, /) -> None:
+    def __iand__(self, other: Self | int, /) -> Self:
         if isinstance(other, int):
             self.value &= other
         else:
             self.value &= other.value
+        return self
 
     def __int___(self) -> int:
         return self.value
@@ -234,17 +235,19 @@ class BaseFlags:
         max_value = -1 + (1 << max_bits)
         return self.from_value(self.value ^ max_value)
 
-    def __ior__(self, other: Self | int, /) -> None:
+    def __ior__(self, other: Self | int, /) -> Self:
         if isinstance(other, int):
             self.value |= other
         else:
             self.value |= other.value
+        return self
 
-    def __ixor__(self, other: Self | int, /) -> None:
+    def __ixor__(self, other: Self | int, /) -> Self:
         if isinstance(other, int):
             self.value ^= other
         else:
             self.value ^= other.value
+        return self
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
