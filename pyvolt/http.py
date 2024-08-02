@@ -74,6 +74,7 @@ from .errors import (
     InternalServerError,
     BadGateway,
 )
+from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
 from .invite import BaseInvite, ServerInvite, Invite
 from .message import (
     Reply,
@@ -81,13 +82,11 @@ from .message import (
     Masquerade,
     SendableEmbed,
     BaseMessage,
-    MessageFlags,
     Message,
 )
-from .permissions import Permissions, PermissionOverride
+from .permissions import PermissionOverride
 from .read_state import ReadState
 from .server import (
-    ServerFlags,
     Category,
     SystemMessageChannels,
     BaseRole,
@@ -104,8 +103,6 @@ from .user import (
     UserStatusEdit,
     UserProfile,
     UserProfileEdit,
-    UserBadges,
-    UserFlags,
     Mutuals,
     BaseUser,
     User,
@@ -1161,25 +1158,25 @@ class HTTPClient:
         List[:class:`Message`]
             The messages retrieved.
         """
-        p: raw.OptionsQueryMessages = {}
+        params: raw.OptionsQueryMessages = {}
         if limit is not None:
-            p['limit'] = limit
+            params['limit'] = limit
         if before is not None:
-            p['before'] = resolve_id(before)
+            params['before'] = resolve_id(before)
         if after is not None:
-            p['after'] = resolve_id(after)
+            params['after'] = resolve_id(after)
         if sort is not None:
-            p['sort'] = sort.value
+            params['sort'] = sort.value
         if nearby is not None:
-            p['nearby'] = resolve_id(nearby)
+            params['nearby'] = resolve_id(nearby)
         if populate_users is not None:
-            p['include_users'] = utils._bool(populate_users)
-        return self.state.parser.parse_messages(
-            await self.request(
-                routes.CHANNELS_MESSAGE_QUERY.compile(channel_id=resolve_id(channel)),
-                params=p,
-            )
+            params['include_users'] = utils._bool(populate_users)
+
+        resp: raw.BulkMessageResponse = await self.request(
+            routes.CHANNELS_MESSAGE_QUERY.compile(channel_id=resolve_id(channel)),
+            params=params,
         )
+        return self.state.parser.parse_messages(resp)
 
     async def add_reaction_to_message(
         self,
@@ -1389,7 +1386,7 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
+                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS
 
         if flags is not None:
             payload['flags'] = flags
@@ -1513,7 +1510,7 @@ class HTTPClient:
         :class:`ServerChannel`
             The updated server channel with new permissions.
         """
-        payload: raw.DataSetRolePermissions = {'permissions': {'allow': int(allow), 'deny': int(deny)}}
+        payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
         r = self.state.parser.parse_channel(
             await self.request(
                 routes.CHANNELS_PERMISSIONS_SET.compile(
@@ -1556,7 +1553,7 @@ class HTTPClient:
             The updated group/server channel with new permissions.
         """
         payload: raw.DataDefaultChannelPermissions = {
-            'permissions': (permissions.build() if isinstance(permissions, PermissionOverride) else int(permissions))
+            'permissions': (permissions.build() if isinstance(permissions, PermissionOverride) else permissions.value)
         }
         r = self.state.parser.parse_channel(
             await self.request(
@@ -2398,9 +2395,9 @@ class HTTPClient:
         role: :class:`ULIDOr`[:class:`BaseRole`]
             The role.
         allow: :class:`Permissions`
-            New allow bit flags.
+            New allow flags.
         deny: :class:`Permissions`
-            New deny bit flags.
+            New deny flags.
 
         Raises
         ------
@@ -2414,16 +2411,13 @@ class HTTPClient:
         :class:`Server`
             The newly updated server.
         """
-        payload: raw.DataSetRolePermissions = {'permissions': {'allow': int(allow), 'deny': int(deny)}}
-        d: raw.Server = await self.request(
+        payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
+        resp: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
             json=payload,
         )
 
-        return self.state.parser.parse_server(
-            d,
-            (True, d['channels']),
-        )
+        return self.state.parser.parse_server(resp, (True, resp['channels']))
 
     async def set_default_server_permissions(
         self,
@@ -2454,7 +2448,7 @@ class HTTPClient:
         :class:`Server`
             The newly updated server.
         """
-        payload: raw.DataPermissionsValue = {'permissions': int(permissions)}
+        payload: raw.DataPermissionsValue = {'permissions': permissions.value}
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(server_id=resolve_id(server)),
             json=payload,
@@ -2782,7 +2776,7 @@ class HTTPClient:
             else:
                 remove.append('SystemMessages')
         if flags is not UNDEFINED:
-            payload['flags'] = int(flags)
+            payload['flags'] = flags.value
         if discoverable is not UNDEFINED:
             payload['discoverable'] = discoverable
         if analytics is not UNDEFINED:
@@ -2999,9 +2993,9 @@ class HTTPClient:
             payload['profile'] = await profile.build(self.state)
             remove.extend(profile.remove)
         if badges is not UNDEFINED:
-            payload['badges'] = int(badges)
+            payload['badges'] = badges.value
         if flags is not UNDEFINED:
-            payload['flags'] = int(flags)
+            payload['flags'] = flags.value
         if len(remove) > 0:
             payload['remove'] = remove
         return await self.request(route, json=payload)
@@ -3406,7 +3400,7 @@ class HTTPClient:
             else:
                 payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         if permissions is not UNDEFINED:
-            payload['permissions'] = int(permissions)
+            payload['permissions'] = permissions.value
         if len(remove) > 0:
             payload['remove'] = remove
 
@@ -3493,7 +3487,7 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS.value
+                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS
 
         if flags is not None:
             payload['flags'] = flags

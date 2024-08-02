@@ -42,15 +42,15 @@ from .core import (
 )
 from .enums import MessageSort
 from .errors import NoData
-from .invite import Invite
-from .permissions import (
+from .flags import (
     Permissions,
-    PermissionOverride,
     UserPermissions,
     VIEW_ONLY_PERMISSIONS,
     DEFAULT_SAVED_MESSAGES_PERMISSIONS,
     DEFAULT_DM_PERMISSIONS,
 )
+from .invite import Invite
+from .permissions import PermissionOverride
 from .server import BaseRole, Role, Server, Member
 from .user import BaseUser, User
 
@@ -210,7 +210,7 @@ def _calculate_saved_messages_channel_permissions(perspective_id: str, user_id: 
 def _calculate_dm_channel_permissions(
     user_permissions: UserPermissions,
 ) -> Permissions:
-    if user_permissions & UserPermissions.SEND_MESSAGE:
+    if user_permissions.send_messages:
         return DEFAULT_DM_PERMISSIONS
     return VIEW_ONLY_PERMISSIONS
 

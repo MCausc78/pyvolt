@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from attrs import define, field
-from enum import IntFlag
 import typing
 
 from . import routes
@@ -36,8 +35,8 @@ from .core import (
     UndefinedOr,
     ULIDOr,
 )
+from .flags import UserPermissions, UserBadges, UserFlags
 from .enums import UserReportReason, Presence, RelationshipStatus
-from .permissions import UserPermissions
 
 
 if typing.TYPE_CHECKING:
@@ -193,65 +192,6 @@ class UserProfileEdit:
         if self.background:
             payload['background'] = await resolve_resource(state, self.background, tag='backgrounds')
         return payload
-
-
-class UserBadges(IntFlag):
-    """User badges bitfield."""
-
-    NONE = 0
-    """Zero badges bitfield."""
-
-    DEVELOPER = 1 << 0
-    """Revolt developer."""
-
-    TRANSLATOR = 1 << 1
-    """Helped translate Revolt."""
-
-    SUPPORTER = 1 << 2
-    """Monetarily supported Revolt."""
-
-    RESPONSIBLE_DISCLOSURE = 1 << 3
-    """Responsibly disclosed a security issue."""
-
-    FOUNDER = 1 << 4
-    """Revolt founder."""
-
-    PLATFORM_MODERATION = 1 << 5
-    """Platform moderator."""
-
-    ACTIVE_SUPPORTER = 1 << 6
-    """Active monetary supporter."""
-
-    PAW = 1 << 7
-    """🦊🦝"""
-
-    EARLY_ADOPTER = 1 << 8
-    """Joined as one of the first 1000 users in 2021."""
-
-    RESERVED_RELEVANT_JOKE_BADGE_1 = 1 << 9
-    """Amogus."""
-
-    RESERVED_RELEVANT_JOKE_BADGE_2 = 1 << 10
-    """Low resolution troll face."""
-
-
-class UserFlags(IntFlag):
-    """User flags bitfield."""
-
-    NONE = 0
-    """Zero badges bitfield."""
-
-    SUSPENDED = 1 << 0
-    """User has been suspended from the platform."""
-
-    DELETED = 1 << 1
-    """User has deleted their account."""
-
-    BANNED = 1 << 2
-    """User was banned off the platform."""
-
-    SPAM = 1 << 3
-    """User was marked as spam and removed from platform."""
 
 
 @define(slots=True)
@@ -574,16 +514,16 @@ def _calculate_user_permissions(
         RelationshipStatus.blocked,
         RelationshipStatus.blocked_other,
     ):
-        return UserPermissions.ACCESS
+        return UserPermissions(access=True)
 
-    result = 0
+    result = UserPermissions()
     if user_relationship in (RelationshipStatus.incoming, RelationshipStatus.outgoing):
-        result |= UserPermissions.ACCESS.value
+        result.access = True
 
     if user_bot or perspective_bot:
-        result |= UserPermissions.SEND_MESSAGE.value
+        result.send_messages = True
 
-    return UserPermissions(result)
+    return result
 
 
 @define(slots=True)
@@ -651,64 +591,64 @@ class User(DisplayUser):
     # flags
     def is_suspended(self) -> bool:
         """:class:`bool`: Whether this user has been suspended from the platform."""
-        return UserFlags.SUSPENDED in self.flags
+        return self.flags.suspended
 
     def is_deleted(self) -> bool:
         """:class:`bool`: Whether this user is deleted his account."""
-        return UserFlags.DELETED in self.flags
+        return self.flags.deleted
 
     def is_banned(self) -> bool:
         """:class:`bool`: Whether this user is banned off the platform."""
-        return UserFlags.BANNED in self.flags
+        return self.flags.banned
 
     def is_spammer(self) -> bool:
         """:class:`bool`: Whether this user was marked as spam and removed from platform."""
-        return UserFlags.SPAM in self.flags
+        return self.flags.spam
 
     # badges
     def is_developer(self) -> bool:
         """:class:`bool`: Whether this user is Revolt developer."""
-        return UserBadges.DEVELOPER in self.badges
+        return self.badges.developer
 
     def is_translator(self) -> bool:
         """:class:`bool`: Whether this user helped translate Revolt."""
-        return UserBadges.TRANSLATOR in self.badges
+        return self.badges.translator
 
     def is_supporter(self) -> bool:
         """:class:`bool`: Whether this user monetarily supported Revolt."""
-        return UserBadges.SUPPORTER in self.badges
+        return self.badges.supporter
 
     def is_responsible_disclosure(self) -> bool:
         """:class:`bool`: Whether this user responsibly disclosed a security issue."""
-        return UserBadges.RESPONSIBLE_DISCLOSURE in self.badges
+        return self.badges.responsible_disclosure
 
     def is_founder(self) -> bool:
         """:class:`bool`: Whether this user is Revolt founder."""
-        return UserBadges.FOUNDER in self.badges
+        return self.badges.founder
 
     def is_platform_moderator(self) -> bool:
         """:class:`bool`: Whether this user is platform moderator."""
-        return UserBadges.PLATFORM_MODERATION in self.badges
+        return self.badges.platform_moderation
 
     def is_active_supporter(self) -> bool:
         """:class:`bool`: Whether this user is active monetary supporter."""
-        return UserBadges.ACTIVE_SUPPORTER in self.badges
+        return self.badges.active_supporter
 
     def is_paw(self) -> bool:
-        """:class:`bool`: Whether this user is fox/raccoon (🦊🦝)."""
-        return UserBadges.PAW in self.badges
+        """:class:`bool`: Whether this user likes fox/raccoon (🦊🦝)."""
+        return self.badges.paw
 
     def is_early_adopter(self) -> bool:
         """:class:`bool`: Whether this user have joined Revolt as one of the first 1000 users in 2021."""
-        return UserBadges.EARLY_ADOPTER in self.badges
+        return self.badges.early_adopter
 
     def is_relevant_joke_1(self) -> bool:
         """:class:`bool`: Whether this user have given funny joke (Called "sus", displayed as Amogus in Revite)."""
-        return UserBadges.RESERVED_RELEVANT_JOKE_BADGE_1 in self.badges
+        return self.badges.reserved_relevant_joke_badge_1
 
     def is_relevant_joke_2(self) -> bool:
         """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
-        return UserBadges.RESERVED_RELEVANT_JOKE_BADGE_2 in self.badges
+        return self.badges.reserved_relevant_joke_badge_2
 
 
 @define(slots=True)
@@ -764,8 +704,6 @@ __all__ = (
     'UserProfile',
     'PartialUserProfile',
     'UserProfileEdit',
-    'UserBadges',
-    'UserFlags',
     'Relationship',
     'Mutuals',
     'BaseUser',

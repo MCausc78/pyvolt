@@ -41,7 +41,7 @@ from .auth import (
     MFAStatus,
     LoginResult,
 )
-from .bot import BotFlags, Bot, PublicBot
+from .bot import Bot, PublicBot
 from .cdn import (
     AssetMetadata,
     StatelessAsset,
@@ -138,6 +138,14 @@ from .events import (
     LogoutEvent,
     AuthenticatedEvent,
 )
+from .flags import (
+    BotFlags,
+    MessageFlags,
+    Permissions,
+    ServerFlags,
+    UserBadges,
+    UserFlags,
+)
 from .invite import (
     BaseInvite,
     ServerPublicInvite,
@@ -167,13 +175,11 @@ from .message import (
     StatelessMessagePinnedSystemEvent,
     StatelessMessageUnpinnedSystemEvent,
     StatelessSystemEvent,
-    MessageFlags,
     Message,
 )
 from .permissions import Permissions, PermissionOverride
 from .read_state import ReadState
 from .server import (
-    ServerFlags,
     Category,
     SystemMessageChannels,
     PartialRole,
@@ -191,8 +197,6 @@ from .user import (
     UserStatusEdit,
     StatelessUserProfile,
     PartialUserProfile,
-    UserBadges,
-    UserFlags,
     Relationship,
     Mutuals,
     PartialUser,
@@ -279,7 +283,7 @@ class Parser:
             height=d.get('height'),
         )
 
-    def parse_asset(self, d: raw.File) -> StatelessAsset:
+    def parse_asset(self, d: raw.File, /) -> StatelessAsset:
         return StatelessAsset(
             id=d['_id'],
             filename=d['filename'],
@@ -371,7 +375,7 @@ class Parser:
     def parse_bot(self, d: raw.Bot, user: raw.User) -> Bot:
         return self._parse_bot(d, self.parse_user(user))
 
-    def parse_bot_user_info(self, d: raw.BotInformation) -> BotUserInfo:
+    def parse_bot_user_info(self, d: raw.BotInformation, /) -> BotUserInfo:
         return BotUserInfo(owner_id=d['owner'])
 
     def parse_bots(self, d: raw.OwnedBotsResponse) -> list[Bot]:
@@ -719,6 +723,7 @@ class Parser:
     def parse_member(
         self,
         d: raw.Member,
+        /,
         *,
         user: User | None = None,
         users: dict[str, User] | None = None,
@@ -760,6 +765,7 @@ class Parser:
     def parse_message(
         self,
         d: raw.Message,
+        /,
         *,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
@@ -1105,7 +1111,7 @@ class Parser:
     def parse_none_embed_special(self, _: raw.NoneSpecial) -> NoneEmbedSpecial:
         return _NONE_EMBED_SPECIAL
 
-    def parse_own_user(self, d: raw.User) -> OwnUser:
+    def parse_own_user(self, d: raw.User, /) -> OwnUser:
         avatar = d.get('avatar')
         status = d.get('status')
         # profile = d.get("profile")
@@ -1288,6 +1294,7 @@ class Parser:
         self,
         d: raw.Server,
         channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]),
+        /,
     ) -> Server:
         server_id = d['_id']
 
@@ -1325,6 +1332,7 @@ class Parser:
         self,
         d: raw.Server,
         channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[raw.Channel]]),
+        /,
     ) -> Server:
         internal_channels: (
             tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]
@@ -1612,7 +1620,7 @@ class Parser:
     def parse_unknown_public_invite(self, d: dict[str, typing.Any]) -> UnknownPublicInvite:
         return UnknownPublicInvite(state=self.state, code=d['code'], payload=d)
 
-    def parse_user(self, d: raw.User) -> User | OwnUser:
+    def parse_user(self, d: raw.User, /) -> User | OwnUser:
         if d['relationship'] == 'User':
             return self.parse_own_user(d)
 
@@ -1694,7 +1702,7 @@ class Parser:
             after=after,
         )
 
-    def parse_user_status(self, d: raw.UserStatus) -> UserStatus:
+    def parse_user_status(self, d: raw.UserStatus, /) -> UserStatus:
         presence = d.get('presence')
 
         return UserStatus(

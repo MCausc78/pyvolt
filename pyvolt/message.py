@@ -27,7 +27,6 @@ from __future__ import annotations
 import abc
 from attrs import define, field
 from datetime import datetime
-from enum import IntFlag
 import typing
 
 
@@ -46,6 +45,7 @@ from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
 from .enums import ContentReportReason
 from .errors import NoData
+from .flags import MessageFlags
 from .server import Member
 from .user import BaseUser, User
 
@@ -1390,11 +1390,6 @@ SystemEvent = (
 )
 
 
-class MessageFlags(IntFlag):
-    SUPPRESS_NOTIFICATIONS = 1 << 0
-    """Whether the message will not send push/desktop notifications."""
-
-
 @define(slots=True)
 class Message(BaseMessage):
     """Representation of message in channel on Revolt."""
@@ -1540,7 +1535,7 @@ class Message(BaseMessage):
 
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message is silent."""
-        return MessageFlags.SUPPRESS_NOTIFICATIONS in self.flags
+        return self.flags.suppress_notifications
 
 
 __all__ = (
@@ -1580,6 +1575,5 @@ __all__ = (
     'MessageUnpinnedSystemEvent',
     'StatelessSystemEvent',
     'SystemEvent',
-    'MessageFlags',
     'Message',
 )

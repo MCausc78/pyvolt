@@ -27,7 +27,6 @@ from __future__ import annotations
 from attrs import define, field
 from collections.abc import Mapping
 from datetime import datetime, timedelta
-from enum import IntFlag
 import typing
 
 from . import (
@@ -46,12 +45,11 @@ from .core import (
 from .emoji import ServerEmoji
 from .enums import ChannelType, ContentReportReason, RelationshipStatus
 from .errors import NoData
+from .flags import Permissions, ServerFlags, UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
 from .state import State
 from .user import (
     UserStatus,
-    UserBadges,
-    UserFlags,
     BaseUser,
     DisplayUser,
     BotUserInfo,
@@ -67,16 +65,6 @@ if typing.TYPE_CHECKING:
         VoiceChannel,
         ServerChannel,
     )
-
-
-class ServerFlags(IntFlag):
-    NONE = 0
-
-    VERIFIED = 1 << 0
-    """Whether the server is verified."""
-
-    OFFICIAL = 1 << 1
-    """Whether the server is ran by Revolt team."""
 
 
 class Category:
@@ -762,16 +750,16 @@ def _calculate_server_permissions(
     *,
     default_permissions: Permissions,
 ) -> Permissions:
-    result = default_permissions.value
+    result = default_permissions.copy()
 
     for role in roles:
-        result |= role.permissions.allow.value
-        result &= ~role.permissions.deny.value
+        result |= role.permissions.allow
+        result &= ~role.permissions.deny
 
     if target_timeout is not None and target_timeout > utils.utcnow():
-        result &= ~Permissions.SEND_MESSAGE.value
+        result.send_messages = True
 
-    return Permissions(result)
+    return result
 
 
 @define(slots=True)
@@ -944,11 +932,11 @@ class Server(BaseServer):
 
     def is_verified(self) -> bool:
         """:class:`bool`: Whether the server is verified."""
-        return ServerFlags.VERIFIED in self.flags
+        return self.flags.verified
 
     def is_official(self) -> bool:
         """:class:`bool`: Whether the server is ran by Revolt team."""
-        return ServerFlags.OFFICIAL in self.flags
+        return self.flags.official
 
     def permissions_for(
         self,
@@ -1252,7 +1240,6 @@ class MemberList:
 
 
 __all__ = (
-    'ServerFlags',
     'Category',
     'SystemMessageChannels',
     'BaseRole',

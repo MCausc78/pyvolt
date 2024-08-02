@@ -25,19 +25,11 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from attrs import define, field
-from enum import IntFlag
 
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
+from .flags import BotFlags
 from .user import User
-
-
-class BotFlags(IntFlag):
-    """Flags that may be attributed to a bot."""
-
-    NONE = 0
-    VERIFIED = 1 << 0
-    OFFICIAL = 1 << 1
 
 
 @define(slots=True)
@@ -123,4 +115,4 @@ class PublicBot(BaseBot):
     """The bot description."""
 
 
-__all__ = ('BotFlags', 'BaseBot', 'Bot', 'PublicBot')
+__all__ = ('BaseBot', 'Bot', 'PublicBot')
