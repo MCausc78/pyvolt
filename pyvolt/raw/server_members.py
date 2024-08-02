@@ -1,57 +1,61 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import basic, files, users
+from .basic import Bool
+from .files import File
+from .users import User
 
 
-class Member(t.TypedDict):
+class Member(typing.TypedDict):
     _id: MemberCompositeKey
     joined_at: str
-    nickname: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
-    roles: t.NotRequired[list[str]]
-    timeout: t.NotRequired[str]
+    nickname: typing.NotRequired[str]
+    avatar: typing.NotRequired[File]
+    roles: typing.NotRequired[list[str]]
+    timeout: typing.NotRequired[str]
 
 
-class PartialMember(t.TypedDict):
-    nickname: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
-    roles: t.NotRequired[list[str]]
-    timeout: t.NotRequired[str]
+class PartialMember(typing.TypedDict):
+    nickname: typing.NotRequired[str]
+    avatar: typing.NotRequired[File]
+    roles: typing.NotRequired[list[str]]
+    timeout: typing.NotRequired[str]
 
 
-class MemberCompositeKey(t.TypedDict):
+class MemberCompositeKey(typing.TypedDict):
     server: str
     user: str
 
 
-FieldsMember = t.Literal["Nickname", "Avatar", "Roles", "Timeout"]
+FieldsMember = typing.Literal['Nickname', 'Avatar', 'Roles', 'Timeout']
+RemovalIntention = typing.Literal['Leave', 'Kick', 'Ban']
 
 
-class OptionsFetchAllMembers(t.TypedDict):
-    exclude_offline: t.NotRequired[basic.Bool]
+class OptionsFetchAllMembers(typing.TypedDict):
+    exclude_offline: typing.NotRequired[Bool]
 
 
-class AllMemberResponse(t.TypedDict):
+class AllMemberResponse(typing.TypedDict):
     members: list[Member]
-    users: list[users.User]
+    users: list[User]
 
 
-class DataMemberEdit(t.TypedDict):
-    nickname: t.NotRequired[str]
-    avatar: t.NotRequired[str]
-    roles: t.NotRequired[list[str]]
-    timeout: t.NotRequired[str]
-    remove: t.NotRequired[list[FieldsMember]]
+class DataMemberEdit(typing.TypedDict):
+    nickname: typing.NotRequired[str]
+    avatar: typing.NotRequired[str]
+    roles: typing.NotRequired[list[str]]
+    timeout: typing.NotRequired[str]
+    remove: typing.NotRequired[list[FieldsMember]]
 
 
 __all__ = (
-    "Member",
-    "PartialMember",
-    "MemberCompositeKey",
-    "FieldsMember",
-    "OptionsFetchAllMembers",
-    "AllMemberResponse",
-    "DataMemberEdit",
+    'Member',
+    'PartialMember',
+    'MemberCompositeKey',
+    'FieldsMember',
+    'RemovalIntention',
+    'OptionsFetchAllMembers',
+    'AllMemberResponse',
+    'DataMemberEdit',
 )

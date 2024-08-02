@@ -1,0 +1,3673 @@
+{
+    "servers": [
+        {
+            "_id": "01HZJX93WB0W6QMFFC2E5VNG23",
+            "name": "peeps",
+            "description": "peeps is an active chatting server with memes and more",
+            "icon": {
+                "_id": "JTnWjuOrDZw6-A0ey94dvfVtDIvydD7bisr_aU82v_",
+                "tag": "icons",
+                "filename": "GSKz91QUnRHWnO92E697pRpDl7BBkHnBCVvQVHTppK.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 768,
+                    "height": 768
+                },
+                "content_type": "image/jpeg",
+                "size": 96701
+            },
+            "banner": {
+                "_id": "ZDeq632SkOHK26Arq7j4uX0V_bbyD10g8NWd8l1eH_",
+                "tag": "banners",
+                "filename": "il_fullxfull.2923896440_644n.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2750,
+                    "height": 2125
+                },
+                "content_type": "image/jpeg",
+                "size": 453049
+            },
+            "tags": [],
+            "members": 71,
+            "activity": "high"
+        },
+        {
+            "_id": "01F80118K1F2EYD9XAMCPQ0BCT",
+            "name": "Catgirl Dungeon",
+            "description": "The gayest corner of the internet :3\n\nNon-catgirls welcome too ❤️",
+            "icon": {
+                "_id": "XIwQosw_3USL_XIvzZDyIKSi9LlMryrOPJNKsTrqts",
+                "tag": "icons",
+                "filename": "gaysex.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 17439
+            },
+            "banner": {
+                "_id": "ZTPUKiZ6OP1Yqox2PNOBVx_q1U3u9hXBbn84tLJXzK",
+                "tag": "banners",
+                "filename": "20230626_221308-2.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 5120,
+                    "height": 2880
+                },
+                "content_type": "image/jpeg",
+                "size": 1321952
+            },
+            "flags": 2,
+            "tags": [],
+            "members": 6804,
+            "activity": "high"
+        },
+        {
+            "_id": "01HVKQBBQ3DQVVNK3M8DHXV30D",
+            "name": "Femboy Kingdom",
+            "icon": {
+                "_id": "1tTV6RqTik3qntjw2tFXg-HfCW_Dtmp4cYBA385BzO",
+                "tag": "icons",
+                "filename": "femdom logo small.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2500,
+                    "height": 2500
+                },
+                "content_type": "image/png",
+                "size": 2082228
+            },
+            "banner": {
+                "_id": "LoBAfzfxv-0bObWR4pYpByG2joAQ_o1LeqZByOrLSY",
+                "tag": "banners",
+                "filename": "Hyrule_Castlesmallimagesize.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3840,
+                    "height": 2160
+                },
+                "content_type": "image/png",
+                "size": 7096268
+            },
+            "description": "! **18+ ONLY** !\n\na comfy server for femboys, but also home to girllikers, boykissers, silly gays of all kinds, and everyone else, too!!",
+            "tags": [],
+            "members": 225,
+            "activity": "high"
+        },
+        {
+            "_id": "01F7ZSBSFHQ8TA81725KQCSDDP",
+            "name": "Revolt",
+            "icon": {
+                "_id": "gtc0gJE2S3RvuDhrl2-JeakvgbqEGr2acvBnRTTh6k",
+                "tag": "icons",
+                "filename": "logo_round.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 7558
+            },
+            "banner": {
+                "_id": "G_Q-6Y8KiGFVBNY2qVtDS25bX9Dh14CK2Py3TmLN_P",
+                "tag": "banners",
+                "filename": "Lounge_Banner_Old.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 138982
+            },
+            "description": "Official server run by the team behind Revolt.\nGeneral conversation and support server.\n \nAppeals and reports: lounge@revolt.chat",
+            "flags": 1,
+            "tags": [
+                "revolt"
+            ],
+            "members": 39737,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HH6WE8A9RR6N9YVZNZAJRG92",
+            "name": "Revolt過密サーバー！",
+            "description": "ja japan　7/3現在 discover5位！",
+            "icon": {
+                "_id": "-Drsvy3FxRt4A-ENypzmhM3puuC9Efyb2oz8S_c94E",
+                "tag": "icons",
+                "filename": "image.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 150,
+                    "height": 147
+                },
+                "content_type": "image/png",
+                "size": 43303
+            },
+            "banner": {
+                "_id": "wkXnd3a9mlzHF4ChPrS4VUXC3NXazKMKj72DVnHV_m",
+                "tag": "banners",
+                "filename": "名称未設定のデザイン.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1280,
+                    "height": 720
+                },
+                "content_type": "image/png",
+                "size": 108794
+            },
+            "tags": [
+                "ja",
+                "japan"
+            ],
+            "members": 352,
+            "activity": "medium"
+        },
+        {
+            "_id": "01GDS83RMZW89AV0BZG24NEXYC",
+            "name": "Furgatory",
+            "icon": {
+                "_id": "Q93qhBFrwVQE43rumFZFdRalq6UYR0JyHxssXOitTA",
+                "tag": "icons",
+                "filename": "Furgatory.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 1000
+                },
+                "content_type": "image/webp",
+                "size": 65770
+            },
+            "description": "**Furgatory** is a simple server, meant to be fun, chaotic, and with lenient rules!\nYou either love it, or absolutely **HATE** it.\n\n*PS: This server is bridged with Discord.*\n\nuhh yes\n\nfurry chill chaotic fun",
+            "banner": {
+                "_id": "54hCHvbcG0P2j1DlomchOxR4ITkco4gGUWoSpYL_fK",
+                "tag": "banners",
+                "filename": "ujyhtgj.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 7111,
+                    "height": 4000
+                },
+                "content_type": "image/jpeg",
+                "size": 2231838
+            },
+            "flags": 2,
+            "tags": [
+                "furry",
+                "chill",
+                "chaotic",
+                "fun"
+            ],
+            "members": 392,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HPW0178JYC2HV7AB3Y9H2GEA",
+            "name": "Terraria",
+            "icon": {
+                "_id": "QNTsRnYMjuanz9-SFyY1YdQSy5O3sK62ycdCwo3FBv",
+                "tag": "icons",
+                "filename": "image(1).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 970,
+                    "height": 970
+                },
+                "content_type": "image/png",
+                "size": 27348
+            },
+            "description": "The largest community-owned server for all Terrarians to chat about the beloved game itself, Terraria!",
+            "banner": {
+                "_id": "qXUVCBGhdgJVWwqORLCN9cS5B2xtuL8xSCsnYrLfcl",
+                "tag": "banners",
+                "filename": "steamuserimages-a.akamaihd.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 528776
+            },
+            "tags": [],
+            "members": 223,
+            "activity": "medium"
+        },
+        {
+            "_id": "01G5DNGB7K9JN685WABZKTYQ0X",
+            "name": "Social Haven",
+            "icon": {
+                "_id": "3mNkqRCBw88PveUOYoshTfOi8KNzHtWzWQs2uHRW_l",
+                "tag": "icons",
+                "filename": "SocialHaven.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 421,
+                    "height": 421
+                },
+                "content_type": "image/gif",
+                "size": 1806072
+            },
+            "banner": {
+                "_id": "gNOForvh8ourH7EyT05Xbc402pszXvxFDx48keTMd1",
+                "tag": "banners",
+                "filename": "SPANN.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 960,
+                    "height": 540
+                },
+                "content_type": "image/png",
+                "size": 503321
+            },
+            "description": "For anyone who wants to discuss things from development, anime, tv shows... Or even to get help on using Ahni (Bot).",
+            "tags": [],
+            "members": 516,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HC4Y9963EZBZD40W28V0SWD2",
+            "name": "Snek Cult",
+            "description": "LGBTQA+ safe space, friendly, chill server!\n\n~~The cult part is a joke, we are just chaotic~~",
+            "icon": {
+                "_id": "pYTYnO9T0lYkNDfFvlWNPVYvSCWpZbP2s1MZMO_JYa",
+                "tag": "icons",
+                "filename": "SnakeLarge.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 900,
+                    "height": 542
+                },
+                "content_type": "image/jpeg",
+                "size": 55605
+            },
+            "banner": {
+                "_id": "nCU-3RhI8u4jYi3FCgQ8ERD7N5OSMADHDXgT2BVwlt",
+                "tag": "banners",
+                "filename": "Torhola_cave_entrance_Aug2008.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 800,
+                    "height": 600
+                },
+                "content_type": "image/jpeg",
+                "size": 189459
+            },
+            "tags": [],
+            "members": 1261,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HBKJD949CPKM31A5WS3DJF4F",
+            "name": "𝘓𝘦𝘧𝘵𝘪𝘴𝘵𝘴 𝘝𝘰𝘪𝘤𝘦",
+            "icon": {
+                "_id": "_PeslCCAi33E97fxwQyITqtZIeJZpASYbmMJYxDN02",
+                "tag": "icons",
+                "filename": "Screenshot_2024-04-02-20-01-12-50_99c04817c0de5652397fc8b56c3b3817.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 750,
+                    "height": 750
+                },
+                "content_type": "image/png",
+                "size": 431448
+            },
+            "banner": {
+                "_id": "XCSbcx3CbaKIh6RrR7QFLaZD_iiZ5W44bXnSelpyKG",
+                "tag": "banners",
+                "filename": "Sans titre (3) (12).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 2353977
+            },
+            "description": "🔴| A server for generally left adjacent and liberatory leftists people to hang out. |⚫\n‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎‎ ‎ ‎‎ ‎ ‎ ‎ ‎‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎‎ ‎ ‎ ‎ ‎  ‎ ‎ ‎ ‎   ‎ ‎ ‎ ‎ ‎‎‎ ‎ ‎ ‎‎ ‎ ‎‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎‎‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ \nleftismpoliticalpoliticsantifascistsantifascismsocialistssocialismsocialsanarchistsanarchismcommunistscommunismancomsbolcheviksbolchevismdemsocssocdemssyndicalistssyndicalismmarxistsmarxismleninistsleninismmaoistsmaoismmlmtrotskyiststrotskyismproletariatsproletarianredflagsfeministsfeminismecologyecologicallgbt+lgbtqa+lgbtqia+2slgbtq+transgenderstransfemstransmascsnonbinaryqueersblacklivesmatterblmpalestinianspalestineelections",
+            "tags": [
+                "left",
+                "leftists",
+                "leftism",
+                "political",
+                "politics",
+                "antifascists",
+                "antifascism",
+                "socialists",
+                "socialism",
+                "socials"
+            ],
+            "members": 202,
+            "activity": "medium"
+        },
+        {
+            "_id": "01G26VQTAV4T8FDTXGKAEN6WW3",
+            "name": "Revolt Türkiye 🇹🇷",
+            "icon": {
+                "_id": "YYNYH5lJD9Qrvbxc7kH_2zHuf2wV__J80EXh0J49gV",
+                "tag": "icons",
+                "filename": "Revolt.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 178,
+                    "height": 180
+                },
+                "content_type": "image/jpeg",
+                "size": 5049
+            },
+            "description": null,
+            "banner": {
+                "_id": "NLLL9LapfIFVBkoOZnv6bt4yKuJlhW9ijd46hJF2dy",
+                "tag": "banners",
+                "filename": "revoltbg.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 720
+                },
+                "content_type": "image/png",
+                "size": 113114
+            },
+            "tags": [],
+            "members": 246,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HJRBQKJN8DPDDF8EWC5NP0Y3",
+            "name": "Vimjoyer's server",
+            "banner": {
+                "_id": "29k_SQ4_gTLMUGmZY0xmtQUl-pq9z8FA7_PYUwxool",
+                "tag": "banners",
+                "filename": "1674902814_top-fon-com-p-fon-dlya-prezentatsii-krestovie-pokhodi-95.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 355837
+            },
+            "icon": {
+                "_id": "sLZPNq_baVjDEGw71lwdg-Vel7C5z97NThJ_qJ888G",
+                "tag": "icons",
+                "filename": "da9197e4c321bde3cbbd82b6b2ede81d.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 460,
+                    "height": 460
+                },
+                "content_type": "image/png",
+                "size": 347738
+            },
+            "description": "Vimjoyer is a laid-back technical community focused primarily on [NixOS](https://nixos.org/) and the associated [YouTube channel](https://www.youtube.com/@vimjoyer).\n\nDiscord Server: https://discord.gg/vimjoyer-s-server-1133342557494067232",
+            "tags": [],
+            "members": 35,
+            "activity": "medium"
+        },
+        {
+            "_id": "01FPH1PAT0RRZRRRHX05S5PAHF",
+            "name": "Metal Music",
+            "banner": {
+                "_id": "isp_efybah3RPr8tWUqmDKQAjB56oJaZEOn7VX3Jev",
+                "tag": "banners",
+                "filename": "thyrfi8.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 997,
+                    "height": 496
+                },
+                "content_type": "image/jpeg",
+                "size": 113020
+            },
+            "icon": {
+                "_id": "npIBCmZWEcSS9uZ3S4xKWSywdKY_1bZAIromqFtPIJ",
+                "tag": "icons",
+                "filename": "Metal Horns.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 238,
+                    "height": 250
+                },
+                "content_type": "image/jpeg",
+                "size": 7765
+            },
+            "description": "Metal Music to share and discover \n\nMetal, MetalMusic, metal, metalmusic, Musikk, #\\M/ #\\m/, Bands",
+            "tags": [
+                "metal",
+                "metalmusic",
+                "musikk",
+                "bands"
+            ],
+            "members": 454,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HMHX9YTP6JDMSMF2V2YK5XSC",
+            "name": "líf's tea house",
+            "icon": {
+                "_id": "Bhv0oJdHSis42wVpKHzG2ocee9FjcwjhGaRksftf5B",
+                "tag": "icons",
+                "filename": "clipart1343880.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 949,
+                    "height": 797
+                },
+                "content_type": "image/png",
+                "size": 51880
+            },
+            "banner": {
+                "_id": "5ITVvJsJH4oZDAuIzEOdV-Y-aOkhuyJXLsyLs7xH0o",
+                "tag": "banners",
+                "filename": "deers_den_japanese_inn_by_mizakilightsword_dgejrsf-fullview.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1280,
+                    "height": 718
+                },
+                "content_type": "image/jpeg",
+                "size": 247313
+            },
+            "description": "hey there, hope you like tea and a cosy atmosphere! let's vibe and spill the tea!\n\n(please don't spill any actual tea...)\n\ncome on in! c:\n\ntea friendly chat chatting games gaming cosy cozy art music lgbtq+",
+            "tags": [
+                "tea",
+                "friendly",
+                "chat",
+                "chatting",
+                "games",
+                "gaming",
+                "cosy",
+                "cozy",
+                "art",
+                "music"
+            ],
+            "members": 180,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HY3ZH08W97DNEBEAJENYBVQW",
+            "name": "Hazbin Hotel",
+            "icon": {
+                "_id": "aGAHw5a2wc9-iyiXYvTi2HFQk-rE1VfphFqc2R2fqM",
+                "tag": "icons",
+                "filename": "Screenshot_20240517-151315.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 941,
+                    "height": 939
+                },
+                "content_type": "image/png",
+                "size": 1313620
+            },
+            "description": "A server open to everyone. (But I do suggest watching Hazbin Hotel.)",
+            "banner": {
+                "_id": "5sgnDL1rt4H89FuynB7vBSvPKE0E6u6E6ezMUKQDym",
+                "tag": "banners",
+                "filename": "Screenshot_20240516-150906.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 939,
+                    "height": 937
+                },
+                "content_type": "image/png",
+                "size": 959759
+            },
+            "tags": [],
+            "members": 72,
+            "activity": "medium"
+        },
+        {
+            "_id": "01GMSVV3HESTM2QNV6FSRR66FK",
+            "name": "World Three (WWW)",
+            "icon": {
+                "_id": "7jJUkr0_FXGJynrco8HsVAq4wJxXPIziTEkAPYOqZ6",
+                "tag": "icons",
+                "filename": "Logo2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 825,
+                    "height": 825
+                },
+                "content_type": "image/png",
+                "size": 635311
+            },
+            "banner": {
+                "_id": "3jIMyKk7LSJF1Dt0xtlFz1FS0_fFpTJ74zneC6WNV8",
+                "tag": "banners",
+                "filename": "bg_main(5).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1920
+                },
+                "content_type": "image/png",
+                "size": 3462831
+            },
+            "description": "A Revolt Version of World Three\n[Guilded](https://guilded.gg/www)\n[Discord](https://discord.gg/R4KDE9NK6J)\n",
+            "tags": [],
+            "members": 73,
+            "activity": "medium"
+        },
+        {
+            "_id": "01GKCGQT0M5YNR6Y0JD4B7MD2K",
+            "name": "Linux Gang",
+            "banner": {
+                "_id": "FtDdlGoFMtqsv8USM7xsZo7c6DWLsohAeTFcrlliVo",
+                "tag": "banners",
+                "filename": "image.psd(2).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1040
+                },
+                "content_type": "image/png",
+                "size": 302367
+            },
+            "icon": {
+                "_id": "Sj0oL7W9_xECKdxRg5y9aGka4Af4yK1mFakVoi3FzO",
+                "tag": "icons",
+                "filename": "10eb37bf4d557a7e0a4d883c9b3f80c3.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 453,
+                    "height": 453
+                },
+                "content_type": "image/jpeg",
+                "size": 26199
+            },
+            "description": "Epic Linux Revolt server (BRIDGED FROM DISCORD SERVER https://discord.gg/linuxgang)\nThis is official Revolt variant of Linux Gang, currently used as a backup. linux programming gang memes meme fun",
+            "tags": [
+                "linux",
+                "programming",
+                "gang",
+                "memes",
+                "meme",
+                "fun"
+            ],
+            "members": 621,
+            "activity": "medium"
+        },
+        {
+            "_id": "01HQ8K0RMZ9A52F8BDPAR0JKRE",
+            "name": "Starlight City | Anime+",
+            "banner": {
+                "_id": "hjQOtyar483kLcmJb6DOPKPuSf-RaiKi89g3C7SVPt",
+                "tag": "banners",
+                "filename": "Starlight City.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 529,
+                    "height": 164
+                },
+                "content_type": "image/png",
+                "size": 155878
+            },
+            "description": "ANIME+ Server. \nEveryone Welcome (16+)\nEnglish Only!!",
+            "icon": {
+                "_id": "odP3IrTBbBhBoWrKGXYdw4s3242GtxEerPTu2vElI7",
+                "tag": "icons",
+                "filename": "img-yW0jCZHPou5zNsQesUZIf.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 768,
+                    "height": 768
+                },
+                "content_type": "image/jpeg",
+                "size": 130899
+            },
+            "tags": [],
+            "members": 101,
+            "activity": "low"
+        },
+        {
+            "_id": "01H0M660HG4MQV4Q7SZ79EX6JF",
+            "name": "ReVoYo",
+            "description": "The Revolt server for all Hoyoverse fans out there!\n\nTags: Genshin GenshinImpact Honkai StarRail HSR ZZZ",
+            "banner": {
+                "_id": "2ZtqTBG6DrMHxpz1hqzIgTQkuVVQKen3DpTa7Gw22F",
+                "tag": "banners",
+                "filename": "moby-kokomi.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2150,
+                    "height": 1518
+                },
+                "content_type": "image/jpeg",
+                "size": 493196
+            },
+            "icon": {
+                "_id": "wq9PL5UqwbnAIP2B_LtXytzVHTZ0001U2aEvZt0ipc",
+                "tag": "icons",
+                "filename": "firefy.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 55193
+            },
+            "tags": [
+                "genshin",
+                "genshinimpact",
+                "honkai",
+                "starrail",
+                "hsr",
+                "zzz"
+            ],
+            "members": 615,
+            "activity": "low"
+        },
+        {
+            "_id": "01GT8N19H8Y8XRA6TMZ9JGX3CZ",
+            "name": "Programmer's Lounge",
+            "icon": {
+                "_id": "N_qoHg4BjHDYyp0FQFZ8SgbwH_cIGK4mHmputuqoA0",
+                "tag": "icons",
+                "filename": "Sequence-4-_1_.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 190,
+                    "height": 190
+                },
+                "content_type": "image/webp",
+                "size": 1815636
+            },
+            "banner": {
+                "_id": "cui2dtXLcihgWSoX1zGxZ0xonLRpLs0VsJtPaVm4l5",
+                "tag": "banners",
+                "filename": "ezgif.com-resize-_7_.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 300,
+                    "height": 225
+                },
+                "content_type": "image/webp",
+                "size": 1487472
+            },
+            "description": "👨‍💻[NEW SERVER] - The old server has been raided and we had to start again here.\n                             💿\nLounge for programmers 😎 - non-programmers are welcome as well!\n\nrevolt programming Linux memelords",
+            "flags": 2,
+            "tags": [
+                "revolt",
+                "programming",
+                "linux",
+                "memelords"
+            ],
+            "members": 2098,
+            "activity": "low"
+        },
+        {
+            "_id": "01HXH7XSA0SSGTS9YQNR28GRWS",
+            "name": "El Chat",
+            "icon": {
+                "_id": "XW8qDDiG3gk7B6RoOY_92CEhCnoPcZJVF4O4tAv2--",
+                "tag": "icons",
+                "filename": "Picture1.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 670,
+                    "height": 595
+                },
+                "content_type": "image/png",
+                "size": 365714
+            },
+            "description": "This server is for all things chat worthy (or to just hang out)\n\n(Btw this is not a Spanish server, we just used 'el' bc 'the' is boring) \ngeneral chill\n",
+            "banner": {
+                "_id": "Cs8v3PLc-9Z0Bze1_6m96n0muyG3TlEw2heXGx3O5N",
+                "tag": "banners",
+                "filename": "Tumblr_l_610160573231594.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 817
+                },
+                "content_type": "image/jpeg",
+                "size": 261713
+            },
+            "tags": [
+                "general",
+                "chill"
+            ],
+            "members": 62,
+            "activity": "low"
+        },
+        {
+            "_id": "01FYW7ZZMBA66K1ZEVN0JTD51Y",
+            "name": "Artists Guild",
+            "description": "The Artist Guild, welcome all artist whether you area a traditional 2D, 3D, Mixed Media, Animator, Comic, Sculptor or anything else. This is a place for fun, sharing, critiques if wanted, and networking.\n\nArt, art, Painting, painting, 2D, 2d, 3D, 3d, Animation, animation,",
+            "banner": {
+                "_id": "AagHiHfldnhf7jHinrMJBx5cHr_cX8Ywn2gUBt0k8k",
+                "tag": "banners",
+                "filename": "new crossed swords on shield.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1787,
+                    "height": 1621
+                },
+                "content_type": "image/png",
+                "size": 4384651
+            },
+            "icon": {
+                "_id": "UfoWGkddrARrsw1TG7y4YLSUsCbC5VYJS7VtnsboU2",
+                "tag": "icons",
+                "filename": "images.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 227,
+                    "height": 222
+                },
+                "content_type": "image/jpeg",
+                "size": 28005
+            },
+            "tags": [
+                "art",
+                "painting",
+                "2d",
+                "3d",
+                "animation"
+            ],
+            "members": 229,
+            "activity": "low"
+        },
+        {
+            "_id": "01H3A6J2B2SR014NB46Z9T92KH",
+            "name": "Homestuck",
+            "icon": {
+                "_id": "L8QTOHkHolX_1IBsCa1mfijyp9iqNYwDUUD9KiHHt5",
+                "tag": "icons",
+                "filename": "homestuck server logo.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 800,
+                    "height": 800
+                },
+                "content_type": "image/png",
+                "size": 17398
+            },
+            "description": "An unofficial server for all things Homestuck! The current banner is [\"The Furthest Ring\"](https://www.deviantart.com/ursca/art/The-Furthest-Ring-201864211) by [Ursca on Deviantart](https://www.deviantart.com/ursca/gallery)!",
+            "banner": {
+                "_id": "fYVf1dcwNnHr84cc46cOmgF3AQgLtnMwmaf9joHE18",
+                "tag": "banners",
+                "filename": "the outer ring.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 163349
+            },
+            "tags": [],
+            "members": 261,
+            "activity": "low"
+        },
+        {
+            "_id": "01HXY6ND7F2CJJWV02H6M8TXPB",
+            "name": "Neo_Tokyo",
+            "icon": {
+                "_id": "lFtUK_BNe0S4vm1orj-RIfsRJ_10Y_-83ud-XsT-cp",
+                "tag": "icons",
+                "filename": "download.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 225,
+                    "height": 225
+                },
+                "content_type": "image/jpeg",
+                "size": 17617
+            },
+            "banner": {
+                "_id": "FIdodQ4cYGLgU22w8ptHMxZ4qMPqd65HYx_4sL6GyE",
+                "tag": "banners",
+                "filename": "images.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 290,
+                    "height": 174
+                },
+                "content_type": "image/jpeg",
+                "size": 29636
+            },
+            "description": "A place to connect users and share hobbies to make a good community.",
+            "tags": [],
+            "members": 21,
+            "activity": "low"
+        },
+        {
+            "_id": "01HAXF5YV13S4J1C9YDSY9GRXC",
+            "name": "✴☽ _🗡 - MYSTICA - 🪄 _ ☾✴",
+            "icon": {
+                "_id": "meXiFrbnAz4ndNHVnzi0tHKPij0jkNDwCK9SfyJsw2",
+                "tag": "icons",
+                "filename": "Mystica_Logo-1-01 (1).jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1080,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 114826
+            },
+            "banner": {
+                "_id": "Dp2OVVpNOWMyCXHdmTFRhbZQTC1fLwW6lsD3aPgGfQ",
+                "tag": "banners",
+                "filename": "fnf-6666666666666-min.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/gif",
+                "size": 3559343
+            },
+            "description": "🗡️𝐌𝐘𝐒𝐓𝐈𝐂𝐀🪄Communauté occulte de la maison d'édition #ésotérique MYSTICA\n\n𝐌𝐘𝐒𝐓𝐈𝐂𝐀, un sanctuaire secret dédié aux praticiens et chercheurs de l' occultisme ésotérique. Entre sorcières, alchimistes, francs-maçons et rose-croix, plongez dans un monde envoûtant où les rituels mystiques et les enseignements ésotériques se rejoignent. Êtes-vous prêt à évoluer spirituellement en explorant les profondeurs cachées de la connaissance secrète ? 🗝️🌌\n\n🌙 Un Univers de Connaissances Cachées :\nTous se réunissent pour partager leurs connaissances ésotériques. Vous découvrirez des secrets anciens, des grimoires sacrés et des pratiques magiques qui transcendent les limites de la réalité. 📚🧙\n\n🌌 Des Convents, Cercles de Cérémonies et Rituels :\nRejoignez nos convents disponibles dans chaque région et à l'étranger, où les étoiles guident nos rituels ésotériques. De la magie cérémonielle à l'astrologie ésotérique, devenez un de nos praticiens éclairés...",
+            "tags": [
+                "occulte",
+                "occultisme",
+                "sorci",
+                "alchimistes",
+                "francs",
+                "convents",
+                "rituels"
+            ],
+            "members": 19,
+            "activity": "low"
+        },
+        {
+            "_id": "01FFJEZKYD3JVWBW3DHREE6EQH",
+            "name": "Revoltijo en español",
+            "description": "¡Primer servidor hispanohablante de Revolt!\nCreado en septiembre de 2021.\n\nspanish español gaming linux english inglés",
+            "icon": {
+                "_id": "75cUFEfe2maMQ85ssZSBcvjibQ5d1VSdDQ8DIHZOPu",
+                "tag": "icons",
+                "filename": "revolt español icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1360,
+                    "height": 1310
+                },
+                "content_type": "image/png",
+                "size": 1183870
+            },
+            "banner": {
+                "_id": "XGRlSt_TbEsA95Uw_53pqSYUvpTFrwyXPVaHKNweZn",
+                "tag": "banners",
+                "filename": "revolt español banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 1961079
+            },
+            "tags": [
+                "spanish",
+                "espa",
+                "gaming",
+                "linux",
+                "english",
+                "ingl"
+            ],
+            "members": 1055,
+            "activity": "low"
+        },
+        {
+            "_id": "01HXGAAE0G57M1VW3Z12CTNE79",
+            "name": "Mospixel",
+            "icon": {
+                "_id": "GCKM1r8KJqTzXvfqBHj0ZybJGyFlTJzeGFdQTDhSO8",
+                "tag": "icons",
+                "filename": "20230321_222813.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3264,
+                    "height": 3264
+                },
+                "content_type": "image/png",
+                "size": 1601740
+            },
+            "description": "A minecraft server that allows cheating. No bans. No punishment.\nThere's only one gamemode, skywars.\nYou can also test the anticheat!",
+            "banner": {
+                "_id": "iFFYVWPk_UdSAK48qzt7zYOPhnC9G5NEJn9bKdoTYI",
+                "tag": "banners",
+                "filename": "2024-06-13_22.37.38_4K.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3840,
+                    "height": 2160
+                },
+                "content_type": "image/png",
+                "size": 6044170
+            },
+            "tags": [],
+            "members": 17,
+            "activity": "low"
+        },
+        {
+            "_id": "01H7ZPK9TSYX12YRTRJ8PGBWBS",
+            "name": "ADSCRAFT Season X (PorcupineNet)",
+            "icon": {
+                "_id": "uuzuC1teebda4VXZgagOZ1HzOj2QcfU2lF9LN7ptEK",
+                "tag": "icons",
+                "filename": "Copy of server-icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 21647
+            },
+            "banner": {
+                "_id": "wCQ7jDFXKM_2svlUOx0s0D816VP2mUzj4Sy10cLWff",
+                "tag": "banners",
+                "filename": "Untitled design (1).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2245,
+                    "height": 1587
+                },
+                "content_type": "image/png",
+                "size": 285907
+            },
+            "description": "The Main chat for ADSCRAFT Season 10 and the Porcupine Network!",
+            "tags": [],
+            "members": 42,
+            "activity": "low"
+        },
+        {
+            "_id": "01GXPNCVM4QTPCGP2DJ5CZ0M74",
+            "name": "🇫🇷 | La Révolte | 🇫🇷",
+            "description": "🇫🇷 | Bienvenue dans la Révolte! C'est LE serveur communautaire pour tous les francophones et tous les français sur Revolt! | 🇫🇷\n‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎‎ ‎ ‎ ‎‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎\n‎ ‎\nfrancaisfrancophonecommunautairefrenchfrenchspeakerscommunityfrance",
+            "banner": {
+                "_id": "HR_4NyvawzKsPDf0ydBK-liM0qL6oYD01X5Bz-eG6a",
+                "tag": "banners",
+                "filename": "proxy-image (28).jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1600,
+                    "height": 1200
+                },
+                "content_type": "image/jpeg",
+                "size": 336751
+            },
+            "icon": {
+                "_id": "xWlzD8Be81y0rmPK0M3uZztChhqE-S4JebL-_YOwsa",
+                "tag": "icons",
+                "filename": "IMG_20231102_033937.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 425,
+                    "height": 427
+                },
+                "content_type": "image/png",
+                "size": 181144
+            },
+            "tags": [
+                "francais",
+                "francophone",
+                "communautaire",
+                "french",
+                "frenchspeakers",
+                "community",
+                "france"
+            ],
+            "members": 296,
+            "activity": "low"
+        },
+        {
+            "_id": "01H9RVA6E180ZN1X6E025BMHQ8",
+            "name": "🌸 Kokoro | こころ Revolt 🌸",
+            "icon": {
+                "_id": "ITrnY3ZLHPgOnqK7LtWhkpNmue8X4UPUaKHepKiZCX",
+                "tag": "icons",
+                "filename": "image (1) (15) (2).jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 394,
+                    "height": 382
+                },
+                "content_type": "image/jpeg",
+                "size": 44161
+            },
+            "banner": {
+                "_id": "3BvSztWyLAOfpzAtKfiW1eYKTjRSTlZ68AYp8XG31r",
+                "tag": "banners",
+                "filename": "cherry-blossom.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 640,
+                    "height": 360
+                },
+                "content_type": "image/gif",
+                "size": 4351267
+            },
+            "description": "🌸🧡Revolt Version of Guilded's Big Server Kokoro, Discord Bot Fully Out! Enter the Magic House!🧡🌸",
+            "tags": [],
+            "members": 115,
+            "activity": "low"
+        },
+        {
+            "_id": "01HTK55PQTM9JC1TNMBA056H5C",
+            "name": "Termux",
+            "icon": {
+                "_id": "ANklm_EU-jT6RuxOoAdxstqhpxBtDk4K1PB80JrBeZ",
+                "tag": "icons",
+                "filename": "tewmux.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 600,
+                    "height": 600
+                },
+                "content_type": "image/gif",
+                "size": 43994
+            },
+            "banner": {
+                "_id": "BRIKuy6CdJM96JsB0T3H0hyPnXJZ66boS9G_DlIljH",
+                "tag": "banners",
+                "filename": "termux-banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1440,
+                    "height": 812
+                },
+                "content_type": "image/png",
+                "size": 76956
+            },
+            "description": "Termux is an Android terminal emulator and Linux environment app that works directly with no rooting or setup required.",
+            "tags": [],
+            "members": 42,
+            "activity": "low"
+        },
+        {
+            "_id": "01GQFCFF0MAT571TESKPW96CZ9",
+            "name": "AI Enthusiasts",
+            "description": "A server for those that are excited for the advancements in AI. And for those that like AI art.\nWe have a stable diffusion bot to generate images.\n\n\nAI Stable_diffusion art chatgpt gpt machine_learning #",
+            "icon": {
+                "_id": "Ru4C0CS1iZQ8WuQjAjol1zPF9QQC8S3dHBjHoLqfUW",
+                "tag": "icons",
+                "filename": "downloa2d.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 768,
+                    "height": 768
+                },
+                "content_type": "image/jpeg",
+                "size": 128370
+            },
+            "banner": {
+                "_id": "QAp-4VLQWq6LjOjO2gqVn2_RbYFO3lQXjkM6HLVh0_",
+                "tag": "banners",
+                "filename": "robot painting.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1042,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 1073895
+            },
+            "tags": [
+                "ai",
+                "stable_diffusion",
+                "art",
+                "chatgpt",
+                "gpt",
+                "machine_learning"
+            ],
+            "members": 694,
+            "activity": "low"
+        },
+        {
+            "_id": "01GK7CWZJ6RF7PXBW8DW0D6AT3",
+            "name": "The Pitlane: EURO 2024 Edition",
+            "description": "**Current Event:** 🇪🇺 UEFA EURO 2024. Hello and welcome to ***the Pitlane*** where it's mainly but not exclusively about sports, racing and motorsports.",
+            "icon": {
+                "_id": "lCgK3haewxs6-Sfr7RDgF9hAWGHWpE0yegUyEtisaH",
+                "tag": "icons",
+                "filename": "EURO Icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 1000
+                },
+                "content_type": "image/png",
+                "size": 773812
+            },
+            "banner": {
+                "_id": "fZiBW5mq6UpewZB109eyMLDCu6SIFy0S8HGgzw9mFt",
+                "tag": "banners",
+                "filename": "euro.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 912,
+                    "height": 513
+                },
+                "content_type": "image/png",
+                "size": 246574
+            },
+            "tags": [
+                "uefa",
+                "euro",
+                "sports",
+                "racing",
+                "motorsports"
+            ],
+            "members": 34,
+            "activity": "low"
+        },
+        {
+            "_id": "01FE6SE1J3GQPGC7W8APGZ6T4M",
+            "name": "Nittama",
+            "description": "Para quienes buscan un lugar ordenado y agradable donde habitar. ¡Bienvenidos al templo en el que la calidad vence a la cantidad! Tenemos por objetivo ser y hacer amigos: aquí nadie es un simple número.\nsocial juegos arte anime ocio pasatiempos bots windows sociedad humanidades waifus husbandos nittama español\nServidor creado el 28 de agosto de 2021.",
+            "banner": {
+                "_id": "ZWX57CqFkA7QD7_x0eEg7Jk79cbf9Xf72GPhfQG96_",
+                "tag": "banners",
+                "filename": "Nittama Estandarte v2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 800,
+                    "height": 432
+                },
+                "content_type": "image/png",
+                "size": 584683
+            },
+            "icon": {
+                "_id": "Bat4jOksLMWgxHKLZtJlkFRV2peIzNzqTNl7BdW1sI",
+                "tag": "icons",
+                "filename": "tama.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 192,
+                    "height": 192
+                },
+                "content_type": "image/gif",
+                "size": 1147973
+            },
+            "tags": [
+                "social",
+                "juegos",
+                "arte",
+                "anime",
+                "ocio",
+                "pasatiempos",
+                "bots",
+                "windows",
+                "sociedad",
+                "humanidades"
+            ],
+            "members": 22,
+            "activity": "low"
+        },
+        {
+            "_id": "01HZB918XT1A42YMEEARQ21J5S",
+            "name": "Olympus RP Hub",
+            "icon": {
+                "_id": "AhT3OM8nIpKjJN9XCCL5HXDx-teRgV6XQCCw7vMYCt",
+                "tag": "icons",
+                "filename": "fasd (16).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 401050
+            },
+            "banner": {
+                "_id": "-WiXYYieKxhmGKQxtT6-HPvSYEc3SwRh9h7iy8x-9b",
+                "tag": "banners",
+                "filename": "Nikki Marie (5).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 680,
+                    "height": 240
+                },
+                "content_type": "image/png",
+                "size": 258200
+            },
+            "description": "Olympus RP Hub is a generalized Roleplay Server where users can chat about the hobby, get and give advice, find RP partners, and connect with other writers should they decide to create group games of their own. Roleplayers from all walks of the hobby are invited to join, hang out, and help make this community into more of what they would like to see from the hobby as a whole. \n\nRP roleplay roleplaying ttrp tbrp writing creativewriting literaterp",
+            "tags": [
+                "rp",
+                "roleplay",
+                "roleplaying",
+                "ttrp",
+                "tbrp",
+                "writing",
+                "creativewriting",
+                "literaterp"
+            ],
+            "members": 34,
+            "activity": "low"
+        },
+        {
+            "_id": "01HT96GXFPQCP100NF9NE0BAS8",
+            "name": "Saiko's Refuge",
+            "description": "A chat room simlar to a web chat room. Have fun. no racism, no bullshit. We also have lore now so theorise and read it.",
+            "icon": {
+                "_id": "PDwmCcSa-WIPwVqTwixmZFO3KB8269X5UlBNVoMRaq",
+                "tag": "icons",
+                "filename": "cartoon-lofi-young-manga-style-girl-while-listening-to-music-in-the-rain-ai-generative-photo.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 714,
+                    "height": 400
+                },
+                "content_type": "image/jpeg",
+                "size": 59195
+            },
+            "banner": {
+                "_id": "UQoVVPO-PAW5HhlROaRJ_9armJlKRtxKixNJPeGEgj",
+                "tag": "banners",
+                "filename": "cartoon-lofi-young-manga-style-girl-while-listening-to-music-in-the-rain-ai-generative-photo.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 714,
+                    "height": 400
+                },
+                "content_type": "image/jpeg",
+                "size": 59195
+            },
+            "tags": [],
+            "members": 37,
+            "activity": "low"
+        },
+        {
+            "_id": "01H2V5VGM6GKX2BEMJHSSXY20J",
+            "name": "TXZ Official Server",
+            "description": "This is the TXZ Official Revolt Server, originally made in January 19, 2020 on Discord by A TXZ Project. A lot of us play Geometry Dash, Osu! and Minecraft, a chill community where you can get easily involved here! Currently, we are under construction, but hope you feel great here :)\ngeometrydash minecraft mc osu! gdps gaming spanish english español games discord anime chill",
+            "icon": {
+                "_id": "ZohqTf0D4x_7COIcX-2uDV6ElT-vfjmiDgO6qrHHf2",
+                "tag": "icons",
+                "filename": "1000007419.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 577,
+                    "height": 577
+                },
+                "content_type": "image/jpeg",
+                "size": 25352
+            },
+            "banner": {
+                "_id": "qvT-8yglTwvvdLkE3EXadU48JmID1S-nWrxnBp7Dua",
+                "tag": "banners",
+                "filename": "TXZNewBanner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 643139
+            },
+            "tags": [
+                "geometrydash",
+                "minecraft",
+                "mc",
+                "osu",
+                "gdps",
+                "gaming",
+                "spanish",
+                "english",
+                "espa",
+                "games"
+            ],
+            "members": 15,
+            "activity": "low"
+        },
+        {
+            "_id": "01GZYC59WCH8SB16Z9V06K57GH",
+            "name": "Pokémon: Revolt",
+            "banner": {
+                "_id": "V6aUnHPT89ix72S3noylO5Re25u5OjchbGYko3eZ45",
+                "tag": "banners",
+                "filename": "sky.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2000,
+                    "height": 1230
+                },
+                "content_type": "image/png",
+                "size": 978748
+            },
+            "description": "Welcome to the Pokémon Revolt Community Server, for Art, News and all kinds of discussions regarding the Games and Anime, as well as Tech in general. \nWe won't bite :3\n\n\npokemon gaming art nintendo lucario Pokemon digimon # Digimon",
+            "icon": {
+                "_id": "6jX4C17c4pLTOAZ54rnfaptPhPUlERyDrACo2hW9DQ",
+                "tag": "icons",
+                "filename": "TR_i_pkp1.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 138,
+                    "height": 137
+                },
+                "content_type": "image/png",
+                "size": 23034
+            },
+            "tags": [
+                "pokemon",
+                "gaming",
+                "art",
+                "nintendo",
+                "lucario",
+                "digimon"
+            ],
+            "members": 448,
+            "activity": "low"
+        },
+        {
+            "_id": "01H3QFBM82MEAZK4HT8FXJ8PD6",
+            "name": "CYBΞRLabs",
+            "icon": {
+                "_id": "m613XMTBnec1nFyl5Ge3wwePPj8w6urHOxlPbVthv0",
+                "tag": "icons",
+                "filename": "Discord_logo_for_some_CYBERLABS_thing.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1207,
+                    "height": 1207
+                },
+                "content_type": "image/png",
+                "size": 44185
+            },
+            "description": "The Support server for **Revoltanator** A fun/multipurpose bot!\nAlso the home of MPPBridge!",
+            "banner": {
+                "_id": "VyPDylApVm4OHA5C4kQZFoTF2MF3eyEJOcHOQx8WVC",
+                "tag": "banners",
+                "filename": "ComfyUI_00011_.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1248,
+                    "height": 824
+                },
+                "content_type": "image/png",
+                "size": 1666670
+            },
+            "tags": [],
+            "members": 28,
+            "activity": "low"
+        },
+        {
+            "_id": "01GG4G9PSPQH338SZQQB7YXCYQ",
+            "name": "Femboy Lounge",
+            "description": "A comfy place for all your femboy needs! ✨ :3\n\nWhether you identify as a femboy or are simply curious, feel free to join! ❤️️",
+            "icon": {
+                "_id": "ukwPS8XCWZ2Etd8trwaBn906f8q-CQHCFMTblgfgdo",
+                "tag": "icons",
+                "filename": "Ev9eA6vVcAEs-hs.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 116044
+            },
+            "banner": {
+                "_id": "5ND7kH5wiPPhgDjGz4qvXcpfC1c6IKN4C-5nVVBR-L",
+                "tag": "banners",
+                "filename": "ddmxnoa-0d31447a-ac6b-4c2a-8dcd-3bf0164c2512.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2000,
+                    "height": 1162
+                },
+                "content_type": "image/png",
+                "size": 1560906
+            },
+            "tags": [
+                "comfy",
+                "femboy"
+            ],
+            "members": 2701,
+            "activity": "low"
+        },
+        {
+            "_id": "01H4NBR374CYXKPRX4K9ECHZR3",
+            "name": "~ p l a c e h o l d e r ~",
+            "icon": {
+                "_id": "mWUdAgLRrItV20qbOJw9G0yghLiTu4qvA7qBZWzviU",
+                "tag": "icons",
+                "filename": "bridgetpinkcrop.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 675,
+                    "height": 675
+                },
+                "content_type": "image/png",
+                "size": 483328
+            },
+            "banner": {
+                "_id": "yfdBGb9hZ8jo9fcloFfta3smDvDbcXGimgoyJpcDZe",
+                "tag": "banners",
+                "filename": "cmhJ4PMid4S8aPFN150LAt6QBhElBz_Hsp51qQtKgspink.png.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 480,
+                    "height": 270
+                },
+                "content_type": "image/png",
+                "size": 49728
+            },
+            "description": "A silly gay server for silly gay goobers :3\n\nDo not join if you are below 18 years old",
+            "tags": [],
+            "members": 879,
+            "activity": "low"
+        },
+        {
+            "_id": "01HKG62HFBA7HNEGZRB1GB5FW9",
+            "name": "restress/",
+            "description": "Русский сервер для общения с нотками видеоигры Doki Doki Literature Club(в частности по персонажу по имени Моника). Имеется мост с сервером stresscord(дискорд)\n\nTags/Тэги: russian ddlc nsfw monika bridged",
+            "banner": {
+                "_id": "5va9e4Rw6KP1V1UUgR3H4TZsuk-snejcZLMygjFJlu",
+                "tag": "banners",
+                "filename": "txt_1699709623248.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 4554,
+                    "height": 2560
+                },
+                "content_type": "image/jpeg",
+                "size": 506312
+            },
+            "icon": {
+                "_id": "7Yyz7GakUjqmQfLtHlB9mmA7vilTkL8zHc0rQ7ejK0",
+                "tag": "icons",
+                "filename": "IMG_20240210_185350759_processed.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2280,
+                    "height": 2280
+                },
+                "content_type": "image/jpeg",
+                "size": 826092
+            },
+            "tags": [],
+            "members": 161,
+            "activity": "low"
+        },
+        {
+            "_id": "01G45V2YS1TVTHCBDQ15R51WNJ",
+            "name": "Infinity",
+            "icon": {
+                "_id": "6q4OfKD585rP1GAeAiYo77GgrL3-4P1Vuo_rQBLg3x",
+                "tag": "icons",
+                "filename": "NITW9.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 194,
+                    "height": 189
+                },
+                "content_type": "image/png",
+                "size": 65247
+            },
+            "banner": {
+                "_id": "jmypp6MkET6IEY1S3foftMX8Ah__483pmbDRFzRJnx",
+                "tag": "banners",
+                "filename": "NITW10.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 551
+                },
+                "content_type": "image/jpeg",
+                "size": 104871
+            },
+            "description": "🏳‍🌈We are a friendly welcoming community!\nMake friends, participate in events, and have fun!\nLots of NITW and Chicory emotes! \nGaming Community Chill LGBTQ Furry General NITW NightInTheWoods Night_in_the_Woods Chicory Chicory_A_Colorful_Tale",
+            "tags": [
+                "gaming",
+                "community",
+                "chill",
+                "lgbtq",
+                "furry",
+                "general",
+                "nitw",
+                "nightinthewoods",
+                "night_in_the_woods",
+                "chicory"
+            ],
+            "members": 122,
+            "activity": "low"
+        },
+        {
+            "_id": "01GVB8HXQCWQDCB63E24H5BZA3",
+            "name": "Bureaucracy: The Server",
+            "icon": {
+                "_id": "E9Gk-TgP1cQ9IYTnuirl5hCwf265vcr6NRHfCLOu5t",
+                "tag": "icons",
+                "filename": "monopoly man.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 172,
+                    "height": 196
+                },
+                "content_type": "image/jpeg",
+                "size": 8200
+            },
+            "description": "Defending free speech and expression, a task that Revolt is making difficult. Regardless, our work must continue. \n",
+            "banner": {
+                "_id": "jiSDBMPQUGIFX6xGiyjHcVLgUKfXxrAUOuIIi1La5o",
+                "tag": "banners",
+                "filename": "claptrap robolution.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 474,
+                    "height": 336
+                },
+                "content_type": "image/png",
+                "size": 390741
+            },
+            "tags": [],
+            "members": 88,
+            "activity": "low"
+        },
+        {
+            "_id": "01HZJVJZRCVKRHKQY47PCMD6MZ",
+            "name": "UK Vote 2024 General Election",
+            "icon": {
+                "_id": "XS71mCR_0m85gyzMUWY1v0Ji2bg2yDc1-u2AJTn1HT",
+                "tag": "icons",
+                "filename": "OIP (7).jfif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 315,
+                    "height": 198
+                },
+                "content_type": "image/jpeg",
+                "size": 23434
+            },
+            "banner": {
+                "_id": "zO0LAhRmv_blp5ib_XHBaW_qYbwCUJcnveT1pAGosl",
+                "tag": "banners",
+                "filename": "d34cb1f60a9045598b7e37150dbdd242_18.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 562
+                },
+                "content_type": "image/jpeg",
+                "size": 126527
+            },
+            "description": "UK Focused Revolt and Discord server for the UK Vote 2024 General Election\n\npolitics left right election uk dxr",
+            "tags": [
+                "politics",
+                "left",
+                "right",
+                "election",
+                "uk",
+                "dxr"
+            ],
+            "members": 16,
+            "activity": "low"
+        },
+        {
+            "_id": "01FE6HQ77JYN0ERD5F5GTP5XMN",
+            "name": "Fluxpoint Development",
+            "icon": {
+                "_id": "EFeT0YxtMGjh_vs6YK447RQOvwDYAK-zWAkhW54p8b",
+                "tag": "icons",
+                "filename": "fluxpoint.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2048,
+                    "height": 2048
+                },
+                "content_type": "image/png",
+                "size": 150210
+            },
+            "description": "A community focused server for developers, gamers and anime fans that enjoy doing what we love.",
+            "banner": {
+                "_id": "NFB2C3DN4_TI73Lgh62umMfUkvRL1lGfyTmcV3es1G",
+                "tag": "banners",
+                "filename": "Webp.net-resizeimage(3).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 320,
+                    "height": 320
+                },
+                "content_type": "image/png",
+                "size": 196632
+            },
+            "tags": [],
+            "members": 351,
+            "activity": "low"
+        },
+        {
+            "_id": "01HTXX6G6JTTMBTT5B2Q0KV73B",
+            "name": "Lanterna dos Revoltados 🌽",
+            "description": "Servidor descontraído com intuito de reunir usuários brasileiros ou interessados em conhecer o país.\n\nbrazil general portuguese chatting chill brasil geral português conversar BR Pt-BR",
+            "banner": {
+                "_id": "ZAmOCmQBEcVvQUrXvMOGXsEqTrCoouIJDwqf0un9Fj",
+                "tag": "banners",
+                "filename": "istockphoto-1396194786-612x612.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 612,
+                    "height": 253
+                },
+                "content_type": "image/png",
+                "size": 117954
+            },
+            "icon": {
+                "_id": "tHsUyl31Zeb4h6dwm4LbjulcHi_5b1wl__OvQ4RNWk",
+                "tag": "icons",
+                "filename": "1446882ad46daafb5ada89eb162a967b17ea2a73ba7f9b1cff2f85cb2239f6fb_1_cropped.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 291,
+                    "height": 291
+                },
+                "content_type": "image/png",
+                "size": 146993
+            },
+            "tags": [
+                "brazil",
+                "general",
+                "portuguese",
+                "chatting",
+                "chill",
+                "brasil",
+                "geral",
+                "portugu",
+                "conversar",
+                "br"
+            ],
+            "members": 38,
+            "activity": "low"
+        },
+        {
+            "_id": "01FZB38TYPX73VSWFMMJTZE8C5",
+            "name": "Freakyville",
+            "icon": {
+                "_id": "tBqQ2eh6GZdZs3xnnO0llkd1Mde1gIOu-cXOCqSwpp",
+                "tag": "icons",
+                "filename": "logo.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 226,
+                    "height": 235
+                },
+                "content_type": "image/png",
+                "size": 21591
+            },
+            "description": "This is a pretty chill server, if you're confused on how you joined this, this used to be the Mecha server. Annnnyyyyyy ways just join this server for a cookie and also to keep up to date on my latest projects, memes, inside jokes, and other stuff. Also linked with my personal discord server\n\nvoltage bot bots developer developing python py revoltbot community programming programmer support mechasupport supportserver mechabot mecha chill  coding coder",
+            "banner": {
+                "_id": "3zTbBjh_RCVGTSN3GtK1FyAAa6AIaG6CvozT8NFnRQ",
+                "tag": "banners",
+                "filename": "20240129200003_1.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 436094
+            },
+            "tags": [
+                "voltage",
+                "bot",
+                "bots",
+                "developer",
+                "developing",
+                "python",
+                "py",
+                "revoltbot",
+                "community",
+                "programming"
+            ],
+            "members": 130,
+            "activity": "low"
+        },
+        {
+            "_id": "01GV54XVZBV12SYCC7CD8223K4",
+            "name": "Weeb's Cafe",
+            "description": "Hi. We like anime, manga, gaming and even films!\n",
+            "icon": {
+                "_id": "rnx_fuk7gp5C4bJ9GH9nWeZtTwWyzaQwir2m8pvAu5",
+                "tag": "icons",
+                "filename": "tumblr_c3f21628338e10f4a2c22c00b0171e13_30f2da15_1280.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1179,
+                    "height": 801
+                },
+                "content_type": "image/jpeg",
+                "size": 118416
+            },
+            "banner": {
+                "_id": "rbuiMpRFbgQ6wtUlhBwk_509mRA1wA1Nf5IUQ_HqZo",
+                "tag": "banners",
+                "filename": "anime-asuka.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 498,
+                    "height": 372
+                },
+                "content_type": "image/gif",
+                "size": 3144389
+            },
+            "tags": [],
+            "members": 547,
+            "activity": "low"
+        },
+        {
+            "_id": "01GVQJVVFM233EHBV03K7B3HF5",
+            "name": "SuperTuxKart",
+            "icon": {
+                "_id": "-rzoEJPeWD8rAJJWNEx_6KfcYUPd-8C1zn53YUe6MP",
+                "tag": "icons",
+                "filename": "supertuxkart_256.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 256,
+                    "height": 256
+                },
+                "content_type": "image/png",
+                "size": 52492
+            },
+            "description": "The (un)official SuperTuxKart Revolt server! SuperTuxKart is a 3D open source kart racing game with a variety of tracks, characters, and modes to play.",
+            "banner": {
+                "_id": "x3HyHSvMTc8nJpaRCPc5AP_SKHMin-kFQpayQjY5fg",
+                "tag": "banners",
+                "filename": "Screenshot from 2023-07-01 13-37-53.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1361,
+                    "height": 695
+                },
+                "content_type": "image/png",
+                "size": 1531368
+            },
+            "tags": [
+                "supertuxkart"
+            ],
+            "members": 254,
+            "activity": "low"
+        },
+        {
+            "_id": "01GKFQ23DBDBK1D978F5GTSNZ7",
+            "name": "Blobfox",
+            "banner": {
+                "_id": "7m8AVQv2CgBSmw1BBcyGN3zwPMiSt3EObAkDlEXWHh",
+                "tag": "banners",
+                "filename": "blobfox-banner3.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 1030870
+            },
+            "icon": {
+                "_id": "YcVEbFfn06htn2-zBSNq9GI-jdsPxOhBwjsoNOJHJU",
+                "tag": "icons",
+                "filename": "blobfoxbox.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 128,
+                    "height": 128
+                },
+                "content_type": "image/png",
+                "size": 4272
+            },
+            "description": "A chat for those who really like foxxos :D \n\nAlso contains blobfox emojis.",
+            "tags": [],
+            "members": 505,
+            "activity": "low"
+        },
+        {
+            "_id": "01H3K7D3N3X9AQNAKWYWT916WY",
+            "name": "Splatlands",
+            "icon": {
+                "_id": "5HyUDPiEmbtY77onG6aE4f1KCm-guIH2AMjad6fU1v",
+                "tag": "icons",
+                "filename": "InklingUsingSplatNet_cropped.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 679,
+                    "height": 679
+                },
+                "content_type": "image/png",
+                "size": 259218
+            },
+            "banner": {
+                "_id": "-fQu2XCKU7qXcl5EktAD7VS9BA3SnUHIzbEeDE4QoV",
+                "tag": "banners",
+                "filename": "ec39a30dec6162a8855a7be5717d5e0d-744733100 (1).gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 480,
+                    "height": 320
+                },
+                "content_type": "image/gif",
+                "size": 138684
+            },
+            "description": "400+ members & active! 🦑 A vibrant cross-platform community for battles, art, tips, & ink-redible fun! - see splatlands.com/revolt-metrics for why it says \"low activity\" - splatoon , splatoon2 , splatoon3 , nintendo , gaming, switch , wiiu",
+            "flags": 2,
+            "tags": [
+                "splatoon",
+                "splatoon2",
+                "splatoon3",
+                "nintendo",
+                "gaming",
+                "switch",
+                "wiiu"
+            ],
+            "members": 110,
+            "activity": "low"
+        },
+        {
+            "_id": "01G6JJDXXTC87T4VK2Y1A67M0C",
+            "name": "PopCord Support",
+            "icon": {
+                "_id": "HdZhrklZqHW8NmQnxa3Yo6BWdfgsjTiTudfI-6eg8R",
+                "tag": "icons",
+                "filename": "image_2023-07-06_015057428.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 636,
+                    "height": 636
+                },
+                "content_type": "image/png",
+                "size": 413371
+            },
+            "banner": {
+                "_id": "CJ0uNsmy4rJmuitfiIgCuKvtLmXuktX0x93msEg6EY",
+                "tag": "banners",
+                "filename": "image_2023-09-30_222236459.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 300
+                },
+                "content_type": "image/png",
+                "size": 380078
+            },
+            "description": "the official support server of PopCord\n\ntags : nsfw support lewd anime hentai game adult social admin",
+            "tags": [
+                "nsfw",
+                "support",
+                "lewd",
+                "anime",
+                "hentai",
+                "game",
+                "adult",
+                "social",
+                "admin"
+            ],
+            "members": 444,
+            "activity": "low"
+        },
+        {
+            "_id": "01J019XD6STD9F76CDBM41MXHJ",
+            "name": "Evelyn's Sillies | Revolt 🌸",
+            "description": "Welcome to Evelyn's server! We hope you enjoy your stay here.",
+            "icon": {
+                "_id": "nrI-8zRH1kWZ67c-Fuj5QzZ5yjMVs6ru0DE_oLBNwY",
+                "tag": "icons",
+                "filename": "f0297c7462b4ec4e8b33914201afe304.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 474,
+                    "height": 470
+                },
+                "content_type": "image/jpeg",
+                "size": 39173
+            },
+            "banner": {
+                "_id": "6WU6lKuPryw3vZ3y8R_kq2nQqPoRQD_0fa_G4IoBR2",
+                "tag": "banners",
+                "filename": "886ddaf1d23845256d097a340b08fc30.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 736,
+                    "height": 414
+                },
+                "content_type": "image/jpeg",
+                "size": 21965
+            },
+            "tags": [],
+            "members": 16,
+            "activity": "low"
+        },
+        {
+            "_id": "01HZ7C8RCF989ZKE783ADDWZNV",
+            "name": "Chlove's Cabin",
+            "icon": {
+                "_id": "rA03w4ObPzWIccWM5POlS8ewgHbLt0usbdkYml_hpi",
+                "tag": "icons",
+                "filename": "f42c89c57a58181a6b8152d50c55c952-Large.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 450,
+                    "height": 450
+                },
+                "content_type": "image/png",
+                "size": 457804
+            },
+            "banner": {
+                "_id": "Kf30G7xjTOBm8X6T4rDktm2p6nIB9bJFBgLiSMCYIv",
+                "tag": "banners",
+                "filename": "1717083426.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 400
+                },
+                "content_type": "image/jpeg",
+                "size": 56053
+            },
+            "description": "Welcome to my cozy little Revolt server, everyone is welcome!",
+            "tags": [],
+            "members": 25,
+            "activity": "low"
+        },
+        {
+            "_id": "01HZWWK052VKHKYK77RXWG7E0T",
+            "name": "Wales Teens",
+            "banner": {
+                "_id": "_znlbdlgHu2-oyafsekbdyyHXq2M1VTLt7vUhOLSXA",
+                "tag": "banners",
+                "filename": "0_yes-Cymru-Rally.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1841,
+                    "height": 1227
+                },
+                "content_type": "image/webp",
+                "size": 259216
+            },
+            "icon": {
+                "_id": "UhkX6V7WzJQT_MdBA6ppywDjZRQmz0Bl3dANYH7lLV",
+                "tag": "icons",
+                "filename": "Screenshot_20240608_234337_Color-removebg-preview.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 499,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 119191
+            },
+            "description": "just Revolt x Discord server for any teens who are Welsh or live in Wales.\n\nplease consider joining as most of the other Welsh community servers are dead :)\n\nwe're still a small server but we do have a fairly active community\n\nWales Celtic Welsh Politics 14+ Community Friends politics dxr",
+            "tags": [
+                "wales",
+                "celtic",
+                "welsh",
+                "politics",
+                "14",
+                "community",
+                "friends",
+                "dxr"
+            ],
+            "members": 7,
+            "activity": "low"
+        },
+        {
+            "_id": "01HDYRVKEA83PFHY1NZH8C00C6",
+            "name": "⟳ .. Venting",
+            "banner": {
+                "_id": "DTjK7SiZCs08eMahEk7Mptik2WUyuhGo-MPXTO2tdr",
+                "tag": "banners",
+                "filename": "23a1724d1094c0a03bebb8072db7eca5.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 282678
+            },
+            "icon": {
+                "_id": "-GPafG3-JkiP_tGcfs72DEeQjGkm3JsXCwMS4SXSwf",
+                "tag": "icons",
+                "filename": "f68ed1d48ebc16f05ee3a4b22619afe9.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 236,
+                    "height": 236
+                },
+                "content_type": "image/jpeg",
+                "size": 13357
+            },
+            "description": "> started on 10.29.23 .. this server's theme is: Echo by Crusher-P\n\n> **Welcome .. This is a comfort chat for ones who need help. We can also hangout.**",
+            "tags": [],
+            "members": 79,
+            "activity": "low"
+        },
+        {
+            "_id": "01HYXTJ5T5ZNF82BM6ZNWVW47M",
+            "name": "Trace's Chill Corner トレースのチルコーナー",
+            "banner": {
+                "_id": "t2oIqupetequV1tA71x2evRa6eHJypR5AM0TsXKylt",
+                "tag": "banners",
+                "filename": "abstract-purple-moon-wallpaper-2560x1600.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2560,
+                    "height": 1548
+                },
+                "content_type": "image/jpeg",
+                "size": 670876
+            },
+            "icon": {
+                "_id": "seIYj_RNuz3TvxgJg4BkS0eetCdUSF7D72WbGEiyPo",
+                "tag": "icons",
+                "filename": "Trace's Chill Cornerトレースのチルコーナー",
+                "metadata": {
+                    "type": "Image",
+                    "width": 431,
+                    "height": 431
+                },
+                "content_type": "image/jpeg",
+                "size": 34376
+            },
+            "description": "This server is a small friendly and wholesome community, where we can have a nice chat, share moments and experiences together, chill, vibe to some music, play games and have fun.",
+            "tags": [],
+            "members": 18,
+            "activity": "low"
+        },
+        {
+            "_id": "01GA6VT1QGYPBBSQJG824664N5",
+            "name": "Capp n' Ccino",
+            "icon": {
+                "_id": "3gaTmL5spsKRyxDTDLVd1ffCyepOJRGS38SFadsK82",
+                "tag": "icons",
+                "filename": "capp.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 700,
+                    "height": 700
+                },
+                "content_type": "image/png",
+                "size": 24751
+            },
+            "banner": {
+                "_id": "thvkrmF41c_sFbuDHFd0PvUvpcIZT-oMa3QXf_WtPS",
+                "tag": "banners",
+                "filename": "banner-cappu.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1280,
+                    "height": 720
+                },
+                "content_type": "image/png",
+                "size": 180687
+            },
+            "description": "🟢⚪Capp n' Ccino⚪🟢・📶 Servidor inovador・💬 Chats temáticos e diversos・🏆 Eventos・🐟 Peixe Alves (Deus) ・🇵🇹🇧🇷 Servidor português (PT/BR - Portugal e Brasil)",
+            "tags": [],
+            "members": 150,
+            "activity": "low"
+        },
+        {
+            "_id": "01H89E5HFQHYZ68FSR7QCM4J0D",
+            "name": "⭐ | AutumnWoods",
+            "description": "Comunidade de ponte ao servidor com o mesmo nome no discord e atualmente o maior servidor furry do brasil no revolt.",
+            "icon": {
+                "_id": "Uq-FuS9fQla4fE3Fo16ShK81TwS-UIIt4lwIrLUwQg",
+                "tag": "icons",
+                "filename": "e87ce6de2fb6297e085b91c9c33173ce.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 469,
+                    "height": 469
+                },
+                "content_type": "image/png",
+                "size": 105297
+            },
+            "banner": {
+                "_id": "wmSad7pB81OAtOMJJEOY9BoHC7XRjM0cQEzoyQDITt",
+                "tag": "banners",
+                "filename": "fda3f0ea0fbff59f8f2d442f7c0ccf05.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 821
+                },
+                "content_type": "image/png",
+                "size": 1690641
+            },
+            "tags": [
+                "brasil"
+            ],
+            "members": 43,
+            "activity": "low"
+        },
+        {
+            "_id": "01GQ14WC58C8AXCWNJQBFDZNT3",
+            "name": "RevoltBots",
+            "icon": {
+                "_id": "ep-ZfhyRjEbl3O1uLuLUOP8bJYqixm27KRhm9VXllz",
+                "tag": "icons",
+                "filename": "Pride.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 186,
+                    "height": 186
+                },
+                "content_type": "image/png",
+                "size": 10369
+            },
+            "description": "The community and support server for the very first open-sourced Revolt Bot List.\nMade for an easier way to find bots and servers. \n\ncommunity support botlist open-sourced programming",
+            "banner": {
+                "_id": "KxuVkC7Q0_yBtUQCZm5FyUUsE8w0Mh26wBw-lOXEDH",
+                "tag": "banners",
+                "filename": "revolt-bot-list-banner-by-axorax.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 6912,
+                    "height": 3456
+                },
+                "content_type": "image/png",
+                "size": 1634583
+            },
+            "tags": [
+                "community",
+                "support",
+                "botlist",
+                "open",
+                "programming"
+            ],
+            "members": 583,
+            "activity": "low"
+        },
+        {
+            "_id": "01GZXEJSR4YGRZ0780FB0TVQWR",
+            "name": "👊Unis Game Clube🎮",
+            "icon": {
+                "_id": "QwCNtMfe94cRHhbKCImh4AuNG04DebXC4zKnXGHK14",
+                "tag": "icons",
+                "filename": "UGC GAMES.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 628,
+                    "height": 628
+                },
+                "content_type": "image/png",
+                "size": 125897
+            },
+            "banner": {
+                "_id": "2IBeL7cC1Z4mg3VhxHOYUbMvSU8lVigiXO1D1WMT6B",
+                "tag": "banners",
+                "filename": "Cyber_Punk.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 498,
+                    "height": 149
+                },
+                "content_type": "image/gif",
+                "size": 607446
+            },
+            "description": "Grupo Criado Especialmente Para o Publico >GAMER< Em Geral.\n\nbrasil revolt gaming community chat",
+            "tags": [
+                "brasil",
+                "revolt",
+                "gaming",
+                "community",
+                "chat"
+            ],
+            "members": 29,
+            "activity": "low"
+        },
+        {
+            "_id": "01H2NVSP015K3GQGEPGD09WZ4H",
+            "name": "Lucario's Hangout",
+            "icon": {
+                "_id": "aOO2Mk2eOpUjc7bQu38SfbXrMnR_fWkIuyjcI_cft7",
+                "tag": "icons",
+                "filename": "lucaROI again04a622a1316109f4a52b0a2a0b9714.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 564,
+                    "height": 795
+                },
+                "content_type": "image/jpeg",
+                "size": 88966
+            },
+            "banner": {
+                "_id": "B34TbbuaN_qzI3QMyam7WA4_1XgnPOPjesQ1SYcPst",
+                "tag": "banners",
+                "filename": "lucariobannerQ8aHU8AASURK.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 400
+                },
+                "content_type": "image/jpeg",
+                "size": 112935
+            },
+            "description": "Welcome to Lucario's server! Here, you will find a lot of nice people and fun bots, such as level bots! This server is for everyone, no matter what. There are advertising channels too, if you'd like to grow your server, so feel free to join! o-o\n\n\nlucario pokemon revolt chill discord",
+            "tags": [
+                "lucario",
+                "pokemon",
+                "revolt",
+                "chill",
+                "discord"
+            ],
+            "members": 83,
+            "activity": "low"
+        },
+        {
+            "_id": "01FR5JKX0N7CAMETQF2KWPCQDY",
+            "name": "Minecraft",
+            "icon": {
+                "_id": "BcraeSn8FndarGQHF26U22y8OXZrqnuBnMG3XDwTrB",
+                "tag": "icons",
+                "filename": "revolt_mc_icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1079,
+                    "height": 1079
+                },
+                "content_type": "image/png",
+                "size": 3974
+            },
+            "banner": {
+                "_id": "YKEaIq2CK2hU02yQS0MBwRVWsH21J-FkenRr4ooXRj",
+                "tag": "banners",
+                "filename": "revolt_mc_banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3072,
+                    "height": 1024
+                },
+                "content_type": "image/png",
+                "size": 2151
+            },
+            "description": "Revolt Minecraft community run by Minecraft enthusiasts for players across the globe! Minecraft Gaming MC Gamer Memes Fun",
+            "tags": [
+                "minecraft",
+                "gaming",
+                "mc",
+                "gamer",
+                "memes",
+                "fun"
+            ],
+            "members": 1201,
+            "activity": "low"
+        },
+        {
+            "_id": "01H5XHVJ8FKHN8WXHWCV4MV4H4",
+            "name": "Gaming and more",
+            "icon": {
+                "_id": "jfkSm4KZdpfh3LmkiieloLo9LgZtmYZJhKHYYCRtm0",
+                "tag": "icons",
+                "filename": "images.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 310,
+                    "height": 163
+                },
+                "content_type": "image/jpeg",
+                "size": 15417
+            },
+            "description": "to discuss gaming and more",
+            "tags": [],
+            "members": 16,
+            "activity": "low"
+        },
+        {
+            "_id": "01H2WTG24FHPC0E2GKB4EDS1ER",
+            "name": "Watame Wonkers 🐏",
+            "icon": {
+                "_id": "FCJxSXbXodD8tOR0ThMLWfXjUwWd1H9j_x7M-DHLey",
+                "tag": "icons",
+                "filename": "watamebigface.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 900,
+                    "height": 900
+                },
+                "content_type": "image/jpeg",
+                "size": 105730
+            },
+            "banner": {
+                "_id": "boAv9G3YQnCUC-xPVAZml8pdk2ikw52T3TM9ZAjyxe",
+                "tag": "banners",
+                "filename": "watamehappy.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 811
+                },
+                "content_type": "image/jpeg",
+                "size": 144562
+            },
+            "description": "Konbandododoo! A server for all things Hololive and Vtuber related. This server also likes other groups like Nijisanji and Vshojo so don't be afraid! If you like the best sheep Watame, do join!",
+            "tags": [
+                "hololive",
+                "vtuber",
+                "nijisanji",
+                "vshojo",
+                "sheep",
+                "watame"
+            ],
+            "members": 103,
+            "activity": "low"
+        },
+        {
+            "_id": "01HXJD88FQMSKNZBNA23GWZ77D",
+            "name": "FREE PALESTINE",
+            "icon": {
+                "_id": "IlkN8LZoGgvPdcdDyfH95yfebUcW55y3ExM3UEPrn0",
+                "tag": "icons",
+                "filename": "depositphotos_44276519-stock-photo-waving-palestine-flag(1).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 600,
+                    "height": 400
+                },
+                "content_type": "image/png",
+                "size": 132612
+            },
+            "banner": {
+                "_id": "TokKs-xc_amWrNscKqlouBezrWPuoQR1igzpjeSAcQ",
+                "tag": "banners",
+                "filename": "GettyImages-1958208313-scaled.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 630
+                },
+                "content_type": "image/jpeg",
+                "size": 118950
+            },
+            "description": "\"From the land to the sea, Palestine shall be free!\" This is a server dedicated to the support of Palestine and the wish for its freedom and worldwide recognition.",
+            "tags": [],
+            "members": 26,
+            "activity": "low"
+        },
+        {
+            "_id": "01HHK2X45XDHXKAGBFF09TDP8F",
+            "name": "Minecraft BR",
+            "icon": {
+                "_id": "nzgeCRbFUC2IzHh_hn61lgcr3asVh93cQ4VWpk5ZKq",
+                "tag": "icons",
+                "filename": "mcforu10.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 166105
+            },
+            "banner": {
+                "_id": "F1Pn9H9O9pDmKBXZbkgI9i7D2egun3M4XSP8gIlJvZ",
+                "tag": "banners",
+                "filename": "minecraft-logo-v0-ak9w918zi5r81.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 400,
+                    "height": 400
+                },
+                "content_type": "image/webp",
+                "size": 10258
+            },
+            "description": "Servidor da comunidade de minecraft br <3",
+            "tags": [],
+            "members": 22,
+            "activity": "low"
+        },
+        {
+            "_id": "01GVHCXDM9DMDDR6CWBCVQTXST",
+            "name": "Sonic The Hedgehog | 85+ Emojis",
+            "description": "The Number 1 Sonic The Hedgehog fandom server for Revolt.chat, and we got emojis, lots of em.\nTags: #sonic  #fandom #emojis #gaming #SonicTheHedgehog #emoji #emotes ",
+            "banner": {
+                "_id": "WoWxFMMruS-AWFQ_3spCP2i7jf2T899sKLwLsqHGfB",
+                "tag": "banners",
+                "filename": "Untitled101_20240206164205.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 381
+                },
+                "content_type": "image/png",
+                "size": 251838
+            },
+            "icon": {
+                "_id": "3hob4UPtsEWefgOHHH6BDkgzbJI9hvYbtcoFi-hvM5",
+                "tag": "icons",
+                "filename": "Untitled90_20240105200635.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1136,
+                    "height": 1040
+                },
+                "content_type": "image/png",
+                "size": 104539
+            },
+            "tags": [
+                "sonic",
+                "fandom",
+                "emojis",
+                "gaming",
+                "sonicthehedgehog",
+                "emoji",
+                "emotes"
+            ],
+            "members": 234,
+            "activity": "low"
+        },
+        {
+            "_id": "01HGWHASQ5E2GK735SKJ96NDFQ",
+            "name": "::::Server Not Found::::",
+            "banner": {
+                "_id": "lTLc3rgIRSrvbs6Ndw2zCRV5vCxzEUgbO7Bo4pOoRn",
+                "tag": "banners",
+                "filename": "IMG_4975.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1560,
+                    "height": 624
+                },
+                "content_type": "image/png",
+                "size": 33769
+            },
+            "description": "This is sui-han-ki proxy server!!!(Server changed)\nOf course, English OK! Japanese OK!\nLet’s talk with us. Everyone is welcome.\n### [My server](https://rvlt.gg/3kNMTVTw) ([Discord ver.](https://discord.gg/3mzgvWQuc8)) Please join!\nsui-han-ki proxy japanese ",
+            "icon": {
+                "_id": "jlioGUKSUqRRW59t15XgY2DjdVMlzOqLCKJCezD4v4",
+                "tag": "icons",
+                "filename": "IMG_4436.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1056,
+                    "height": 1064
+                },
+                "content_type": "image/jpeg",
+                "size": 51278
+            },
+            "tags": [
+                "sui",
+                "proxy",
+                "japanese"
+            ],
+            "members": 194,
+            "activity": "low"
+        },
+        {
+            "_id": "01GTPEPDFFRVWEKPXNTNY9S69H",
+            "name": "Programming Space",
+            "description": "A general-purpose SFW programming server for all developers/programmers and more.\n\nprogramming coding revolt linux",
+            "icon": {
+                "_id": "Ct4Pidnhx0Y7OMHcsFIcB2BiLijTl1xHzHsvyKujtw",
+                "tag": "icons",
+                "filename": "PFPNewest.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 550,
+                    "height": 550
+                },
+                "content_type": "image/png",
+                "size": 286150
+            },
+            "banner": {
+                "_id": "ji24WY1PQ4MqWlA_2HmiOWhMPJ-3bOoBlV1rtpk0Js",
+                "tag": "banners",
+                "filename": "Banner2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3456,
+                    "height": 900
+                },
+                "content_type": "image/png",
+                "size": 2485277
+            },
+            "tags": [
+                "programming",
+                "coding",
+                "revolt",
+                "linux"
+            ],
+            "members": 243,
+            "activity": "low"
+        },
+        {
+            "_id": "01GTWDKEMTKWKM5M1BW630YTV3",
+            "name": "Russian Shitpost",
+            "description": "Сервер для русскоязычной части Револьта\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nrussian russia programming tech алокакэтитегиубрать",
+            "banner": {
+                "_id": "qEXE4f9bXuRJnXVnHDkRF9_j6Y9J_hz6855Sef_e5a",
+                "tag": "banners",
+                "filename": "furry_pornushka.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 600,
+                    "height": 421
+                },
+                "content_type": "image/gif",
+                "size": 3541037
+            },
+            "icon": {
+                "_id": "XwFsjo4hQ_Gf7_7U2Oo0-B1kN5rSDX-nak4EH0mJ02",
+                "tag": "icons",
+                "filename": "rslogo.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 64,
+                    "height": 64
+                },
+                "content_type": "image/png",
+                "size": 9911
+            },
+            "tags": [
+                "russian",
+                "russia",
+                "programming",
+                "tech"
+            ],
+            "members": 449,
+            "activity": "low"
+        },
+        {
+            "_id": "01H7WNWGEX0GCMV7FC0BR6PEEH",
+            "name": "jenvolt.",
+            "icon": {
+                "_id": "P0ObxzAOW3dvRvcO5bvfmgzkRmXjK4PHQnK66nyntp",
+                "tag": "icons",
+                "filename": "-LWDWjundDgaq3SSQUYcCm8a6zNR3G5zmaL1lcDFpK (4).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 715,
+                    "height": 715
+                },
+                "content_type": "image/png",
+                "size": 222016
+            },
+            "banner": {
+                "_id": "X5lL3bygullQL3kSt7q94fcP3MYcCN_KMjVIbckSYv",
+                "tag": "banners",
+                "filename": "v5GDGIf0iHAzsKg2dpLSArNKG2d4-B2V2x1G96c4Gc.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 1041645
+            },
+            "description": "welcome to el servidor de jennifer\nwe also do the official revolt android app 🥶🥶🥶🥶🥶\n",
+            "flags": 2,
+            "tags": [],
+            "members": 430,
+            "activity": "low"
+        },
+        {
+            "_id": "01HZR76BXQHHQ2ZPSS4W3NPXKX",
+            "name": "Revplace ",
+            "description": "Comunidade brasileira dedicada a trazer atualizações e novidades sobre as mudanças e inovações da plataforma Revolt.\n\nBrazil",
+            "banner": {
+                "_id": "7te8h0oZdywWacVfyz2SrP176XGZFeRtnbaziRIUyY",
+                "tag": "banners",
+                "filename": "IMG_5961.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 548
+                },
+                "content_type": "image/jpeg",
+                "size": 72732
+            },
+            "icon": {
+                "_id": "U53GfG0VHT7MZ-CVnKZHf-L1bTId0-_X-URirVSxO9",
+                "tag": "icons",
+                "filename": "IMG_5962.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 24275
+            },
+            "tags": [
+                "brazil"
+            ],
+            "members": 8,
+            "activity": "low"
+        },
+        {
+            "_id": "01HSJPNS9H2MPPMZTJNW8T5MRD",
+            "name": "AutoMod",
+            "description": "The official AutoMod server.\n\nBot AutoMod Moderation",
+            "icon": {
+                "_id": "u1UnHIUee-DWKXO6AN6ZzOVoznde1TOaC4rv4lK_kj",
+                "tag": "icons",
+                "filename": "pYjK-QyMv92hy8GUM-b4IK1DMzYILys9s114khzzKY.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 29618
+            },
+            "banner": {
+                "_id": "vLwPp9Hf_AdMboqBnJrypI24cE8zRH2EHGOY7C35M1",
+                "tag": "banners",
+                "filename": "AoRvVsvP1Y8X_A4cEqJ_R7B29wDZI5lNrbiu0A5pJI.webp",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1000,
+                    "height": 562
+                },
+                "content_type": "image/webp",
+                "size": 44628
+            },
+            "flags": 2,
+            "tags": [
+                "bot",
+                "automod",
+                "moderation"
+            ],
+            "members": 123,
+            "activity": "low"
+        },
+        {
+            "_id": "01G3PKD1YJ2H484MDX6KP9WRBN",
+            "name": "Revolt API",
+            "icon": {
+                "_id": "vKzb5xTbhtAvXcFcY6PITtOuHDhjie4849gq6pWO5n",
+                "tag": "icons",
+                "filename": "BujbQ_t27M9iQ-ZKVQuv03LI-IndUYxq3sBHpx6XsM.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 12696
+            },
+            "description": "Official server for discussing the Revolt API. Get help, discuss improvements and hear about the latest changes here!\n\nrevolt api official ",
+            "flags": 1,
+            "tags": [
+                "revolt",
+                "api",
+                "official"
+            ],
+            "members": 512,
+            "activity": "no"
+        },
+        {
+            "_id": "01J0242M5KBX0QDNVQBVJGQ7SM",
+            "name": "Portugal",
+            "description": "O servidor Portugal trata-se de uma comunidade portuguesa, onde todos são muito bem vindos, espero que gostem do servidor!\n",
+            "icon": {
+                "_id": "iUNTQOoScm1skpVOa1x_3pR-EoUebARGhVTt0ZYOax",
+                "tag": "icons",
+                "filename": "Screenshot from 2024-06-16 22-11-50.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 829,
+                    "height": 605
+                },
+                "content_type": "image/png",
+                "size": 580529
+            },
+            "banner": {
+                "_id": "WwRBopQryQv-WuGxBUAAE4JgnsIWo7ktHXUb2IPMaX",
+                "tag": "banners",
+                "filename": "portugal2.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1500,
+                    "height": 1000
+                },
+                "content_type": "image/jpeg",
+                "size": 286484
+            },
+            "tags": [],
+            "members": 10,
+            "activity": "no"
+        },
+        {
+            "_id": "01H6WQGNWVEKH3BH7FS14NS7XH",
+            "name": "The Splatoon Lounge",
+            "icon": {
+                "_id": "iZtGw9smfIqvBpXFJKroLt6f2Xfbx1YtN2iJ0IeJsc",
+                "tag": "icons",
+                "filename": "IMG_3221.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 416,
+                    "height": 351
+                },
+                "content_type": "image/jpeg",
+                "size": 55007
+            },
+            "banner": {
+                "_id": "NFfaCjj69zHWSxKjrY-n1FLSCo3c_Z8VPmDHLQBcwc",
+                "tag": "banners",
+                "filename": "IMG_3220.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 700,
+                    "height": 200
+                },
+                "content_type": "image/jpeg",
+                "size": 28391
+            },
+            "description": "A server you can chat about Splatoon. Please make sure to read the rules before going into conversation. Enjoy your stay here! ",
+            "tags": [],
+            "members": 87,
+            "activity": "no"
+        },
+        {
+            "_id": "01FEPATGXB3TGTKSA3ZVA7RSTM",
+            "name": "yui's comfy place",
+            "description": "comfy server for everyone!",
+            "banner": {
+                "_id": "lhq_rDDPfY3J3zUw1EaYQMCmptoatIqrkU0u9g4qgB",
+                "tag": "banners",
+                "filename": "7e0accaa2b2b902724863fffaa319f94.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 361
+                },
+                "content_type": "image/png",
+                "size": 432331
+            },
+            "icon": {
+                "_id": "1tU3Gn6rosEoZ0sbgfgZkHMp0dlAPOrge1CUxzKW--",
+                "tag": "icons",
+                "filename": "sssdwqqwd.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 226803
+            },
+            "tags": [],
+            "members": 786,
+            "activity": "no"
+        },
+        {
+            "_id": "01H28NWQBPXA2FMZD7G0YVKZ61",
+            "name": "Language Learning",
+            "description": "The server for language learning and all things language. For both natlangs and conlangs! Also a very active chess channel...",
+            "icon": {
+                "_id": "X33zErm-vNBR0ObiRz90haDQp15nbXNYD4Wkt3dhoy",
+                "tag": "icons",
+                "filename": "planet-earth-on-blue-background-vector-3295462538(1).jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/jpeg",
+                "size": 24115
+            },
+            "banner": {
+                "_id": "pjvGhN93qaSIRmMi-7nJpKNLS4huqHI3Lu91IQxoLm",
+                "tag": "banners",
+                "filename": "Untitled347_20230611115010.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 800,
+                    "height": 450
+                },
+                "content_type": "image/png",
+                "size": 255952
+            },
+            "tags": [
+                "language",
+                "learning",
+                "natlangs",
+                "conlangs",
+                "chess"
+            ],
+            "members": 783,
+            "activity": "no"
+        },
+        {
+            "_id": "01HB2D9WWFMVHS4PH3KXT6HZTM",
+            "name": "blendOS",
+            "icon": {
+                "_id": "YDXDLRy9cFEGfiojdLIvLmif3EvIAXafvga1dFGsgc",
+                "tag": "icons",
+                "filename": "logo-1.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 1024
+                },
+                "content_type": "image/png",
+                "size": 634962
+            },
+            "description": "[blendOS](https://blendos.co) is an Arch based Linux Distribution, focused around allowing the user to use packages from different distributions, Android, and PWAs.",
+            "banner": {
+                "_id": "08JnC5g_2wnIvH9NlLMDB-wrkipLLZJmGF4RjltZDZ",
+                "tag": "banners",
+                "filename": "rn_image_picker_lib_temp_3b8c1800-a197-4563-aa8b-4b777d10255c.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1080,
+                    "height": 360
+                },
+                "content_type": "image/jpeg",
+                "size": 35160
+            },
+            "tags": [],
+            "members": 40,
+            "activity": "no"
+        },
+        {
+            "_id": "01FZ62C8WFS3HBEN5QTN8RZRQG",
+            "name": "Remix HQ",
+            "icon": {
+                "_id": "abVmV8YgPfdZalAs0vqy2YaOgs3lNRV8oIj8wL8tAY",
+                "tag": "icons",
+                "filename": "Remix.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1440,
+                    "height": 1440
+                },
+                "content_type": "image/jpeg",
+                "size": 104575
+            },
+            "description": "The official community for the Remix music bot. \nremix remixbot firstmusicbot bot bots music musicbot revolt revoltbot support community cool epic",
+            "flags": 2,
+            "banner": {
+                "_id": "wj2r7z8c_dJt2UDw6NQOXM4sU8Vt-CNAAFjNURY4vC",
+                "tag": "banners",
+                "filename": "D4_hBq5D2DObGDeYuo6agc7-5kjWNcefnrqMgHAkL2.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 600,
+                    "height": 360
+                },
+                "content_type": "image/gif",
+                "size": 1739994
+            },
+            "tags": [
+                "remix",
+                "remixbot",
+                "firstmusicbot",
+                "bot",
+                "bots",
+                "music",
+                "musicbot",
+                "revolt",
+                "revoltbot",
+                "support"
+            ],
+            "members": 514,
+            "activity": "no"
+        },
+        {
+            "_id": "01GVKKSEJAPK8V9CXG9FNYW0DG",
+            "name": "Roblox Lounge",
+            "icon": {
+                "_id": "jb0YFUKg3v118tU3hIDVKblX5KFiG31tYIuHS4adyj",
+                "tag": "icons",
+                "filename": "Revolt Icon.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 6332
+            },
+            "banner": {
+                "_id": "2aIsCm0ZI6tNuJh9ohOmA2Xr365j0FcIjG0nKcj_eZ",
+                "tag": "banners",
+                "filename": "Revolt Banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1222,
+                    "height": 489
+                },
+                "content_type": "image/png",
+                "size": 11518
+            },
+            "description": "Fan Server about the game named Roblox! Share whatever you like here, find new people in our channels :)\n\nNot official neither affilitated with the Roblox Company.",
+            "tags": [],
+            "members": 281,
+            "activity": "no"
+        },
+        {
+            "_id": "01HC0370ZP1VKKMXP4KB1666G0",
+            "name": "The Star Lounge ⭐",
+            "description": "> **Welcome to The Star Lounge ★ !!**\n*Relax, chat, and make lots of friends here ♡ !*\n> **Have fun, and enjoy your time 🎔 !!**\n``We celebrate with 40+ members and 13 spot in Discovery, join the fun !``\n",
+            "icon": {
+                "_id": "WGAMHgoQ4_hZWnOQ8Zx96L0GJE1vNpXwtfuuhL-aTx",
+                "tag": "icons",
+                "filename": "pixai-1671089269300275634-0.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 440,
+                    "height": 378
+                },
+                "content_type": "image/png",
+                "size": 255760
+            },
+            "banner": {
+                "_id": "yK0QaOuRwkjTOrrDxtyrFXWMis4rhVloBhrRY7oSBx",
+                "tag": "banners",
+                "filename": "pixai-1671090919939491631-2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 357
+                },
+                "content_type": "image/png",
+                "size": 319166
+            },
+            "tags": [
+                "13"
+            ],
+            "members": 115,
+            "activity": "no"
+        },
+        {
+            "_id": "01HS75CA336AEZQCR3CZCW5TYF",
+            "name": "I like boars",
+            "description": "For anyone who interested in my games, software and other projects.\n\nAlso available is general Godot and game development discussion + guidance.\nOur procrastination is programming.\n\ngamedev godot selfhosting programming",
+            "icon": {
+                "_id": "pUjeTLgdRGfzLlYBdlhX34FdcVbVg2LrK7dByBew0P",
+                "tag": "icons",
+                "filename": "cecc2b48f468f6e8f313343e78ef3eb5.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 750,
+                    "height": 750
+                },
+                "content_type": "image/jpeg",
+                "size": 101405
+            },
+            "banner": {
+                "_id": "pU9PoZNYrr07WtLj7xARbxAulZEZ8DA4xKEhuuBlra",
+                "tag": "banners",
+                "filename": "letton-ditch-768x1024-panorama-1ccb4f1d628031af4b38c3709211dc6c-58bc9620e17d7.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 768,
+                    "height": 384
+                },
+                "content_type": "image/jpeg",
+                "size": 116377
+            },
+            "tags": [
+                "gamedev",
+                "godot",
+                "selfhosting",
+                "programming"
+            ],
+            "members": 32,
+            "activity": "no"
+        },
+        {
+            "_id": "01HYVDCETD8056A9R3S37569H2",
+            "name": "Wireframe: A 3D modelling server",
+            "description": "A server for 3D modellers to get together and share knowledge, creations and also improve their skills\n\n3d modelling blender art",
+            "icon": {
+                "_id": "Jth2gxEHBaFwtTwZeK98K1bQlaPLLMK2a2f2M41Nzr",
+                "tag": "icons",
+                "filename": "icon.gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 256,
+                    "height": 256
+                },
+                "content_type": "image/gif",
+                "size": 2001855
+            },
+            "banner": {
+                "_id": "OLaoi-y3Vb7GaCSfNsd0NbozEj0sQWN17ACvO-YDEg",
+                "tag": "banners",
+                "filename": "banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 652817
+            },
+            "tags": [
+                "3d",
+                "modelling",
+                "blender",
+                "art"
+            ],
+            "members": 9,
+            "activity": "no"
+        },
+        {
+            "_id": "01HZ94FSKNRP4XWWZ4XQ0BHYQ2",
+            "name": "🎊 | Solix’s World",
+            "description": null,
+            "banner": {
+                "_id": "tMpKyE2cCFCvjpP7NGKAmf6LwMgFH5o5ZL3af5jTJ3",
+                "tag": "banners",
+                "filename": "officialbanner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2560,
+                    "height": 1440
+                },
+                "content_type": "image/png",
+                "size": 1915119
+            },
+            "tags": [],
+            "members": 10,
+            "activity": "no"
+        },
+        {
+            "_id": "01FNYD7FYZF1YA4QGEY9PHSK2S",
+            "name": "Voltage",
+            "description": "Voltage is a python API wrapper for the revolt API.\nHere you can chill, talk about Voltage and stuff *i guess*.\n\nThis server is also bridged with Eludris so you'll find a lot of shitposting, programming talk and dumb shit regularly :^)\n\nRepo: https://github.com/EnokiUN/voltage\n\nTags: bots programming anime shitposting amogus ",
+            "icon": {
+                "_id": "wx2pNtOIszoFshiQH_vcxtjBzKVq1YcIBRIvdVvE5t",
+                "tag": "icons",
+                "filename": "Untitled40_20220314234237.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 514,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 25926
+            },
+            "banner": {
+                "_id": "t5djH5K6ElpuM0n9uZVXUxkLFYj1QlsfMMiuuQlkSg",
+                "tag": "banners",
+                "filename": "20220324_194432.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1280,
+                    "height": 718
+                },
+                "content_type": "image/jpeg",
+                "size": 46484
+            },
+            "tags": [
+                "bots",
+                "programming",
+                "anime",
+                "shitposting",
+                "amogus"
+            ],
+            "members": 612,
+            "activity": "no"
+        },
+        {
+            "_id": "01GCSWMPKQ8HRKR4AVB4C850CV",
+            "name": "Privacy Lounge",
+            "description": "Engage with users in conversations about privacy, Linux, and Fediverse, while also having the freedom to discuss a wide range of other topics.",
+            "icon": {
+                "_id": "5cTVZ_8TLEFRaKsGakcSZvgHnZCmQfyLxAor5XM1ss",
+                "tag": "icons",
+                "filename": "PLC1_UAPIG_RevoltLogo2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1080,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 46285
+            },
+            "banner": {
+                "_id": "CpgHPi9Kcm-6JiVR6ISKCTB1SHOyKI1wEIWzdX6xAw",
+                "tag": "banners",
+                "filename": "PLC1_UAPIG_RevoltBanner2-1.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/jpeg",
+                "size": 73561
+            },
+            "tags": [
+                "privacy",
+                "linux",
+                "fediverse"
+            ],
+            "members": 538,
+            "activity": "no"
+        },
+        {
+            "_id": "01H1H8JQ2J2HGE6109MVBSW4KH",
+            "name": "Celeste Hearts",
+            "description": "Cute Celeste-themed pride emotes for all your identity needs. Feel free to suggest additional flags!",
+            "icon": {
+                "_id": "pQgrTgBY5RulGqPe_oJne5lgM2z9jytuyaJh6BGNsg",
+                "tag": "icons",
+                "filename": "image",
+                "metadata": {
+                    "type": "Image",
+                    "width": 72,
+                    "height": 68
+                },
+                "content_type": "image/png",
+                "size": 1057
+            },
+            "banner": {
+                "_id": "Gfzyt0iWKJGMxxDrVBQASGHbycl660VURVn2rxjbHR",
+                "tag": "banners",
+                "filename": "Celeste Hearts Banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3000,
+                    "height": 1500
+                },
+                "content_type": "image/png",
+                "size": 435383
+            },
+            "tags": [],
+            "members": 164,
+            "activity": "no"
+        },
+        {
+            "_id": "01FDA8EPHMNWGF26NRDGSGZ3ND",
+            "name": "NitroMojis",
+            "icon": {
+                "_id": "B0xQlGTPH8GMqOOFedd2Xu5EIryHm1mgkQ2wvX2XeJ",
+                "tag": "icons",
+                "filename": "a_0893876ce40862ad9d83c27f6145909a (1).png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 128,
+                    "height": 128
+                },
+                "content_type": "image/png",
+                "size": 21577
+            },
+            "banner": {
+                "_id": "EIKeaHLERSMb6ENUYbwqkNfW9qkxC20ut4gCGC3u7Y",
+                "tag": "banners",
+                "filename": "NitroMojis Banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 757960
+            },
+            "description": "NitroMojis is a server that aims to provide Revolt users with the finest emojis to use all across Revolt. Emoji, Emote and Emotes.",
+            "flags": 2,
+            "tags": [],
+            "members": 1309,
+            "activity": "no"
+        },
+        {
+            "_id": "01GVKNE144E7Y219RNATVX72QX",
+            "name": "idk what should i call this",
+            "description": "idk join if you want",
+            "banner": {
+                "_id": "KZBmJEjbW0tOa-gkgsU25jvh86ZEGxI2nT-C_K73Dt",
+                "tag": "banners",
+                "filename": "srhtdjfy.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 400,
+                    "height": 382
+                },
+                "content_type": "image/jpeg",
+                "size": 30062
+            },
+            "icon": {
+                "_id": "EI0mcQDjnNq4OmF-Ho4IDpvPcHFYq2aNKChF5-lgVY",
+                "tag": "icons",
+                "filename": "RANMYFAVORITE.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 222,
+                    "height": 177
+                },
+                "content_type": "image/jpeg",
+                "size": 14140
+            },
+            "tags": [],
+            "members": 52,
+            "activity": "no"
+        },
+        {
+            "_id": "01H2RDRXT4VN0HQ5M4QAM5XC92",
+            "name": "Polandia✨",
+            "icon": {
+                "_id": "vLCUIf6mNebE4SaY_n5qBAOWtCc6hJ2vNV4k2hc5Lg",
+                "tag": "icons",
+                "filename": "Polandia.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 400,
+                    "height": 400
+                },
+                "content_type": "image/jpeg",
+                "size": 32989
+            },
+            "banner": {
+                "_id": "VDOKLXl205tQ29267z-jI098Tf_DRijgPErkNFpyXI",
+                "tag": "banners",
+                "filename": "polandiatemplate.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2000,
+                    "height": 1000
+                },
+                "content_type": "image/jpeg",
+                "size": 472010
+            },
+            "description": "Do you like geography, history or countryballs? Than join the first geography server ever made: This one!\n\n",
+            "tags": [],
+            "members": 22,
+            "activity": "no"
+        },
+        {
+            "_id": "01HD41EJ793JPHYS3Z64BACKBM",
+            "name": "Division Server!tintindaisuki",
+            "icon": {
+                "_id": "pP6qtvoODmmeNQABCkaYiS_P5klasMO1ag5dARH50m",
+                "tag": "icons",
+                "filename": "IMG_0502.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 225,
+                    "height": 225
+                },
+                "content_type": "image/jpeg",
+                "size": 7193
+            },
+            "description": "ばか？\n\n\nchat japan ja  division revolt chating ",
+            "banner": {
+                "_id": "FKnd9SQx21ZTwUZRiai6NvCZ9SqfZTf8iVW9drR67D",
+                "tag": "banners",
+                "filename": "IMG_0559.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 460,
+                    "height": 380
+                },
+                "content_type": "image/jpeg",
+                "size": 58393
+            },
+            "tags": [
+                "chat",
+                "japan",
+                "ja",
+                "division",
+                "revolt",
+                "chating"
+            ],
+            "members": 89,
+            "activity": "no"
+        },
+        {
+            "_id": "01H6BZ13N71P5MJG1JFFHHRJHC",
+            "name": "Astroid",
+            "icon": {
+                "_id": "_CSrGoqeQCqNPdmAOzSQ54dcHaWCWLY2KpTvVI0XKT",
+                "tag": "icons",
+                "filename": "Astroid Logo.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 927,
+                    "height": 927
+                },
+                "content_type": "image/jpeg",
+                "size": 54410
+            },
+            "description": "Astroid is a easy to use multi-plattform bridge including Discord, Guilded and Revolt!\n",
+            "banner": {
+                "_id": "42E70bk5H3DNnOmkGKbYQrBxLTYeCb8uV8dxetQODC",
+                "tag": "banners",
+                "filename": "Astroid-banner.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "content_type": "image/png",
+                "size": 204815
+            },
+            "tags": [
+                "bridge",
+                "discord",
+                "guilded",
+                "revolt"
+            ],
+            "members": 44,
+            "activity": "no"
+        },
+        {
+            "_id": "01G2RNRDXXEZP3WEHQZEY4GE79",
+            "name": "Revolt C#",
+            "icon": {
+                "_id": "IdMMWfYfiLLTXduMxer2qbHg7ZKIAbAXV6j7EgdxdS",
+                "tag": "icons",
+                "filename": "c-img2.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 231,
+                    "height": 231
+                },
+                "content_type": "image/png",
+                "size": 5370
+            },
+            "description": "Revolt c# development server!\n\n\nThis is for our library RevoltSharp which you can use to interact with the revolt api and create your own bots.",
+            "tags": [],
+            "members": 114,
+            "activity": "no"
+        },
+        {
+            "_id": "01H14M0JCRWT52VW7BR1XH5Y5W",
+            "name": "Revolt Translators",
+            "description": "Official server for discussing, expanding and improving Revolt's translations. revolt translations translators internationalisation internationalization i18n ",
+            "flags": 1,
+            "icon": {
+                "_id": "N0Oi3so_bu-X_M0xsXENUEl5oQuw4AkpwJ7y07Thlz",
+                "tag": "icons",
+                "filename": "Group_3.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 266,
+                    "height": 266
+                },
+                "content_type": "image/png",
+                "size": 6672
+            },
+            "tags": [
+                "revolt",
+                "translations",
+                "translators",
+                "internationalisation",
+                "internationalization",
+                "i18n"
+            ],
+            "members": 487,
+            "activity": "no"
+        },
+        {
+            "_id": "01J01ZZQ9V749SK2MW1VJM3BQJ",
+            "name": "Socialize, Hangout & Chat!",
+            "description": "Join our community of free thinkers in a Revolt server dedicated to the principles of **freedom of speech**, **privacy** and ~**anime**~ **open discussion**. Our server is a safe space for individuals from all walks of life to come together, share their thoughts, and engage in respectful conversations. \n\n**What to expect:**\n1. A relaxed and welcoming atmosphere, perfect for socializing and making new friends.\n\n2. A platform for open and honest discussion on various topics, from politics and social issues to hobbies and interests.",
+            "icon": {
+                "_id": "yjDkbFq6OpPJFIZC8FUtbZ5O6JImkXfn6QDcfjzO0D",
+                "tag": "icons",
+                "filename": "Untitled-tCfr5M9Pu-transformed.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 2048,
+                    "height": 2048
+                },
+                "content_type": "image/jpeg",
+                "size": 362881
+            },
+            "banner": {
+                "_id": "j-OacdPeNJSL2MsppElviruqp0lGfVuZ3dvfAVlITu",
+                "tag": "banners",
+                "filename": "Untitled2-transformed.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 3072,
+                    "height": 2048
+                },
+                "content_type": "image/jpeg",
+                "size": 561340
+            },
+            "tags": [],
+            "members": 13,
+            "activity": "no"
+        },
+        {
+            "_id": "01GPB36KBEVXZK77YHSA6SM2CW",
+            "name": "Workbench Team",
+            "icon": {
+                "_id": "GRD3bK68MZwvUxn2tQdcItj9QRLTO4pp-dzytIOvdc",
+                "tag": "icons",
+                "filename": "a_ce4d2d1b08978e4443958ecbc4827245(1).gif",
+                "metadata": {
+                    "type": "Image",
+                    "width": 320,
+                    "height": 320
+                },
+                "content_type": "image/gif",
+                "size": 2164048
+            },
+            "banner": {
+                "_id": "VUC03mQMU9P_O-yOwz5ACxK53Yj48Ik2Nr4DnmRAH4",
+                "tag": "banners",
+                "filename": "943c3dbc098523861d34e9d3c5e676b1.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 576
+                },
+                "content_type": "image/png",
+                "size": 448438
+            },
+            "description": "🇺🇸 We are the team of game content creators and servers\n\n🇷🇺 Мы команда создателей игрового контента и серверов",
+            "tags": [],
+            "members": 276,
+            "activity": "no"
+        },
+        {
+            "_id": "01H2JG3X52790F328P7X20GCM1",
+            "name": "Revolt Car Club",
+            "icon": {
+                "_id": "UeW1vFIr_8P5taoKA9LR247dNT5RrvOT5FBd4DMOT9",
+                "tag": "icons",
+                "filename": "TE37.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 960,
+                    "height": 960
+                },
+                "content_type": "image/png",
+                "size": 1223704
+            },
+            "banner": {
+                "_id": "5nTKigMUv-m5BMNGq8UK2pI7lFmHOi20vHwoa8VVgA",
+                "tag": "banners",
+                "filename": "0_Car drifting through a mountain road curve, lots o_esrgan-v1-x2plus.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1792,
+                    "height": 1024
+                },
+                "content_type": "image/png",
+                "size": 2666535
+            },
+            "description": "Hello! Do you like cars, or things that move on wheels? Yes? Join us and let's build a community of car lovers and alike together!",
+            "tags": [],
+            "members": 15,
+            "activity": "no"
+        },
+        {
+            "_id": "01HYDZPQFE9S86PGV1T24DSGA7",
+            "name": "むめーproxy鯖！",
+            "description": "scratch民が多いと思うけど仲良くしていこう！",
+            "banner": {
+                "_id": "Q2yzKB71NNza6aTRCHSGxXFCbPvcsYahSmGNly04M_",
+                "tag": "banners",
+                "filename": "あ.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 457,
+                    "height": 340
+                },
+                "content_type": "image/jpeg",
+                "size": 24946
+            },
+            "icon": {
+                "_id": "mQsTdm521JI-L6S3nF9aJQ7v491HdoT8dY1BqOuLsN",
+                "tag": "icons",
+                "filename": "images.jpeg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 225,
+                    "height": 225
+                },
+                "content_type": "image/jpeg",
+                "size": 11700
+            },
+            "tags": [],
+            "members": 19,
+            "activity": "no"
+        },
+        {
+            "_id": "01J17WDGM1R7Q3HWE0FTT1R28A",
+            "name": "Rainbow Advertising",
+            "description": "Advertise for free here! Part of the Rainbow Network across Discord & Guilded.\n\nadvertise | advertising | promo | promote | promotion | self promo",
+            "icon": {
+                "_id": "kXpvtI-QWU4Zt_Lm5r4J9Ur5r8SiEhAAX7wdj_YbaJ",
+                "tag": "icons",
+                "filename": "Screenshot 2024-06-25 at 10.28.51 AM.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 144,
+                    "height": 150
+                },
+                "content_type": "image/png",
+                "size": 35512
+            },
+            "tags": [
+                "advertise",
+                "advertising",
+                "promo",
+                "promote",
+                "promotion"
+            ],
+            "members": 8,
+            "activity": "no"
+        },
+        {
+            "_id": "01HE70NW72PF4HGCYGB9M8EH37",
+            "name": "The Legend of Zelda",
+            "icon": {
+                "_id": "W4gKFeKWc1P1edq651ipXtC7UW-o-TWJ25f2-WbOhZ",
+                "tag": "icons",
+                "filename": "zonai-charge-materials-zelda-tears-of-the-kingdom-wiki-guide-200px.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 512,
+                    "height": 512
+                },
+                "content_type": "image/png",
+                "size": 116934
+            },
+            "description": "Unofficial server for all things Legend Of Zelda related.\n\n\nzelda totk link nintendo gaming",
+            "banner": {
+                "_id": "ij84WA7LHN0fKwCPTryblBKE0imoy28ccJhMBRs25r",
+                "tag": "banners",
+                "filename": "Screenshot 2024-02-20 12.34.26.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 461,
+                    "height": 153
+                },
+                "content_type": "image/png",
+                "size": 136520
+            },
+            "tags": [
+                "zelda",
+                "totk",
+                "link",
+                "nintendo",
+                "gaming"
+            ],
+            "members": 36,
+            "activity": "no"
+        },
+        {
+            "_id": "01HX2MP6ANR0R83BCG9V66XCDD",
+            "name": "🌐 Translator | Bot",
+            "icon": {
+                "_id": "7DrjzKyrSfBAoPWf-uMsfi16l7McmOEbpQs7KELT4N",
+                "tag": "icons",
+                "filename": "translator.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 500,
+                    "height": 500
+                },
+                "content_type": "image/png",
+                "size": 29249
+            },
+            "banner": {
+                "_id": "CJgHaUXKCN2tpg26TNBiGqbynicfH_xbIqVisc6LLT",
+                "tag": "banners",
+                "filename": "translator_bannière_2.png.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1200,
+                    "height": 480
+                },
+                "content_type": "image/png",
+                "size": 31782
+            },
+            "description": "😍 1st Revolt translation bot !\n👀 100% free, no premium features, no limitations.\n⭐ Try it now !\n\nTranslator",
+            "tags": [
+                "translation",
+                "bot",
+                "free",
+                "translator"
+            ],
+            "members": 15,
+            "activity": "no"
+        },
+        {
+            "_id": "01J163G9TCNM63DHHHHF9PVT0G",
+            "name": "Amici In Game",
+            "icon": {
+                "_id": "1pLkEMaF17yi_0FGvIeDNVSPEty6xwIPlViHPY_d8K",
+                "tag": "icons",
+                "filename": "Logo BOT Minecraft.png",
+                "metadata": {
+                    "type": "Image",
+                    "width": 1024,
+                    "height": 1024
+                },
+                "content_type": "image/png",
+                "size": 736160
+            },
+            "banner": {
+                "_id": "WGFQyTn3908BB8XADhK7arbk-6W7SKmzH1c0bX1vYH",
+                "tag": "banners",
+                "filename": "Sfondo Ritagliato.jpg",
+                "metadata": {
+                    "type": "Image",
+                    "width": 999,
+                    "height": 499
+                },
+                "content_type": "image/jpeg",
+                "size": 104187
+            },
+            "description": "Server Ufficiale su Revolt della Community di Amici In Game\nSeguici in Live su Twitch.Tv/Amici_In_Game\n\nTwitch Live Gaming Chill Music",
+            "tags": [
+                "twitch",
+                "live",
+                "gaming",
+                "chill",
+                "music"
+            ],
+            "members": 5,
+            "activity": "no"
+        }
+    ],
+    "popularTags": [
+        "gaming",
+        "revolt",
+        "programming",
+        "fun",
+        "chill",
+        "art",
+        "linux",
+        "politics",
+        "chat",
+        "music"
+    ]
+}

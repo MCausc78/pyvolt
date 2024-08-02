@@ -1,74 +1,80 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import files
+from .files import File
 
-ImageSize = t.Literal["Large", "Preview"]
+ImageSize = typing.Literal['Large', 'Preview']
 
 
-class Image(t.TypedDict):
+class Image(typing.TypedDict):
     url: str
     width: int
     height: int
     size: ImageSize
 
 
-class Video(t.TypedDict):
+class Video(typing.TypedDict):
     url: str
     width: int
     height: int
 
 
-TwitchType = t.Literal["Channel", "Video", "Clip"]
-LightspeedType = t.Literal["Channel"]
-BandcampType = t.Literal["Album", "Track"]
+TwitchType = typing.Literal['Channel', 'Video', 'Clip']
+LightspeedType = typing.Literal['Channel']
+BandcampType = typing.Literal['Album', 'Track']
 
 
-class NoneSpecial(t.TypedDict):
-    type: t.Literal["None"]
+class NoneSpecial(typing.TypedDict):
+    type: typing.Literal['None']
 
 
-class GIFSpecial(t.TypedDict):
-    type: t.Literal["GIF"]
+class GIFSpecial(typing.TypedDict):
+    type: typing.Literal['GIF']
 
 
-class YouTubeSpecial(t.TypedDict):
-    type: t.Literal["YouTube"]
+class YouTubeSpecial(typing.TypedDict):
+    type: typing.Literal['YouTube']
     id: str
-    timestamp: t.NotRequired[str]
+    timestamp: typing.NotRequired[str]
 
 
-class LightspeedSpecial(t.TypedDict):
-    type: t.Literal["Lightspeed"]
+class LightspeedSpecial(typing.TypedDict):
+    type: typing.Literal['Lightspeed']
     content_type: LightspeedType
     id: str
 
 
-class TwitchSpecial(t.TypedDict):
-    type: t.Literal["Twitch"]
+class TwitchSpecial(typing.TypedDict):
+    type: typing.Literal['Twitch']
     content_type: TwitchType
     id: str
 
 
-class SpotifySpecial(t.TypedDict):
-    type: t.Literal["Spotify"]
+class SpotifySpecial(typing.TypedDict):
+    type: typing.Literal['Spotify']
     content_type: str
     id: str
 
 
-class SoundcloudSpecial(t.TypedDict):
-    type: t.Literal["Soundcloud"]
+class SoundcloudSpecial(typing.TypedDict):
+    type: typing.Literal['Soundcloud']
 
 
-class BandcampSpecial(t.TypedDict):
-    type: t.Literal["Bandcamp"]
+class BandcampSpecial(typing.TypedDict):
+    type: typing.Literal['Bandcamp']
     content_type: BandcampType
     id: str
 
 
-class StreamableSpecial(t.TypedDict):
-    type: t.Literal["Streamable"]
+class AppleMusicSpecial(typing.TypedDict):
+    type: typing.Literal['AppleMusic']
+    album_id: str
+    track_id: typing.NotRequired[str]
+
+
+class StreamableSpecial(typing.TypedDict):
+    type: typing.Literal['Streamable']
     id: str
 
 
@@ -80,77 +86,79 @@ Special = (
     | TwitchSpecial
     | SpotifySpecial
     | BandcampSpecial
+    | AppleMusicSpecial
     | StreamableSpecial
 )
 
 
-class WebsiteMetadata(t.TypedDict):
-    url: t.NotRequired[str]
-    original_url: t.NotRequired[str]
-    special: t.NotRequired[Special]
-    title: t.NotRequired[str]
-    description: t.NotRequired[str]
-    image: t.NotRequired[Image]
-    video: t.NotRequired[Video]
-    site_name: t.NotRequired[str]
-    icon_url: t.NotRequired[str]
-    colour: t.NotRequired[str]
+class WebsiteMetadata(typing.TypedDict):
+    url: typing.NotRequired[str]
+    original_url: typing.NotRequired[str]
+    special: typing.NotRequired[Special]
+    title: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    image: typing.NotRequired[Image]
+    video: typing.NotRequired[Video]
+    site_name: typing.NotRequired[str]
+    icon_url: typing.NotRequired[str]
+    colour: typing.NotRequired[str]
 
 
-class Text(t.TypedDict):
-    icon_url: t.NotRequired[str]
-    url: t.NotRequired[str]
-    title: t.NotRequired[str]
-    description: t.NotRequired[str]
-    media: t.NotRequired[files.File]
-    colour: t.NotRequired[str]
+class Text(typing.TypedDict):
+    icon_url: typing.NotRequired[str]
+    url: typing.NotRequired[str]
+    title: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    media: typing.NotRequired[File]
+    colour: typing.NotRequired[str]
 
 
 class WebsiteEmbed(WebsiteMetadata):
-    type: t.Literal["Website"]
+    type: typing.Literal['Website']
 
 
 class ImageEmbed(Image):
-    type: t.Literal["Image"]
+    type: typing.Literal['Image']
 
 
 class VideoEmbed(Video):
-    type: t.Literal["Video"]
+    type: typing.Literal['Video']
 
 
 class TextEmbed(Text):
-    type: t.Literal["Text"]
+    type: typing.Literal['Text']
 
 
-class NoneEmbed(t.TypedDict):
-    type: t.Literal["None"]
+class NoneEmbed(typing.TypedDict):
+    type: typing.Literal['None']
 
 
 Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
 
 __all__ = (
-    "ImageSize",
-    "Image",
-    "Video",
-    "TwitchType",
-    "LightspeedType",
-    "BandcampType",
-    "NoneSpecial",
-    "GIFSpecial",
-    "YouTubeSpecial",
-    "LightspeedSpecial",
-    "TwitchSpecial",
-    "SpotifySpecial",
-    "SoundcloudSpecial",
-    "BandcampSpecial",
-    "StreamableSpecial",
-    "Special",
-    "WebsiteMetadata",
-    "Text",
-    "WebsiteEmbed",
-    "ImageEmbed",
-    "VideoEmbed",
-    "TextEmbed",
-    "NoneEmbed",
-    "Embed",
+    'ImageSize',
+    'Image',
+    'Video',
+    'TwitchType',
+    'LightspeedType',
+    'BandcampType',
+    'NoneSpecial',
+    'GIFSpecial',
+    'YouTubeSpecial',
+    'LightspeedSpecial',
+    'TwitchSpecial',
+    'SpotifySpecial',
+    'SoundcloudSpecial',
+    'BandcampSpecial',
+    'AppleMusicSpecial',
+    'StreamableSpecial',
+    'Special',
+    'WebsiteMetadata',
+    'Text',
+    'WebsiteEmbed',
+    'ImageEmbed',
+    'VideoEmbed',
+    'TextEmbed',
+    'NoneEmbed',
+    'Embed',
 )

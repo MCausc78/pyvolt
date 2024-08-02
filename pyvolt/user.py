@@ -1,111 +1,119 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2024-present MCausc78
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 from __future__ import annotations
 
 from attrs import define, field
-from enum import IntFlag, StrEnum
-import typing as t
+import typing
 
-from . import (
-    base,
-    cdn,
-    core,
-    permissions as permissions_,
-    safety_reports,
+from . import routes
+from .base import Base
+from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
 )
+from .flags import UserPermissions, UserBadges, UserFlags
+from .enums import UserReportReason, Presence, RelationshipStatus
 
 
-if t.TYPE_CHECKING:
-    from . import (
-        channel as channels,
-        raw,
-    )
+if typing.TYPE_CHECKING:
+    from . import raw
+    from .channel import SavedMessagesChannel, DMChannel
+    from .message import BaseMessage
     from .state import State
-
-
-class Presence(StrEnum):
-    ONLINE = "Online"
-    """User is online."""
-
-    IDLE = "Idle"
-    """User is not currently available."""
-
-    FOCUS = "Focus"
-    """User is focusing / will only receive mentions."""
-
-    BUSY = "Busy"
-    """User is busy / will not receive any notifications."""
-
-    INVISIBLE = "Invisible"
-    """User appears to be offline."""
 
 
 @define(slots=True)
 class UserStatus:
-    """User's active status."""
+    """Represents user's active status."""
 
-    text: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Custom status text."""
+    text: str | None = field(repr=True, kw_only=True)
+    """The custom status text."""
 
-    presence: Presence | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Current presence option."""
+    presence: Presence | None = field(repr=True, kw_only=True)
+    """The current presence option."""
 
     def _update(self, data: UserStatusEdit) -> None:
-        if core.is_defined(data.text):
+        if data.text is not UNDEFINED:
             self.text = data.text
-        if core.is_defined(data.presence):
+        if data.presence is not UNDEFINED:
             self.presence = data.presence
 
 
 class UserStatusEdit:
-    """Patrial user's status."""
+    """Represents partial user's status.
 
-    text: core.UndefinedOr[str | None]
-    """Custom status text."""
+    Attributes
+    ----------
+    text: :class:`UndefinedOr`[Optional[:class:`str`]]
+        The new custom status text.
+    presence: :class:`UndefinedOr`[Optional[:class:`Presence`]]
+        The presence to use.
+    """
 
-    presence: core.UndefinedOr[Presence | None]
-    """Current presence option."""
-
-    __slots__ = ("text", "presence")
+    __slots__ = ('text', 'presence')
 
     def __init__(
         self,
         *,
-        text: core.UndefinedOr[str | None] = core.UNDEFINED,
-        presence: core.UndefinedOr[Presence | None] = core.UNDEFINED,
+        text: UndefinedOr[str | None] = UNDEFINED,
+        presence: UndefinedOr[Presence | None] = UNDEFINED,
     ) -> None:
         self.text = text
         self.presence = presence
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
-        r = []
+        remove: list[raw.FieldsUser] = []
         if self.text is None:
-            r.append("StatusText")
+            remove.append('StatusText')
         if self.presence is None:
-            r.append("StatusPresence")
-        return r
+            remove.append('StatusPresence')
+        return remove
 
     def build(self) -> raw.UserStatus:
-        j: raw.UserStatus = {}
-        if self.text is not None and core.is_defined(self.text):
-            j["text"] = self.text
-        if self.presence is not None and core.is_defined(self.presence):
-            j["presence"] = self.presence.value
-        return j
+        payload: raw.UserStatus = {}
+        if self.text not in (None, UNDEFINED):
+            payload['text'] = self.text
+        if self.presence not in (None, UNDEFINED):
+            payload['presence'] = self.presence.value
+        return payload
 
 
 @define(slots=True)
 class StatelessUserProfile:
-    """Stateless user's profile."""
+    """The stateless user's profile."""
 
-    content: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    content: str | None = field(repr=True, kw_only=True)
     """The user's profile content."""
 
-    internal_background: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_background: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless background visible on user's profile."""
 
-    def _stateful(self, state: State, user_id: core.ULID) -> UserProfile:
+    def _stateful(self, state: State, user_id: str) -> UserProfile:
         return UserProfile(
             content=self.content,
             internal_background=self.internal_background,
@@ -118,237 +126,197 @@ class StatelessUserProfile:
 class UserProfile(StatelessUserProfile):
     """User's profile."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    state: State = field(repr=False, kw_only=True)
+    user_id: str = field(repr=True, kw_only=True)
 
     @property
-    def background(self) -> cdn.Asset | None:
+    def background(self) -> Asset | None:
         """Background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(
-            self.state, "backgrounds"
-        )
+        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
 @define(slots=True)
 class PartialUserProfile:
     """The user's profile."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, kw_only=True)
     """The state."""
 
-    content: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    content: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """The user's profile content."""
 
-    internal_background: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_background: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     """The stateless background visible on user's profile."""
 
     @property
-    def background(self) -> core.UndefinedOr[cdn.Asset | None]:
-        """Background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(
-            self.state, "backgrounds"
-        )
+    def background(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The background visible on user's profile."""
+        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
 class UserProfileEdit:
-    """Partial user's profile."""
+    """Partially represents user's profile.
 
-    content: core.UndefinedOr[str | None]
-    """Text to set as user profile description."""
+    Attributes
+    ----------
+    content: :class:`UndefinedOr`[Optional[:class:`str`]]
+        The text to use in user profile description.
+    background: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        The background to use on user's profile.
+    """
 
-    background: core.UndefinedOr[cdn.ResolvableResource | None]
-    """New background visible on user's profile."""
-
-    __slots__ = ("content", "background")
+    __slots__ = ('content', 'background')
 
     def __init__(
         self,
-        content: core.UndefinedOr[str | None] = core.UNDEFINED,
-        background: core.UndefinedOr[cdn.ResolvableResource | None] = core.UNDEFINED,
+        content: UndefinedOr[str | None] = UNDEFINED,
+        *,
+        background: UndefinedOr[ResolvableResource | None] = UNDEFINED,
     ) -> None:
         self.content = content
         self.background = background
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
-        r = []
+        remove: list[raw.FieldsUser] = []
         if self.content is None:
-            r.append("ProfileContent")
+            remove.append('ProfileContent')
         if self.background is None:
-            r.append("ProfileBackground")
-        return r
+            remove.append('ProfileBackground')
+        return remove
 
     async def build(self, state: State) -> raw.DataUserProfile:
-        j: raw.DataUserProfile = {}
+        payload: raw.DataUserProfile = {}
         if self.content:
-            j["content"] = self.content
+            payload['content'] = self.content
         if self.background:
-            j["background"] = await cdn.resolve_resource(
-                state, self.background, tag="backgrounds"
-            )
-        return j
-
-
-class UserBadges(IntFlag):
-    """User badges bitfield."""
-
-    NONE = 0
-    """Zero badges bitfield."""
-
-    DEVELOPER = 1 << 0
-    """Revolt developer."""
-
-    TRANSLATOR = 1 << 1
-    """Helped translate Revolt."""
-
-    SUPPORTER = 1 << 2
-    """Monetarily supported Revolt."""
-
-    RESPONSIBLE_DISCLOSURE = 1 << 3
-    """Responsibly disclosed a security issue."""
-
-    FOUNDER = 1 << 4
-    """Revolt founder."""
-
-    PLATFORM_MODERATION = 1 << 5
-    """Platform moderator."""
-
-    ACTIVE_SUPPORTER = 1 << 6
-    """Active monetary supporter."""
-
-    PAW = 1 << 7
-    """🦊🦝"""
-
-    EARLY_ADOPTER = 1 << 8
-    """Joined as one of the first 1000 users in 2021."""
-
-    RESERVED_RELEVANT_JOKE_BADGE_1 = 1 << 9
-    """Amogus."""
-
-    RESERVED_RELEVANT_JOKE_BADGE_2 = 1 << 10
-    """Low resolution troll face."""
-
-
-class UserFlags(IntFlag):
-    """User flags bitfield."""
-
-    NONE = 0
-    """Zero badges bitfield."""
-
-    SUSPENDED = 1 << 0
-    """User has been suspended from the platform."""
-
-    DELETED = 1 << 1
-    """User has deleted their account."""
-
-    BANNED = 1 << 2
-    """User was banned off the platform."""
-
-    SPAM = 1 << 3
-    """User was marked as spam and removed from platform."""
-
-
-class RelationshipStatus(StrEnum):
-    """User's relationship with another user (or themselves)."""
-
-    NONE = "None"
-    """No relationship with other user."""
-
-    USER = "User"
-    """Other user is us."""
-
-    FRIEND = "Friend"
-    """Friends with the other user."""
-
-    OUTGOING = "Outgoing"
-    """Pending friend request to user."""
-
-    INCOMING = "Incoming"
-    """Incoming friend request from user."""
-
-    BLOCKED = "Blocked"
-    """Blocked this user."""
-
-    BLOCKED_OTHER = "BlockedOther"
-    """Blocked by this user."""
+            payload['background'] = await resolve_resource(state, self.background, tag='backgrounds')
+        return payload
 
 
 @define(slots=True)
 class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
-    user_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True)
     """Other user's ID."""
 
-    status: RelationshipStatus = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: RelationshipStatus = field(repr=True, kw_only=True)
     """Relationship status with them."""
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, Relationship) and self.id == other.id and self.status == other.status
 
 
 @define(slots=True)
 class Mutuals:
     """Mutual friends and servers response."""
 
-    user_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_ids: list[str] = field(repr=True, kw_only=True)
     """Array of mutual user IDs that both users are friends with."""
 
-    server_ids: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_ids: list[str] = field(repr=True, kw_only=True)
     """Array of mutual server IDs that both users are in."""
 
 
-class BaseUser(base.Base):
+class BaseUser(Base):
     """Represents a user on Revolt."""
+
+    def is_sentinel(self) -> bool:
+        """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""
+        return self is self.state.system
 
     @property
     def mention(self) -> str:
-        """The user mention."""
-        return f"<@{self.id}>"
+        """:class:`str`: The user mention."""
+        return f'<@{self.id}>'
+
+    @property
+    def default_avatar_url(self) -> str:
+        """:class:`str`: The URL to user's default avatar."""
+        return self.state.http.url_for(routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=self.id))
+
+    @property
+    def dm_channel_id(self) -> str | None:
+        """Optional[:class:`str`]: The ID of the private channel with this user."""
+        cache = self.state.cache
+        if cache:
+            from .cache import _USER_REQUEST as USER_REQUEST
+
+            return cache.get_private_channel_by_user(self.id, USER_REQUEST)
+
+    pm_id = dm_channel_id
+
+    @property
+    def dm_channel(self) -> DMChannel | None:
+        """Optional[:class:`DMChannel`]: The private channel with this user."""
+        dm_channel_id = self.dm_channel_id
+
+        cache = self.state.cache
+        if cache and dm_channel_id:
+            from .cache import _USER_REQUEST as USER_REQUEST
+
+            channel = cache.get_channel(dm_channel_id, USER_REQUEST)
+            if isinstance(channel, DMChannel):
+                return channel
+
+    pm = dm_channel
 
     async def accept_friend_request(self) -> User:
         """|coro|
 
-        Accept another user's friend request.
+        Accepts the incoming friend request.
         """
         return await self.state.http.accept_friend_request(self.id)
 
     async def block(self) -> User:
         """|coro|
 
-        Block this user.
+        Blocks the user.
         """
         return await self.state.http.block_user(self.id)
 
     async def edit(
         self,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[str | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         """|coro|
 
-        Edit this user.
+        Edits the user.
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[:class:`str`] | `None`
-            New display name. Set `None` to remove it.
-        avatar: :class:`UndefinedOr`[:class:`str`] | `None`
-            New avatar. Must be attachment ID. Set `None` to remove it.
+        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New display name. Pass ``None`` to remove it.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
         badges: :class:`UndefinedOr`[:class:`UserBadges`]
-            New user badges.
+            The new user badges.
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
-            New user flags.
+            The new user flags.
+
+        Raises
+        ------
+        HTTPException
+            Editing the user failed.
+
+        Returns
+        -------
+        :class:`User`
+            The newly updated user.
         """
         return await self.state.http.edit_user(
             self.id,
@@ -367,20 +335,20 @@ class BaseUser(base.Base):
         """
         return await self.state.http.deny_friend_request(self.id)
 
-    async def mutual_friend_ids(self) -> list[core.ULID]:
+    async def mutual_friend_ids(self) -> list[str]:
         """|coro|
 
-        Retrieve a list of mutual friends with this user.
+        Retrieves a list of mutual friends with this user.
         """
-        mutuals = await self.state.http.get_mutual_friends_and_servers(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id)
         return mutuals.user_ids
 
-    async def mutual_server_ids(self) -> list[core.ULID]:
+    async def mutual_server_ids(self) -> list[str]:
         """|coro|
 
-        Retrieve a list of mutual servers with this user.
+        Retrieves a list of mutual servers with this user.
         """
-        mutuals = await self.state.http.get_mutual_friends_and_servers(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id)
         return mutuals.server_ids
 
     async def mutuals(self) -> Mutuals:
@@ -388,28 +356,48 @@ class BaseUser(base.Base):
 
         Retrieve a list of mutual friends and servers with this user.
         """
-        return await self.state.http.get_mutual_friends_and_servers(self.id)
+        return await self.state.http.get_mutuals_with(self.id)
 
-    async def open_dm(self) -> channels.SavedMessagesChannel | channels.DMChannel:
+    async def open_dm(self) -> SavedMessagesChannel | DMChannel:
         """|coro|
 
         Open a DM with another user. If the target is oneself, a saved messages channel is returned.
         """
         return await self.state.http.open_dm(self.id)
 
+    async def fetch_profile(self) -> UserProfile:
+        """|coro|
+
+        Retrives user profile.
+
+        Returns
+        -------
+        :class`UserProfile`
+            The user's profile page.
+        """
+        return await self.state.http.get_user_profile(self.id)
+
     async def remove_friend(self) -> User:
         """|coro|
 
-        Denies this user's friend request or removes an existing friend.
+        Removes the user as a friend.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        HTTPException
+            Removing the user as a friend failed.
         """
         return await self.state.http.remove_friend(self.id)
 
     async def report(
         self,
-        reason: safety_reports.UserReportReason,
+        reason: UserReportReason,
         *,
         additional_context: str | None = None,
-        message_context: core.ResolvableULID,
+        message_context: ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
 
@@ -420,7 +408,7 @@ class BaseUser(base.Base):
 
         Raises
         ------
-        :class:`APIError`
+        HTTPException
             You're trying to self-report, or reporting the user failed.
         """
         return await self.state.http.report_user(
@@ -433,7 +421,7 @@ class BaseUser(base.Base):
     async def unblock(self) -> User:
         """|coro|
 
-        Unblock this user.
+        Unblocks the user.
         """
         return await self.state.http.unblock_user(self.id)
 
@@ -442,76 +430,56 @@ class BaseUser(base.Base):
 class PartialUser(BaseUser):
     """Partially represents a user on Revolt."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """New username of the user."""
 
-    discriminator: core.UndefinedOr[str] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    discriminator: UndefinedOr[str] = field(repr=True, kw_only=True)
     """New discriminator of the user."""
 
-    display_name: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    display_name: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """New display name of the user."""
 
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     """New stateless avatar of the user."""
 
-    badges: core.UndefinedOr[UserBadges] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    badges: UndefinedOr[UserBadges] = field(repr=True, kw_only=True)
     """New user badges."""
 
-    status: core.UndefinedOr[UserStatusEdit] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    status: UndefinedOr[UserStatusEdit] = field(repr=True, kw_only=True)
     """New user's status."""
 
-    profile: core.UndefinedOr[PartialUserProfile] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
     """New user's profile page."""
 
-    flags: core.UndefinedOr[UserFlags] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    flags: UndefinedOr[UserFlags] = field(repr=True, kw_only=True)
     """The user flags."""
 
-    online: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    online: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this user came online."""
 
     @property
-    def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
+    def avatar(self) -> UndefinedOr[Asset | None]:
         """The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
 @define(slots=True)
 class DisplayUser(BaseUser):
     """Represents a user on Revolt that can be easily displayed in UI."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The username of the user."""
 
-    discriminator: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    discriminator: str = field(repr=True, kw_only=True)
     """The discriminator of the user."""
 
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless avatar of the user."""
 
     @property
-    def avatar(self) -> cdn.Asset | None:
-        """The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+    def avatar(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The avatar of the user."""
+        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     async def send_friend_request(self) -> User:
         """|coro|
@@ -523,130 +491,186 @@ class DisplayUser(BaseUser):
 
 @define(slots=True)
 class BotUserInfo:
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
-    """ID of the owner of this bot."""
+    owner_id: str = field(repr=True, kw_only=True)
+    """The ID of the owner of this bot."""
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
 
 
 def _calculate_user_permissions(
-    user_id: core.ULID,
+    user_id: str,
     user_privileged: bool,
     user_relationship: RelationshipStatus,
     user_bot: BotUserInfo | None,
     *,
-    perspective_id: core.ULID,
+    perspective_id: str,
     perspective_bot: BotUserInfo | None,
-) -> permissions_.UserPermissions:
-    if (
-        user_privileged
-        or user_id == perspective_id
-        or user_relationship == RelationshipStatus.FRIEND
-    ):
-        return permissions_.UserPermissions.ALL
+) -> UserPermissions:
+    if user_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
+        return UserPermissions.ALL
 
     if user_relationship in (
-        RelationshipStatus.BLOCKED,
-        RelationshipStatus.BLOCKED_OTHER,
+        RelationshipStatus.blocked,
+        RelationshipStatus.blocked_other,
     ):
-        return permissions_.UserPermissions.ACCESS
+        return UserPermissions(access=True)
 
-    result = 0
-    if user_relationship in (RelationshipStatus.INCOMING, RelationshipStatus.OUTGOING):
-        result |= permissions_.UserPermissions.ACCESS.value
+    result = UserPermissions()
+    if user_relationship in (RelationshipStatus.incoming, RelationshipStatus.outgoing):
+        result.access = True
 
     if user_bot or perspective_bot:
-        result |= permissions_.UserPermissions.SEND_MESSAGE.value
+        result.send_messages = True
 
-    return permissions_.UserPermissions(result)
+    return result
 
 
 @define(slots=True)
 class User(DisplayUser):
     """Represents a user on Revolt."""
 
-    display_name: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    display_name: str | None = field(repr=True, kw_only=True)
     """The user display name."""
 
-    badges: UserBadges = field(repr=True, hash=True, kw_only=True, eq=True)
+    badges: UserBadges = field(repr=True, kw_only=True)
     """The user badges."""
 
-    status: UserStatus | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    status: UserStatus | None = field(repr=True, kw_only=True)
     """The current user's status."""
 
-    flags: UserFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: UserFlags = field(repr=True, kw_only=True)
     """The user flags."""
 
-    privileged: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    privileged: bool = field(repr=True, kw_only=True)
     """Whether this user is privileged."""
 
-    bot: BotUserInfo | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    bot: BotUserInfo | None = field(repr=True, kw_only=True)
     """The information about the bot."""
 
-    relationship: RelationshipStatus = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    relationship: RelationshipStatus = field(repr=True, kw_only=True)
     """The current session user's relationship with this user."""
 
-    online: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    online: bool = field(repr=True, kw_only=True)
     """Whether this user is currently online."""
 
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def tag(self) -> str:
+        """:class:`str`: The tag of the user.
+        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``, example output would be ``'vlf#3510'``."""
+        return f'{self.name}#{self.discriminator}'
+
     def _update(self, data: PartialUser) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.discriminator):
+        if data.discriminator is not UNDEFINED:
             self.discriminator = data.discriminator
-        if core.is_defined(data.display_name):
+        if data.display_name is not UNDEFINED:
             self.display_name = data.display_name
-        if core.is_defined(data.internal_avatar):
+        if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if core.is_defined(data.badges):
+        if data.badges is not UNDEFINED:
             self.badges = data.badges
-        if core.is_defined(data.status):
+        if data.status is not UNDEFINED:
             status = data.status
-            if core.is_defined(status.text) and core.is_defined(status.presence):
+            if status.text is not UNDEFINED and status.presence is not UNDEFINED:
                 self.status = UserStatus(
                     text=status.text,
                     presence=status.presence,
                 )
             elif self.status:
                 self.status._update(status)
-        if core.is_defined(data.flags):
+        if data.flags is not UNDEFINED:
             self.flags = data.flags
-        if core.is_defined(data.online):
+        if data.online is not UNDEFINED:
             self.online = data.online
 
-    async def profile(self) -> UserProfile:
-        """|coro|
+    # flags
+    def is_suspended(self) -> bool:
+        """:class:`bool`: Whether this user has been suspended from the platform."""
+        return self.flags.suspended
 
-        Retrives user profile.
+    def is_deleted(self) -> bool:
+        """:class:`bool`: Whether this user is deleted his account."""
+        return self.flags.deleted
 
-        Returns
-        -------
-        :class`UserProfile`
-            The user's profile page.
-        """
-        return await self.state.http.get_user_profile(self.id)
+    def is_banned(self) -> bool:
+        """:class:`bool`: Whether this user is banned off the platform."""
+        return self.flags.banned
+
+    def is_spammer(self) -> bool:
+        """:class:`bool`: Whether this user was marked as spam and removed from platform."""
+        return self.flags.spam
+
+    # badges
+    def is_developer(self) -> bool:
+        """:class:`bool`: Whether this user is Revolt developer."""
+        return self.badges.developer
+
+    def is_translator(self) -> bool:
+        """:class:`bool`: Whether this user helped translate Revolt."""
+        return self.badges.translator
+
+    def is_supporter(self) -> bool:
+        """:class:`bool`: Whether this user monetarily supported Revolt."""
+        return self.badges.supporter
+
+    def is_responsible_disclosure(self) -> bool:
+        """:class:`bool`: Whether this user responsibly disclosed a security issue."""
+        return self.badges.responsible_disclosure
+
+    def is_founder(self) -> bool:
+        """:class:`bool`: Whether this user is Revolt founder."""
+        return self.badges.founder
+
+    def is_platform_moderator(self) -> bool:
+        """:class:`bool`: Whether this user is platform moderator."""
+        return self.badges.platform_moderation
+
+    def is_active_supporter(self) -> bool:
+        """:class:`bool`: Whether this user is active monetary supporter."""
+        return self.badges.active_supporter
+
+    def is_paw(self) -> bool:
+        """:class:`bool`: Whether this user likes fox/raccoon (🦊🦝)."""
+        return self.badges.paw
+
+    def is_early_adopter(self) -> bool:
+        """:class:`bool`: Whether this user have joined Revolt as one of the first 1000 users in 2021."""
+        return self.badges.early_adopter
+
+    def is_relevant_joke_1(self) -> bool:
+        """:class:`bool`: Whether this user have given funny joke (Called "sus", displayed as Amogus in Revite)."""
+        return self.badges.reserved_relevant_joke_badge_1
+
+    def is_relevant_joke_2(self) -> bool:
+        """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
+        return self.badges.reserved_relevant_joke_badge_2
 
 
 @define(slots=True)
-class SelfUser(User):
-    """Representation of a user on Revolt."""
+class OwnUser(User):
+    """Representation of a current user on Revolt."""
 
-    relations: list[Relationship] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Relationships with other users."""
+    relations: dict[str, Relationship] = field(repr=True, kw_only=True)
+    """The dictionary of relationships with other users."""
 
     async def edit(
         self,
         *,
-        display_name: core.UndefinedOr[str] = core.UNDEFINED,
-        avatar: core.UndefinedOr[str | None] = core.UNDEFINED,
-        status: core.UndefinedOr[UserStatusEdit] = core.UNDEFINED,
-        profile: core.UndefinedOr[UserProfileEdit] = core.UNDEFINED,
-        badges: core.UndefinedOr[UserBadges] = core.UNDEFINED,
-        flags: core.UndefinedOr[UserFlags] = core.UNDEFINED,
+        display_name: UndefinedOr[str] = UNDEFINED,
+        avatar: UndefinedOr[str | None] = UNDEFINED,
+        status: UndefinedOr[UserStatusEdit] = UNDEFINED,
+        profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
+        badges: UndefinedOr[UserBadges] = UNDEFINED,
+        flags: UndefinedOr[UserFlags] = UNDEFINED,
     ) -> User:
         """|coro|
 
-        Edit user.
+        Edits the user.
 
         Parameters
         ----------
@@ -663,7 +687,7 @@ class SelfUser(User):
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
             Bitfield of new user flags.
         """
-        return await self.state.http.edit_self_user(
+        return await self.state.http.edit_my_user(
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -674,22 +698,19 @@ class SelfUser(User):
 
 
 __all__ = (
-    "Presence",
-    "UserStatus",
-    "UserStatusEdit",
-    "StatelessUserProfile",
-    "UserProfile",
-    "UserProfileEdit",
-    "UserBadges",
-    "UserFlags",
-    "RelationshipStatus",
-    "Relationship",
-    "Mutuals",
-    "BaseUser",
-    "PartialUser",
-    "DisplayUser",
-    "BotUserInfo",
-    "_calculate_user_permissions",
-    "User",
-    "SelfUser",
+    'UserStatus',
+    'UserStatusEdit',
+    'StatelessUserProfile',
+    'UserProfile',
+    'PartialUserProfile',
+    'UserProfileEdit',
+    'Relationship',
+    'Mutuals',
+    'BaseUser',
+    'PartialUser',
+    'DisplayUser',
+    'BotUserInfo',
+    '_calculate_user_permissions',
+    'User',
+    'OwnUser',
 )

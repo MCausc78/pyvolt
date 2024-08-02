@@ -1,137 +1,190 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2024-present MCausc78
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 from __future__ import annotations
 
 from attrs import define, field
-from datetime import datetime
-from enum import IntFlag
-import typing as t
+from collections.abc import Mapping
+from datetime import datetime, timedelta
+import typing
 
 from . import (
-    base,
     cache as caching,
-    cdn,
-    core,
-    errors,
-    permissions as permissions_,
-    safety_reports,
-    state,
-    user as users,
     utils,
 )
+from .base import Base
+from .bot import BaseBot
+from .cdn import StatelessAsset, Asset, ResolvableResource
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+    resolve_id,
+)
+from .emoji import ServerEmoji
+from .enums import ChannelType, ContentReportReason, RelationshipStatus
+from .errors import NoData
+from .flags import Permissions, ServerFlags, UserBadges, UserFlags
+from .permissions import Permissions, PermissionOverride
+from .state import State
+from .user import (
+    UserStatus,
+    BaseUser,
+    DisplayUser,
+    BotUserInfo,
+    User,
+)
 
-if t.TYPE_CHECKING:
-    from . import (
-        channel as channels,
-        raw,
+
+if typing.TYPE_CHECKING:
+    from . import raw
+    from .channel import (
+        TextChannel,
+        ServerTextChannel,
+        VoiceChannel,
+        ServerChannel,
     )
 
 
-class ServerFlags(IntFlag):
-    NONE = 0
-
-    VERIFIED = 1 << 0
-    """Whether the server is verified."""
-
-    OFFICIAL = 1 << 1
-    """Whether the server is ran by Revolt team."""
-
-
 class Category:
-    """Representation of channel category on Revolt server."""
+    """Represents a category containing channels in Revolt server.
 
-    id: core.ULID
-    """Unique ID for this category."""
+    Attributes
+    ----------
+    id: :class:`str`
+        The category's ID.
+    title: :class:`str`
+        The category's title.
+    channels: List[:class:`str`]
+        The IDs of channels in this category.
+    """
 
-    title: str
-    """Title for this category."""
-
-    channels: list[core.ULID]
-    """Channel in this category."""
-
-    __slots__ = ("id", "title", "channels")
+    __slots__ = ('id', 'title', 'channels')
 
     def __init__(
         self,
-        id: core.ResolvableULID,
+        id: ULIDOr[Category],
         title: str,
-        channels: list[core.ResolvableULID],
+        channels: list[ULIDOr[ServerChannel]],
     ) -> None:
-        self.id = core.resolve_ulid(id)
+        self.id = resolve_id(id)
         self.title = title
-        self.channels = [core.resolve_ulid(channel) for channel in channels]
+        self.channels = [resolve_id(channel) for channel in channels]
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, Category) and self.id == other.id
 
     def build(self) -> raw.Category:
         return {
-            "id": self.id,
-            "title": self.title,
-            "channels": t.cast("list[str]", self.channels),
+            'id': self.id,
+            'title': self.title,
+            'channels': self.channels,
         }
 
 
 class SystemMessageChannels:
-    """System message channel assignments."""
+    """Represents system message channel assignments in a Revolt server.
 
-    user_joined: core.ULID | None
-    """ID of channel to send user join messages in."""
+    Attributes
+    ----------
+    user_joined: Optional[:class:`str`]
+        The ID of channel to send user join messages in.
+    user_left: Optional[:class:`str`]
+        The ID of channel to send user left messages in.
+    user_kicked: Optional[:class:`str`]
+        The ID of channel to send user kicked messages in.
+    user_banned: Optional[:class:`str`]
+        The ID of channel to send user banned messages in.
+    """
 
-    user_left: core.ULID | None
-    """ID of channel to send user left messages in."""
-
-    user_kicked: core.ULID | None
-    """ID of channel to send user kicked messages in."""
-
-    user_banned: core.ULID | None
-    """ID of channel to send user banned messages in."""
-
-    __slots__ = ("user_joined", "user_left", "user_kicked", "user_banned")
+    __slots__ = ('user_joined', 'user_left', 'user_kicked', 'user_banned')
 
     def __init__(
         self,
         *,
-        user_joined: core.ResolvableULID | None = None,
-        user_left: core.ResolvableULID | None = None,
-        user_kicked: core.ResolvableULID | None = None,
-        user_banned: core.ResolvableULID | None = None,
+        user_joined: ULIDOr[TextChannel] | None = None,
+        user_left: ULIDOr[TextChannel] | None = None,
+        user_kicked: ULIDOr[TextChannel] | None = None,
+        user_banned: ULIDOr[TextChannel] | None = None,
     ) -> None:
-        self.user_joined = (
-            None if user_joined is None else core.resolve_ulid(user_joined)
-        )
-        self.user_left = None if user_left is None else core.resolve_ulid(user_left)
-        self.user_kicked = (
-            None if user_kicked is None else core.resolve_ulid(user_kicked)
-        )
-        self.user_banned = (
-            None if user_banned is None else core.resolve_ulid(user_banned)
+        self.user_joined = None if user_joined is None else resolve_id(user_joined)
+        self.user_left = None if user_left is None else resolve_id(user_left)
+        self.user_kicked = None if user_kicked is None else resolve_id(user_kicked)
+        self.user_banned = None if user_banned is None else resolve_id(user_banned)
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, SystemMessageChannels)
+            and (
+                self.user_joined == other.user_joined
+                and self.user_left == other.user_left
+                and self.user_kicked == other.user_kicked
+                and self.user_banned == other.user_banned
+            )
         )
 
     def build(self) -> raw.SystemMessageChannels:
-        d: raw.SystemMessageChannels = {}
+        payload: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
-            d["user_joined"] = self.user_joined
+            payload['user_joined'] = self.user_joined
         if self.user_left is not None:
-            d["user_left"] = self.user_left
+            payload['user_left'] = self.user_left
         if self.user_kicked is not None:
-            d["user_kicked"] = self.user_kicked
+            payload['user_kicked'] = self.user_kicked
         if self.user_banned is not None:
-            d["user_banned"] = self.user_banned
-        return d
+            payload['user_banned'] = self.user_banned
+        return payload
 
 
-@define()
-class BaseRole(base.Base):
+@define(slots=True)
+class BaseRole(Base):
     """Base representation of a server role."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other or isinstance(other, BaseRole) and (self.id == other.id and self.server_id == other.server_id)
+        )
 
     async def delete(self) -> None:
         """|coro|
 
-        Delete a server role.
+        Deletes the role.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to delete the role.
-        :class:`APIError`
+        HTTPException
             Deleting the role failed.
         """
         return await self.state.http.delete_role(self.server_id, self.id)
@@ -139,42 +192,52 @@ class BaseRole(base.Base):
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        colour: core.UndefinedOr[str | None] = core.UNDEFINED,
-        hoist: core.UndefinedOr[bool] = core.UNDEFINED,
-        rank: core.UndefinedOr[int] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        colour: UndefinedOr[str | None] = UNDEFINED,
+        hoist: UndefinedOr[bool] = UNDEFINED,
+        rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
         """|coro|
 
-        Edit a role.
+        Edits the role.
 
         Parameters
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`UndefinedOr`[:class:`str` | `None`]
-            New role colour.
+        colour: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New role colour. This should be valid CSS colour.
         hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
         rank: :class:`UndefinedOr`[:class:`int`]
-            Ranking position. Smaller values take priority.
+            The new ranking position. Smaller values take priority.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the role.
-        :class:`APIError`
+        HTTPException
             Editing the role failed.
+
+        Returns
+        -------
+        :class:`Role`
+            The newly updated role.
         """
         return await self.state.http.edit_role(
-            self.server_id, self.id, name=name, colour=colour, hoist=hoist, rank=rank
+            self.server_id,
+            self.id,
+            name=name,
+            colour=colour,
+            hoist=hoist,
+            rank=rank,
         )
 
     async def set_permissions(
         self,
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
     ) -> Server:
         """|coro|
 
@@ -182,55 +245,49 @@ class BaseRole(base.Base):
 
         Parameters
         ----------
-        allow: :class:`permissions_.Permissions`
+        allow: :class:`Permissions`
             New allow bit flags.
-        deny: :class:`permissions_.Permissions`
+        deny: :class:`Permissions`
             New disallow bit flags.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the server.
-        :class:`APIError`
+        HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(
-            self.server_id, self.id, allow=allow, deny=deny
-        )
+        return await self.state.http.set_server_permissions_for_role(self.server_id, self.id, allow=allow, deny=deny)
 
 
 @define(slots=True)
 class PartialRole(BaseRole):
     """Partial representation of a server role."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """The new role name."""
 
-    permissions: core.UndefinedOr[permissions_.PermissionOverride] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
     """The permissions available to this role."""
 
-    colour: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    colour: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     """New colour used for this. This can be any valid CSS colour."""
 
-    hoist: core.UndefinedOr[bool] = field(repr=True, hash=True, kw_only=True, eq=True)
+    hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
-    rank: core.UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
+    rank: UndefinedOr[int] = field(repr=True, kw_only=True)
     """New ranking of this role."""
 
     def into_full(self) -> Role | None:
-        """Tries transform this partial role into full object. This is useful when caching role."""
+        """Optional[:class:`Role`]: Tries transform this partial role into full object. This is useful when caching role."""
         if (
-            core.is_defined(self.name)
-            and core.is_defined(self.permissions)
-            and core.is_defined(self.hoist)
-            and core.is_defined(self.rank)
+            self.name is not UNDEFINED
+            and self.permissions is not UNDEFINED
+            and self.hoist is not UNDEFINED
+            and self.rank is not UNDEFINED
         ):
-            colour = None if not core.is_defined(self.colour) else self.colour
+            colour = None if not self.colour is not UNDEFINED else self.colour
             return Role(
                 state=self.state,
                 id=self.id,
@@ -247,43 +304,95 @@ class PartialRole(BaseRole):
 class Role(BaseRole):
     """Representation of a server role."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """Role name."""
 
-    permissions: permissions_.PermissionOverride = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    permissions: PermissionOverride = field(repr=True, kw_only=True)
     """Permissions available to this role."""
 
-    colour: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    colour: str | None = field(repr=True, kw_only=True)
     """Colour used for this. This can be any valid CSS colour."""
 
-    hoist: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    hoist: bool = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
-    rank: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    rank: int = field(repr=True, kw_only=True)
     """Ranking of this role."""
 
     def _update(self, data: PartialRole) -> None:
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.permissions):
+        if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
-        if core.is_defined(data.colour):
+        if data.colour is not UNDEFINED:
             self.colour = data.colour
-        if core.is_defined(data.hoist):
+        if data.hoist is not UNDEFINED:
             self.hoist = data.hoist
-        if core.is_defined(data.rank):
+        if data.rank is not UNDEFINED:
             self.rank = data.rank
 
 
 @define(slots=True)
-class BaseServer(base.Base):
+class BaseServer(Base):
     """Base representation of a server on Revolt."""
+
+    @property
+    def emojis(self) -> Mapping[str, ServerEmoji]:
+        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
+    @property
+    def members(self) -> Mapping[str, Member]:
+        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
+    def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
+        """Retrieves a server emoji from cache.
+
+        Parameters
+        ----------
+        emoji_id: :class:`str`
+            The emoji ID.
+
+        Returns
+        -------
+        Optional[:class:`ServerEmoji`]
+            The emoji or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        emoji = cache.get_emoji(emoji_id, caching._USER_REQUEST)
+        if emoji and isinstance(emoji, ServerEmoji) and emoji.server_id == self.id:
+            return emoji
+
+    def get_member(self, user_id: str, /) -> Member | None:
+        """Retrieves a server member from cache.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user ID.
+
+        Returns
+        -------
+        Optional[:class:`Member`]
+            The member or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
 
     async def add_bot(
         self,
-        bot: core.ResolvableULID,
+        bot: ULIDOr[BaseBot | BaseUser],
     ) -> None:
         """|coro|
 
@@ -291,66 +400,83 @@ class BaseServer(base.Base):
         """
         return await self.state.http.invite_bot(bot, server=self.id)
 
+    async def ban(self, user: str | BaseUser | BaseMember, *, reason: str | None = None) -> Ban:
+        """|coro|
+
+        Ban a user.
+
+        Parameters
+        ----------
+        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The user to ban.
+        reason: Optional[:class:`str`]
+            The ban reason. Should be between 1 and 1024 chars long.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to ban the user.
+        HTTPException
+            Banning the user failed.
+        """
+        return await self.state.http.ban(self.id, user, reason=reason)
+
     async def create_channel(
         self,
         *,
-        type: channels.ChannelType | None = None,
+        type: ChannelType | None = None,
         name: str,
         description: str | None = None,
         nsfw: bool | None = None,
-    ) -> channels.ServerChannel:
+    ) -> ServerChannel:
         """|coro|
 
         Create a new text or voice channel within this server.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        HTTPException
             Creating the channel failed.
         """
-        return await self.state.http.create_channel(
+        return await self.state.http.create_server_channel(
             self.id, type=type, name=name, description=description, nsfw=nsfw
         )
 
     async def create_text_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
-    ) -> channels.ServerTextChannel:
+    ) -> ServerTextChannel:
         """|coro|
 
         Create a new text channel within this server.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        HTTPException
             Creating the channel failed.
         """
-        from .channel import ChannelType
-
-        type = ChannelType.TEXT
-        return await self.create_channel(type=type, name=name, description=description, nsfw=nsfw)  # type: ignore
+        channel = await self.create_channel(type=ChannelType.text, name=name, description=description, nsfw=nsfw)
+        return channel  # type: ignore
 
     async def create_voice_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
-    ) -> channels.VoiceChannel:
+    ) -> VoiceChannel:
         """|coro|
 
         Create a new voice channel within this server.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the channel.
-        :class:`APIError`
+        HTTPException
             Creating the channel failed.
         """
-        from .channel import ChannelType
-
-        type = ChannelType.VOICE
-        return await self.create_channel(type=type, name=name, description=description, nsfw=nsfw)  # type: ignore
+        channel = await self.create_channel(type=ChannelType.voice, name=name, description=description, nsfw=nsfw)
+        return channel  # type: ignore
 
     async def create_role(self, *, name: str, rank: int | None = None) -> Role:
         """|coro|
@@ -359,16 +485,16 @@ class BaseServer(base.Base):
 
         Parameters
         ----------
-        name: :class:`str` | `None`
-            Role name. Should be between 1 and 32 chars long.
-        rank: :class:`int` | `None`
-            Ranking position. Smaller values take priority.
+        name: :class:`str`
+            The role name. Should be between 1 and 32 chars long.
+        rank: Optional[:class:`int`]
+            The ranking position. Smaller values take priority.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to create the role.
-        :class:`APIError`
+        HTTPException
             Creating the role failed.
         """
         return await self.state.http.create_role(self.id, name=name, rank=rank)
@@ -376,45 +502,43 @@ class BaseServer(base.Base):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Deletes the server if owner otherwise leaves.
         """
         return await self.state.http.delete_server(self.id)
 
     async def edit(
         self,
         *,
-        name: core.UndefinedOr[str] = core.UNDEFINED,
-        description: core.UndefinedOr[str | None] = core.UNDEFINED,
-        icon: core.UndefinedOr[str | None] = core.UNDEFINED,
-        banner: core.UndefinedOr[str | None] = core.UNDEFINED,
-        categories: core.UndefinedOr[list[Category] | None] = core.UNDEFINED,
-        system_messages: core.UndefinedOr[
-            SystemMessageChannels | None
-        ] = core.UNDEFINED,
-        flags: core.UndefinedOr[ServerFlags] = core.UNDEFINED,
-        discoverable: core.UndefinedOr[bool] = core.UNDEFINED,
-        analytics: core.UndefinedOr[bool] = core.UNDEFINED,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[str | None] = UNDEFINED,
+        icon: UndefinedOr[str | None] = UNDEFINED,
+        banner: UndefinedOr[str | None] = UNDEFINED,
+        categories: UndefinedOr[list[Category] | None] = UNDEFINED,
+        system_messages: UndefinedOr[SystemMessageChannels | None] = UNDEFINED,
+        flags: UndefinedOr[ServerFlags] = UNDEFINED,
+        discoverable: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
     ) -> Server:
         """|coro|
 
-        Edit a server.
+        Edits the server.
 
         Parameters
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[:class:`str` | `None`]
+        description: :class:`UndefinedOr`[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[:class:`str` | `None`]
-            New server icon. Pass attachment ID given by Autumn.
-        banner: :class:`UndefinedOr`[:class:`str` | `None`]
-            New server banner. Pass attachment ID given by Autumn.
-        categories: :class:`UndefinedOr`[:class:`list`[:class:`Category`] | `None`]
+        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New server icon.
+        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New server banner.
+        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[:class:`SystemMessageChannels` | `None`]
+        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
         flags: :class:`UndefinedOr`[:class:`ServerFlags`]
-            Bitfield of server flags. Can be passed only if you're privileged user.
+            The new server flags. Can be passed only if you're privileged user.
         discoverable: :class:`UndefinedOr`[:class:`bool`]
             Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg). Can be passed only if you're privileged user.
         analytics: :class:`UndefinedOr`[:class:`bool`]
@@ -422,10 +546,15 @@ class BaseServer(base.Base):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to edit the server.
-        :class:`APIError`
+        HTTPException
             Editing the server failed.
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
         """
         return await self.state.http.edit_server(
             self.id,
@@ -440,19 +569,34 @@ class BaseServer(base.Base):
             analytics=analytics,
         )
 
-    async def leave(self, *, leave_silently: bool | None = None) -> None:
+    async def join(self) -> Server:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Joins the server.
+
+        Raises
+        ------
+        Forbidden
+            You're banned.
+        NotFound
+            Either server is not discoverable, or it does not exist at all.
+        HTTPException
+            Accepting the invite failed.
+        """
+        server = await self.state.http.accept_invite(self.id)
+        return server  # type: ignore
+
+    async def leave(self, *, silent: bool | None = None) -> None:
+        """|coro|
+
+        Leaves a server if not owner otherwise deletes it.
 
         Parameters
         ----------
-        leave_silently: :class:`bool`
+        silent: :class:`bool`
             Whether to not send a leave message.
         """
-        return await self.state.http.leave_server(
-            self.id, leave_silently=leave_silently
-        )
+        return await self.state.http.leave_server(self.id, silent=silent)
 
     async def mark_server_as_read(self) -> None:
         """|coro|
@@ -463,7 +607,7 @@ class BaseServer(base.Base):
 
     async def report(
         self,
-        reason: safety_reports.ContentReportReason,
+        reason: ContentReportReason,
         *,
         additional_context: str | None = None,
     ) -> None:
@@ -476,19 +620,17 @@ class BaseServer(base.Base):
 
         Raises
         ------
-        :class:`APIError`
+        HTTPException
             You're trying to self-report, or reporting the server failed.
         """
-        return await self.state.http.report_server(
-            self.id, reason, additional_context=additional_context
-        )
+        return await self.state.http.report_server(self.id, reason, additional_context=additional_context)
 
     async def set_role_permissions(
         self,
-        role: core.ResolvableULID,
+        role: ULIDOr[BaseRole],
         *,
-        allow: permissions_.Permissions = permissions_.Permissions.NONE,
-        deny: permissions_.Permissions = permissions_.Permissions.NONE,
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
     ) -> Server:
         """|coro|
 
@@ -496,37 +638,33 @@ class BaseServer(base.Base):
 
         Parameters
         ----------
-        allow: :class:`permissions_.Permissions`
+        allow: :class:`Permissions`
             New allow bit flags.
-        deny: :class:`permissions_.Permissions`
+        deny: :class:`Permissions`
             New deny bit flags.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set role permissions on the server.
-        :class:`APIError`
+        HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_server_permissions(
-            self.id, role, allow=allow, deny=deny
-        )
+        return await self.state.http.set_server_permissions_for_role(self.id, role, allow=allow, deny=deny)
 
-    async def set_default_permissions(
-        self, permissions: permissions_.Permissions | permissions_.PermissionOverride, /
-    ) -> Server:
+    async def set_default_permissions(self, permissions: Permissions, /) -> Server:
         """|coro|
 
         Sets permissions for the default role in this server.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to set default permissions on the server.
-        :class:`APIError`
+        HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_default_role_permissions(self.id, permissions)
+        return await self.state.http.set_default_server_permissions(self.id, permissions)
 
     async def subscribe(self) -> None:
         """|coro|
@@ -535,63 +673,60 @@ class BaseServer(base.Base):
         """
         await self.state.shard.subscribe_to(self.id)
 
+    async def unban(self, user: ULIDOr[BaseUser]) -> None:
+        """|coro|
+
+        Unbans a user from the server.
+
+        Parameters
+        ----------
+        user: :class:`ULIDOr`[:class:`BaseUser`]
+            The user to unban from the server.
+
+        Raises
+        ------
+        Forbidden
+            You do not have permissions to unban the user.
+        HTTPException
+            Unbanning the user failed.
+        """
+        return await self.state.http.unban(self.id, user)
+
 
 @define(slots=True)
 class PartialServer(BaseServer):
     """Partial representation of a server on Revolt."""
 
-    name: core.UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    owner_id: core.UndefinedOr[core.ULID] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    description: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    channel_ids: core.UndefinedOr[list[core.ULID]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    categories: core.UndefinedOr[list[Category] | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    system_messages: core.UndefinedOr[SystemMessageChannels | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    default_permissions: core.UndefinedOr[permissions_.Permissions] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_icon: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_banner: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    flags: core.UndefinedOr[ServerFlags] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    discoverable: core.UndefinedOr[bool] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    analytics: core.UndefinedOr[bool] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    description: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    categories: UndefinedOr[list[Category] | None] = field(repr=True, kw_only=True)
+    system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, kw_only=True)
+    default_permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True)
+    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    flags: UndefinedOr[ServerFlags] = field(repr=True, kw_only=True)
+    discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
 
     @property
-    def icon(self) -> core.UndefinedOr[cdn.Asset | None]:
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+    def icon(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server icon."""
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
-    def banner(self) -> core.UndefinedOr[cdn.Asset | None]:
-        return self.internal_banner and self.internal_banner._stateful(
-            self.state, "banners"
-        )
+    def banner(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server banner."""
+        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 def _sort_roles(
-    target_roles: list[core.ULID],
+    target_roles: list[str],
     /,
     *,
     safe: bool,
-    server_roles: dict[core.ULID, Role],
+    server_roles: dict[str, Role],
 ) -> list[Role]:
     if not safe:
         return sorted(
@@ -606,109 +741,134 @@ def _sort_roles(
             reverse=True,
         )
     except KeyError as ke:
-        raise errors.NoData(ke.args[0], "role")
+        raise NoData(ke.args[0], 'role')
 
 
 def _calculate_server_permissions(
     roles: list[Role],
     target_timeout: datetime | None,
     *,
-    default_permissions: permissions_.Permissions,
-) -> permissions_.Permissions:
-    result = default_permissions.value
+    default_permissions: Permissions,
+) -> Permissions:
+    result = default_permissions.copy()
 
     for role in roles:
-        result |= role.permissions.allow.value
-        result &= ~role.permissions.deny.value
+        result |= role.permissions.allow
+        result &= ~role.permissions.deny
 
     if target_timeout is not None and target_timeout > utils.utcnow():
-        result &= ~permissions_.Permissions.SEND_MESSAGE.value
+        result.send_messages = True
 
-    return permissions_.Permissions(result)
+    return result
 
 
 @define(slots=True)
 class Server(BaseServer):
     """Representation of a server on Revolt."""
 
-    owner_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the owner."""
 
-    name: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: str = field(repr=True, kw_only=True)
     """The name of the server."""
 
-    description: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    description: str | None = field(repr=True, kw_only=True)
     """The description for the server."""
 
-    internal_channels: (
-        tuple[t.Literal[True], list[core.ULID]]
-        | tuple[t.Literal[False], list[channels.ServerChannel]]
-    ) = field(repr=True, hash=True, kw_only=True, eq=True)
-
-    categories: list[Category] | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
+    internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
+        field(repr=True, kw_only=True)
     )
+
+    categories: list[Category] | None = field(repr=True, kw_only=True)
     """The categories for this server."""
 
-    system_messages: SystemMessageChannels | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    system_messages: SystemMessageChannels | None = field(repr=True, kw_only=True)
     """The configuration for sending system event messages."""
 
-    roles: dict[core.ULID, Role] = field(repr=True, hash=True, kw_only=True, eq=True)
+    roles: dict[str, Role] = field(repr=True, kw_only=True)
     """The roles for this server."""
 
-    default_permissions: permissions_.Permissions = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    default_permissions: Permissions = field(repr=True, kw_only=True)
     """The default set of server and channel permissions."""
 
-    internal_icon: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server icon."""
 
-    internal_banner: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
+    internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server banner."""
 
-    flags: ServerFlags = field(repr=True, hash=True, kw_only=True, eq=True)
+    flags: ServerFlags = field(repr=True, kw_only=True)
     """The server flags."""
 
-    nsfw: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    nsfw: bool = field(repr=True, kw_only=True)
     """Whether this server is flagged as not safe for work."""
 
-    analytics: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    analytics: bool = field(repr=True, kw_only=True)
     """Whether to enable analytics."""
 
-    discoverable: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    discoverable: bool = field(repr=True, kw_only=True)
     """Whether this server should be publicly discoverable."""
 
+    def get_channel(self, channel_id: str, /) -> ServerChannel | None:
+        """Retrieves a server channel from cache.
+
+        Parameters
+        ----------
+        channel_id: :class:`str`
+            The channel ID.
+
+        Returns
+        -------
+        Optional[:class:`ServerChannel`]
+            The channel or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+
+        from .channel import ServerChannel
+
+        channel = cache.get_channel(channel_id, caching._USER_REQUEST)
+        if channel and isinstance(channel, ServerChannel) and (channel.server_id == self.id or channel.server_id == ''):
+            return channel
+
+        if not self.internal_channels[0]:
+            for ch in self.internal_channels[1]:
+                t: ServerChannel = ch  # type: ignore
+                if t.id == channel_id:
+                    return t
+
+    def _prepare_cached(self) -> list[ServerChannel]:
+        if not self.internal_channels[0]:
+            channels = self.internal_channels[1]
+            self.internal_channels = (True, self.channel_ids)
+            return channels  # type: ignore
+        return []
+
     def _update(self, data: PartialServer) -> None:
-        if core.is_defined(data.owner_id):
+        if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
-        if core.is_defined(data.name):
+        if data.name is not UNDEFINED:
             self.name = data.name
-        if core.is_defined(data.description):
+        if data.description is not UNDEFINED:
             self.description = data.description
-        if core.is_defined(data.channel_ids):
+        if data.channel_ids is not UNDEFINED:
             self.internal_channels = (True, data.channel_ids)
-        if core.is_defined(data.categories):
+        if data.categories is not UNDEFINED:
             self.categories = data.categories or []
-        if core.is_defined(data.system_messages):
+        if data.system_messages is not UNDEFINED:
             self.system_messages = data.system_messages
-        if core.is_defined(data.default_permissions):
+        if data.default_permissions is not UNDEFINED:
             self.default_permissions = data.default_permissions
-        if core.is_defined(data.internal_icon):
+        if data.internal_icon is not UNDEFINED:
             self.internal_icon = data.internal_icon
-        if core.is_defined(data.internal_banner):
+        if data.internal_banner is not UNDEFINED:
             self.internal_banner = data.internal_banner
-        if core.is_defined(data.flags):
+        if data.flags is not UNDEFINED:
             self.flags = data.flags
-        if core.is_defined(data.discoverable):
+        if data.discoverable is not UNDEFINED:
             self.discoverable = data.discoverable
-        if core.is_defined(data.analytics):
+        if data.analytics is not UNDEFINED:
             self.analytics = data.analytics
 
     def _role_update_full(self, data: PartialRole | Role) -> None:
@@ -728,59 +888,55 @@ class Server(BaseServer):
             role._update(data)
 
     @property
-    def icon(self) -> cdn.Asset | None:
-        """The server icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, "icons")
+    def icon(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The server icon."""
+        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
-    def banner(self) -> cdn.Asset | None:
-        """The server banner."""
-        return self.internal_banner and self.internal_banner._stateful(
-            self.state, "banners"
-        )
+    def banner(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The server banner."""
+        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
     @property
-    def channel_ids(self) -> list[core.ULID]:
-        """IDs of channels within this server."""
+    def channel_ids(self) -> list[str]:
+        """List[:class:`str`]: The IDs of channels within this server."""
         if self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
         else:
             return [channel.id for channel in self.internal_channels[1]]  # type: ignore
 
     @property
-    def channels(self) -> list[channels.ServerChannel]:
-        """The channels within this server."""
+    def channels(self) -> list[ServerChannel]:
+        """List[:class:`ServerChannel`]: The channels within this server."""
 
         if not self.internal_channels[0]:
-            return t.cast("list[channels.ServerChannel]", self.internal_channels[1])
+            return self.internal_channels[1]  # type: ignore
         cache = self.state.cache
         if not cache:
             return []
+        from .channel import ServerTextChannel, VoiceChannel
+
         channels = []
         for channel_id in self.internal_channels[1]:
-            channel = t.cast(
-                "channels.ServerChannel | None",
-                cache.get_channel(t.cast(core.ULID, channel_id), caching._USER_REQUEST),
-            )
+            id: str = channel_id  # type: ignore
+            channel = cache.get_channel(id, caching._USER_REQUEST)
+
             if channel:
+                if channel.__class__ not in (
+                    ServerTextChannel,
+                    VoiceChannel,
+                ) or not isinstance(channel, (ServerTextChannel, VoiceChannel)):
+                    raise TypeError(f'Cache have given us incorrect channel type: {channel.__class__!r}')
                 channels.append(channel)
         return channels
 
-    @property
-    def members(self) -> list[Member]:
-        """The members list of this server."""
-        cache = self.state.cache
-        if not cache:
-            return []
-        return cache.get_all_server_members_of(self.id, caching._USER_REQUEST) or []
-
     def is_verified(self) -> bool:
-        """Whether the server is verified."""
-        return ServerFlags.VERIFIED in self.flags
+        """:class:`bool`: Whether the server is verified."""
+        return self.flags.verified
 
     def is_official(self) -> bool:
-        """Whether the server is ran by Revolt team."""
-        return ServerFlags.OFFICIAL in self.flags
+        """:class:`bool`: Whether the server is ran by Revolt team."""
+        return self.flags.official
 
     def permissions_for(
         self,
@@ -788,122 +944,171 @@ class Server(BaseServer):
         /,
         *,
         safe: bool = True,
-    ) -> permissions_.Permissions:
-        """Calculate permissions for given member."""
+        with_ownership: bool = True,
+        include_timeout: bool = True,
+    ) -> Permissions:
+        """Calculate permissions for given member.
 
-        if member.id == self.owner_id:
-            return permissions_.Permissions.ALL
+        Parameters
+        ----------
+        member: :class:`Member`
+            The member to calculate permissions for.
+        safe: :class:`bool`
+            Whether to raise exception or not if role is missing in cache.
+        with_ownership: :class:`bool`
+            Whether to account for ownership.
+        include_timeout: :class:`bool`
+            Whether to account for timeout.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+
+        if with_ownership and member.id == self.owner_id:
+            return Permissions.ALL
 
         return _calculate_server_permissions(
             _sort_roles(member.roles, safe=safe, server_roles=self.roles),
-            member.timeout,
+            member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
         )
-
-    def _ensure_cached(self) -> None:
-        if not self.internal_channels[0]:
-            self.internal_channels = (True, self.channel_ids)
 
 
 @define(slots=True)
 class Ban:
     """Representation of a server ban on Revolt."""
 
-    server_id: core.ULID = field(repr=False, hash=False, kw_only=True, eq=False)
+    server_id: str = field(repr=False, kw_only=True)
     """The server ID."""
 
-    user_id: core.ULID = field(repr=False, hash=False, kw_only=True, eq=False)
+    user_id: str = field(repr=False, kw_only=True)
     """The user ID that was banned."""
 
-    reason: str | None = field(repr=False, hash=False, kw_only=True, eq=False)
+    reason: str | None = field(repr=False, kw_only=True)
     """Reason for ban creation."""
 
-    user: users.DisplayUser | None = field(
-        repr=False, hash=False, kw_only=True, eq=False
-    )
+    user: DisplayUser | None = field(repr=False, kw_only=True)
     """The user that was banned."""
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.user_id))
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other
+            or isinstance(other, Ban)
+            and (self.server_id == other.server_id and self.user_id == other.user_id)
+        )
 
 
 @define(slots=True)
 class BaseMember:
     """Base representation of a member of a server on Revolt."""
 
-    state: state.State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, kw_only=True)
     """State that controls this member."""
 
-    server_id: core.ULID = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str = field(repr=True, kw_only=True)
     """ID of the server that member is on."""
 
-    _user: users.User | core.ULID = field(
-        repr=True, hash=True, kw_only=True, eq=True, alias="_user"
-    )
+    _user: User | str = field(repr=True, kw_only=True, alias='_user')
+
+    def get_user(self) -> User | None:
+        """Optional[:class:`User`]: Grabs the user from cache."""
+        if isinstance(self._user, User):
+            return self._user
+        cache = self.state.cache
+        if not cache:
+            return None
+        return cache.get_user(self._user, caching._USER_REQUEST)
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self is other or isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.server_id, self.id))
+
+    def __str__(self) -> str:
+        user = self.get_user()
+        return str(user) if user else ''
 
     @property
-    def id(self) -> core.ULID:
+    def id(self) -> str:
         """The member's user ID."""
-        return self._user.id if isinstance(self._user, users.User) else self._user
-
-
-@define(slots=True)
-class PartialMember(BaseMember):
-    """Partial representation of a member of a server on Revolt."""
-
-    nick: core.UndefinedOr[str | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    internal_avatar: core.UndefinedOr[cdn.StatelessAsset | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    roles: core.UndefinedOr[list[core.ULID]] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    timeout: core.UndefinedOr[datetime | None] = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-
-    def avatar(self) -> core.UndefinedOr[cdn.Asset | None]:
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
-
-
-@define(slots=True)
-class Member(BaseMember):
-    """Representation of a member of a server on Revolt."""
-
-    joined_at: datetime = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Time at which this user joined the server."""
-
-    nick: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The member's nick."""
-
-    internal_avatar: cdn.StatelessAsset | None = field(
-        repr=True, hash=True, kw_only=True, eq=True
-    )
-    """The member's avatar on server."""
-
-    roles: list[core.ULID] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The member's roles."""
-
-    timeout: datetime | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The timestamp this member is timed out until."""
-
-    def _update(self, data: PartialMember) -> None:
-        if core.is_defined(data.nick):
-            self.nick = data.nick
-        if core.is_defined(data.internal_avatar):
-            self.internal_avatar = data.internal_avatar
-        if core.is_defined(data.roles):
-            self.roles = data.roles or []
-        if core.is_defined(data.timeout):
-            self.timeout = data.timeout
+        return self._user.id if isinstance(self._user, User) else self._user
 
     @property
-    def avatar(self) -> cdn.Asset | None:
-        """The member's avatar on server."""
-        return self.internal_avatar and self.internal_avatar._stateful(
-            self.state, "avatars"
-        )
+    def user(self) -> User:
+        """:class:`User`: The member user."""
+        user = self.get_user()
+        if not user:
+            raise NoData(self.id, 'member user')
+        return user
+
+    @property
+    def display_name(self) -> str | None:
+        """Optional[:class:`str`]: The user display name."""
+        user = self.get_user()
+        if user:
+            return user.display_name
+
+    @property
+    def badges(self) -> UserBadges:
+        """:class:`UserBadges`: The user badges."""
+        user = self.get_user()
+        if user:
+            return user.badges
+        return UserBadges.NONE
+
+    @property
+    def status(self) -> UserStatus | None:
+        """Optional[:class:`UserStatus`]: The current user's status."""
+        user = self.get_user()
+        if user:
+            return user.status
+
+    @property
+    def user_flags(self) -> UserFlags:
+        """Optional[:class:`UserFlags`]: The user flags."""
+        user = self.get_user()
+        if user:
+            return user.flags
+        return UserFlags.NONE
+
+    @property
+    def privileged(self) -> bool:
+        """:class:`bool`: Whether this user is privileged."""
+        user = self.get_user()
+        if user:
+            return user.privileged
+        return False
+
+    @property
+    def bot(self) -> BotUserInfo | None:
+        """Optional[:class:`BotUserInfo`]: The information about the bot."""
+        user = self.get_user()
+        if user:
+            return user.bot
+
+    @property
+    def relationship(self) -> RelationshipStatus:
+        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
+        user = self.get_user()
+        if user:
+            return user.relationship
+        return RelationshipStatus.none
+
+    @property
+    def online(self) -> bool:
+        """:class:`bool`: Whether this user is currently online."""
+        user = self.get_user()
+        if user:
+            return user.online
+        return False
 
     async def ban(self, *, reason: str | None = None) -> Ban:
         """|coro|
@@ -912,17 +1117,55 @@ class Member(BaseMember):
 
         Parameters
         ----------
-        reason: :class:`str` | `None`
-            Ban reason. Should be between 1 and 1024 chars long.
+        reason: Optional[:class:`str`]
+            The ban reason. Should be between 1 and 1024 chars long.
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to ban the user.
-        :class:`APIError`
+        HTTPException
             Banning the user failed.
         """
-        return await self.state.http.ban_user(self.server_id, self.id, reason=reason)
+        return await self.state.http.ban(self.server_id, self.id, reason=reason)
+
+    async def edit(
+        self,
+        *,
+        nick: UndefinedOr[str | None] = UNDEFINED,
+        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
+        timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
+    ) -> Member:
+        """|coro|
+
+        Edits the member.
+
+        Parameters
+        ----------
+        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The member's new nick. Use ``None`` to remove the nickname.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
+        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+            The member's new list of roles. This *replaces* the roles.
+        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+            The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
+            This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+
+        Returns
+        -------
+        :class:`Member`
+            The newly updated member.
+        """
+        return await self.state.http.edit_member(
+            self.server_id,
+            self.id,
+            nick=nick,
+            avatar=avatar,
+            roles=roles,
+            timeout=timeout,
+        )
 
     async def kick(self) -> None:
         """|coro|
@@ -931,36 +1174,85 @@ class Member(BaseMember):
 
         Raises
         ------
-        :class:`Forbidden`
+        Forbidden
             You do not have permissions to kick the member.
-        :class:`APIError`
+        HTTPException
             Kicking the member failed.
         """
         return await self.state.http.kick_member(self.server_id, self.id)
 
 
 @define(slots=True)
+class PartialMember(BaseMember):
+    """Partial representation of a member of a server on Revolt."""
+
+    nick: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    roles: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    timed_out_until: UndefinedOr[datetime | None] = field(repr=True, kw_only=True)
+
+    def server_avatar(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The member's avatar on server."""
+        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
+
+
+@define(slots=True)
+class Member(BaseMember):
+    """Representation of a member of a server on Revolt."""
+
+    joined_at: datetime = field(repr=True, kw_only=True)
+    """Time at which this user joined the server."""
+
+    nick: str | None = field(repr=True, kw_only=True)
+    """The member's nick."""
+
+    internal_server_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
+    """The member's avatar on server."""
+
+    roles: list[str] = field(repr=True, kw_only=True)
+    """The member's roles."""
+
+    timed_out_until: datetime | None = field(repr=True, kw_only=True)
+    """The timestamp this member is timed out until."""
+
+    def _update(self, data: PartialMember) -> None:
+        if data.nick is not UNDEFINED:
+            self.nick = data.nick
+        if data.internal_server_avatar is not UNDEFINED:
+            self.internal_server_avatar = data.internal_server_avatar
+        if data.roles is not UNDEFINED:
+            self.roles = data.roles or []
+        if data.timed_out_until is not UNDEFINED:
+            self.timed_out_until = data.timed_out_until
+
+    @property
+    def server_avatar(self) -> Asset | None:
+        """Optional[:class:`Asset`]: The member's avatar on server."""
+        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
+
+
+@define(slots=True)
 class MemberList:
     """A member list of a server."""
 
-    members: list[Member] = field(repr=True, hash=True, kw_only=True, eq=True)
-    users: list[users.User] = field(repr=True, hash=True, kw_only=True, eq=True)
+    members: list[Member] = field(repr=True, kw_only=True)
+    users: list[User] = field(repr=True, kw_only=True)
 
 
 __all__ = (
-    "ServerFlags",
-    "Category",
-    "SystemMessageChannels",
-    "BaseRole",
-    "PartialRole",
-    "Role",
-    "BaseServer",
-    "PartialServer",
-    "_sort_roles",
-    "_calculate_server_permissions",
-    "Server",
-    "Ban",
-    "BaseMember",
-    "PartialMember",
-    "Member",
+    'Category',
+    'SystemMessageChannels',
+    'BaseRole',
+    'PartialRole',
+    'Role',
+    'BaseServer',
+    'PartialServer',
+    '_sort_roles',
+    '_calculate_server_permissions',
+    'Server',
+    'Ban',
+    'BaseMember',
+    'PartialMember',
+    'Member',
+    'MemberList',
 )

@@ -1,4 +1,5 @@
-from . import authifier as a
+# This is actually used
+from . import authifier as a  # noqa: F401
 from .basic import *
 from .bots import *
 from .channel_invites import *
@@ -10,7 +11,9 @@ from .embeds import *
 from .emojis import *
 from .files import *
 from .gateway import *
+from .localization import *
 from .messages import *
+from .misc import *
 from .permissions import *
 from .safety_reports import *
 from .server_bans import *

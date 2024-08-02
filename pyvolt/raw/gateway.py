@@ -1,214 +1,238 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import (
-    authifier,
-    channel_webhooks,
-    channels,
-    emojis,
-    messages,
-    safety_reports,
-    server_members,
-    servers,
-    user_settings,
-    users,
+from .authifier import (
+    AuthifierCreateSessionEvent,
+    AuthifierDeleteSessionEvent,
+    AuthifierDeleteAllSessionsEvent,
 )
+from .channel_unreads import ChannelUnread
+from .channel_webhooks import Webhook, PartialWebhook, FieldsWebhook
+from .channels import (
+    SavedMessagesChannel,
+    DirectMessageChannel,
+    GroupChannel,
+    TextChannel,
+    VoiceChannel,
+    Channel,
+    PartialChannel,
+    FieldsChannel,
+)
+from .emojis import ServerEmoji
+from .messages import Message, PartialMessage, AppendMessage, FieldsMessage
+from .safety_reports import CreatedReport
+from .server_members import (
+    Member,
+    PartialMember,
+    MemberCompositeKey,
+    FieldsMember,
+    RemovalIntention,
+)
+from .servers import Server, PartialServer, PartialRole, FieldsServer, FieldsRole
+from .user_settings import UserSettings
+from .users import User, PartialUser, FieldsUser
 
 
-class ClientBulkEvent(t.TypedDict):
-    type: t.Literal["Bulk"]
+class ClientBulkEvent(typing.TypedDict):
+    type: typing.Literal['Bulk']
     v: list[ClientEvent]
 
 
-class ClientAuthenticatedEvent(t.TypedDict):
-    type: t.Literal["Authenticated"]
+class ClientAuthenticatedEvent(typing.TypedDict):
+    type: typing.Literal['Authenticated']
 
 
-class ClientLogoutEvent(t.TypedDict):
-    type: t.Literal["Logout"]
+class ClientLogoutEvent(typing.TypedDict):
+    type: typing.Literal['Logout']
 
 
-class ClientReadyEvent(t.TypedDict):
-    type: t.Literal["Ready"]
-    users: list[users.User]
-    servers: list[servers.Server]
-    channels: list[channels.Channel]
-    members: list[server_members.Member]
-    emojis: list[emojis.ServerEmoji]
+class ClientReadyEvent(typing.TypedDict):
+    type: typing.Literal['Ready']
+    users: typing.NotRequired[list[User]]
+    servers: typing.NotRequired[list[Server]]
+    channels: typing.NotRequired[list[Channel]]
+    members: typing.NotRequired[list[Member]]
+    emojis: typing.NotRequired[list[ServerEmoji]]
+    # Insert please....
+    # me: User
+    user_settings: typing.NotRequired[UserSettings]
+    channel_unreads: typing.NotRequired[list[ChannelUnread]]
 
 
 Ping = list[int] | int
 
 
-class ClientPongEvent(t.TypedDict):
-    type: t.Literal["Pong"]
+class ClientPongEvent(typing.TypedDict):
+    type: typing.Literal['Pong']
     data: Ping
 
 
-class ClientMessageEvent(messages.Message):
-    type: t.Literal["Message"]
+class ClientMessageEvent(Message):
+    type: typing.Literal['Message']
 
 
-class ClientMessageUpdateEvent(t.TypedDict):
-    type: t.Literal["MessageUpdate"]
+class ClientMessageUpdateEvent(typing.TypedDict):
+    type: typing.Literal['MessageUpdate']
     id: str
     channel: str
-    data: messages.PartialMessage
+    data: PartialMessage
+    clear: list[FieldsMessage]
 
 
-class ClientMessageAppendEvent(t.TypedDict):
-    type: t.Literal["MessageAppend"]
+class ClientMessageAppendEvent(typing.TypedDict):
+    type: typing.Literal['MessageAppend']
     id: str
     channel: str
-    append: messages.AppendMessage
+    append: AppendMessage
 
 
-class ClientMessageDeleteEvent(t.TypedDict):
-    type: t.Literal["MessageDelete"]
+class ClientMessageDeleteEvent(typing.TypedDict):
+    type: typing.Literal['MessageDelete']
     id: str
     channel: str
 
 
-class ClientMessageReactEvent(t.TypedDict):
-    type: t.Literal["MessageReact"]
+class ClientMessageReactEvent(typing.TypedDict):
+    type: typing.Literal['MessageReact']
     id: str
     channel_id: str
     user_id: str
     emoji_id: str
 
 
-class ClientMessageUnreactEvent(t.TypedDict):
-    type: t.Literal["MessageUnreact"]
+class ClientMessageUnreactEvent(typing.TypedDict):
+    type: typing.Literal['MessageUnreact']
     id: str
     channel_id: str
     user_id: str
     emoji_id: str
 
 
-class ClientMessageRemoveReactionEvent(t.TypedDict):
-    type: t.Literal["MessageRemoveReaction"]
+class ClientMessageRemoveReactionEvent(typing.TypedDict):
+    type: typing.Literal['MessageRemoveReaction']
     id: str
     channel_id: str
     emoji_id: str
 
 
-class ClientBulkMessageDeleteEvent(t.TypedDict):
-    type: t.Literal["BulkMessageDelete"]
+class ClientBulkMessageDeleteEvent(typing.TypedDict):
+    type: typing.Literal['BulkMessageDelete']
     channel: str
     ids: list[str]
 
 
-class ClientServerCreateEvent(t.TypedDict):
-    type: t.Literal["ServerCreate"]
+class ClientServerCreateEvent(typing.TypedDict):
+    type: typing.Literal['ServerCreate']
     id: str
-    server: servers.Server
-    channels: list[channels.Channel]
-    emojis: list[emojis.ServerEmoji]
+    server: Server
+    channels: list[Channel]
+    emojis: list[ServerEmoji]
 
 
-class ClientServerUpdateEvent(t.TypedDict):
-    type: t.Literal["ServerUpdate"]
+class ClientServerUpdateEvent(typing.TypedDict):
+    type: typing.Literal['ServerUpdate']
     id: str
-    data: servers.PartialServer
-    clear: list[servers.FieldsServer]
+    data: PartialServer
+    clear: list[FieldsServer]
 
 
-class ClientServerDeleteEvent(t.TypedDict):
-    type: t.Literal["ServerDelete"]
+class ClientServerDeleteEvent(typing.TypedDict):
+    type: typing.Literal['ServerDelete']
     id: str
 
 
-class ClientServerMemberUpdateEvent(t.TypedDict):
-    type: t.Literal["ServerMemberUpdate"]
-    id: server_members.MemberCompositeKey
-    data: server_members.PartialMember
-    clear: list[server_members.FieldsMember]
+class ClientServerMemberUpdateEvent(typing.TypedDict):
+    type: typing.Literal['ServerMemberUpdate']
+    id: MemberCompositeKey
+    data: PartialMember
+    clear: list[FieldsMember]
 
 
-class ClientServerMemberJoinEvent(t.TypedDict):
-    type: t.Literal["ServerMemberJoin"]
-    id: str
-    user: str
-
-
-class ClientServerMemberLeaveEvent(t.TypedDict):
-    type: t.Literal["ServerMemberLeave"]
+class ClientServerMemberJoinEvent(typing.TypedDict):
+    type: typing.Literal['ServerMemberJoin']
     id: str
     user: str
 
 
-class ClientServerRoleUpdateEvent(t.TypedDict):
-    type: t.Literal["ServerRoleUpdate"]
+class ClientServerMemberLeaveEvent(typing.TypedDict):
+    type: typing.Literal['ServerMemberLeave']
+    id: str
+    user: str
+    reason: RemovalIntention
+
+
+class ClientServerRoleUpdateEvent(typing.TypedDict):
+    type: typing.Literal['ServerRoleUpdate']
     id: str
     role_id: str
-    data: servers.PartialRole
-    clear: list[servers.FieldsRole]
+    data: PartialRole
+    clear: list[FieldsRole]
 
 
-class ClientServerRoleDeleteEvent(t.TypedDict):
-    type: t.Literal["ServerRoleDelete"]
+class ClientServerRoleDeleteEvent(typing.TypedDict):
+    type: typing.Literal['ServerRoleDelete']
     id: str
     role_id: str
 
 
-class ClientUserUpdateEvent(t.TypedDict):
-    type: t.Literal["UserUpdate"]
+class ClientUserUpdateEvent(typing.TypedDict):
+    type: typing.Literal['UserUpdate']
     id: str
-    data: users.PartialUser
-    clear: list[users.FieldsUser]
+    data: PartialUser
+    clear: list[FieldsUser]
     event_id: str | None
 
 
-class ClientUserRelationshipEvent(t.TypedDict):
-    type: t.Literal["UserRelationship"]
+class ClientUserRelationshipEvent(typing.TypedDict):
+    type: typing.Literal['UserRelationship']
     id: str
-    user: users.User
+    user: User
 
 
-class ClientUserSettingsUpdateEvent(t.TypedDict):
-    type: t.Literal["UserSettingsUpdate"]
+class ClientUserSettingsUpdateEvent(typing.TypedDict):
+    type: typing.Literal['UserSettingsUpdate']
     id: str
-    update: user_settings.UserSettings
+    update: UserSettings
 
 
-class ClientUserPlatformWipeEvent(t.TypedDict):
-    type: t.Literal["UserPlatformWipe"]
+class ClientUserPlatformWipeEvent(typing.TypedDict):
+    type: typing.Literal['UserPlatformWipe']
     user_id: str
     flags: int
 
 
-class ClientEmojiCreateEvent(emojis.ServerEmoji):
-    type: t.Literal["EmojiCreate"]
+class ClientEmojiCreateEvent(ServerEmoji):
+    type: typing.Literal['EmojiCreate']
 
 
-class ClientEmojiDeleteEvent(t.TypedDict):
-    type: t.Literal["EmojiDelete"]
+class ClientEmojiDeleteEvent(typing.TypedDict):
+    type: typing.Literal['EmojiDelete']
     id: str
 
 
-class ClientReportCreateEvent(safety_reports.CreatedReport):
-    type: t.Literal["ReportCreate"]
+class ClientReportCreateEvent(CreatedReport):
+    type: typing.Literal['ReportCreate']
 
 
-class ClientSavedMessagesChannelCreateEvent(channels.SavedMessagesChannel):
-    type: t.Literal["ChannelCreate"]
+class ClientSavedMessagesChannelCreateEvent(SavedMessagesChannel):
+    type: typing.Literal['ChannelCreate']
 
 
-class ClientDirectMessageChannelCreateEvent(channels.DirectMessageChannel):
-    type: t.Literal["ChannelCreate"]
+class ClientDirectMessageChannelCreateEvent(DirectMessageChannel):
+    type: typing.Literal['ChannelCreate']
 
 
-class ClientGroupChannelCreateEvent(channels.GroupChannel):
-    type: t.Literal["ChannelCreate"]
+class ClientGroupChannelCreateEvent(GroupChannel):
+    type: typing.Literal['ChannelCreate']
 
 
-class ClientTextChannelCreateEvent(channels.TextChannel):
-    type: t.Literal["ChannelCreate"]
+class ClientTextChannelCreateEvent(TextChannel):
+    type: typing.Literal['ChannelCreate']
 
 
-class ClientVoiceChannelCreateEvent(channels.VoiceChannel):
-    type: t.Literal["ChannelCreate"]
+class ClientVoiceChannelCreateEvent(VoiceChannel):
+    type: typing.Literal['ChannelCreate']
 
 
 ClientChannelCreateEvent = (
@@ -220,82 +244,78 @@ ClientChannelCreateEvent = (
 )
 
 
-class ClientChannelUpdateEvent(t.TypedDict):
-    type: t.Literal["ChannelUpdate"]
+class ClientChannelUpdateEvent(typing.TypedDict):
+    type: typing.Literal['ChannelUpdate']
     id: str
-    data: channels.PartialChannel
-    clear: list[channels.FieldsChannel]
+    data: PartialChannel
+    clear: list[FieldsChannel]
 
 
-class ClientChannelDeleteEvent(t.TypedDict):
-    type: t.Literal["ChannelDelete"]
+class ClientChannelDeleteEvent(typing.TypedDict):
+    type: typing.Literal['ChannelDelete']
     id: str
 
 
-class ClientChannelGroupJoinEvent(t.TypedDict):
-    type: t.Literal["ChannelGroupJoin"]
-    id: str
-    user: str
-
-
-class ClientChannelGroupLeaveEvent(t.TypedDict):
-    type: t.Literal["ChannelGroupLeave"]
+class ClientChannelGroupJoinEvent(typing.TypedDict):
+    type: typing.Literal['ChannelGroupJoin']
     id: str
     user: str
 
 
-class ClientChannelStartTypingEvent(t.TypedDict):
-    type: t.Literal["ChannelStartTyping"]
+class ClientChannelGroupLeaveEvent(typing.TypedDict):
+    type: typing.Literal['ChannelGroupLeave']
     id: str
     user: str
 
 
-class ClientChannelStopTypingEvent(t.TypedDict):
-    type: t.Literal["ChannelStopTyping"]
+class ClientChannelStartTypingEvent(typing.TypedDict):
+    type: typing.Literal['ChannelStartTyping']
     id: str
     user: str
 
 
-class ClientChannelAckEvent(t.TypedDict):
-    type: t.Literal["ChannelAck"]
+class ClientChannelStopTypingEvent(typing.TypedDict):
+    type: typing.Literal['ChannelStopTyping']
+    id: str
+    user: str
+
+
+class ClientChannelAckEvent(typing.TypedDict):
+    type: typing.Literal['ChannelAck']
     id: str
     user: str
     message_id: str
 
 
-class ClientWebhookCreateEvent(channel_webhooks.Webhook):
-    type: t.Literal["WebhookCreate"]
+class ClientWebhookCreateEvent(Webhook):
+    type: typing.Literal['WebhookCreate']
 
 
-class ClientWebhookUpdateEvent(t.TypedDict):
-    type: t.Literal["WebhookUpdate"]
+class ClientWebhookUpdateEvent(typing.TypedDict):
+    type: typing.Literal['WebhookUpdate']
     id: str
-    data: channel_webhooks.PartialWebhook
-    remove: list[channel_webhooks.FieldsWebhook]
+    data: PartialWebhook
+    remove: list[FieldsWebhook]
 
 
-class ClientWebhookDeleteEvent(t.TypedDict):
-    type: t.Literal["WebhookDelete"]
+class ClientWebhookDeleteEvent(typing.TypedDict):
+    type: typing.Literal['WebhookDelete']
     id: str
 
 
-class ClientCreateSessionAuthEvent(authifier.AuthifierCreateSessionEvent):
-    type: t.Literal["Auth"]
+class ClientCreateSessionAuthEvent(AuthifierCreateSessionEvent):
+    type: typing.Literal['Auth']
 
 
-class ClientDeleteSessionAuthEvent(authifier.AuthifierDeleteSessionEvent):
-    type: t.Literal["Auth"]
+class ClientDeleteSessionAuthEvent(AuthifierDeleteSessionEvent):
+    type: typing.Literal['Auth']
 
 
-class ClientDeleteAllSessionsAuthEvent(authifier.AuthifierDeleteAllSessionsEvent):
-    type: t.Literal["Auth"]
+class ClientDeleteAllSessionsAuthEvent(AuthifierDeleteAllSessionsEvent):
+    type: typing.Literal['Auth']
 
 
-ClientAuthEvent = (
-    ClientCreateSessionAuthEvent
-    | ClientDeleteSessionAuthEvent
-    | ClientDeleteAllSessionsAuthEvent
-)
+ClientAuthEvent = ClientCreateSessionAuthEvent | ClientDeleteSessionAuthEvent | ClientDeleteAllSessionsAuthEvent
 
 ClientEvent = (
     ClientBulkEvent
@@ -341,35 +361,98 @@ ClientEvent = (
 )
 
 
-class ServerAuthenticateEvent(t.TypedDict):
-    type: t.Literal["Authenticate"]
+class ServerAuthenticateEvent(typing.TypedDict):
+    type: typing.Literal['Authenticate']
     token: str
 
 
-class ServerBeginTypingEvent(t.TypedDict):
-    type: t.Literal["BeginTyping"]
+class ServerBeginTypingEvent(typing.TypedDict):
+    type: typing.Literal['BeginTyping']
     channel: str
 
 
-class ServerEndTypingEvent(t.TypedDict):
-    type: t.Literal["EndTyping"]
+class ServerEndTypingEvent(typing.TypedDict):
+    type: typing.Literal['EndTyping']
     channel: str
 
 
-class ServerSubscribeEvent(t.TypedDict):
-    type: t.Literal["Subscribe"]
+class ServerSubscribeEvent(typing.TypedDict):
+    type: typing.Literal['Subscribe']
     server_id: str
 
 
-class ServerPingEvent(t.TypedDict):
-    type: t.Literal["Ping"]
+class ServerPingEvent(typing.TypedDict):
+    type: typing.Literal['Ping']
     data: Ping
 
 
 ServerEvent = (
-    ServerAuthenticateEvent
-    | ServerBeginTypingEvent
-    | ServerEndTypingEvent
-    | ServerSubscribeEvent
-    | ServerPingEvent
+    ServerAuthenticateEvent | ServerBeginTypingEvent | ServerEndTypingEvent | ServerSubscribeEvent | ServerPingEvent
+)
+
+
+class BonfireConnectionParameters(typing.TypedDict):
+    version: typing.Literal['1']
+    format: typing.Literal['json', 'msgpack']
+    token: typing.NotRequired[str]
+    __user_settings_keys: typing.NotRequired[str]
+
+
+__all__ = (
+    'ClientBulkEvent',
+    'ClientAuthenticatedEvent',
+    'ClientLogoutEvent',
+    'ClientReadyEvent',
+    'Ping',
+    'ClientPongEvent',
+    'ClientMessageEvent',
+    'ClientMessageUpdateEvent',
+    'ClientMessageAppendEvent',
+    'ClientMessageDeleteEvent',
+    'ClientMessageReactEvent',
+    'ClientMessageUnreactEvent',
+    'ClientMessageRemoveReactionEvent',
+    'ClientBulkMessageDeleteEvent',
+    'ClientServerCreateEvent',
+    'ClientServerUpdateEvent',
+    'ClientServerDeleteEvent',
+    'ClientServerMemberUpdateEvent',
+    'ClientServerMemberJoinEvent',
+    'ClientServerMemberLeaveEvent',
+    'ClientServerRoleUpdateEvent',
+    'ClientServerRoleDeleteEvent',
+    'ClientUserUpdateEvent',
+    'ClientUserRelationshipEvent',
+    'ClientUserSettingsUpdateEvent',
+    'ClientUserPlatformWipeEvent',
+    'ClientEmojiCreateEvent',
+    'ClientEmojiDeleteEvent',
+    'ClientSavedMessagesChannelCreateEvent',
+    'ClientDirectMessageChannelCreateEvent',
+    'ClientGroupChannelCreateEvent',
+    'ClientTextChannelCreateEvent',
+    'ClientVoiceChannelCreateEvent',
+    'ClientChannelCreateEvent',
+    'ClientChannelUpdateEvent',
+    'ClientChannelDeleteEvent',
+    'ClientChannelGroupJoinEvent',
+    'ClientChannelGroupLeaveEvent',
+    'ClientChannelStartTypingEvent',
+    'ClientChannelStopTypingEvent',
+    'ClientChannelAckEvent',
+    'ClientWebhookCreateEvent',
+    'ClientWebhookUpdateEvent',
+    'ClientWebhookDeleteEvent',
+    'ClientCreateSessionAuthEvent',
+    'ClientDeleteSessionAuthEvent',
+    'ClientDeleteAllSessionsAuthEvent',
+    'ClientAuthEvent',
+    'ClientEvent',
+    'ServerAuthenticateEvent',
+    'ServerBeginTypingEvent',
+    'ServerEndTypingEvent',
+    'ServerSubscribeEvent',
+    'ServerPingEvent',
+    'ServerEvent',
+    'BonfireConnectionParameters',
 )

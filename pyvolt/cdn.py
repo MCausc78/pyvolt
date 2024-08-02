@@ -1,17 +1,43 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2024-present MCausc78
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 from __future__ import annotations
 
 import abc
 import aiohttp
 from attrs import define, field
-from enum import StrEnum
 import io
 import logging
-import typing as t
+import typing
 from urllib.parse import quote
 
-from . import core, errors, utils
+from . import utils
+from .core import __version__ as version
+from .enums import AssetMetadataType
+from .errors import HTTPException
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from .state import State
     import typing_extensions as te
 
@@ -19,33 +45,16 @@ if t.TYPE_CHECKING:
 _L = logging.getLogger(__name__)
 
 
-class AssetMetadataType(StrEnum):
-    FILE = "File"
-    """File is just a generic uncategorised file."""
-
-    TEXT = "Text"
-    """File contains textual data and should be displayed as such."""
-
-    IMAGE = "Image"
-    """File is an image with specific dimensions."""
-
-    VIDEO = "Video"
-    """File is a video with specific dimensions."""
-
-    AUDIO = "Audio"
-    """File is audio."""
-
-
 @define(slots=True)
 class AssetMetadata:
     """Metadata associated with a file."""
 
-    type: AssetMetadataType = field(repr=True, hash=True, kw_only=True, eq=True)
-    width: int | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    height: int | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    type: AssetMetadataType = field(repr=True, kw_only=True, eq=True)
+    width: int | None = field(repr=True, kw_only=True, eq=True)
+    height: int | None = field(repr=True, kw_only=True, eq=True)
 
 
-Tag = t.Literal["icons", "banners", "emojis", "backgrounds", "avatars", "attachments"]
+Tag = typing.Literal['icons', 'banners', 'emojis', 'backgrounds', 'avatars', 'attachments']
 
 
 @define(slots=True)
@@ -55,38 +64,44 @@ class StatelessAsset:
     For better user experience, prefer using `parent.foo` rather than `parent.internal_foo`.
     """
 
-    id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    id: str = field(repr=True, kw_only=True)
     """Unique ID."""
 
-    filename: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    filename: str = field(repr=True, kw_only=True)
     """Original filename."""
 
-    metadata: AssetMetadata = field(repr=True, hash=True, kw_only=True, eq=True)
+    metadata: AssetMetadata = field(repr=True, kw_only=True)
     """Parsed metadata of this file."""
 
-    content_type: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    content_type: str = field(repr=True, kw_only=True)
     """Raw content type of this file."""
 
-    size: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    size: int = field(repr=True, kw_only=True)
     """Size of this file (in bytes)."""
 
-    deleted: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    deleted: bool = field(repr=True, kw_only=True)
     """Whether this file was deleted."""
 
-    reported: bool = field(repr=True, hash=True, kw_only=True, eq=True)
+    reported: bool = field(repr=True, kw_only=True)
     """Whether this file was reported."""
 
-    message_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    message_id: str | None = field(repr=True, kw_only=True)
     """ID of the message this file is associated with."""
 
-    user_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    user_id: str | None = field(repr=True, kw_only=True)
     """ID of the user this file is associated with."""
 
-    server_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    server_id: str | None = field(repr=True, kw_only=True)
     """ID of the server this file is associated with."""
 
-    object_id: core.ULID | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    object_id: str | None = field(repr=True, kw_only=True)
     """ID of the object this file is associated with."""
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, StatelessAsset) and self.id == other.id
 
     def _stateful(self, state: State, tag: Tag) -> Asset:
         return Asset(
@@ -109,15 +124,33 @@ class StatelessAsset:
 
 @define(slots=True)
 class Asset(StatelessAsset):
-    state: "State" = field(repr=False, hash=False, kw_only=True, eq=False)
-    tag: Tag = field(repr=True, hash=True, kw_only=True, eq=True)
+    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
+    tag: Tag = field(repr=True, kw_only=True)
 
-    def url(self) -> str:
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def url(
+        self,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> str:
         """:class:`str`: The asset URL."""
-        url = f"{self.state.cdn_client.base}/{quote(self.tag)}/{quote(self.id)}"
-        return url
+        return self.state.cdn_client.url_for(
+            self.id, self.tag, size=size, width=width, height=height, max_side=max_side
+        )
 
-    async def read(self) -> bytes:
+    async def read(
+        self,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> bytes:
         """|coro|
 
         Read asset contents.
@@ -127,7 +160,9 @@ class Asset(StatelessAsset):
         :class:`bytes`
             The asset contents.
         """
-        return await self.state.cdn_client.read(self.tag, self.id)
+        return await self.state.cdn_client.read(
+            self.tag, self.id, size=size, width=width, height=height, max_side=max_side
+        )
 
 
 class Resource(abc.ABC):
@@ -139,9 +174,7 @@ class Resource(abc.ABC):
 
 _cdn_session: aiohttp.ClientSession | None = None
 
-DEFAULT_USER_AGENT = (
-    f"pyvolt CDN client (https://github.com/MCausc78/pyvolt, {core.__version__})"
-)
+DEFAULT_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 def _get_session() -> aiohttp.ClientSession:
@@ -165,48 +198,53 @@ def resolve_content(content: Content) -> bytes | io.IOBase:
 
 
 class Upload(Resource):
-    """A file upload."""
+    """Represents a file upload.
 
-    content: bytes | io.IOBase
-    tag: Tag | None
-    filename: str
+    Attributes
+    ----------
+    content: Union[:class:`bytes`, :class:`~io.IOBase`]
+        The file contents.
+    tag: Optional[Tag]
+        The attachment tag. If none, this is determined automatically.
+    filename: :class:`str`
+        The file name.
+    """
 
-    __slots__ = ("tag", "content", "filename")
+    __slots__ = ('tag', 'content', 'filename')
 
-    def __init__(
-        self, content: Content, *, tag: Tag | None = None, filename: str
-    ) -> None:
+    def __init__(self, content: Content, *, tag: Tag | None = None, filename: str) -> None:
         self.content = resolve_content(content)
-        self.tag = tag
+        # Pyright sucks massive balls here.
+        self.tag: Tag | None = tag
         self.filename = filename
 
     @classmethod
     def attachment(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="attachments", filename=filename)
+        return cls(content, tag='attachments', filename=filename)
 
     @classmethod
     def avatar(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="avatars", filename=filename)
+        return cls(content, tag='avatars', filename=filename)
 
     @classmethod
     def background(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="backgrounds", filename=filename)
+        return cls(content, tag='backgrounds', filename=filename)
 
     @classmethod
     def banner(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="banners", filename=filename)
+        return cls(content, tag='banners', filename=filename)
 
     @classmethod
     def emoji(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="emojis", filename=filename)
+        return cls(content, tag='emojis', filename=filename)
 
     @classmethod
     def icon(cls, content: Content, *, filename: str) -> te.Self:
-        return cls(content, tag="icons", filename=filename)
+        return cls(content, tag='icons', filename=filename)
 
-    async def upload(self, cdn_client: "CDNClient", tag: Tag, /) -> str:
+    async def upload(self, cdn_client: CDNClient, tag: Tag, /) -> str:
         form = aiohttp.FormData()
-        form.add_field("file", self.content, filename=self.filename)
+        form.add_field('file', self.content, filename=self.filename)
 
         return await cdn_client.upload(self.tag or tag, form)
 
@@ -214,25 +252,19 @@ class Upload(Resource):
 ResolvableResource = Resource | str | bytes | tuple[str, Content]
 
 
-async def resolve_resource(
-    state: State, resolvable: ResolvableResource, *, tag: Tag
-) -> str:
+async def resolve_resource(state: State, resolvable: ResolvableResource, *, tag: Tag) -> str:
     if isinstance(resolvable, Resource):
         return await resolvable.upload(state.cdn_client, tag)
     elif isinstance(resolvable, str):
         return resolvable
     elif isinstance(resolvable, bytes):
-        return await Upload(resolvable, filename="untitled0.png").upload(
-            state.cdn_client, tag
-        )
+        return await Upload(resolvable, filename='untitled0.png').upload(state.cdn_client, tag)
         # return await state.cdn_client.upload(Upload(resolvable, filename="untitled0"), tag)
     elif isinstance(resolvable, tuple):
-        return await Upload(
-            resolve_content(resolvable[1]), filename=resolvable[0]
-        ).upload(state.cdn_client, tag)
+        return await Upload(resolve_content(resolvable[1]), filename=resolvable[0]).upload(state.cdn_client, tag)
         # return await state.cdn_client.upload(Upload(resolve_content(resolvable[1]), filename=resolvable[0]), tag)
     else:
-        return ""
+        return ''
 
 
 class CDNClient:
@@ -240,32 +272,26 @@ class CDNClient:
         self,
         state: State,
         *,
-        session: (
-            utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession]
-            | aiohttp.ClientSession
-        ),
+        session: (utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession),
         base: str | None = None,
         user_agent: str | None = None,
     ) -> None:
         self.state = state
         self._session = session
         if base is None:
-            base = "https://autumn.revolt.chat"
-        self._base = base.rstrip("/")
+            base = 'https://autumn.revolt.chat'
+        self._base = base.rstrip('/')
         self.user_agent = user_agent or DEFAULT_USER_AGENT
 
     @property
     def base(self) -> str:
         return self._base
 
-    async def request(
-        self, method: str, route: str, **kwargs
-    ) -> aiohttp.ClientResponse:
-        headers: dict[str, t.Any] = kwargs.pop("headers", {})
-        if not kwargs.pop("manual_accept", False):
-            headers["Accept"] = "application/json"
-        if "User-Agent" not in headers:
-            headers["User-Agent"] = self.user_agent
+    async def request(self, method: str, route: str, **kwargs) -> aiohttp.ClientResponse:
+        headers: dict[str, typing.Any] = kwargs.pop('headers', {})
+        if not kwargs.pop('manual_accept', False):
+            headers['accept'] = 'application/json'
+        headers['user-agent'] = self.user_agent
 
         url = self._base + route
 
@@ -274,13 +300,11 @@ class CDNClient:
             session = await utils._maybe_coroutine(session, self)
             # detect recursion
             if callable(session):
-                raise TypeError(
-                    f"Expected aiohttp.ClientSession, not {type(session)!r}"
-                )
+                raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
             # Do not call factory on future requests
             self._session = session
 
-        _L.debug("sending request to %s", route)
+        _L.debug('sending request to %s', route)
 
         response = await session.request(
             method,
@@ -290,28 +314,77 @@ class CDNClient:
         )
         if response.status >= 400:
             j = await utils._json_or_text(response)
-            if isinstance(j, dict) and isinstance(j.get("error"), dict):
-                error = j["error"]
-                code = error.get("code")
-                reason = error.get("reason")
-                description = error.get("description")
-                j["type"] = "Rocket error"
-                j["err"] = f"{code} {reason}: {description}"
-            raise {
-                401: errors.Unauthorized,
-                403: errors.Forbidden,
-                404: errors.NotFound,
-                429: errors.Ratelimited,
-                500: errors.InternalServerError,
-            }.get(response.status, errors.APIError)(response, j)
+            if isinstance(j, dict) and isinstance(j.get('error'), dict):
+                error = j['error']
+                code = error.get('code')
+                reason = error.get('reason')
+                description = error.get('description')
+                j['type'] = 'Rocket error'
+                j['err'] = f'{code} {reason}: {description}'
+
+            from .http import _STATUS_TO_ERRORS
+
+            raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
         return response
+
+    def url_for(
+        self,
+        id: str,
+        tag: Tag,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
+    ) -> str:
+        """:class:`str`: Generates asset URL."""
+
+        url = f'{self._base}/{tag}/{quote(id)}'
+
+        params = []
+
+        if size is not None:
+            params.append(f'size={size}')
+
+        if width is not None:
+            params.append(f'width={width}')
+
+        if height is not None:
+            params.append(f'height={height}')
+
+        if max_side is not None:
+            params.append(f'max_side={max_side}')
+
+        if params:
+            url += '?' + '&'.join(params)
+
+        return url
 
     async def read(
         self,
         tag: Tag,
         id: str,
+        *,
+        size: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        max_side: int | None = None,
     ) -> bytes:
-        response = await self.request("GET", f"/{quote(tag)}/{quote(id)}")
+        params = {}
+
+        if size is not None:
+            params['size'] = size
+
+        if width is not None:
+            params['width'] = width
+
+        if height is not None:
+            params['height'] = height
+
+        if max_side is not None:
+            params['max_side'] = max_side
+
+        response = await self.request('GET', f'/{tag}/{quote(id)}', params=params)
         data = await response.read()
         response.close()
         return data
@@ -319,28 +392,27 @@ class CDNClient:
     async def upload(
         self,
         tag: Tag,
-        data: t.Any,
+        data: typing.Any,
     ) -> str:
-        response = await self.request("POST", f"/{quote(tag)}", data=data)
-        data = await response.json()
+        response = await self.request('POST', f'/{tag}', data=data)
+        data = await response.json(loads=utils.from_json)
         response.close()
-        return data["id"]
+        return data['id']
 
 
 __all__ = (
-    "AssetMetadataType",
-    "AssetMetadata",
-    "StatelessAsset",
-    "Asset",
-    "Tag",
-    "Resource",
-    "_cdn_session",
-    "DEFAULT_USER_AGENT",
-    "_get_session",
-    "Content",
-    "resolve_content",
-    "Upload",
-    "ResolvableResource",
-    "resolve_resource",
-    "CDNClient",
+    'AssetMetadata',
+    'StatelessAsset',
+    'Asset',
+    'Tag',
+    'Resource',
+    '_cdn_session',
+    'DEFAULT_USER_AGENT',
+    '_get_session',
+    'Content',
+    'resolve_content',
+    'Upload',
+    'ResolvableResource',
+    'resolve_resource',
+    'CDNClient',
 )

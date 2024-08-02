@@ -1,38 +1,38 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import files
+from .files import File
 
 
-class Webhook(t.TypedDict):
+class Webhook(typing.TypedDict):
     id: str
     name: str
-    avatar: t.NotRequired[files.File]
+    avatar: typing.NotRequired[File]
     channel_id: str
     permissions: int
     token: str | None
 
 
-class PartialWebhook(t.TypedDict):
-    name: t.NotRequired[str]
-    avatar: t.NotRequired[files.File]
-    permissions: t.NotRequired[int]
+class PartialWebhook(typing.TypedDict):
+    name: typing.NotRequired[str]
+    avatar: typing.NotRequired[File]
+    permissions: typing.NotRequired[int]
 
 
-class MessageWebhook(t.TypedDict):
+class MessageWebhook(typing.TypedDict):
     name: str
     avatar: str | None
 
 
-class DataEditWebhook(t.TypedDict):
-    name: t.NotRequired[str]
-    avatar: t.NotRequired[str]
-    permissions: t.NotRequired[int]
-    remove: t.NotRequired[list[FieldsWebhook]]
+class DataEditWebhook(typing.TypedDict):
+    name: typing.NotRequired[str]
+    avatar: typing.NotRequired[str]
+    permissions: typing.NotRequired[int]
+    remove: typing.NotRequired[list[FieldsWebhook]]
 
 
-class ResponseWebhook(t.TypedDict):
+class ResponseWebhook(typing.TypedDict):
     id: str
     name: str
     avatar: str | None
@@ -40,20 +40,20 @@ class ResponseWebhook(t.TypedDict):
     permissions: int
 
 
-FieldsWebhook = t.Literal["Avatar"]
+FieldsWebhook = typing.Literal['Avatar']
 
 
-class CreateWebhookBody(t.TypedDict):
+class CreateWebhookBody(typing.TypedDict):
     name: str
-    avatar: t.NotRequired[str | None]
+    avatar: typing.NotRequired[str | None]
 
 
 __all__ = (
-    "Webhook",
-    "PartialWebhook",
-    "MessageWebhook",
-    "DataEditWebhook",
-    "ResponseWebhook",
-    "FieldsWebhook",
-    "CreateWebhookBody",
+    'Webhook',
+    'PartialWebhook',
+    'MessageWebhook',
+    'DataEditWebhook',
+    'ResponseWebhook',
+    'FieldsWebhook',
+    'CreateWebhookBody',
 )

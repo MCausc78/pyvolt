@@ -1,146 +1,142 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import basic, files, permissions
+from .basic import Bool
+from .files import File
+from .permissions import Override, OverrideField
 
 
-class SavedMessagesChannel(t.TypedDict):
-    channel_type: t.Literal["SavedMessages"]
+class SavedMessagesChannel(typing.TypedDict):
+    channel_type: typing.Literal['SavedMessages']
     _id: str
     user: str
 
 
-class DirectMessageChannel(t.TypedDict):
-    channel_type: t.Literal["DirectMessage"]
+class DirectMessageChannel(typing.TypedDict):
+    channel_type: typing.Literal['DirectMessage']
     _id: str
     active: bool
     recipients: list[str]
-    last_message_id: t.NotRequired[str]
+    last_message_id: typing.NotRequired[str]
 
 
-class GroupChannel(t.TypedDict):
-    channel_type: t.Literal["Group"]
+class GroupChannel(typing.TypedDict):
+    channel_type: typing.Literal['Group']
     _id: str
     name: str
     owner: str
-    description: t.NotRequired[str]
+    description: typing.NotRequired[str]
     recipients: list[str]
-    icon: t.NotRequired[files.File]
-    last_message_id: t.NotRequired[str]
-    permissions: t.NotRequired[int]
-    nsfw: t.NotRequired[bool]
+    icon: typing.NotRequired[File]
+    last_message_id: typing.NotRequired[str]
+    permissions: typing.NotRequired[int]
+    nsfw: typing.NotRequired[bool]
 
 
-class TextChannel(t.TypedDict):
-    channel_type: t.Literal["TextChannel"]
+class TextChannel(typing.TypedDict):
+    channel_type: typing.Literal['TextChannel']
     _id: str
     server: str
     name: str
-    description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
-    last_message_id: t.NotRequired[str]
-    default_permissions: t.NotRequired[permissions.OverrideField]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
-    nsfw: t.NotRequired[bool]
+    description: typing.NotRequired[str]
+    icon: typing.NotRequired[File]
+    last_message_id: typing.NotRequired[str]
+    default_permissions: typing.NotRequired[OverrideField]
+    role_permissions: typing.NotRequired[dict[str, OverrideField]]
+    nsfw: typing.NotRequired[bool]
 
 
-class VoiceChannel(t.TypedDict):
-    channel_type: t.Literal["VoiceChannel"]
+class VoiceChannel(typing.TypedDict):
+    channel_type: typing.Literal['VoiceChannel']
     _id: str
     server: str
     name: str
-    description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
-    default_permissions: t.NotRequired[permissions.OverrideField]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
-    nsfw: t.NotRequired[bool]
+    description: typing.NotRequired[str]
+    icon: typing.NotRequired[File]
+    default_permissions: typing.NotRequired[OverrideField]
+    role_permissions: typing.NotRequired[dict[str, OverrideField]]
+    nsfw: typing.NotRequired[bool]
 
 
-Channel = (
-    SavedMessagesChannel
-    | DirectMessageChannel
-    | GroupChannel
-    | TextChannel
-    | VoiceChannel
-)
+Channel = SavedMessagesChannel | DirectMessageChannel | GroupChannel | TextChannel | VoiceChannel
 
 
-class PartialChannel(t.TypedDict):
-    name: t.NotRequired[str]
-    owner: t.NotRequired[str]
-    description: t.NotRequired[str]
-    icon: t.NotRequired[files.File]
-    nsfw: t.NotRequired[bool]
-    active: t.NotRequired[bool]
-    permissions: t.NotRequired[int]
-    role_permissions: t.NotRequired[dict[str, permissions.OverrideField]]
-    default_permissions: t.NotRequired[permissions.OverrideField]
-    last_message_id: t.NotRequired[str]
+class PartialChannel(typing.TypedDict):
+    name: typing.NotRequired[str]
+    owner: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    icon: typing.NotRequired[File]
+    nsfw: typing.NotRequired[bool]
+    active: typing.NotRequired[bool]
+    permissions: typing.NotRequired[int]
+    role_permissions: typing.NotRequired[dict[str, OverrideField]]
+    default_permissions: typing.NotRequired[OverrideField]
+    last_message_id: typing.NotRequired[str]
 
 
-FieldsChannel = t.Literal["Description", "Icon", "DefaultPermissions"]
+FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions']
 
 
-class DataEditChannel(t.TypedDict):
-    name: t.NotRequired[str]
-    description: t.NotRequired[str]
-    owner: t.NotRequired[str]
-    icon: t.NotRequired[str]
-    nsfw: t.NotRequired[bool]
-    archived: t.NotRequired[bool]
-    remove: t.NotRequired[list[FieldsChannel]]
+class DataEditChannel(typing.TypedDict):
+    name: typing.NotRequired[str]
+    description: typing.NotRequired[str]
+    owner: typing.NotRequired[str]
+    icon: typing.NotRequired[str]
+    nsfw: typing.NotRequired[bool]
+    archived: typing.NotRequired[bool]
+    remove: typing.NotRequired[list[FieldsChannel]]
 
 
-class DataCreateGroup(t.TypedDict):
+class DataCreateGroup(typing.TypedDict):
     name: str
-    description: t.NotRequired[str | None]
-    icon: t.NotRequired[str | None]
-    users: t.NotRequired[list[str]]
-    nsfw: t.NotRequired[bool | None]
+    description: typing.NotRequired[str | None]
+    icon: typing.NotRequired[str | None]
+    users: typing.NotRequired[list[str]]
+    nsfw: typing.NotRequired[bool | None]
 
 
-LegacyServerChannelType = t.Literal["Text", "Voice"]
+LegacyServerChannelType = typing.Literal['Text', 'Voice']
 
 
-class DataCreateServerChannel(t.TypedDict):
-    type: t.NotRequired[LegacyServerChannelType]
+class DataCreateServerChannel(typing.TypedDict):
+    type: typing.NotRequired[LegacyServerChannelType]
     name: str
-    description: t.NotRequired[str | None]
-    nsfw: t.NotRequired[bool]
+    description: typing.NotRequired[str | None]
+    nsfw: typing.NotRequired[bool]
 
 
-class DataDefaultChannelPermissions(t.TypedDict):
-    permissions: permissions.Override | int
+class DataDefaultChannelPermissions(typing.TypedDict):
+    permissions: Override | int
 
 
-class DataSetRolePermissions(t.TypedDict):
-    permissions: permissions.Override
+class DataSetRolePermissions(typing.TypedDict):
+    permissions: Override
 
 
-class OptionsChannelDelete(t.TypedDict):
-    leave_silently: t.NotRequired[basic.Bool]
+class OptionsChannelDelete(typing.TypedDict):
+    leave_silently: typing.NotRequired[Bool]
 
 
-class LegacyCreateVoiceUserResponse(t.TypedDict):
+class LegacyCreateVoiceUserResponse(typing.TypedDict):
     token: str
 
 
 __all__ = (
-    "SavedMessagesChannel",
-    "DirectMessageChannel",
-    "GroupChannel",
-    "TextChannel",
-    "VoiceChannel",
-    "Channel",
-    "PartialChannel",
-    "FieldsChannel",
-    "DataEditChannel",
-    "DataCreateGroup",
-    "LegacyServerChannelType",
-    "DataCreateServerChannel",
-    "DataDefaultChannelPermissions",
-    "DataSetRolePermissions",
-    "OptionsChannelDelete",
-    "LegacyCreateVoiceUserResponse",
+    'SavedMessagesChannel',
+    'DirectMessageChannel',
+    'GroupChannel',
+    'TextChannel',
+    'VoiceChannel',
+    'Channel',
+    'PartialChannel',
+    'FieldsChannel',
+    'DataEditChannel',
+    'DataCreateGroup',
+    'LegacyServerChannelType',
+    'DataCreateServerChannel',
+    'DataDefaultChannelPermissions',
+    'DataSetRolePermissions',
+    'OptionsChannelDelete',
+    'LegacyCreateVoiceUserResponse',
 )

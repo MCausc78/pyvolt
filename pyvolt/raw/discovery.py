@@ -2,110 +2,112 @@
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from . import files, users
+from .files import File
+from .user_settings import ReviteThemeVariable
+from .users import UserProfile
 
 # Servers
-DiscoveryServerActivity = t.Literal["high", "medium", "low", "no"]
+DiscoveryServerActivity = typing.Literal['high', 'medium', 'low', 'no']
 
 
-class DiscoveryServer(t.TypedDict):
+class DiscoveryServer(typing.TypedDict):
     _id: str
     name: str
     description: str | None
-    icon: t.NotRequired[files.File]
-    banner: t.NotRequired[files.File]
-    flags: t.NotRequired[int]
+    icon: typing.NotRequired[File]
+    banner: typing.NotRequired[File]
+    flags: typing.NotRequired[int]
     tags: list[str]
     members: int
     activity: DiscoveryServerActivity
 
 
-class DiscoveryServersPage(t.TypedDict):
+class DiscoveryServersPage(typing.TypedDict):
     servers: list[DiscoveryServer]
     popularTags: list[str]
 
 
-class DiscoveryServerSearchResult(t.TypedDict):
+class DiscoveryServerSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: t.Literal["servers"]
+    type: typing.Literal['servers']
     servers: list[DiscoveryServer]
     relatedTags: list[str]
 
 
 # Bots
-DiscoveryBotUsage = t.Literal["high", "medium", "low"]
+DiscoveryBotUsage = typing.Literal['high', 'medium', 'low']
 
 
-class DiscoveryBot(t.TypedDict):
+class DiscoveryBot(typing.TypedDict):
     _id: str
     username: str
-    avatar: t.NotRequired[files.File]
-    profile: users.UserProfile
+    avatar: typing.NotRequired[File]
+    profile: UserProfile
     tags: list[str]
     servers: int
     usage: DiscoveryBotUsage
 
 
-class DiscoveryBotsPage(t.TypedDict):
+class DiscoveryBotsPage(typing.TypedDict):
     bots: list[DiscoveryBot]
     popularTags: list[str]
 
 
-class DiscoveryBotSearchResult(t.TypedDict):
+class DiscoveryBotSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: t.Literal["bots"]
+    type: typing.Literal['bots']
     bots: list[DiscoveryBot]
     relatedTags: list[str]
 
 
 # Themes
-class DiscoveryTheme(t.TypedDict):
+class DiscoveryTheme(typing.TypedDict):
     name: str
     version: str
     slug: str
     creator: str
     description: str
     tags: list[str]
-    variables: dict[str, str]
-    css: t.NotRequired[str]
+    variables: dict[ReviteThemeVariable, str]
+    css: typing.NotRequired[str]
 
 
-class DiscoveryThemesPage(t.TypedDict):
+class DiscoveryThemesPage(typing.TypedDict):
     themes: list[DiscoveryTheme]
     popularTags: list[str]
 
 
-class DiscoveryThemeSearchResult(t.TypedDict):
+class DiscoveryThemeSearchResult(typing.TypedDict):
     query: str
     count: int
-    type: t.Literal["themes"]
+    type: typing.Literal['themes']
     themes: list[DiscoveryTheme]
     relatedTags: list[str]
 
 
-P = t.TypeVar("P")
+P = typing.TypeVar('P')
 
 
-class NextPage(t.Generic[P], t.TypedDict):
+class NextPage(typing.Generic[P], typing.TypedDict):
     pageProps: P
     __N_SSP: bool
 
 
 __all__ = (
-    "DiscoveryServerActivity",
-    "DiscoveryServer",
-    "DiscoveryServersPage",
-    "DiscoveryServerSearchResult",
-    "DiscoveryBotUsage",
-    "DiscoveryBot",
-    "DiscoveryBotsPage",
-    "DiscoveryBotSearchResult",
-    "DiscoveryTheme",
-    "DiscoveryThemesPage",
-    "DiscoveryThemeSearchResult",
-    "NextPage",
+    'DiscoveryServerActivity',
+    'DiscoveryServer',
+    'DiscoveryServersPage',
+    'DiscoveryServerSearchResult',
+    'DiscoveryBotUsage',
+    'DiscoveryBot',
+    'DiscoveryBotsPage',
+    'DiscoveryBotSearchResult',
+    'DiscoveryTheme',
+    'DiscoveryThemesPage',
+    'DiscoveryThemeSearchResult',
+    'NextPage',
 )

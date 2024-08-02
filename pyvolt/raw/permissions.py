@@ -1,16 +1,33 @@
 from __future__ import annotations
 
-import typing as t
+import typing
 
 
-class Override(t.TypedDict):
+class Override(typing.TypedDict):
     allow: int
     deny: int
 
 
-class OverrideField(t.TypedDict):
+class DataPermissionsField(typing.TypedDict):
+    permissions: Override
+
+
+class DataPermissionsValue(typing.TypedDict):
+    permissions: int
+
+
+DataPermissionPoly = DataPermissionsValue | DataPermissionsField
+
+
+class OverrideField(typing.TypedDict):
     a: int
     d: int
 
 
-__all__ = ("Override", "OverrideField")
+__all__ = (
+    'Override',
+    'DataPermissionsField',
+    'DataPermissionsValue',
+    'DataPermissionPoly',
+    'OverrideField',
+)

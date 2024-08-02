@@ -1,70 +1,96 @@
-from collections.abc import MutableMapping
-import datetime
-import typing as t
-import ulid
+"""
+The MIT License (MIT)
+
+Copyright (c) 2024-present MCausc78
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import typing
+
+from .enums import Enum
+from .ulid import _ulid_timestamp
 
 
-class Undefined:
-    """Undefined sentinel"""
+class _Sentinel(Enum):
+    """The library sentinels."""
 
-    __slots__ = ()
+    _undefined = 'UNDEFINED'
 
-    def __init__(self) -> None:
-        pass
-
-    def __bool__(self) -> t.Literal[False]:
+    def __bool__(self) -> typing.Literal[False]:
         return False
 
+    def __repr__(self) -> typing.Literal['UNDEFINED']:
+        return self.value
 
-UNDEFINED = Undefined()
+    def __eq__(self, other) -> bool:
+        return self is other
 
 
-T = t.TypeVar("T")
+Undefined: typing.TypeAlias = typing.Literal[_Sentinel._undefined]
+UNDEFINED: Undefined = _Sentinel._undefined
+
+
+T = typing.TypeVar('T')
 UndefinedOr = Undefined | T
 
 
-def is_defined(x: UndefinedOr[T]) -> t.TypeGuard[T]:
-    return x is not UNDEFINED and not isinstance(x, Undefined)
+def ulid_timestamp(val: str) -> float:
+    return _ulid_timestamp(val.encode('ascii'))
 
 
-class ULID(str):
-    EPOCH: int = 1420070400000
-
-    @property
-    def timestamp(self) -> float:
-        return ulid.parse(self).timestamp().timestamp
-
-    @property
-    def created_at(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.timestamp)
+def ulid_time(val: str) -> datetime:
+    return datetime.fromtimestamp(ulid_timestamp(val), timezone.utc)
 
 
-class HasID(t.Protocol):
-    id: ULID
+class HasID(typing.Protocol):
+    id: str
 
 
-ResolvableULID = ULID | HasID | str
+U = typing.TypeVar('U', bound='HasID')
+ULIDOr = str | U
 
 
-def resolve_ulid(resolvable: ResolvableULID) -> ULID:
-    if isinstance(resolvable, ULID):
-        return resolvable
+def resolve_id(resolvable: ULIDOr) -> str:
     if isinstance(resolvable, str):
-        return ULID(resolvable)
+        return resolvable
     return resolvable.id
 
 
-__version__: str = "1.0.0"
+# zero ID
+ZID = '00000000000000000000000000'
+
+__version__: str = '0.7.0'
 
 __all__ = (
-    "Undefined",
-    "UNDEFINED",
-    "T",
-    "UndefinedOr",
-    "is_defined",
-    "ULID",
-    "HasID",
-    "ResolvableULID",
-    "resolve_ulid",
-    "__version__",
+    'Undefined',
+    'UNDEFINED',
+    'T',
+    'UndefinedOr',
+    'ulid_timestamp',
+    'ulid_time',
+    'HasID',
+    'ULIDOr',
+    'resolve_id',
+    '__version__',
+    'ZID',
 )
