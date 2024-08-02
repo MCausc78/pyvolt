@@ -67,6 +67,12 @@ class BandcampSpecial(typing.TypedDict):
     id: str
 
 
+class AppleMusicSpecial(typing.TypedDict):
+    type: typing.Literal['AppleMusic']
+    album_id: str
+    track_id: typing.NotRequired[str]
+
+
 class StreamableSpecial(typing.TypedDict):
     type: typing.Literal['Streamable']
     id: str
@@ -80,6 +86,7 @@ Special = (
     | TwitchSpecial
     | SpotifySpecial
     | BandcampSpecial
+    | AppleMusicSpecial
     | StreamableSpecial
 )
 
@@ -143,6 +150,7 @@ __all__ = (
     'SpotifySpecial',
     'SoundcloudSpecial',
     'BandcampSpecial',
+    'AppleMusicSpecial',
     'StreamableSpecial',
     'Special',
     'WebsiteMetadata',

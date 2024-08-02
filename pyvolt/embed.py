@@ -43,7 +43,8 @@ class _BaseEmbed(abc.ABC):
     def _stateful(self, state: State) -> Embed: ...
 
 
-class EmbedSpecial(abc.ABC):
+@define(slots=True)
+class EmbedSpecial:
     """Information about special remote content."""
 
 
@@ -121,6 +122,17 @@ class BandcampEmbedSpecial(EmbedSpecial):
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """The Bandcamp content ID."""
+
+
+@define(slots=True)
+class AppleMusicEmbedSpecial(EmbedSpecial):
+    """Represents information about Apple Music track."""
+
+    album_id: str = field(repr=True, kw_only=True, eq=True)
+    """The Apple Music album ID."""
+
+    track_id: str | None = field(repr=True, kw_only=True, eq=True)
+    """The Apple Music track ID."""
 
 
 @define(slots=True)
@@ -278,6 +290,7 @@ __all__ = (
     'SoundcloudEmbedSpecial',
     '_SOUNDCLOUD_EMBED_SPECIAL',
     'BandcampEmbedSpecial',
+    'AppleMusicEmbedSpecial',
     'StreamableEmbedSpecial',
     'ImageEmbed',
     'VideoEmbed',

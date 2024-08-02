@@ -71,6 +71,7 @@ from .embed import (
     SoundcloudEmbedSpecial,
     _SOUNDCLOUD_EMBED_SPECIAL,
     BandcampEmbedSpecial,
+    AppleMusicEmbedSpecial,
     StreamableEmbedSpecial,
     ImageSize,
     ImageEmbed,
@@ -249,6 +250,7 @@ class Parser:
             'Spotify': self.parse_spotify_embed_special,
             'Soundcloud': self.parse_soundcloud_embed_special,
             'Bandcamp': self.parse_bandcamp_embed_special,
+            'AppleMusic': self.parse_apple_music_embed_special,
             'Streamable': self.parse_streamable_embed_special,
         }
         self._emoji_parsers = {
@@ -281,7 +283,13 @@ class Parser:
 
     # basic start
 
-    def parse_asset_metadata(self, d: raw.Metadata) -> AssetMetadata:
+    def parse_apple_music_embed_special(self, d: raw.AppleMusicSpecial, /) -> AppleMusicEmbedSpecial:
+        return AppleMusicEmbedSpecial(
+            album_id=d['album_id'],
+            track_id=d.get('track_id'),
+        )
+
+    def parse_asset_metadata(self, d: raw.Metadata, /) -> AssetMetadata:
         return AssetMetadata(
             type=AssetMetadataType(d['type']),
             width=d.get('width'),

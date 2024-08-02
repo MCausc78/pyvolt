@@ -22,6 +22,7 @@ from .emoji import *
 from .enums import *
 from .errors import *
 from .events import *
+from .flags import *
 from .http import *
 from .invite import *
 from .message import *
