@@ -6,25 +6,25 @@
 
 * TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L235C11-L235C94
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L234C11-L234C94
 
 * TODO: What we should do in case of mentions? This solution sucks.
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L322C15-L322C80
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/events.py#L321C15-L321C80
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L277C19-L277C38
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L285C19-L285C38
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L400C11-L400C49
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L408C11-L408C49
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L476C11-L476C49
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/http.py#L484C11-L484C49
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/shard.py#L345C19-L345C38
+  Source: https://github.com/MCausc78/pyvolt/blob/ready/pyvolt/shard.py#L353C19-L353C38
 
