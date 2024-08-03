@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime
-from functools import partial
 import logging
 import typing
 
@@ -225,7 +224,7 @@ _new_user_flags = UserFlags.__new__
 
 
 class Parser:
-    def __init__(self, state: State) -> None:
+    def __init__(self, *, state: State) -> None:
         self.state = state
         self._channel_parsers = {
             'SavedMessages': self.parse_saved_messages_channel,

@@ -674,18 +674,28 @@ class OwnUser(User):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[:class:`str`] | `None`
-            New display name. Set `None` to remove it.
-        avatar: :class:`UndefinedOr`[:class:`str`] | `None`
-            New avatar. Must be attachment ID. Set `None` to remove it.
+        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New display name. Pass ``None`` to remove it.
+        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+            New avatar. Pass ``None`` to remove it.
         status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
             New user status.
         profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
         badges: :class:`UndefinedOr`[:class:`UserBadges`]
-            Bitfield of new user badges.
+            The new user badges.
         flags: :class:`UndefinedOr`[:class:`UserFlags`]
-            Bitfield of new user flags.
+            The new user flags.
+
+        Raises
+        ------
+        HTTPException
+            Editing the user failed.
+
+        Returns
+        -------
+        :class:`OwnUser`
+            The newly updated authenticated user.
         """
         return await self.state.http.edit_my_user(
             display_name=display_name,

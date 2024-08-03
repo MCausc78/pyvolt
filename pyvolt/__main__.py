@@ -25,9 +25,8 @@ async def login(email: str, password: str, friendly_name: str | None):
 
     state = pyvolt.State()
     http = pyvolt.HTTPClient(session=session, state=state)
-    parser = pyvolt.Parser(state)
 
-    state.setup(http=http, parser=parser)
+    state.setup(http=http)
 
     async with session:
         resp = await http.login_with_email(email, password, friendly_name=friendly_name)

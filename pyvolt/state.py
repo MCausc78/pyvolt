@@ -27,6 +27,7 @@ from __future__ import annotations
 import typing
 
 from .core import ZID
+from .parser import Parser
 from .user_settings import UserSettings
 from .user import UserBadges, UserFlags, RelationshipStatus, User
 
@@ -35,7 +36,6 @@ if typing.TYPE_CHECKING:
     from .cdn import CDNClient
     from .channel import SavedMessagesChannel
     from .http import HTTPClient
-    from .parser import Parser
     from .shard import Shard
     from .user import OwnUser
 
@@ -47,6 +47,8 @@ class State:
     ----------
     provide_cache_context_in: List[:class:`ProvideCacheContextIn`]
         The methods/properties that do provide cache context.
+    parser: :class:`Parser`
+        The parser.
     system: :class:`User`
         The Revolt#0000 sentinel user.
     """
@@ -56,7 +58,7 @@ class State:
         'provide_cache_context_in',
         '_cdn_client',
         '_http',
-        '_parser',
+        'parser',
         '_shard',
         '_me',
         '_saved_notes',
@@ -78,7 +80,7 @@ class State:
         self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
         self._cdn_client = cdn_client
         self._http = http
-        self._parser = parser
+        self.parser = parser if parser else Parser(state=self)
         self._shard = shard
         self._me: OwnUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None
@@ -115,7 +117,7 @@ class State:
         if http:
             self._http = http
         if parser:
-            self._parser = parser
+            self.parser = parser
         if shard:
             self._shard = shard
         return self
@@ -133,11 +135,6 @@ class State:
     def http(self) -> HTTPClient:
         assert self._http, 'State has no HTTP client attached'
         return self._http
-
-    @property
-    def parser(self) -> Parser:
-        assert self._parser, 'State has no parser attached'
-        return self._parser
 
     @property
     def shard(self) -> Shard:

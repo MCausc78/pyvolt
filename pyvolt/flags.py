@@ -26,7 +26,6 @@ BF = typing.TypeVar('BF', bound='BaseFlags')
 class flag(typing.Generic[BF]):
     __slots__ = (
         '_func',
-        '_parent',
         'doc',
         'name',
         'value',
@@ -37,7 +36,6 @@ class flag(typing.Generic[BF]):
 
     def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
         self._func: Callable[[BF], int] = MISSING
-        self._parent: type[BF] = MISSING
         self.doc: str | None = None
         self.name: str = ''
         self.value: int = 0
@@ -55,14 +53,11 @@ class flag(typing.Generic[BF]):
     def __get__(self, instance: BF, owner: type[BF], /) -> bool: ...
 
     @typing.overload
-    def __get__(self, instance: None, owner: type[BF], /) -> int: ...
+    def __get__(self, instance: None, owner: type[BF], /) -> Self: ...
 
-    def __get__(self, instance: BF | None, owner: type[BF], /) -> bool | int:
+    def __get__(self, instance: BF | None, owner: type[BF], /) -> bool | Self:
         if instance is None:
-            if self._parent:
-                return self.value
-            # Needs to be here to allow prepare class
-            return self  # type: ignore
+            return self
         else:
             return instance._get(self)
 
@@ -95,7 +90,6 @@ class BaseFlags:
                     continue
                 valid_flags[f.name] = f.value
                 flags[f.name] = f
-                f._parent = cls
 
         default = 0
         if inverted:

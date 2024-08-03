@@ -504,6 +504,8 @@ class Client:
                 cr = cache
             c = cr if cr is not UNDEFINED else MapCache()
 
+            if parser:
+                state.setup(parser=parser(self, state))
             state.setup(
                 cache=c,
                 cdn_client=(
@@ -520,7 +522,6 @@ class Client:
                         session=_session_factory,
                     )
                 ),
-                parser=parser(self, state) if parser else Parser(state),
             )
             self._state = state
             state.setup(
