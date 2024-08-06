@@ -17,7 +17,7 @@ async def bench_dm_channels():
         payload = json.load(fp)
     
     state = pyvolt.State()
-    parser = pyvolt.Parser(state)
+    parser = pyvolt.Parser(state=state)
     state.setup(parser=parser)
 
     def using_pyvolt():
@@ -65,7 +65,7 @@ async def bench_group_channels():
         payload = json.load(fp)
     
     state = pyvolt.State()
-    parser = pyvolt.Parser(state)
+    parser = pyvolt.Parser(state=state)
     state.setup(parser=parser)
 
     def using_pyvolt():
@@ -125,7 +125,7 @@ async def bench_text_channels():
         server_payload = json.load(fp)
     
     state = pyvolt.State()
-    parser = pyvolt.Parser(state)
+    parser = pyvolt.Parser(state=state)
     state.setup(parser=parser)
 
     def using_pyvolt():

@@ -29,10 +29,10 @@ import typing
 
 from .cdn import StatelessAsset, Asset
 from .server import ServerFlags, Server
-from .state import State
 
 if typing.TYPE_CHECKING:
     from .channel import GroupChannel
+    from .state import State
 
 
 @define(slots=True)

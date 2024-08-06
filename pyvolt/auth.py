@@ -30,9 +30,9 @@ import typing
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
 from .enums import MFAMethod
-from .state import State
 
 if typing.TYPE_CHECKING:
+    from .state import State
     from . import raw
 
 

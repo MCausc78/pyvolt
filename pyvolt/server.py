@@ -47,7 +47,6 @@ from .enums import ChannelType, ContentReportReason, RelationshipStatus
 from .errors import NoData
 from .flags import Permissions, ServerFlags, UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
-from .state import State
 from .user import (
     UserStatus,
     BaseUser,
@@ -65,6 +64,7 @@ if typing.TYPE_CHECKING:
         VoiceChannel,
         ServerChannel,
     )
+    from .state import State
 
 
 class Category:
@@ -88,9 +88,9 @@ class Category:
         title: str,
         channels: list[ULIDOr[ServerChannel]],
     ) -> None:
-        self.id = resolve_id(id)
-        self.title = title
-        self.channels = [resolve_id(channel) for channel in channels]
+        self.id: str = resolve_id(id)
+        self.title: str = title
+        self.channels: list[str] = [resolve_id(channel) for channel in channels]
 
     def __hash__(self) -> int:
         return hash(self.id)

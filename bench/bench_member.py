@@ -23,7 +23,7 @@ async def bench_members():
         user_payload = json.load(fp)
 
     state = pyvolt.State()
-    parser = pyvolt.Parser(state)
+    parser = pyvolt.Parser(state=state)
     state.setup(parser=parser)
 
     def using_pyvolt():

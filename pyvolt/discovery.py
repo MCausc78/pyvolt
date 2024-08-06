@@ -36,11 +36,11 @@ from .core import UNDEFINED, UndefinedOr, __version__ as version
 from .enums import ServerActivity, BotUsage, ReviteBaseTheme
 from .errors import DiscoveryError
 from .server import ServerFlags, BaseServer
-from .state import State
 from .user import StatelessUserProfile, UserProfile
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .state import State
     from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
