@@ -16,6 +16,21 @@ Key Features
 - Customizable architecture. Build object parser in Rust to achieve high speeds.
 - Focuses on supporting both, bot and user accounts.
 
+Installing
+----------
+
+**Python 3.10 or higher is required**
+
+To install the library, you can just run the following command:
+
+.. code:: sh
+
+    # Linux/macOS
+    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+
+    # Windows
+    py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+
 Quick Example
 --------------
 
