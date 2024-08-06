@@ -7,7 +7,7 @@ name = "pyvolt"
 description = "A Python wrapper for the Revolt API"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "MCausc78" }]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -15,7 +15,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -39,7 +38,6 @@ speed = [
     "orjson>=3.5.4",
     "aiodns>=1.1",
     "Brotli",
-    "cchardet==2.1.7; python_version < '3.10'",
 ]
 test = [
     "pytest",

@@ -221,6 +221,7 @@ _EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 _new_server_flags = ServerFlags.__new__
 _new_user_badges = UserBadges.__new__
 _new_user_flags = UserFlags.__new__
+_parse_dt = datetime.fromisoformat
 
 
 class Parser:
@@ -746,8 +747,8 @@ class Parser:
         id = d['_id']
         user_id = id['user']
 
-        if user:
-            assert user.id == user_id, 'IDs do not match'
+        # if user:
+        #    assert user.id == user_id, 'IDs do not match'
 
         avatar = d.get('avatar')
         timeout = d.get('timeout')
@@ -756,11 +757,11 @@ class Parser:
             state=self.state,
             _user=user or (users or _EMPTY_DICT).get(user_id) or user_id,
             server_id=id['server'],
-            joined_at=datetime.fromisoformat(d['joined_at']),
+            joined_at=_parse_dt(d['joined_at']),
             nick=d.get('nickname'),
             internal_server_avatar=self.parse_asset(avatar) if avatar else None,
             roles=d.get('roles') or [],
-            timed_out_until=datetime.fromisoformat(timeout) if timeout else None,
+            timed_out_until=_parse_dt(timeout) if timeout else None,
         )
 
     def parse_member_list(self, d: raw.AllMemberResponse) -> MemberList:
@@ -811,9 +812,9 @@ class Parser:
             webhook=self.parse_message_webhook(webhook) if webhook else None,
             content=d.get('content', ''),
             internal_system_event=self.parse_message_system_event(system, members, users) if system else None,
-            internal_attachments=[self.parse_asset(a) for a in d.get('attachments', [])],
-            edited_at=datetime.fromisoformat(edited_at) if edited_at else None,
-            internal_embeds=[self.parse_embed(e) for e in d.get('embeds', [])],
+            internal_attachments=[self.parse_asset(a) for a in d.get('attachments', ())],
+            edited_at=_parse_dt(edited_at) if edited_at else None,
+            internal_embeds=[self.parse_embed(e) for e in d.get('embeds', ())],
             mention_ids=d.get('mentions', []),
             replies=d.get('replies', []),
             reactions={k: tuple(v) for k, v in (d.get('reactions') or {}).items()},
@@ -986,7 +987,7 @@ class Parser:
                 id=d['id'],
                 channel_id=d['channel'],
                 content=content if content is not None else UNDEFINED,
-                edited_at=datetime.fromisoformat(edited_at) if edited_at else UNDEFINED,
+                edited_at=_parse_dt(edited_at) if edited_at else UNDEFINED,
                 internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED,
                 pinned=False if 'Pinned' in clear else data.get('pinned', UNDEFINED),
                 reactions={k: tuple(v) for k, v in reactions.items()} if reactions is not None else UNDEFINED,
@@ -1130,7 +1131,7 @@ class Parser:
         privileged = d.get('privileged')
         bot = d.get('bot')
 
-        relations = [self.parse_relationship(r) for r in d.get('relations', [])]
+        relations = [self.parse_relationship(r) for r in d.get('relations', ())]
 
         return OwnUser(
             state=self.state,
@@ -1204,13 +1205,13 @@ class Parser:
         )
 
     def parse_ready_event(self, shard: Shard, d: raw.ClientReadyEvent) -> ReadyEvent:
-        users = [self.parse_user(u) for u in d.get('users', [])]
-        servers = [self.parse_server(s, (True, s['channels'])) for s in d.get('servers', [])]
-        channels = [self.parse_channel(c) for c in d.get('channels', [])]
-        members = [self.parse_member(m) for m in d.get('members', [])]
-        emojis = [self.parse_server_emoji(e) for e in d.get('emojis', [])]
+        users = [self.parse_user(u) for u in d.get('users', ())]
+        servers = [self.parse_server(s, (True, s['channels'])) for s in d.get('servers', ())]
+        channels = [self.parse_channel(c) for c in d.get('channels', ())]
+        members = [self.parse_member(m) for m in d.get('members', ())]
+        emojis = [self.parse_server_emoji(e) for e in d.get('emojis', ())]
         user_settings = self.parse_user_settings(d.get('user_settings', {}), False)
-        read_states = [self.parse_read_state(rs) for rs in d.get('channel_unreads', [])]
+        read_states = [self.parse_read_state(rs) for rs in d.get('channel_unreads', ())]
 
         me = users[-1]
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
@@ -1443,9 +1444,7 @@ class Parser:
                 nick=None if 'Nickname' in clear else data.get('nickname', UNDEFINED),
                 internal_server_avatar=None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED,
                 roles=[] if 'Roles' in clear else roles if roles is not None else UNDEFINED,
-                timed_out_until=(
-                    None if 'Timeout' in clear else datetime.fromisoformat(timeout) if timeout else UNDEFINED
-                ),
+                timed_out_until=(None if 'Timeout' in clear else _parse_dt(timeout) if timeout else UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch

@@ -171,6 +171,30 @@ class _ColourFormatter(logging.Formatter):
         return output
 
 
+def new_formatter(handler: logging.Handler) -> logging.Formatter:
+    """A helper function to create logging formatter.
+
+    Like :func:`.setup_logging`, this will use colors if they are supported
+    on current stream.
+
+    Parameters
+    ----------
+    handler: :class:`logging.Handler`
+        The log handler.
+
+    Returns
+    -------
+    :class:`logging.Formatter`
+        The formatter.
+    """
+    if isinstance(handler, logging.StreamHandler) and stream_supports_colour(handler.stream):
+        formatter = _ColourFormatter()
+    else:
+        dt_fmt = '%Y-%m-%d %H:%M:%S'
+        formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
+    return formatter
+
+
 def setup_logging(
     *,
     handler: UndefinedOr[logging.Handler] = UNDEFINED,
@@ -211,11 +235,7 @@ def setup_logging(
         handler = logging.StreamHandler()
 
     if formatter is UNDEFINED:
-        if isinstance(handler, logging.StreamHandler) and stream_supports_colour(handler.stream):
-            formatter = _ColourFormatter()
-        else:
-            dt_fmt = '%Y-%m-%d %H:%M:%S'
-            formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
+        formatter = new_formatter(handler)
 
     if root:
         logger = logging.getLogger()
@@ -237,5 +257,6 @@ __all__ = (
     'utcnow',
     'is_docker',
     'stream_supports_colour',
+    'new_formatter',
     'setup_logging',
 )
