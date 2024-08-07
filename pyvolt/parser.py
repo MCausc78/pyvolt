@@ -30,7 +30,7 @@ import logging
 import typing
 
 from . import discovery
-from .auth import (
+from .authentication import (
     PartialAccount,
     MFATicket,
     WebPushSubscription,

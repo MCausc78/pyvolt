@@ -47,7 +47,7 @@ class Base:
         return hash(self.id)
 
     def __eq__(self, other: object) -> bool:
-        return self is other or isinstance(other, Base) and self.id == other.id
+        return self is other or isinstance(other, self.__class__) and self.id == other.id
 
     @property
     def created_at(self) -> datetime:

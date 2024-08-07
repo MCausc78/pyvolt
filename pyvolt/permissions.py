@@ -46,8 +46,9 @@ class PermissionOverride:
 
     def __init__(
         self,
-        allow: Permissions = Permissions.none(),
-        deny: Permissions = Permissions.none(),
+        *,
+        allow: Permissions = Permissions.NONE,
+        deny: Permissions = Permissions.NONE,
     ) -> None:
         self.allow = allow
         self.deny = deny

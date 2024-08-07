@@ -41,7 +41,6 @@ from .core import (
     resolve_id,
     ZID,
 )
-from .embed import StatelessEmbed, Embed
 from .emoji import ResolvableEmoji
 from .enums import ContentReportReason
 from .errors import NoData
@@ -51,6 +50,7 @@ from .user import BaseUser, User
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .embed import StatelessEmbed, Embed
     from .state import State
 
 

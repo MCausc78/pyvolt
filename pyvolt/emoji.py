@@ -80,7 +80,7 @@ class ServerEmoji(BaseEmoji):
     server_id: str = field(repr=True, kw_only=True)
     """What server owns this emoji."""
 
-    async def delete_emoji(self) -> None:
+    async def delete(self) -> None:
         """|coro|
 
         Deletes the emoji.

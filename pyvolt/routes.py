@@ -33,14 +33,11 @@ Method = typing.Literal['GET', 'POST', 'PATCH', 'DELETE', 'PUT']
 class CompiledRoute:
     """Represents compiled Revolt API route."""
 
-    route: Route
-    args: dict[str, typing.Any]
-
     __slots__ = ('route', 'args')
 
     def __init__(self, route: Route, **args: typing.Any) -> None:
-        self.route = route
-        self.args = args
+        self.route: Route = route
+        self.args: dict[str, typing.Any] = args
 
     def __repr__(self) -> str:
         return f'<CompiledRoute route={self.route!r} args={self.args!r}>'

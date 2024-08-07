@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from attrs import define, field
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 import typing
 
@@ -57,6 +56,8 @@ from .user import (
 
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from . import raw
     from .channel import (
         TextChannel,

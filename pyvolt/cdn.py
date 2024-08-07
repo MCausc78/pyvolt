@@ -34,12 +34,12 @@ from urllib.parse import quote
 
 from . import utils
 from .core import __version__ as version
-from .enums import AssetMetadataType
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
+    from .enums import AssetMetadataType
     from .state import State
-    import typing_extensions as te
+    from typing_extensions import Self
 
 
 _L = logging.getLogger(__name__)
@@ -219,27 +219,27 @@ class Upload(Resource):
         self.filename = filename
 
     @classmethod
-    def attachment(cls, content: Content, *, filename: str) -> te.Self:
+    def attachment(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='attachments', filename=filename)
 
     @classmethod
-    def avatar(cls, content: Content, *, filename: str) -> te.Self:
+    def avatar(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='avatars', filename=filename)
 
     @classmethod
-    def background(cls, content: Content, *, filename: str) -> te.Self:
+    def background(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='backgrounds', filename=filename)
 
     @classmethod
-    def banner(cls, content: Content, *, filename: str) -> te.Self:
+    def banner(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='banners', filename=filename)
 
     @classmethod
-    def emoji(cls, content: Content, *, filename: str) -> te.Self:
+    def emoji(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='emojis', filename=filename)
 
     @classmethod
-    def icon(cls, content: Content, *, filename: str) -> te.Self:
+    def icon(cls, content: Content, *, filename: str) -> Self:
         return cls(content, tag='icons', filename=filename)
 
     async def upload(self, cdn_client: CDNClient, tag: Tag, /) -> str:

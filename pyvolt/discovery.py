@@ -31,16 +31,16 @@ import typing
 
 from . import utils
 from .bot import BaseBot
-from .cdn import StatelessAsset, Asset
 from .core import UNDEFINED, UndefinedOr, __version__ as version
-from .enums import ServerActivity, BotUsage, ReviteBaseTheme
 from .errors import DiscoveryError
 from .server import ServerFlags, BaseServer
-from .user import StatelessUserProfile, UserProfile
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .cdn import StatelessAsset, Asset
+    from .enums import ServerActivity, BotUsage, ReviteBaseTheme
     from .state import State
+    from .user import StatelessUserProfile, UserProfile
     from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)

@@ -32,7 +32,7 @@ import multidict
 import typing
 
 from . import routes, utils
-from .auth import (
+from .authentication import (
     PartialAccount,
     MFATicket,
     PartialSession,
@@ -379,7 +379,13 @@ class HTTPClient:
             method = response.request_info.method
             url = response.request_info.url
 
-            _L.debug('%s %s has received %s', method, url, result)
+            _L.debug('%s %s has received %s %s', method, url, response.status, result)
+        else:
+            method = response.request_info.method
+            url = response.request_info.url
+
+            _L.debug('%s %s has received %s [too large response]', method, url, response.status)
+
         response.close()
         return result
 

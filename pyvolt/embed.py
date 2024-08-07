@@ -28,10 +28,10 @@ import abc
 from attrs import define, field
 import typing
 
-from .cdn import StatelessAsset, Asset
-from .enums import LightspeedContentType, TwitchContentType, BandcampContentType, ImageSize
 
 if typing.TYPE_CHECKING:
+    from .cdn import StatelessAsset, Asset
+    from .enums import LightspeedContentType, TwitchContentType, BandcampContentType, ImageSize
     from .state import State
 
 

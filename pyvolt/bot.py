@@ -25,11 +25,14 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from attrs import define, field
+import typing
 
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
-from .flags import BotFlags
-from .user import User
+
+if typing.TYPE_CHECKING:
+    from .flags import BotFlags
+    from .user import User
 
 
 @define(slots=True)

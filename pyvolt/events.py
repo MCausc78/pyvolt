@@ -31,7 +31,7 @@ import typing
 
 from . import cache as caching
 
-from .auth import Session
+from .authentication import Session
 from .channel import (
     PartialChannel,
     SavedMessagesChannel,

@@ -28,10 +28,10 @@ from attrs import define, field
 import typing
 
 from .cdn import StatelessAsset, Asset
-from .server import ServerFlags, Server
 
 if typing.TYPE_CHECKING:
     from .channel import GroupChannel
+    from .server import ServerFlags, Server
     from .state import State
 
 

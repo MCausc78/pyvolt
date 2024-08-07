@@ -32,15 +32,12 @@ import typing
 from . import cache as caching
 
 from .base import Base
-from .bot import BaseBot
-from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
     UNDEFINED,
     UndefinedOr,
     ULIDOr,
     resolve_id,
 )
-from .enums import MessageSort
 from .errors import NoData
 from .flags import (
     Permissions,
@@ -49,12 +46,15 @@ from .flags import (
     DEFAULT_SAVED_MESSAGES_PERMISSIONS,
     DEFAULT_DM_PERMISSIONS,
 )
-from .invite import Invite
-from .permissions import PermissionOverride
-from .server import BaseRole, Role, Server, Member
-from .user import BaseUser, User
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from .bot import BaseBot
+    from .cdn import StatelessAsset, Asset, ResolvableResource
+    from .enums import MessageSort
+    from .invite import Invite
+    from .permissions import PermissionOverride
     from .message import (
         Reply,
         Interactions,
@@ -63,7 +63,9 @@ if typing.TYPE_CHECKING:
         BaseMessage,
         Message,
     )
+    from .server import BaseRole, Role, Server, Member
     from .shard import Shard
+    from .user import BaseUser, User
 
 
 class Typing(contextlib.AbstractAsyncContextManager):
@@ -266,6 +268,14 @@ class TextChannel(BaseChannel):
         """Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
         return Typing(self.state.shard, self.id)
 
+    @property
+    def messages(self) -> Mapping[str, Message]:
+        """Mapping[:class:`str`, :class:`Message`]: Returns all messages in this channel."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_messages_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
     async def begin_typing(self) -> None:
         """Begins typing in channel, until `end_typing` is called."""
         return await self.state.shard.begin_typing(self.id)
@@ -398,18 +408,7 @@ class SavedMessagesChannel(TextChannel):
     """Personal "Saved Notes" channel which allows users to save messages."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """ID of the user this channel belongs to."""
-
-    def __hash__(self) -> int:
-        return hash((self.id, self.user_id))
-
-    def __eq__(self, other: object) -> bool:
-        return (
-            self is other
-            or isinstance(other, SavedMessagesChannel)
-            and self.id == other.id
-            and self.user_id == other.user_id
-        )
+    """The ID of the user this channel belongs to."""
 
     def _update(self, data: PartialChannel) -> None:
         # PartialChannel has no fields that are related to SavedMessages yet
@@ -767,7 +766,8 @@ class BaseServerChannel(BaseChannel):
         HTTPException
             Setting permissions failed.
         """
-        return await self.state.http.set_role_channel_permissions(self.id, role, allow=allow, deny=deny)  # type: ignore
+        result = await self.state.http.set_channel_permissions_for_role(self.id, role, allow=allow, deny=deny)
+        return result
 
     async def set_default_permissions(self, permissions: PermissionOverride, /) -> ServerChannel:
         """|coro|
