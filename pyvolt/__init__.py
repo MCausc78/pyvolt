@@ -24,6 +24,7 @@ from .errors import *
 from .events import *
 from .flags import *
 from .http import *
+from .instance import *
 from .invite import *
 from .message import *
 from .parser import *

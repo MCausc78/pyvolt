@@ -147,6 +147,14 @@ from .flags import (
     UserBadges,
     UserFlags,
 )
+from .instance import (
+    InstanceCaptchaFeature,
+    InstanceGenericFeature,
+    InstanceVoiceFeature,
+    InstanceFeaturesConfig,
+    InstanceBuild,
+    Instance,
+)
 from .invite import (
     BaseInvite,
     ServerPublicInvite,
@@ -720,6 +728,69 @@ class Parser:
             width=d['width'],
             height=d['height'],
             size=ImageSize(d['size']),
+        )
+
+    def parse_instance(self, payload: raw.RevoltConfig) -> Instance:
+        return Instance(
+            version=payload['revolt'],
+            features=self.parse_instance_features_config(payload['features']),
+            websocket_url=payload['ws'],
+            app_url=payload['app'],
+            vapid_public_key=payload['vapid'],
+            build=self.parse_instance_build(payload['build']),
+        )
+
+    def parse_instance_build(self, payload: raw.BuildInformation) -> InstanceBuild:
+        try:
+            committed_at = _parse_dt(payload['commit_timestamp'])
+        except Exception:
+            committed_at = None
+
+        try:
+            built_at = _parse_dt(payload['timestamp'])
+        except Exception:
+            built_at = None
+
+        return InstanceBuild(
+            commit_as_sha=payload['commit_sha'],
+            committed_at=committed_at,
+            semver=payload['semver'],
+            origin_url=payload['origin_url'],
+            built_at=built_at,
+        )
+
+    def parse_instance_captcha_feature(self, payload: raw.CaptchaFeature) -> InstanceCaptchaFeature:
+        return InstanceCaptchaFeature(
+            enabled=payload['enabled'],
+            key=payload['key'],
+        )
+
+    def parse_instance_features_config(self, payload: raw.RevoltFeatures) -> InstanceFeaturesConfig:
+        try:
+            voice: raw.VoiceFeature = payload['livekit']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        except KeyError:
+            voice = payload['voso']
+
+        return InstanceFeaturesConfig(
+            captcha=self.parse_instance_captcha_feature(payload['captcha']),
+            email_verification=payload['email'],
+            invite_only=payload['invite_only'],
+            autumn=self.parse_instance_generic_feature(payload['autumn']),
+            january=self.parse_instance_generic_feature(payload['january']),
+            voice=self.parse_instance_voice_feature(voice),
+        )
+
+    def parse_instance_generic_feature(self, payload: raw.Feature) -> InstanceGenericFeature:
+        return InstanceGenericFeature(
+            enabled=payload['enabled'],
+            url=payload['url'],
+        )
+
+    def parse_instance_voice_feature(self, payload: raw.VoiceFeature) -> InstanceVoiceFeature:
+        return InstanceVoiceFeature(
+            enabled=payload['enabled'],
+            url=payload['url'],
+            websocket_url=payload['ws'],
         )
 
     def parse_invite(self, d: raw.Invite) -> Invite:
@@ -1597,7 +1668,7 @@ class Parser:
         role_permissions = d.get('role_permissions', {})
 
         try:
-            last_message_id = d['last_message_id']  # type: ignore # I really hope that Eric will allow that
+            last_message_id = d['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
         except KeyError:
             last_message_id = None
 

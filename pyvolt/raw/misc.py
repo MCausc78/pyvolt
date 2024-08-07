@@ -24,6 +24,7 @@ class RevoltFeatures(typing.TypedDict):
     autumn: Feature
     january: Feature
     voso: VoiceFeature
+    livekit: typing.NotRequired[VoiceFeature]
 
 
 class BuildInformation(typing.TypedDict):

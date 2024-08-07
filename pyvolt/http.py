@@ -115,6 +115,7 @@ _L = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .instance import Instance
     from .state import State
 
 
@@ -396,6 +397,14 @@ class HTTPClient:
         """
         if not callable(self._session):
             await self._session.close()
+
+    async def query_node(self) -> Instance:
+        """|coro|
+
+        Retrieves the instance information.
+        """
+        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), authenticated=False)
+        return self.state.parser.parse_instance(resp)
 
     # Bots control
     async def create_bot(self, name: str) -> Bot:
