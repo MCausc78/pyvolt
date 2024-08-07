@@ -402,6 +402,11 @@ class HTTPClient:
         """|coro|
 
         Retrieves the instance information.
+
+        Returns
+        -------
+        :class:`Instance`
+            The instance.
         """
         resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), authenticated=False)
         return self.state.parser.parse_instance(resp)

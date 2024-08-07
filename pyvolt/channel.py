@@ -260,13 +260,27 @@ def _calculate_server_channel_permissions(
 class TextChannel(BaseChannel):
     """A channel that can have messages."""
 
+    def get_message(self, message_id: str, /) -> Message | None:
+        """Retrieves a channel message from cache.
+
+        Parameters
+        ----------
+        message_id: :class:`str`
+            The message ID.
+
+        Returns
+        -------
+        Optional[:class:`Message`]
+            The message or ``None`` if not found.
+        """
+        cache = self.state.cache
+        if not cache:
+            return
+        return cache.get_message(self.id, message_id, caching._USER_REQUEST)
+
     def _update(self, data: PartialChannel) -> None:
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
-
-    def typing(self) -> Typing:
-        """Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
-        return Typing(self.state.shard, self.id)
 
     @property
     def messages(self) -> Mapping[str, Message]:
@@ -401,6 +415,10 @@ class TextChannel(BaseChannel):
             interactions=interactions,
             silent=silent,
         )
+
+    def typing(self) -> Typing:
+        """Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
+        return Typing(self.state.shard, self.id)
 
 
 @define(slots=True)
