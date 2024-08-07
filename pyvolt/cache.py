@@ -34,6 +34,8 @@ from .enums import Enum
 from .user import User
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from .channel import DMChannel, GroupChannel, Channel
     from .message import Message
     from .read_state import ReadState
@@ -182,11 +184,11 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_channel(self, channel_id: str, ctx: BaseContext, /) -> Channel | None: ...
 
-    def get_all_channels(self, ctx: BaseContext, /) -> list[Channel]:
+    def get_all_channels(self, ctx: BaseContext, /) -> Sequence[Channel]:
         return list(self.get_channels_mapping().values())
 
     @abc.abstractmethod
-    def get_channels_mapping(self) -> dict[str, Channel]: ...
+    def get_channels_mapping(self) -> Mapping[str, Channel]: ...
 
     @abc.abstractmethod
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None: ...
@@ -195,7 +197,31 @@ class Cache(abc.ABC):
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None: ...
 
     @abc.abstractmethod
-    def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]: ...
+    def get_private_channels_mapping(self) -> Mapping[str, DMChannel | GroupChannel]: ...
+
+    ####################
+    # Channel Messages #
+    ####################
+    @abc.abstractmethod
+    def get_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> Message | None: ...
+
+    def get_all_messages_of(self, channel_id: str, ctx: BaseContext, /) -> Sequence[Message] | None:
+        ms = self.get_messages_mapping_of(channel_id, ctx)
+        if ms is None:
+            return None
+        return list(ms.values())
+
+    @abc.abstractmethod
+    def get_messages_mapping_of(self, channel_id: str, ctx: BaseContext, /) -> Mapping[str, Message] | None: ...
+
+    @abc.abstractmethod
+    def store_message(self, message: Message, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
+    def delete_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
+    def delete_messages_of(self, channel_id: str, ctx: BaseContext, /) -> None: ...
 
     ###############
     # Read States #
@@ -203,11 +229,11 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_read_state(self, channel_id: str, ctx: BaseContext, /) -> ReadState | None: ...
 
-    def get_all_read_states(self, ctx: BaseContext, /) -> list[ReadState]:
+    def get_all_read_states(self, ctx: BaseContext, /) -> Sequence[ReadState]:
         return list(self.get_read_states_mapping().values())
 
     @abc.abstractmethod
-    def get_read_states_mapping(self) -> dict[str, ReadState]: ...
+    def get_read_states_mapping(self) -> Mapping[str, ReadState]: ...
 
     @abc.abstractmethod
     def store_read_state(self, read_state: ReadState, ctx: BaseContext, /) -> None: ...
@@ -222,19 +248,19 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> Emoji | None: ...
 
-    def get_all_emojis(self, ctx: BaseContext, /) -> list[Emoji]:
+    def get_all_emojis(self, ctx: BaseContext, /) -> Sequence[Emoji]:
         return list(self.get_emojis_mapping().values())
 
     @abc.abstractmethod
-    def get_emojis_mapping(self) -> dict[str, Emoji]: ...
+    def get_emojis_mapping(self) -> Mapping[str, Emoji]: ...
 
     @abc.abstractmethod
     def get_server_emojis_mapping(
         self,
-    ) -> dict[str, dict[str, ServerEmoji]]: ...
+    ) -> Mapping[str, Mapping[str, ServerEmoji]]: ...
 
     @abc.abstractmethod
-    def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, ServerEmoji] | None: ...
+    def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> Mapping[str, ServerEmoji] | None: ...
 
     @abc.abstractmethod
     def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None: ...
@@ -252,11 +278,11 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_server(self, server_id: str, ctx: BaseContext, /) -> Server | None: ...
 
-    def get_all_servers(self, ctx: BaseContext, /) -> list[Server]:
+    def get_all_servers(self, ctx: BaseContext, /) -> Sequence[Server]:
         return list(self.get_servers_mapping().values())
 
     @abc.abstractmethod
-    def get_servers_mapping(self) -> dict[str, Server]: ...
+    def get_servers_mapping(self) -> Mapping[str, Server]: ...
 
     @abc.abstractmethod
     def store_server(self, server: Server, ctx: BaseContext, /) -> None: ...
@@ -270,14 +296,14 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_server_member(self, server_id: str, user_id: str, ctx: BaseContext, /) -> Member | None: ...
 
-    def get_all_server_members_of(self, server_id: str, ctx: BaseContext, /) -> list[Member] | None:
+    def get_all_server_members_of(self, server_id: str, ctx: BaseContext, /) -> Sequence[Member] | None:
         ms = self.get_server_members_mapping_of(server_id, ctx)
         if ms is None:
             return None
         return list(ms.values())
 
     @abc.abstractmethod
-    def get_server_members_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, Member] | None: ...
+    def get_server_members_mapping_of(self, server_id: str, ctx: BaseContext, /) -> Mapping[str, Member] | None: ...
 
     @abc.abstractmethod
     def bulk_store_server_members(
@@ -313,11 +339,11 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_user(self, user_id: str, ctx: BaseContext, /) -> User | None: ...
 
-    def get_all_users(self, ctx: BaseContext, /) -> list[User]:
+    def get_all_users(self, ctx: BaseContext, /) -> Sequence[User]:
         return list(self.get_users_mapping().values())
 
     @abc.abstractmethod
-    def get_users_mapping(self) -> dict[str, User]: ...
+    def get_users_mapping(self) -> Mapping[str, User]: ...
 
     @abc.abstractmethod
     def store_user(self, user: User, ctx: BaseContext, /) -> None: ...
@@ -331,11 +357,11 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> str | None: ...
 
-    def get_all_private_channels_by_users(self, ctx: BaseContext, /) -> list[str]:
+    def get_all_private_channels_by_users(self, ctx: BaseContext, /) -> Sequence[str]:
         return list(self.get_private_channels_by_users_mapping().values())
 
     @abc.abstractmethod
-    def get_private_channels_by_users_mapping(self) -> dict[str, str]: ...
+    def get_private_channels_by_users_mapping(self) -> Mapping[str, str]: ...
 
     @abc.abstractmethod
     def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None: ...
@@ -364,6 +390,24 @@ class EmptyCache(Cache):
 
     def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]:
         return {}
+
+    ####################
+    # Channel Messages #
+    ####################
+    def get_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> Message | None:
+        return None
+
+    def get_messages_mapping_of(self, channel_id: str, ctx: BaseContext, /) -> Mapping[str, Message] | None:
+        return None
+
+    def store_message(self, message: Message, ctx: BaseContext, /) -> None:
+        pass
+
+    def delete_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> None:
+        pass
+
+    def delete_messages_of(self, channel_id: str, ctx: BaseContext, /) -> None:
+        pass
 
     ###############
     # Read States #
@@ -517,75 +561,81 @@ def _put1(d: dict[str, V], k: str, v: V, max_size: int) -> None:
 
 
 class MapCache(Cache):
-    _channels: dict[str, Channel]
-    _channels_max_size: int
-    _read_states: dict[str, ReadState]
-    _read_states_max_size: int
-    _emojis: dict[str, Emoji]
-    _emojis_max_size: int
-    _server_emojis: dict[str, dict[str, ServerEmoji]]
-    _server_emojis_max_size: int
-    _servers: dict[str, Server]
-    _servers_max_size: int
-    _server_members: dict[str, dict[str, Member]]
-    _server_members_max_size: int
-    _users: dict[str, User]
-    _users_max_size: int
-    _private_channels_by_user: dict[str, str]
-    _private_channels_by_user_max_size: int
+    if typing.TYPE_CHECKING:
+        """_channels: dict[str, Channel]
+        _channels_max_size: int
+        _emojis: dict[str, Emoji]
+        _emojis_max_size: int
+        _private_channels_by_user: dict[str, str]
+        _private_channels_by_user_max_size: int
+        _read_states: dict[str, ReadState]
+        _read_states_max_size: int
+        _servers: dict[str, Server]
+        _servers_max_size: int
+        _server_emojis: dict[str, dict[str, ServerEmoji]]
+        _server_emojis_max_size: int
+        _server_members: dict[str, dict[str, Member]]
+        _server_members_max_size: int
+        _users: dict[str, User]
+        _users_max_size: int"""
 
     __slots__ = (
         '_channels',
         '_channels_max_size',
-        '_private_channels',
-        '_private_channels_max_size',
-        '_read_states',
-        '_read_states_max_size',
         '_emojis',
         '_emojis_max_size',
-        '_server_emojis',
-        '_server_emojis_max_size',
+        '_private_channels',
+        '_private_channels_by_user',
+        '_private_channels_by_user_max_size',
+        '_private_channels_max_size',
+        '_messages',
+        '_messages_max_size',
+        '_read_states',
+        '_read_states_max_size',
         '_servers',
         '_servers_max_size',
+        '_server_emojis',
+        '_server_emojis_max_size',
         '_server_members',
         '_server_members_max_size',
         '_users',
         '_users_max_size',
-        '_private_channels_by_user',
-        '_private_channels_by_user_max_size',
     )
 
     def __init__(
         self,
         *,
         channels_max_size: int = -1,
+        emojis_max_size: int = -1,
+        messages_max_size: int = 1000,
+        private_channels_by_user_max_size: int = -1,
         private_channels_max_size: int = -1,
         read_states_max_size: int = -1,
-        emojis_max_size: int = -1,
         server_emojis_max_size: int = -1,
-        servers_max_size: int = -1,
         server_members_max_size: int = -1,
+        servers_max_size: int = -1,
         users_max_size: int = -1,
-        private_channels_by_user_max_size: int = -1,
     ) -> None:
-        self._channels = {}
-        self._channels_max_size = channels_max_size
-        self._private_channels = {}
-        self._private_channels_max_size = private_channels_max_size
-        self._read_states = {}
-        self._read_states_max_size = read_states_max_size
-        self._emojis = {}
-        self._emojis_max_size = emojis_max_size
-        self._server_emojis = {}
-        self._server_emojis_max_size = server_emojis_max_size
-        self._servers = {}
-        self._servers_max_size = servers_max_size
-        self._server_members = {}
-        self._server_members_max_size = server_members_max_size
-        self._users = {}
-        self._users_max_size = users_max_size
-        self._private_channels_by_user = {}
-        self._private_channels_by_user_max_size = private_channels_by_user_max_size
+        self._channels: dict[str, Channel] = {}
+        self._channels_max_size: int = channels_max_size
+        self._emojis: dict[str, Emoji] = {}
+        self._emojis_max_size: int = emojis_max_size
+        self._private_channels: dict[str, DMChannel | GroupChannel] = {}
+        self._private_channels_by_user: dict[str, str] = {}
+        self._private_channels_by_user_max_size: int = private_channels_by_user_max_size
+        self._private_channels_max_size: int = private_channels_max_size
+        self._messages: dict[str, dict[str, Message]] = {}
+        self._messages_max_size = messages_max_size
+        self._read_states: dict[str, ReadState] = {}
+        self._read_states_max_size: int = read_states_max_size
+        self._servers: dict[str, Server] = {}
+        self._servers_max_size: int = servers_max_size
+        self._server_emojis: dict[str, dict[str, ServerEmoji]] = {}
+        self._server_emojis_max_size: int = server_emojis_max_size
+        self._server_members: dict[str, dict[str, Member]] = {}
+        self._server_members_max_size: int = server_members_max_size
+        self._users: dict[str, User] = {}
+        self._users_max_size: int = users_max_size
 
     ############
     # Channels #
@@ -610,6 +660,45 @@ class MapCache(Cache):
 
     def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]:
         return self._private_channels
+
+    ####################
+    # Channel Messages #
+    ####################
+    def get_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> Message | None:
+        messages = self._messages.get(channel_id)
+        if messages:
+            return messages.get(message_id)
+        return None
+
+    def get_messages_mapping_of(self, channel_id: str, ctx: BaseContext, /) -> dict[str, Message] | None:
+        return self._messages.get(channel_id)
+
+    def store_message(self, message: Message, ctx: BaseContext, /) -> None:
+        from .server import Member
+
+        author = message._author
+        if isinstance(author, Member):
+            self.store_server_member(author, ctx)
+            message._author = author.id
+        elif isinstance(author, User):
+            self.store_user(author, ctx)
+            message._author = author.id
+
+        d = self._messages.get(message.channel_id)
+        if d is None:
+            if self._messages_max_size == 0:
+                return
+            self._messages[message.channel_id] = {message.id: message}
+        else:
+            _put1(d, message.id, message, self._messages_max_size)
+
+    def delete_message(self, channel_id: str, message_id: str, ctx: BaseContext, /) -> None:
+        messages = self._messages.get(channel_id)
+        if messages:
+            messages.pop(message_id, None)
+
+    def delete_messages_of(self, channel_id: str, ctx: BaseContext, /) -> None:
+        self._messages.pop(channel_id, None)
 
     ###############
     # Read States #
@@ -740,9 +829,11 @@ class MapCache(Cache):
             member._user = member._user.id
         d = self._server_members.get(member.server_id)
         if d is None:
+            if self._server_members_max_size == 0:
+                return
             self._server_members[member.server_id] = {member.id: member}
         else:
-            d[member.id] = member
+            _put1(d, member.id, member, self._server_members_max_size)
 
     def delete_server_member(self, server_id: str, user_id: str, ctx: BaseContext, /) -> None:
         members = self._server_members.get(server_id)

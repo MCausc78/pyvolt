@@ -246,7 +246,7 @@ class ChannelDeleteEvent(BaseEvent):
                     cache.store_server(server, caching._CHANNEL_DELETE)
         elif isinstance(self.channel, DMChannel):
             cache.delete_private_channel_by_user(self.channel.recipient_id, caching._CHANNEL_DELETE)
-
+        cache.delete_messages_of(self.channel_id, caching._CHANNEL_DELETE)
         return True
 
 
@@ -364,6 +364,8 @@ class MessageCreateEvent(BaseEvent):
         ):
             channel.last_message_id = self.message.id
 
+        cache.store_message(self.message, caching._MESSAGE_CREATE)
+
         return True
 
 
@@ -374,16 +376,73 @@ class MessageUpdateEvent(BaseEvent):
     before: Message | None = field(repr=True, kw_only=True)
     after: Message | None = field(repr=True, kw_only=True)
 
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        before = cache.get_message(self.message.channel_id, self.message.id, caching._MESSAGE_UPDATE)
+        if not before:
+            return
+        self.before = before
+        after = copy(before)
+        after._update(self.message)
+        self.after = after
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.after:
+            return False
+        cache.store_message(self.after, caching._MESSAGE_UPDATE)
+        return True
+
 
 @define(slots=True)
 class MessageAppendEvent(BaseEvent):
     data: MessageAppendData = field(repr=True, kw_only=True)
+
+    message: Message | None = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        self.message = cache.get_message(self.data.channel_id, self.data.id, caching._MESSAGE_APPEND)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.message:
+            return False
+
+        self.message._append(self.data)
+        cache.store_message(self.message, caching._MESSAGE_APPEND)
+        return True
 
 
 @define(slots=True)
 class MessageDeleteEvent(BaseEvent):
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
+
+    message: Message | None = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_DELETE)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return False
+        cache.delete_message(self.channel_id, self.message_id, caching._MESSAGE_DELETE)
+        return True
 
 
 @define(slots=True)
@@ -395,6 +454,24 @@ class MessageReactEvent(BaseEvent):
     emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
+    message: Message | None = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_REACT)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.message:
+            return False
+        self.message._react(self.user_id, self.emoji)
+        cache.store_message(self.message, caching._MESSAGE_REACT)
+        return True
+
 
 @define(slots=True)
 class MessageUnreactEvent(BaseEvent):
@@ -405,6 +482,24 @@ class MessageUnreactEvent(BaseEvent):
     emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
+    message: Message | None = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_UNREACT)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.message:
+            return False
+        self.message._unreact(self.user_id, self.emoji)
+        cache.store_message(self.message, caching._MESSAGE_UNREACT)
+        return True
+
 
 @define(slots=True)
 class MessageClearReactionEvent(BaseEvent):
@@ -414,11 +509,53 @@ class MessageClearReactionEvent(BaseEvent):
     emoji: str = field(repr=True, kw_only=True)
     """May be either ULID or Unicode."""
 
+    message: Message | None = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_REACT)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.message:
+            return False
+        self.message._clear(self.emoji)
+        cache.store_message(self.message, caching._MESSAGE_REACT)
+        return True
+
 
 @define(slots=True)
 class BulkMessageDeleteEvent(BaseEvent):
     channel_id: str = field(repr=True, kw_only=True)
     message_ids: list[str] = field(repr=True, kw_only=True)
+
+    messages: list[Message] = field(repr=True, kw_only=True)
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+
+        for message_id in self.message_ids:
+            message = cache.get_message(self.channel_id, message_id, caching._MESSAGE_BULK_DELETE)
+            if message:
+                self.messages.append(message)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return False
+
+        for message_id in self.message_ids:
+            cache.delete_message(self.channel_id, message_id, caching._MESSAGE_BULK_DELETE)
+
+        return True
 
 
 @define(slots=True)

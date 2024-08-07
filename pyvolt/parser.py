@@ -406,6 +406,7 @@ class Parser:
             shard=shard,
             channel_id=d['channel'],
             message_ids=d['ids'],
+            messages=[],
         )
 
     def parse_category(self, d: raw.Category, /) -> Category:
@@ -836,6 +837,7 @@ class Parser:
                 channel_id=d['channel'],
                 internal_embeds=([self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED),
             ),
+            message=None,
         )
 
     def parse_message_channel_description_changed_system_event(
@@ -886,6 +888,7 @@ class Parser:
             shard=shard,
             channel_id=d['channel'],
             message_id=d['id'],
+            message=None,
         )
 
     def parse_message_event(self, shard: Shard, d: raw.ClientMessageEvent) -> MessageCreateEvent:
@@ -933,6 +936,7 @@ class Parser:
             message_id=d['id'],
             user_id=d['user_id'],
             emoji=d['emoji_id'],
+            message=None,
         )
 
     def parse_message_remove_reaction_event(
@@ -943,6 +947,7 @@ class Parser:
             channel_id=d['channel_id'],
             message_id=d['id'],
             emoji=d['emoji_id'],
+            message=None,
         )
 
     def parse_message_system_event(
@@ -969,6 +974,7 @@ class Parser:
             message_id=d['id'],
             user_id=d['user_id'],
             emoji=d['emoji_id'],
+            message=None,
         )
 
     def parse_message_update_event(self, shard: Shard, d: raw.ClientMessageUpdateEvent) -> MessageUpdateEvent:
