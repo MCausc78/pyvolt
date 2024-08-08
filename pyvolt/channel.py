@@ -319,7 +319,7 @@ class TextChannel(BaseChannel):
         Parameters
         ----------
         query: Optional[:class:`str`]
-            Full-text search query. See [MongoDB documentation](https://docs.mongodb.com/manual/text-search/#-text-operator) for more information.
+            Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]

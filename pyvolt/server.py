@@ -541,9 +541,9 @@ class BaseServer(Base):
         flags: :class:`UndefinedOr`[:class:`ServerFlags`]
             The new server flags. Can be passed only if you're privileged user.
         discoverable: :class:`UndefinedOr`[:class:`bool`]
-            Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg). Can be passed only if you're privileged user.
+            Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_. Can be passed only if you're privileged user.
         analytics: :class:`UndefinedOr`[:class:`bool`]
-            Whether analytics should be collected for this server. Must be enabled in order to show up on [Revolt Discover](https://rvlt.gg).
+            Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
 
         Raises
         ------

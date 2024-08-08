@@ -46,7 +46,6 @@ from .core import (
 from .emoji import Emoji
 from .events import BaseEvent
 from .http import HTTPClient
-from .message import Message
 from .parser import Parser
 from .read_state import ReadState
 from .server import Server
@@ -59,7 +58,53 @@ from .user import BaseUser, User, OwnUser
 if typing.TYPE_CHECKING:
     from types import TracebackType
     from typing_extensions import Self
+
     from . import raw
+    from .events import (
+        AuthenticatedEvent,
+        AuthifierEvent,
+        BaseChannelCreateEvent,
+        BaseEvent,
+        BulkMessageDeleteEvent,
+        ChannelDeleteEvent,
+        ChannelStartTypingEvent,
+        ChannelStopTypingEvent,
+        ChannelUpdateEvent,
+        GroupRecipientAddEvent,
+        GroupRecipientRemoveEvent,
+        LogoutEvent,
+        MessageAckEvent,
+        MessageAppendEvent,
+        MessageClearReactionEvent,
+        MessageCreateEvent,
+        MessageDeleteEvent,
+        MessageReactEvent,
+        MessageUnreactEvent,
+        MessageUpdateEvent,
+        PrivateChannelCreateEvent,
+        RawServerRoleUpdateEvent,
+        ReadyEvent,
+        ServerChannelCreateEvent,
+        ServerCreateEvent,
+        ServerDeleteEvent,
+        ServerEmojiCreateEvent,
+        ServerEmojiDeleteEvent,
+        ServerMemberJoinEvent,
+        ServerMemberRemoveEvent,
+        ServerMemberUpdateEvent,
+        ServerRoleDeleteEvent,
+        ServerUpdateEvent,
+        SessionCreateEvent,
+        SessionDeleteAllEvent,
+        SessionDeleteEvent,
+        UserPlatformWipeEvent,
+        UserRelationshipUpdateEvent,
+        UserSettingsUpdateEvent,
+        UserUpdateEvent,
+        WebhookCreateEvent,
+        WebhookDeleteEvent,
+        WebhookUpdateEvent,
+    )
 
 
 _L = logging.getLogger(__name__)
@@ -351,13 +396,7 @@ class EventSubscription(typing.Generic[EventT]):
         return self.callback(arg)
 
     async def _handle(self, arg: EventT, name: str, /) -> None:
-        try:
-            await utils._maybe_coroutine(self.callback, arg)
-        except Exception:
-            try:
-                await utils._maybe_coroutine(self.client.on_user_error, arg)
-            except Exception as exc:
-                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
+        await self.client._run_callback(self.callback, arg, name)
 
     def remove(self) -> None:
         """Removes the event subscription."""
@@ -540,7 +579,7 @@ class Client:
             )
         self._token = token
         self.bot = bot
-        self._subscribe_methods()
+        # self._subscribe_methods()
 
     def _get_i(self) -> int:
         self._i += 1
@@ -580,6 +619,17 @@ class Client:
 
         _L.exception('%s handler raised an exception', type, exc_info=exc)
 
+    async def _run_callback(
+        self, callback: Callable[[EventT], utils.MaybeAwaitable[None]], arg: EventT, name: str, /
+    ) -> None:
+        try:
+            await utils._maybe_coroutine(callback, arg)
+        except Exception:
+            try:
+                await utils._maybe_coroutine(self.on_user_error, arg)
+            except Exception as exc:
+                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
+
     async def _dispatch(self, types: list[type[BaseEvent]], event: BaseEvent, name: str, /) -> None:
         event.before_dispatch()
         await event.abefore_dispatch()
@@ -601,6 +651,12 @@ class Client:
 
             for handler in handlers.values():
                 await handler._handle(event, name)
+
+            event_name: str | None = getattr(type, 'event_name', None)
+            if event_name:
+                handler = getattr(self, 'on_' + event_name, None)
+                if handler:
+                    await self._run_callback(handler, event, name)
 
         if event.is_cancelled:
             _L.debug('%s processing was cancelled', event.__class__.__name__)
@@ -674,6 +730,7 @@ class Client:
 
         return decorator
 
+    """
     @staticmethod
     def listens_on(
         event: type[EventT],
@@ -696,6 +753,7 @@ class Client:
     def _subscribe_methods(self) -> None:
         for _, callback in inspect.getmembers(self, lambda func: hasattr(func, '__pyvolt_handles__')):
             self.subscribe(callback.__pyvolt_handles__, callback)
+    """
 
     def wait_for(
         self,
@@ -1172,6 +1230,51 @@ class Client:
             # NOTE: not true
             # > and `self.start` closes all sockets and the HTTPClient instance.
             return
+
+    if typing.TYPE_CHECKING:
+
+        def on_authenticated(self, arg: AuthenticatedEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_authifier(self, arg: AuthifierEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_create(self, arg: BaseChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_bulk_message_delete(self, arg: BulkMessageDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_delete(self, arg: ChannelDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_start_typing(self, arg: ChannelStartTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_stop_typing(self, arg: ChannelStopTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_update(self, arg: ChannelUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_recipient_add(self, arg: GroupRecipientAddEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_recipient_remove(self, arg: GroupRecipientRemoveEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_logout(self, arg: LogoutEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_ack(self, arg: MessageAckEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_append(self, arg: MessageAppendEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_clear_reaction(self, arg: MessageClearReactionEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_create(self, arg: MessageCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_delete(self, arg: MessageDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_react(self, arg: MessageReactEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_unreact(self, arg: MessageUnreactEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_update(self, arg: MessageUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_private_channel_create(self, arg: PrivateChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_raw_server_role_update(self, arg: RawServerRoleUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_ready(self, arg: ReadyEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_channel_create(self, arg: ServerChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_create(self, arg: ServerCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_delete(self, arg: ServerDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_emoji_create(self, arg: ServerEmojiCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_emoji_delete(self, arg: ServerEmojiDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_member_join(self, arg: ServerMemberJoinEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_member_remove(self, arg: ServerMemberRemoveEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_member_update(self, arg: ServerMemberUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_role_delete(self, arg: ServerRoleDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_update(self, arg: ServerUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_session_create(self, arg: SessionCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_session_delete_all(self, arg: SessionDeleteAllEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_session_delete(self, arg: SessionDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_user_platform_wipe(self, arg: UserPlatformWipeEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_user_relationship_update(self, arg: UserRelationshipUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_user_settings_update(self, arg: UserSettingsUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_user_update(self, arg: UserUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_webhook_create(self, arg: WebhookCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_webhook_delete(self, arg: WebhookDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_webhook_update(self, arg: WebhookUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
 
     async def create_group(
         self,

@@ -211,6 +211,9 @@ class ClientEmojiDeleteEvent(typing.TypedDict):
     id: str
 
 
+# This event is weird...
+# I would expect it to be dispatched to privileged users, but no.
+# It ISN'T dispatched in WebSocket, never.
 class ClientReportCreateEvent(CreatedReport):
     type: typing.Literal['ReportCreate']
 
@@ -345,7 +348,7 @@ ClientEvent = (
     | ClientUserPlatformWipeEvent
     | ClientEmojiCreateEvent
     | ClientEmojiDeleteEvent
-    | ClientReportCreateEvent
+    # | ClientReportCreateEvent
     | ClientChannelCreateEvent
     | ClientChannelUpdateEvent
     | ClientChannelDeleteEvent

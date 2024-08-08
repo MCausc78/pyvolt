@@ -68,6 +68,8 @@ from .webhook import Webhook, PartialWebhook
 
 @define(slots=True)
 class BaseEvent:
+    # event_name: typing.ClassVar[str] = ''
+
     shard: Shard = field(repr=True, kw_only=True)
     is_cancelled: bool = field(default=False, repr=True, kw_only=True)
 
@@ -101,6 +103,8 @@ class BaseEvent:
 
 @define(slots=True)
 class ReadyEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['ready']] = 'ready'
+
     users: list[User] = field(repr=True, kw_only=True)
     servers: list[Server] = field(repr=True, kw_only=True)
     channels: list[Channel] = field(repr=True, kw_only=True)
@@ -151,11 +155,13 @@ class ReadyEvent(BaseEvent):
 
 @define(slots=True)
 class BaseChannelCreateEvent(BaseEvent):
-    pass
+    event_name: typing.ClassVar[str] = 'channel_create'
 
 
 @define(slots=True)
 class PrivateChannelCreateEvent(BaseChannelCreateEvent):
+    event_name: typing.ClassVar[str] = 'private_channel_create'
+
     channel: PrivateChannel = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
@@ -174,6 +180,8 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
 
 @define(slots=True)
 class ServerChannelCreateEvent(BaseChannelCreateEvent):
+    event_name: typing.ClassVar[str] = 'server_channel_create'
+
     channel: ServerChannel = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
@@ -190,6 +198,8 @@ ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
 
 @define(slots=True)
 class ChannelUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['channel_update']] = 'channel_update'
+
     channel: PartialChannel = field(repr=True, kw_only=True)
 
     before: Channel | None = field(repr=True, kw_only=True)
@@ -218,6 +228,8 @@ class ChannelUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['channel_delete']] = 'channel_delete'
+
     channel_id: str = field(repr=True, kw_only=True)
 
     channel: Channel | None = field(repr=True, kw_only=True)
@@ -252,6 +264,8 @@ class ChannelDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientAddEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['recipient_add']] = 'recipient_add'
+
     channel_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
 
@@ -275,6 +289,8 @@ class GroupRecipientAddEvent(BaseEvent):
 
 @define(slots=True)
 class GroupRecipientRemoveEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['recipient_remove']] = 'recipient_remove'
+
     channel_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
 
@@ -298,18 +314,24 @@ class GroupRecipientRemoveEvent(BaseEvent):
 
 @define(slots=True)
 class ChannelStartTypingEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['channel_start_typing']] = 'channel_start_typing'
+
     channel_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class ChannelStopTypingEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['channel_stop_typing']] = 'channel_stop_typing'
+
     channel_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class MessageAckEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_ack']] = 'message_ack'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
@@ -336,6 +358,8 @@ class MessageAckEvent(BaseEvent):
 
 @define(slots=True)
 class MessageCreateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
+
     message: Message = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
@@ -371,6 +395,8 @@ class MessageCreateEvent(BaseEvent):
 
 @define(slots=True)
 class MessageUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_update']] = 'message_update'
+
     message: PartialMessage = field(repr=True, kw_only=True)
 
     before: Message | None = field(repr=True, kw_only=True)
@@ -400,6 +426,8 @@ class MessageUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class MessageAppendEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_append']] = 'message_append'
+
     data: MessageAppendData = field(repr=True, kw_only=True)
 
     message: Message | None = field(repr=True, kw_only=True)
@@ -424,6 +452,8 @@ class MessageAppendEvent(BaseEvent):
 
 @define(slots=True)
 class MessageDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_delete']] = 'message_delete'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
 
@@ -447,6 +477,8 @@ class MessageDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class MessageReactEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_react']] = 'message_react'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
@@ -475,6 +507,8 @@ class MessageReactEvent(BaseEvent):
 
 @define(slots=True)
 class MessageUnreactEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_unreact']] = 'message_unreact'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
@@ -503,6 +537,8 @@ class MessageUnreactEvent(BaseEvent):
 
 @define(slots=True)
 class MessageClearReactionEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['message_clear_reaction']] = 'message_clear_reaction'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_id: str = field(repr=True, kw_only=True)
 
@@ -530,6 +566,8 @@ class MessageClearReactionEvent(BaseEvent):
 
 @define(slots=True)
 class BulkMessageDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['bulk_message_delete']] = 'bulk_message_delete'
+
     channel_id: str = field(repr=True, kw_only=True)
     message_ids: list[str] = field(repr=True, kw_only=True)
 
@@ -560,6 +598,8 @@ class BulkMessageDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerCreateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_create']] = 'server_create'
+
     joined_at: datetime = field(repr=True, kw_only=True)
     server: Server = field(repr=True, kw_only=True)
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
@@ -597,6 +637,8 @@ class ServerCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiCreateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_emoji_create']] = 'server_emoji_create'
+
     emoji: ServerEmoji = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
@@ -609,6 +651,8 @@ class ServerEmojiCreateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerEmojiDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
+
     emoji: ServerEmoji | None = field(repr=True, kw_only=True)
     server_id: str | None = field(repr=True, kw_only=True)
     emoji_id: str = field(repr=True, kw_only=True)
@@ -631,6 +675,8 @@ class ServerEmojiDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_update']] = 'server_update'
+
     server: PartialServer = field(repr=True, kw_only=True)
 
     before: Server | None = field(repr=True, kw_only=True)
@@ -659,6 +705,8 @@ class ServerUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_delete']] = 'server_delete'
+
     server_id: str = field(repr=True, kw_only=True)
     server: Server | None = field(repr=True, kw_only=True)
 
@@ -680,6 +728,8 @@ class ServerDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberJoinEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_member_join']] = 'server_member_join'
+
     member: Member = field(repr=True, kw_only=True)
 
     def process(self) -> bool:
@@ -692,6 +742,8 @@ class ServerMemberJoinEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_member_update']] = 'server_member_update'
+
     member: PartialMember = field(repr=True, kw_only=True)
 
     before: Member | None = field(repr=True, kw_only=True)
@@ -720,6 +772,8 @@ class ServerMemberUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerMemberRemoveEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_member_remove']] = 'server_member_remove'
+
     server_id: str = field(repr=True, kw_only=True)
     user_id: str = field(repr=True, kw_only=True)
 
@@ -751,6 +805,8 @@ class ServerMemberRemoveEvent(BaseEvent):
 
 @define(slots=True)
 class RawServerRoleUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['raw_server_role_update']] = 'raw_server_role_update'
+
     role: PartialRole = field(repr=True, kw_only=True)
 
     old_role: Role | None = field(repr=True, kw_only=True)
@@ -780,6 +836,8 @@ class RawServerRoleUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class ServerRoleDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['server_role_delete']] = 'server_role_delete'
+
     server_id: str = field(repr=True, kw_only=True)
     role_id: str = field(repr=True, kw_only=True)
 
@@ -807,6 +865,8 @@ class ServerRoleDeleteEvent(BaseEvent):
 
 @define(slots=True)
 class UserUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['user_update']] = 'user_update'
+
     user: PartialUser = field(repr=True, kw_only=True)
 
     before: User | None = field(repr=True, kw_only=True)
@@ -835,6 +895,8 @@ class UserUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class UserRelationshipUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['user_relationship_update']] = 'user_relationship_update'
+
     current_user_id: str = field(repr=True, kw_only=True)
     """The current user ID."""
 
@@ -883,6 +945,8 @@ class UserRelationshipUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class UserSettingsUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['user_settings_update']] = 'user_settings_update'
+
     """User settings were updated remotely."""
 
     current_user_id: str = field(repr=True, kw_only=True)
@@ -903,6 +967,8 @@ class UserSettingsUpdateEvent(BaseEvent):
 
 @define(slots=True)
 class UserPlatformWipeEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['user_platform_wipe']] = 'user_platform_wipe'
+
     """
     User has been platform banned or deleted their account.
 
@@ -921,50 +987,61 @@ class UserPlatformWipeEvent(BaseEvent):
 
 @define(slots=True)
 class WebhookCreateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['webhook_create']] = 'webhook_create'
     webhook: Webhook = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class WebhookUpdateEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['webhook_update']] = 'webhook_update'
+
     new_webhook: PartialWebhook = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class WebhookDeleteEvent(BaseEvent):
+    event_name: typing.ClassVar[typing.Literal['webhook_delete']] = 'webhook_delete'
+
     webhook: Webhook | None = field(repr=True, kw_only=True)
     webhook_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class AuthifierEvent(BaseEvent):
-    pass
+    event_name: typing.ClassVar[str] = 'authifier'
 
 
 @define(slots=True)
 class SessionCreateEvent(AuthifierEvent):
+    event_name: typing.ClassVar[str] = 'session_create'
+
     session: Session = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class SessionDeleteEvent(AuthifierEvent):
+    event_name: typing.ClassVar[str] = 'session_delete'
+
     user_id: str = field(repr=True, kw_only=True)
     session_id: str = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class SessionDeleteAllEvent(AuthifierEvent):
+    event_name: typing.ClassVar[str] = 'session_delete_all'
+
     user_id: str = field(repr=True, kw_only=True)
     exclude_session_id: str | None = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
 class LogoutEvent(BaseEvent):
-    pass
+    event_name: typing.ClassVar[str] = 'logout'
 
 
 @define(slots=True)
 class AuthenticatedEvent(BaseEvent):
-    pass
+    event_name: typing.ClassVar[str] = 'authenticated'
 
 
 __all__ = (

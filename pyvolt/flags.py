@@ -227,25 +227,27 @@ class BaseFlags:
         """Copies the flag value."""
         return self.__class__(self.value)
 
-    def is_subset(self, other: Self) -> bool:
+    def _value_of(self, other: flag[Self] | Self | int, /) -> int:
+        if isinstance(other, int):
+            return other
+        elif isinstance(other, (flag, self.__class__)):
+            return other.value
+        else:
+            raise TypeError(f'cannot get {other.__class__.__name__} value')
+
+    def is_subset(self, other: Self | flag[Self] | int) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or fewer flags as other."""
-        if isinstance(other, self.__class__):
-            return (self.value & other.value) == self.value
-        else:
-            raise TypeError(f'cannot compare {self.__class__.__name__} with {other.__class__.__name__}')
+        return (self.value & self._value_of(other)) == self.value
 
-    def is_superset(self, other: Self) -> bool:
+    def is_superset(self, other: Self | flag[Self] | int) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or more flags as other."""
-        if isinstance(other, self.__class__):
-            return (self.value | other.value) == self.value
-        else:
-            raise TypeError(f'cannot compare {self.__class__.__name__} with {other.__class__.__name__}')
+        return (self.value | self._value_of(other)) == self.value
 
-    def is_strict_subset(self, other: Self) -> bool:
+    def is_strict_subset(self, other: Self | flag[Self] | int) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict subset of those on self."""
         return self.is_subset(other) and self != other
 
-    def is_strict_superset(self, other: Self) -> bool:
+    def is_strict_superset(self, other: Self | flag[Self] | int) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict superset of those on self."""
         return self.is_superset(other) and self != other
 
@@ -254,25 +256,21 @@ class BaseFlags:
     __lt__ = is_strict_subset
     __gt__ = is_strict_superset
 
-    def __and__(self, other: Self | int, /) -> Self:
-        if isinstance(other, self.__class__):
-            other = other.value
-        return self.__class__(self.value & other)
+    def __and__(self, other: Self | flag[Self] | int, /) -> Self:
+        return self.__class__(self.value & self._value_of(other))
 
     def __bool__(self) -> bool:
         return self.value != self.NONE_VALUE
 
-    def __contains__(self, other: Self, /) -> bool:
-        return (self.value & other.value) == other.value
+    def __contains__(self, other: Self | flag[Self] | int, /) -> bool:
+        ov = self._value_of(other)
+        return (self.value & ov) == ov
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, self.__class__) and self.value == other.value
 
-    def __iand__(self, other: Self | int, /) -> Self:
-        if isinstance(other, int):
-            self.value &= other
-        else:
-            self.value &= other.value
+    def __iand__(self, other: Self | flag[Self] | int, /) -> Self:
+        self.value &= self._value_of(other)
         return self
 
     def __int___(self) -> int:
@@ -283,32 +281,22 @@ class BaseFlags:
         max_value = -1 + (1 << max_bits)
         return self.from_value(self.value ^ max_value)
 
-    def __ior__(self, other: Self | int, /) -> Self:
-        if isinstance(other, int):
-            self.value |= other
-        else:
-            self.value |= other.value
+    def __ior__(self, other: Self | flag[Self] | int, /) -> Self:
+        self.value |= self._value_of(other)
         return self
 
-    def __ixor__(self, other: Self | int, /) -> Self:
-        if isinstance(other, int):
-            self.value ^= other
-        else:
-            self.value ^= other.value
+    def __ixor__(self, other: Self | flag[Self] | int, /) -> Self:
+        self.value ^= self._value_of(other)
         return self
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __or__(self, other: Self | int, /) -> Self:
-        if isinstance(other, self.__class__):
-            other = other.value
-        return self.__class__(self.value | other)
+    def __or__(self, other: Self | flag[Self] | int, /) -> Self:
+        return self.__class__(self.value | self._value_of(other))
 
-    def __xor__(self, other: Self | int, /) -> Self:
-        if isinstance(other, self.__class__):
-            other = other.value
-        return self.__class__(self.value ^ other)
+    def __xor__(self, other: Self | flag[Self] | int, /) -> Self:
+        return self.__class__(self.value ^ self._value_of(other))
 
 
 def doc_flags(
