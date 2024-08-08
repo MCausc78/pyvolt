@@ -90,7 +90,11 @@ class Typing(contextlib.AbstractAsyncContextManager):
 class BaseChannel(Base, abc.ABC):
     """Representation of channel on Revolt."""
 
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseChannel) and self.id == other.id
+
     def message(self, message: ULIDOr[BaseMessage]) -> BaseMessage:
+        """:class:`BaseMessage`: Returns a partial message with specified ID."""
         from .message import BaseMessage
 
         return BaseMessage(state=self.state, id=resolve_id(message), channel_id=self.id)

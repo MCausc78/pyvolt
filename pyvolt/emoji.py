@@ -47,6 +47,9 @@ class BaseEmoji(Base):
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether the emoji is marked as NSFW."""
 
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseEmoji) and self.id == other.id
+
     def __str__(self) -> str:
         return f':{self.id}:'
 

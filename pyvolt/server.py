@@ -169,12 +169,10 @@ class BaseRole(Base):
     server_id: str = field(repr=True, kw_only=True)
 
     def __hash__(self) -> int:
-        return hash((self.server_id, self.id))
+        return hash(self.id)
 
     def __eq__(self, other: object) -> bool:
-        return (
-            self is other or isinstance(other, BaseRole) and (self.id == other.id and self.server_id == other.server_id)
-        )
+        return self is other or isinstance(other, BaseRole) and self.id == other.id
 
     async def delete(self) -> None:
         """|coro|
@@ -337,22 +335,6 @@ class Role(BaseRole):
 class BaseServer(Base):
     """Base representation of a server on Revolt."""
 
-    @property
-    def emojis(self) -> Mapping[str, ServerEmoji]:
-        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
-
-    @property
-    def members(self) -> Mapping[str, Member]:
-        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
-
     def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
         """Retrieves a server emoji from cache.
 
@@ -390,6 +372,25 @@ class BaseServer(Base):
         if not cache:
             return
         return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseServer) and self.id == other.id
+
+    @property
+    def emojis(self) -> Mapping[str, ServerEmoji]:
+        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
+
+    @property
+    def members(self) -> Mapping[str, Member]:
+        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        cache = self.state.cache
+        if cache:
+            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
+        return {}
 
     async def add_bot(
         self,

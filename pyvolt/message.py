@@ -563,7 +563,7 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -669,7 +669,7 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -814,7 +814,7 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -873,7 +873,7 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -932,7 +932,7 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
@@ -1000,7 +1000,7 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_by(self) -> User | None:
@@ -1056,7 +1056,7 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_by(self) -> User | None:
@@ -1108,7 +1108,7 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_by(self) -> User | None:
@@ -1179,7 +1179,7 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_from(self) -> User | None:
@@ -1260,7 +1260,7 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_by(self) -> User | Member | None:
@@ -1328,7 +1328,7 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
-    message: Message = field(repr=False, hash=False, kw_only=True, eq=False)
+    message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
     def get_by(self) -> User | Member | None:

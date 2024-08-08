@@ -39,6 +39,9 @@ if typing.TYPE_CHECKING:
 class BaseBot(Base):
     """Base representation of a bot on Revolt."""
 
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseBot) and self.id == other.id
+
     async def delete(self) -> None:
         """|coro|
 
