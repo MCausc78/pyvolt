@@ -72,7 +72,6 @@ from .embed import (
     BandcampEmbedSpecial,
     AppleMusicEmbedSpecial,
     StreamableEmbedSpecial,
-    ImageSize,
     ImageEmbed,
     VideoEmbed,
     WebsiteEmbed,

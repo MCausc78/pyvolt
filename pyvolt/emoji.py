@@ -27,7 +27,8 @@ from __future__ import annotations
 from attrs import define, field
 
 from .base import Base
-from .cdn import AssetMetadataType, AssetMetadata, Asset
+from .cdn import AssetMetadata, Asset
+from .enums import AssetMetadataType
 
 
 @define(slots=True)
