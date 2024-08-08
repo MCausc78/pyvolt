@@ -105,6 +105,7 @@ if typing.TYPE_CHECKING:
         WebhookDeleteEvent,
         WebhookUpdateEvent,
     )
+    from .message import Message
 
 
 _L = logging.getLogger(__name__)
@@ -599,6 +600,7 @@ class Client:
     async def on_user_error(self, event: BaseEvent) -> None:
         """Handles user errors that came from handlers.
         You can get current exception being raised via :func:`sys.exc_info`.
+
         By default, this logs exception.
         """
         _, exc, _ = sys.exc_info()
@@ -658,13 +660,27 @@ class Client:
                 if handler:
                     await self._run_callback(handler, event, name)
 
+        handler = getattr(self, 'on_event', None)
+        if handler:
+            await self._run_callback(handler, event, name)
+
         if event.is_cancelled:
             _L.debug('%s processing was cancelled', event.__class__.__name__)
-            return
+        else:
+            _L.debug('Processing %s', event.__class__.__name__)
+            event.process()
+            await event.aprocess()
 
-        _L.debug('Processing %s', event.__class__.__name__)
-        event.process()
-        await event.aprocess()
+        hook = getattr(event, 'call_object_handlers_hook', None)
+        if not hook:
+            return
+        try:
+            await hook(self)
+        except Exception:
+            try:
+                await utils._maybe_coroutine(self.on_user_error, event)
+            except Exception as exc:
+                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
 
     def dispatch(self, event: BaseEvent) -> asyncio.Task[None]:
         """Dispatches a event.
@@ -1233,6 +1249,8 @@ class Client:
 
     if typing.TYPE_CHECKING:
 
+        def on_event(self, arg: BaseEvent, /) -> utils.MaybeAwaitable[None]: ...
+
         def on_authenticated(self, arg: AuthenticatedEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_authifier(self, arg: AuthifierEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_create(self, arg: BaseChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
@@ -1252,6 +1270,7 @@ class Client:
         def on_message_react(self, arg: MessageReactEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_message_unreact(self, arg: MessageUnreactEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_message_update(self, arg: MessageUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message(self, arg: Message, /) -> utils.MaybeAwaitable[None]: ...
         def on_private_channel_create(self, arg: PrivateChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_raw_server_role_update(self, arg: RawServerRoleUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_ready(self, arg: ReadyEvent, /) -> utils.MaybeAwaitable[None]: ...

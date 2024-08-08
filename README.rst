@@ -36,14 +36,13 @@ Quick Example
 
 .. code:: py
 
-    from pyvolt import Client, ReadyEvent, MessageCreateEvent
+    from pyvolt import Client
 
     class MyClient(Client):
         async def on_ready(self, _, /):
             print('Logged on as', self.me)
 
-        async def on_message_create(self, event, /):
-            message = event.message
+        async def on_message(self, message, /):
             # don't respond to ourselves
             if message.author_id == self.me.id:
                 return

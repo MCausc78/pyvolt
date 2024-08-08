@@ -29,9 +29,7 @@ from copy import copy
 from datetime import datetime
 import typing
 
-from . import cache as caching
-
-from .authentication import Session
+from . import cache as caching, utils
 from .channel import (
     PartialChannel,
     SavedMessagesChannel,
@@ -44,7 +42,6 @@ from .channel import (
 )
 from .emoji import ServerEmoji, DetachedEmoji
 from .enums import MemberRemovalIntention, RelationshipStatus
-from .message import PartialMessage, MessageAppendData, Message
 from .read_state import ReadState
 from .server import (
     PartialRole,
@@ -54,16 +51,21 @@ from .server import (
     PartialMember,
     Member,
 )
-from .shard import Shard
-from .user_settings import UserSettings
 from .user import (
-    UserFlags,
     Relationship,
     PartialUser,
     User,
     OwnUser,
 )
-from .webhook import Webhook, PartialWebhook
+
+if typing.TYPE_CHECKING:
+    from .authentication import Session
+    from .client import Client
+    from .flags import UserFlags
+    from .message import PartialMessage, MessageAppendData, Message
+    from .webhook import Webhook, PartialWebhook
+    from .shard import Shard
+    from .user_settings import UserSettings
 
 
 @define(slots=True)
@@ -391,6 +393,10 @@ class MessageCreateEvent(BaseEvent):
         cache.store_message(self.message, caching._MESSAGE_CREATE)
 
         return True
+
+    def call_object_handlers_hook(self, client: Client) -> utils.MaybeAwaitable[None]:
+        if hasattr(client, 'on_message'):
+            return client.on_message(self.message)
 
 
 @define(slots=True)
