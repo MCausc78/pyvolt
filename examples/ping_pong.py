@@ -1,6 +1,5 @@
 import pyvolt
 
-import pyvolt
 
 # Whether the example should be ran as a user account or not
 self_bot = False
