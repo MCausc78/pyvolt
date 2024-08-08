@@ -675,7 +675,7 @@ class Client:
         if not hook:
             return
         try:
-            await hook(self)
+            await utils._maybe_coroutine(hook, self)
         except Exception:
             try:
                 await utils._maybe_coroutine(self.on_user_error, event)

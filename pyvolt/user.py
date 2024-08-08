@@ -229,6 +229,9 @@ class BaseUser(Base):
         """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""
         return self is self.state.system
 
+    def __eq__(self, other: object) -> bool:
+        return self is other or isinstance(other, BaseUser) and self.id == other.id
+
     @property
     def mention(self) -> str:
         """:class:`str`: The user mention."""
