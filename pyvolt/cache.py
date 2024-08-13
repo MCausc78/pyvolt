@@ -561,24 +561,6 @@ def _put1(d: dict[str, V], k: str, v: V, max_size: int) -> None:
 
 
 class MapCache(Cache):
-    if typing.TYPE_CHECKING:
-        """_channels: dict[str, Channel]
-        _channels_max_size: int
-        _emojis: dict[str, Emoji]
-        _emojis_max_size: int
-        _private_channels_by_user: dict[str, str]
-        _private_channels_by_user_max_size: int
-        _read_states: dict[str, ReadState]
-        _read_states_max_size: int
-        _servers: dict[str, Server]
-        _servers_max_size: int
-        _server_emojis: dict[str, dict[str, ServerEmoji]]
-        _server_emojis_max_size: int
-        _server_members: dict[str, dict[str, Member]]
-        _server_members_max_size: int
-        _users: dict[str, User]
-        _users_max_size: int"""
-
     __slots__ = (
         '_channels',
         '_channels_max_size',
@@ -644,7 +626,7 @@ class MapCache(Cache):
     def get_channel(self, channel_id: str, ctx: BaseContext, /) -> Channel | None:
         return self._channels.get(channel_id)
 
-    def get_channels_mapping(self) -> dict[str, Channel]:
+    def get_channels_mapping(self) -> Mapping[str, Channel]:
         return self._channels
 
     def store_channel(self, channel: Channel, ctx: BaseContext, /) -> None:
@@ -658,7 +640,7 @@ class MapCache(Cache):
     def delete_channel(self, channel_id: str, ctx: BaseContext, /) -> None:
         self._channels.pop(channel_id, None)
 
-    def get_private_channels_mapping(self) -> dict[str, DMChannel | GroupChannel]:
+    def get_private_channels_mapping(self) -> Mapping[str, DMChannel | GroupChannel]:
         return self._private_channels
 
     ####################
@@ -670,7 +652,7 @@ class MapCache(Cache):
             return messages.get(message_id)
         return None
 
-    def get_messages_mapping_of(self, channel_id: str, ctx: BaseContext, /) -> dict[str, Message] | None:
+    def get_messages_mapping_of(self, channel_id: str, ctx: BaseContext, /) -> Mapping[str, Message] | None:
         return self._messages.get(channel_id)
 
     def store_message(self, message: Message, ctx: BaseContext, /) -> None:
@@ -706,7 +688,7 @@ class MapCache(Cache):
     def get_read_state(self, channel_id: str, ctx: BaseContext, /) -> ReadState | None:
         return self._read_states.get(channel_id)
 
-    def get_read_states_mapping(self) -> dict[str, ReadState]:
+    def get_read_states_mapping(self) -> Mapping[str, ReadState]:
         return self._read_states
 
     def store_read_state(self, read_state: ReadState, ctx: BaseContext, /) -> None:
@@ -727,28 +709,30 @@ class MapCache(Cache):
     def get_emoji(self, emoji_id: str, ctx: BaseContext, /) -> Emoji | None:
         return self._emojis.get(emoji_id)
 
-    def get_emojis_mapping(self) -> dict[str, Emoji]:
+    def get_emojis_mapping(self) -> Mapping[str, Emoji]:
         return self._emojis
 
     def get_server_emojis_mapping(
         self,
-    ) -> dict[str, dict[str, ServerEmoji]]:
+    ) -> Mapping[str, Mapping[str, ServerEmoji]]:
         return self._server_emojis
 
-    def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, ServerEmoji] | None:
+    def get_server_emojis_mapping_of(self, server_id: str, ctx: BaseContext, /) -> Mapping[str, ServerEmoji] | None:
         return self._server_emojis.get(server_id)
 
     def delete_server_emojis_of(self, server_id: str, ctx: BaseContext, /) -> None:
-        self._server_emojis.pop(server_id)
+        self._server_emojis.pop(server_id, None)
 
     def store_emoji(self, emoji: Emoji, ctx: BaseContext, /) -> None:
         if isinstance(emoji, ServerEmoji):
             server_id = emoji.server_id
             if _put0(self._server_emojis, server_id, self._server_emojis_max_size):
-                self._server_emojis[server_id] = {
-                    **self._server_emojis.get(server_id, {}),
-                    emoji.id: emoji,
-                }
+                se = self._server_emojis
+                s = se.get(server_id)
+                if s is not None:
+                    s[emoji.id] = emoji
+                else:
+                    se[server_id] = {emoji.id: emoji}
         _put1(self._emojis, emoji.id, emoji, self._emojis_max_size)
 
     def delete_emoji(self, emoji_id: str, server_id: str | None, ctx: BaseContext, /) -> None:
@@ -772,7 +756,7 @@ class MapCache(Cache):
     def get_server(self, server_id: str, ctx: BaseContext, /) -> Server | None:
         return self._servers.get(server_id)
 
-    def get_servers_mapping(self) -> dict[str, Server]:
+    def get_servers_mapping(self) -> Mapping[str, Server]:
         return self._servers
 
     def store_server(self, server: Server, ctx: BaseContext, /) -> None:
@@ -798,7 +782,7 @@ class MapCache(Cache):
             return None
         return d.get(user_id)
 
-    def get_server_members_mapping_of(self, server_id: str, ctx: BaseContext, /) -> dict[str, Member] | None:
+    def get_server_members_mapping_of(self, server_id: str, ctx: BaseContext, /) -> Mapping[str, Member] | None:
         return self._server_members.get(server_id)
 
     def bulk_store_server_members(
@@ -850,13 +834,13 @@ class MapCache(Cache):
     def get_user(self, user_id: str, ctx: BaseContext, /) -> User | None:
         return self._users.get(user_id)
 
-    def get_users_mapping(self) -> dict[str, User]:
+    def get_users_mapping(self) -> Mapping[str, User]:
         return self._users
 
     def store_user(self, user: User, ctx: BaseContext, /) -> None:
         _put1(self._users, user.id, user, self._users_max_size)
 
-    def bulk_store_users(self, users: dict[str, User], ctx: BaseContext, /) -> None:
+    def bulk_store_users(self, users: Mapping[str, User], ctx: BaseContext, /) -> None:
         self._users.update(users)
 
     ############################
@@ -865,7 +849,7 @@ class MapCache(Cache):
     def get_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> str | None:
         return self._private_channels_by_user.get(user_id)
 
-    def get_private_channels_by_users_mapping(self) -> dict[str, str]:
+    def get_private_channels_by_users_mapping(self) -> Mapping[str, str]:
         return self._private_channels_by_user
 
     def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseContext, /) -> None:
