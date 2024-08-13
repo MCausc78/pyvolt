@@ -27,7 +27,6 @@ from __future__ import annotations
 import aiohttp
 import asyncio
 import builtins
-from collections.abc import Callable, Coroutine, Generator, Mapping
 import inspect
 from functools import wraps
 import logging
@@ -47,15 +46,14 @@ from .emoji import Emoji
 from .events import BaseEvent
 from .http import HTTPClient
 from .parser import Parser
-from .read_state import ReadState
 from .server import Server
 from .shard import EventHandler, Shard
 from .state import State
-from .user_settings import UserSettings
 from .user import BaseUser, User, OwnUser
 
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Generator, Mapping
     from types import TracebackType
     from typing_extensions import Self
 
@@ -106,6 +104,8 @@ if typing.TYPE_CHECKING:
         WebhookUpdateEvent,
     )
     from .message import Message
+    from .read_state import ReadState
+    from .user_settings import UserSettings
 
 
 _L = logging.getLogger(__name__)

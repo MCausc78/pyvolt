@@ -59,4 +59,12 @@ Links
 
 - `Documentation <https://pyvolt.readthedocs.io/en/latest/index.html>`_
 - `Official Revolt Server <https://rvlt.gg/ZZQb4sxx>`_
-- `Revolt API <https://rvlt.gg/API>`_
+- `Revolt API <https://rvlt.gg/API>`
+
+Why Not
+-------
+
+- `pyrevolt <https://github.com/GenericNerd/pyrevolt>`_ - Doesn't follow PEP8 and does a ton of requests on startup (not member list).
+- `voltage <https://github.com/EnokiUN/voltage>`_ - Slow and simply copypasta from ``revolt.py``.
+- `revolt.py <https://github.com/revoltchat/revolt.py>`_ - Slow and unable to disable member list loading.
+- `luster <https://github.com/nerdguyahmad/luster>`_ - Unmaintained library.
