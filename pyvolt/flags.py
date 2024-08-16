@@ -26,6 +26,7 @@ BF = typing.TypeVar('BF', bound='BaseFlags')
 class flag(typing.Generic[BF]):
     __slots__ = (
         '_func',
+        '_parent',
         'doc',
         'name',
         'value',
@@ -36,6 +37,7 @@ class flag(typing.Generic[BF]):
 
     def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
         self._func: Callable[[BF], int] = MISSING
+        self._parent: type[BF] = MISSING
         self.doc: str | None = None
         self.name: str = ''
         self.value: int = 0
@@ -64,6 +66,18 @@ class flag(typing.Generic[BF]):
     def __set__(self, instance: BF, value: bool) -> None:
         instance._set(self, value)
 
+    def __and__(self, other: BF | flag[BF] | int, /) -> BF:
+        return self._parent(self.value) & other
+
+    def __int___(self) -> int:
+        return self.value
+
+    def __or__(self, other: BF | flag[BF] | int, /) -> BF:
+        return self._parent(self.value) | other
+
+    def __xor__(self, other: BF | flag[BF] | int, /) -> BF:
+        return self._parent(self.value) ^ other
+
 
 class BaseFlags:
     """Base class for flags."""
@@ -90,6 +104,7 @@ class BaseFlags:
                     continue
                 valid_flags[f.name] = f.value
                 flags[f.name] = f
+                f._parent = cls
 
         default = 0
         if inverted:
@@ -328,21 +343,15 @@ def doc_flags(
             Returns a {cls.__name__} instance with all enabled flags from
             both x and y.
 
-            .. versionadded:: 2.0
-
         .. describe:: x & y, x &= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             both x and y.
 
-            .. versionadded:: 2.0
-
         .. describe:: x ^ y, x ^= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             only one of x or y, not on both.
-
-            .. versionadded:: 2.0
 
         .. describe:: ~x
             Returns a {cls.__name__} instance with all flags inverted from x.
@@ -388,12 +397,10 @@ class BotFlags(BaseFlags, support_kwargs=False):
 class MessageFlags(BaseFlags, support_kwargs=False):
     __slots__ = ()
 
-    SUPPRESS_NOTIFICATIONS = 1 << 0
-
     @flag()
     def suppress_notifications(cls) -> int:
         """:class:`bool`: Whether the message will not send push/desktop notifications."""
-        return cls.SUPPRESS_NOTIFICATIONS
+        return 1 << 0
 
 
 @doc_flags('Wraps up a Permission flag value.')

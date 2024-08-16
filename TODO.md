@@ -24,6 +24,14 @@
 
   Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L513C11-L513C49
 
+* TODO: is this pyright bug?
+
+  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L1411C19-L1411C45
+
+* TODO: is this pyright bug?
+
+  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L3504C19-L3504C45
+
 * TODO: Handle 10053?
 
   Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/shard.py#L365C19-L365C38

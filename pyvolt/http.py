@@ -1408,7 +1408,8 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS
+                # TODO: is this pyright bug?
+                flags |= MessageFlags.suppress_notifications.value
 
         if flags is not None:
             payload['flags'] = flags
@@ -3500,7 +3501,8 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                flags |= MessageFlags.SUPPRESS_NOTIFICATIONS
+                # TODO: is this pyright bug?
+                flags |= MessageFlags.suppress_notifications.value
 
         if flags is not None:
             payload['flags'] = flags
