@@ -59,7 +59,7 @@ Links
 
 - `Documentation <https://pyvolt.readthedocs.io/en/latest/index.html>`_
 - `Official Revolt Server <https://rvlt.gg/ZZQb4sxx>`_
-- `Revolt API <https://rvlt.gg/API>`
+- `Revolt API <https://rvlt.gg/API>`_
 
 Why Not
 -------
