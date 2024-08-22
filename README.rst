@@ -10,7 +10,7 @@ Key Features
 -------------
 
 - Built on ``asyncio``.
-- Probably handles ratelimiting.
+- Sane rate limit handling that prevents 429s
 - Fast. Really faster than Revolt.py and voltage.
 - Low memory usage.
 - Customizable architecture. Build object parser in Rust to achieve high speeds.

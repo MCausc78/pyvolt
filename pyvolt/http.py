@@ -141,27 +141,61 @@ class RateLimit(ABC):
     remaining: int
 
     @abstractmethod
-    async def block(self) -> None: ...
+    async def block(self) -> None:
+        """If necessary, this method must calculate delay and sleep."""
+        ...
 
     @abstractmethod
-    def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None: ...
+    def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+        """Called when any response from Revolt API is received.
+
+        This has same note as :meth:`RateLimiter.on_response`.
+
+        This is called only if bucket was already present and ratelimiter wants
+        to resync data.
+        """
+        ...
 
 
 class RateLimiter(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None: ...
+    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+        """Optional[:class:`.RateLimit`]: Must return ratelimit information, if available."""
+        ...
 
     @abstractmethod
-    async def on_response(
-        self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /
-    ) -> None: ...
+    async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+        """Called when any response from Revolt API is received.
+
+        .. note::
+            This is called when request fails for other reasons like failed validation,
+            invalid token, something not found, etc.
+        """
+        ...
 
     @abstractmethod
     def on_bucket_update(
         self, response: aiohttp.ClientResponse, path: str, old_bucket: str, new_bucket: str, /
-    ) -> None: ...
+    ) -> None:
+        """Called when path updates their bucket key.
+
+        The :meth:`default implementation <DefaultRateLimiter.on_bucket_update>` will remove old
+        bucket from internal mapping.
+
+        Parameters
+        ----------
+        response: :class:`aiohttp.ClientResponse`
+            The response.
+        path: :class:`str`
+            The path.
+        old_bucket: :class:`str`
+            The old bucket key.
+        new_bucket: :class:`str`
+            The new bucket key.
+        """
+        ...
 
 
 # (bucket, limit, remaining, reset-after)
