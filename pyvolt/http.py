@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import aiohttp
 import asyncio
 from datetime import datetime, timedelta
@@ -133,19 +134,144 @@ _STATUS_TO_ERRORS = {
 }
 
 
+class RateLimit(ABC):
+    __slots__ = ()
+
+    bucket: str
+    remaining: int
+
+    @abstractmethod
+    async def block(self) -> None: ...
+
+    @abstractmethod
+    def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None: ...
+
+
+class RateLimiter(ABC):
+    __slots__ = ()
+
+    @abstractmethod
+    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None: ...
+
+    @abstractmethod
+    async def on_response(
+        self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /
+    ) -> None: ...
+
+    @abstractmethod
+    def on_bucket_update(
+        self, response: aiohttp.ClientResponse, path: str, old_bucket: str, new_bucket: str, /
+    ) -> None: ...
+
+
+# (bucket, limit, remaining, reset-after)
+class DefaultRateLimit(RateLimit):
+    __slots__ = (
+        '_rate_limiter',
+        'bucket',
+        'remaining',
+        '_expires_at',
+    )
+
+    def __init__(self, rate_limiter: RateLimiter, bucket: str, /, *, remaining: int, reset_after: int) -> None:
+        self._rate_limiter: RateLimiter = rate_limiter
+        self.bucket: str = bucket
+        self.remaining: int = remaining
+        self._expires_at: datetime = utils.utcnow() + timedelta(milliseconds=reset_after)
+
+    async def block(self) -> None:
+        if self.remaining == 0:
+            now = utils.utcnow()
+
+            delay = (self._expires_at - now).total_seconds()
+            if delay > 0:
+                _L.debug('Bucket %s is ratelimited locally for %.4f; sleeping', self.bucket, delay)
+                await asyncio.sleep(delay)
+            else:
+                # getting here means someone fucking up ratelimit info.
+                # 429 is unavoidable in this case.
+                _L.warning('Bucket %s has 0 remaining requests, expect 429!', self.bucket)
+
+    def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+        headers = response.headers
+        bucket = headers['x-ratelimit-bucket']
+        if self.bucket != bucket:
+            _L.warning('%s changed ratelimit bucket key: %s -> %s.', response.url, self.bucket, bucket)
+            self.bucket = bucket
+            self._rate_limiter.on_bucket_update(response, path, self.bucket, bucket)
+
+        # (bucket, limit, remaining, reset-after)
+        self.remaining = int(headers['x-ratelimit-remaining'])
+        self._expires_at = utils.utcnow() + timedelta(milliseconds=int(headers['x-ratelimit-reset-after']))
+
+
+class DefaultRateLimiter(RateLimiter):
+    __slots__ = (
+        '_ratelimits',
+        '_routes_to_bucket',
+    )
+
+    def __init__(self) -> None:
+        self._ratelimits: dict[str, RateLimit] = {}
+        self._routes_to_bucket: dict[str, str] = {}
+
+    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+        try:
+            bucket = self._routes_to_bucket[path]
+        except KeyError:
+            return None
+        else:
+            return self._ratelimits[bucket]
+
+    async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+        headers = response.headers
+
+        try:
+            bucket = headers['x-ratelimit-bucket']
+        except KeyError:
+            # Thanks Cloudflare
+            return
+
+        remaining = int(headers['x-ratelimit-remaining'])
+        reset_after = int(headers['x-ratelimit-reset-after'])
+
+        try:
+            ratelimit = self._ratelimits[bucket]
+        except KeyError:
+            if _L.isEnabledFor(logging.DEBUG):
+                _L.debug('%s found initial bucket key: %s.', path, bucket)
+            ratelimit = DefaultRateLimit(
+                self,
+                bucket,
+                remaining=remaining,
+                reset_after=reset_after,
+            )
+            self._ratelimits[ratelimit.bucket] = ratelimit
+            self._routes_to_bucket[path] = bucket
+        else:
+            ratelimit.on_response(route, path, response)
+
+    def on_bucket_update(
+        self, response: aiohttp.ClientResponse, path: str, old_bucket: str, new_bucket: str, /
+    ) -> None:
+        self._ratelimits[new_bucket] = self._ratelimits.pop(old_bucket)
+        self._routes_to_bucket[path] = new_bucket
+
+
 class HTTPClient:
     """The Revolt HTTP API client."""
 
     # To prevent unexpected 200's with HTML page the user must pass cookie with ``cf_clearance`` key.
 
     __slots__ = (
-        'token',
-        'bot',
-        'state',
+        '_base',
         '_session',
-        'base',
+        'bot',
         'cookie',
         'max_retries',
+        'rate_limiter',
+        'state',
+        'token',
         'user_agent',
     )
 
@@ -157,21 +283,22 @@ class HTTPClient:
         bot: bool = True,
         cookie: str | None = None,
         max_retries: int | None = None,
+        rate_limiter: UndefinedOr[RateLimiter | None] = UNDEFINED,
         state: State,
         session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
         user_agent: str | None = None,
     ) -> None:
-        self.token = token
-        self.bot = bot
-
-        self.state = state
         if base is None:
             base = 'https://api.revolt.chat'
-        self._session = session
-        self.base = base
-        self.cookie = cookie
-        self.max_retries = max_retries or 3
-        self.user_agent = user_agent or DEFAULT_HTTP_USER_AGENT
+        self._base: str = base.rstrip('/')
+        self.bot = bot
+        self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
+        self.cookie: str | None = cookie
+        self.max_retries: int = max_retries or 3
+        self.rate_limiter: RateLimiter | None = DefaultRateLimiter() if rate_limiter is UNDEFINED else rate_limiter
+        self.state: State = state
+        self.token = token
+        self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
 
     def url_for(self, route: routes.CompiledRoute) -> str:
         """Returns a URL for route.
@@ -186,7 +313,7 @@ class HTTPClient:
         :class:`str`
             The URL for the route.
         """
-        return self.base.rstrip('/') + route.build()
+        return self._base + route.build()
 
     def with_credentials(self, token: str, *, bot: bool = True) -> None:
         """Modifies HTTP client credentials.
@@ -262,10 +389,18 @@ class HTTPClient:
             kwargs['data'] = utils.to_json(json)
 
         method = route.route.method
-        url = self.url_for(route)
+        path = route.build()
+        url = self._base + path
+
+        rate_limiter = self.rate_limiter
 
         while True:
-            _L.debug('sending request to %s %s with %s', method, url, kwargs.get('data'))
+            if rate_limiter:
+                rate_limit = rate_limiter.fetch_ratelimit_for(route, path)
+                if rate_limit:
+                    await rate_limit.block()
+
+            _L.debug('Sending request to %s %s with %s', method, path, kwargs.get('data'))
 
             session = self._session
             if callable(session):
@@ -290,8 +425,11 @@ class HTTPClient:
                     continue
                 raise
 
+            if rate_limiter:
+                await rate_limiter.on_response(route, path, response)
+
             if response.status >= 400:
-                _L.debug('%s %s has returned %s', method, url, kwargs.get('data'), response.status)
+                _L.debug('%s %s has returned %s', method, path, response.status)
 
                 if response.status == 502:
                     if retries >= self.max_retries:
@@ -305,7 +443,7 @@ class HTTPClient:
                         else:
                             retry_after = 1
                         _L.debug(
-                            'ratelimited on %s %s, retrying in %.3f seconds',
+                            'Ratelimited on %s %s, retrying in %.3f seconds',
                             method,
                             url,
                             retry_after,
@@ -4090,4 +4228,12 @@ class HTTPClient:
         await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), params=params)
 
 
-__all__ = ('DEFAULT_HTTP_USER_AGENT', '_STATUS_TO_ERRORS', 'HTTPClient')
+__all__ = (
+    'DEFAULT_HTTP_USER_AGENT',
+    '_STATUS_TO_ERRORS',
+    'RateLimit',
+    'RateLimiter',
+    'DefaultRateLimit',
+    'DefaultRateLimiter',
+    'HTTPClient',
+)
