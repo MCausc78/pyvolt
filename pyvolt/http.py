@@ -157,12 +157,29 @@ class RateLimit(ABC):
         ...
 
 
+class RateLimitBlocker(ABC):
+    __slots__ = ()
+
+    async def increment(self) -> None:
+        """Increments pending requests counter."""
+        pass
+
+    async def decrement(self) -> None:
+        """Decrements pending requests counter."""
+        pass
+
+
 class RateLimiter(ABC):
     __slots__ = ()
 
     @abstractmethod
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
         """Optional[:class:`.RateLimit`]: Must return ratelimit information, if available."""
+        ...
+
+    @abstractmethod
+    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str) -> RateLimitBlocker:
+        """:class:`.RateLimitBlocker`: Returns request blocker."""
         ...
 
     @abstractmethod
@@ -198,7 +215,6 @@ class RateLimiter(ABC):
         ...
 
 
-# (bucket, limit, remaining, reset-after)
 class DefaultRateLimit(RateLimit):
     __slots__ = (
         '_rate_limiter',
@@ -215,7 +231,8 @@ class DefaultRateLimit(RateLimit):
 
     @utils.copy_doc(RateLimit.block)
     async def block(self) -> None:
-        if self.remaining == 0:
+        self.remaining -= 1
+        if self.remaining <= 0:
             now = utils.utcnow()
 
             delay = (self._expires_at - now).total_seconds()
@@ -241,24 +258,72 @@ class DefaultRateLimit(RateLimit):
         self._expires_at = utils.utcnow() + timedelta(milliseconds=int(headers['x-ratelimit-reset-after']))
 
 
+class DefaultRateLimitBlocker(RateLimitBlocker):
+    __slots__ = ('_lock',)
+
+    def __init__(self) -> None:
+        self._lock: asyncio.Lock = asyncio.Lock()
+
+    @utils.copy_doc(RateLimitBlocker.increment)
+    async def increment(self) -> None:
+        await self._lock.acquire()
+
+    @utils.copy_doc(RateLimitBlocker.decrement)
+    async def decrement(self) -> None:
+        self._lock.release()
+
+
+class _NoopRateLimitBlocker(RateLimitBlocker):
+    __slots__ = ()
+
+    def __init__(self) -> None:
+        pass
+
+    async def increment(self) -> None:
+        pass
+
+    async def decrement(self) -> None:
+        pass
+
+
 class DefaultRateLimiter(RateLimiter):
     __slots__ = (
+        '_no_concurrent_block',
+        '_noop_blocker',
+        '_pending_requests',
         '_ratelimits',
         '_routes_to_bucket',
     )
 
-    def __init__(self) -> None:
+    def __init__(self, *, no_concurrent_block: bool = False) -> None:
+        self._no_concurrent_block: bool = no_concurrent_block
+        self._noop_blocker: RateLimitBlocker = _NoopRateLimitBlocker()
+        self._pending_requests: dict[tuple[str, str], RateLimitBlocker] = {}
         self._ratelimits: dict[str, RateLimit] = {}
-        self._routes_to_bucket: dict[str, str] = {}
+        self._routes_to_bucket: dict[tuple[str, str], str] = {}
 
     @utils.copy_doc(RateLimiter.fetch_ratelimit_for)
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+        key = (route.route.method, path)
         try:
-            bucket = self._routes_to_bucket[path]
+            bucket = self._routes_to_bucket[key]
         except KeyError:
             return None
         else:
             return self._ratelimits[bucket]
+
+    @utils.copy_doc(RateLimiter.fetch_blocker_for)
+    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str) -> RateLimitBlocker:
+        if self._no_concurrent_block:
+            return self._noop_blocker
+
+        key = (route.route.method, path)
+        try:
+            return self._pending_requests[key]
+        except KeyError:
+            blocker = DefaultRateLimitBlocker()
+            self._pending_requests[key] = blocker
+            return blocker
 
     @utils.copy_doc(RateLimiter.on_response)
     async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
@@ -277,7 +342,7 @@ class DefaultRateLimiter(RateLimiter):
             ratelimit = self._ratelimits[bucket]
         except KeyError:
             if _L.isEnabledFor(logging.DEBUG):
-                _L.debug('%s found initial bucket key: %s.', path, bucket)
+                _L.debug('%s %s found initial bucket key: %s.', route.route.method, path, bucket)
             ratelimit = DefaultRateLimit(
                 self,
                 bucket,
@@ -285,7 +350,7 @@ class DefaultRateLimiter(RateLimiter):
                 reset_after=reset_after,
             )
             self._ratelimits[ratelimit.bucket] = ratelimit
-            self._routes_to_bucket[path] = bucket
+            self._routes_to_bucket[(route.route.method, path)] = bucket
         else:
             ratelimit.on_response(route, path, response)
 
@@ -294,7 +359,7 @@ class DefaultRateLimiter(RateLimiter):
         self, response: aiohttp.ClientResponse, path: str, old_bucket: str, new_bucket: str, /
     ) -> None:
         self._ratelimits[new_bucket] = self._ratelimits.pop(old_bucket)
-        self._routes_to_bucket[path] = new_bucket
+        self._routes_to_bucket[(response.method, path)] = new_bucket
 
 
 class HTTPClient:
@@ -437,7 +502,17 @@ class HTTPClient:
             if rate_limiter:
                 rate_limit = rate_limiter.fetch_ratelimit_for(route, path)
                 if rate_limit:
+                    blocker: RateLimitBlocker | None = None
+                else:
+                    blocker = rate_limiter.fetch_blocker_for(route, path)
+                    await blocker.increment()
+
+                    rate_limit = rate_limiter.fetch_ratelimit_for(route, path)
+
+                if rate_limit:
                     await rate_limit.block()
+            else:
+                blocker = None
 
             _L.debug('Sending request to %s %s with %s', method, path, kwargs.get('data'))
 
@@ -466,6 +541,8 @@ class HTTPClient:
 
             if rate_limiter:
                 await rate_limiter.on_response(route, path, response)
+                if blocker:
+                    await blocker.decrement()
 
             if response.status >= 400:
                 _L.debug('%s %s has returned %s', method, path, response.status)
@@ -4271,8 +4348,11 @@ __all__ = (
     'DEFAULT_HTTP_USER_AGENT',
     '_STATUS_TO_ERRORS',
     'RateLimit',
+    'RateLimitBlocker',
     'RateLimiter',
     'DefaultRateLimit',
+    'DefaultRateLimitBlocker',
+    '_NoopRateLimitBlocker',
     'DefaultRateLimiter',
     'HTTPClient',
 )
