@@ -83,6 +83,28 @@ async def _maybe_coroutine(f: MaybeAwaitableFunc[P, T], *args: P.args, **kwargs:
         return value
 
 
+def copy_doc(original: Callable[..., typing.Any]) -> Callable[[T], T]:
+    """A decorator that copies documentation.
+
+    Parameters
+    ----------
+    original: Callable[..., typing.Any]
+        The function to copy documentation from.
+
+    Returns
+    -------
+    Callable[[T], T]
+        The decorated function with copied documentation.
+    """
+
+    def decorator(overridden: T) -> T:
+        overridden.__doc__ = original.__doc__
+        overridden.__signature__ = inspect.signature(original)  # type: ignore
+        return overridden
+
+    return decorator
+
+
 _TRUE: typing.Literal['true'] = 'true'
 _FALSE: typing.Literal['false'] = 'false'
 
@@ -252,6 +274,7 @@ __all__ = (
     'to_json',
     'from_json',
     '_maybe_coroutine',
+    'copy_doc',
     '_bool',
     '_json_or_text',
     'utcnow',

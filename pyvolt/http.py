@@ -170,7 +170,7 @@ class RateLimiter(ABC):
         """Called when any response from Revolt API is received.
 
         .. note::
-            This is called when request fails for other reasons like failed validation,
+            This is always called, even when request fails for other reasons like failed validation,
             invalid token, something not found, etc.
         """
         ...
@@ -213,6 +213,7 @@ class DefaultRateLimit(RateLimit):
         self.remaining: int = remaining
         self._expires_at: datetime = utils.utcnow() + timedelta(milliseconds=reset_after)
 
+    @utils.copy_doc(RateLimit.block)
     async def block(self) -> None:
         if self.remaining == 0:
             now = utils.utcnow()
@@ -226,13 +227,14 @@ class DefaultRateLimit(RateLimit):
                 # 429 is unavoidable in this case.
                 _L.warning('Bucket %s has 0 remaining requests, expect 429!', self.bucket)
 
+    @utils.copy_doc(RateLimit.on_response)
     def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
         headers = response.headers
         bucket = headers['x-ratelimit-bucket']
         if self.bucket != bucket:
             _L.warning('%s changed ratelimit bucket key: %s -> %s.', response.url, self.bucket, bucket)
-            self.bucket = bucket
             self._rate_limiter.on_bucket_update(response, path, self.bucket, bucket)
+            self.bucket = bucket
 
         # (bucket, limit, remaining, reset-after)
         self.remaining = int(headers['x-ratelimit-remaining'])
@@ -249,6 +251,7 @@ class DefaultRateLimiter(RateLimiter):
         self._ratelimits: dict[str, RateLimit] = {}
         self._routes_to_bucket: dict[str, str] = {}
 
+    @utils.copy_doc(RateLimiter.fetch_ratelimit_for)
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
         try:
             bucket = self._routes_to_bucket[path]
@@ -257,6 +260,7 @@ class DefaultRateLimiter(RateLimiter):
         else:
             return self._ratelimits[bucket]
 
+    @utils.copy_doc(RateLimiter.on_response)
     async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
         headers = response.headers
 
@@ -285,6 +289,7 @@ class DefaultRateLimiter(RateLimiter):
         else:
             ratelimit.on_response(route, path, response)
 
+    @utils.copy_doc(RateLimiter.on_bucket_update)
     def on_bucket_update(
         self, response: aiohttp.ClientResponse, path: str, old_bucket: str, new_bucket: str, /
     ) -> None:
