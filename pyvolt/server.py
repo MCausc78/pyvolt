@@ -1028,7 +1028,10 @@ class BaseMember:
 
     def __eq__(self, other: object) -> bool:
         return (
-            self is other or isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id
+            self is other
+            or (isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id)
+            or isinstance(other, BaseUser)
+            and self.id == other.id
         )
 
     def __hash__(self) -> int:
