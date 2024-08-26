@@ -152,7 +152,7 @@ class UserSettings:
     def get(self, key: str, default: str, /) -> str: ...
 
     def get(self, key: str, *default: str) -> str | None:
-        """Get a user setting."""
+        """Optional[:class:`str`]: Get a user setting."""
         if key in self.data:
             return self.data[key][1]
         return default[0] if default else None
@@ -192,7 +192,7 @@ class AndroidUserSettings:
         '_avatar_radius',
     )
 
-    def __init__(self, parent: UserSettings) -> None:
+    def __init__(self, parent: UserSettings, /) -> None:
         self.parent: UserSettings = parent
         payload: raw.AndroidUserSettings = utils.from_json(parent.get('android', '{}'))
         self._payload: raw.AndroidUserSettings = payload

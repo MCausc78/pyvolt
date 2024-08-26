@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 # Thanks Danny:
+# - setup_logging, copy_doc
 # - https://github.com/Rapptz/discord.py/blob/041abf8b487038c2935da668405ba8b0686ff2f8/discord/utils.py#L77-L82
 # - https://github.com/Rapptz/discord.py/blob/041abf8b487038c2935da668405ba8b0686ff2f8/discord/utils.py#L641-L653
 # - https://github.com/Rapptz/discord.py/blob/ff638d393d0f5a83639ccc087bec9bf588b59a22/discord/utils.py#L1253-L1374

@@ -143,7 +143,8 @@ class ShardError(PyvoltError):
 class AuthenticationError(ShardError):
     __slots__ = ()
 
-    def __init__(self, a: typing.Any) -> None:
+    def __init__(self, a: typing.Any, /) -> None:
+        self.message: typing.Any = a
         super().__init__('Failed to connect shard', a)
 
 
