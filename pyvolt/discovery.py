@@ -271,6 +271,9 @@ class ThemeSearchResult:
     """All of tags that listed themes have."""
 
 
+DISCOVERY_BUILD_ID: str = 'OddIUaX26creykRzYdVYw'
+
+
 class DiscoveryClient:
     __slots__ = (
         '_base',
@@ -279,15 +282,15 @@ class DiscoveryClient:
     )
 
     def __init__(self, *, base: str | None = None, session: aiohttp.ClientSession, state: State) -> None:
-        self._base = 'https://rvlt.gg/_next/data/OddIUaX26creykRzYdVYw/' if base is None else base.rstrip('/') + '/'
-        self.session = session
-        self.state = state
+        self._base: str = f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base is None else base.rstrip('/')
+        self.session: aiohttp.ClientSession = session
+        self.state: State = state
 
     async def _request(self, method: str, path: str, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
         headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
         headers.update(kwargs.pop('headers', {}))
-        response = await self.session.request(method, self._base + path.lstrip('/'), headers=headers, **kwargs)
+        response = await self.session.request(method, self._base + path, headers=headers, **kwargs)
         if response.status >= 400:
             body = await utils._json_or_text(response)
             raise DiscoveryError(response, response.status, body)
@@ -439,5 +442,6 @@ __all__ = (
     'ServerSearchResult',
     'BotSearchResult',
     'ThemeSearchResult',
+    'DISCOVERY_BUILD_ID',
     'DiscoveryClient',
 )
