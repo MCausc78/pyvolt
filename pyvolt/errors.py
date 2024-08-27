@@ -64,6 +64,7 @@ class HTTPException(PyvoltError):
         self,
         response: Response,
         data: dict[str, typing.Any] | str,
+        /,
         *,
         message: str | None = None,
     ) -> None:
@@ -151,7 +152,7 @@ class AuthenticationError(ShardError):
 class ConnectError(ShardError):
     __slots__ = ('errors',)
 
-    def __init__(self, tries: int, errors: list[Exception]) -> None:
+    def __init__(self, tries: int, errors: list[Exception], /) -> None:
         self.errors = errors
         super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
 
@@ -164,11 +165,25 @@ class DiscoveryError(PyvoltError):
         response: aiohttp.ClientResponse,
         status: int,
         data: str,
+        /,
     ) -> None:
-        self.response = response
-        self.status = status
-        self.data = data
+        self.response: aiohttp.ClientResponse = response
+        self.status: int = status
+        self.data: str = data
         super().__init__(status, data)
+
+
+# Thanks Danny for docs
+class InvalidData(PyvoltError):
+    """Exception that's raised when the library encounters unknown
+    or invalid data from Revolt.
+    """
+
+    __slots__ = ('reason',)
+
+    def __init__(self, reason: str, /) -> None:
+        self.reason: str = reason
+        super().__init__(reason)
 
 
 class NoData(PyvoltError):
@@ -193,5 +208,6 @@ __all__ = (
     'AuthenticationError',
     'ConnectError',
     'DiscoveryError',
+    'InvalidData',
     'NoData',
 )

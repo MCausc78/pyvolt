@@ -27,12 +27,13 @@ from __future__ import annotations
 import aiohttp
 from attrs import define, field
 import logging
+import re
 import typing
 
 from . import utils
 from .bot import BaseBot
 from .core import UNDEFINED, UndefinedOr, __version__ as version
-from .errors import DiscoveryError
+from .errors import DiscoveryError, InvalidData
 from .server import ServerFlags, BaseServer
 
 if typing.TYPE_CHECKING:
@@ -271,7 +272,9 @@ class ThemeSearchResult:
     """All of tags that listed themes have."""
 
 
-DISCOVERY_BUILD_ID: str = 'OddIUaX26creykRzYdVYw'
+DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'
+
+RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s+"([0-9A-Za-z]+)"')
 
 
 class DiscoveryClient:
@@ -286,15 +289,66 @@ class DiscoveryClient:
         self.session: aiohttp.ClientSession = session
         self.state: State = state
 
+    def with_base(self, base: str, /) -> None:
+        self._base = base.rstrip('/')
+
+    async def fetch_build_id(self) -> str:
+        """|coro|
+
+        Retrieves latest discover client build ID.
+
+        .. note::
+            This always retrieves **only from** `official Discover instance <https://rvlt.gg/>`_.
+
+        Raises
+        ------
+        DiscoveryError
+            Fetching the main page failed.
+        InvalidData
+            If library is unable look up build ID.
+
+        Returns
+        -------
+        :class:`str`
+            The build ID.
+        """
+        async with self.session.get('https://rvlt.gg/discover/servers') as response:
+            data = await utils._json_or_text(response)
+            if response.status != 200:
+                data = await utils._json_or_text(response)
+                raise DiscoveryError(response, response.status, data)
+            match = RE_DISCOVERY_BUILD_ID.findall(data)
+            if not match:
+                raise InvalidData(
+                    f'Unable to find build ID. Please file an issue on https://github.com/MCausc78/pyvolt with following data: {data}'
+                )
+            return match[0]
+
     async def _request(self, method: str, path: str, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
         headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
         headers.update(kwargs.pop('headers', {}))
         response = await self.session.request(method, self._base + path, headers=headers, **kwargs)
         if response.status >= 400:
-            body = await utils._json_or_text(response)
-            raise DiscoveryError(response, response.status, body)
+            data = await utils._json_or_text(response)
+            raise DiscoveryError(response, response.status, data)
         return response
+
+    async def use_latest_build_id(self) -> str:
+        """|coro|
+
+        Retrieves latest discover client build ID and uses it.
+
+        This follows same exceptions and notes as :meth:`.fetch_build_id`.
+
+        Returns
+        -------
+        :class:`str`
+            The build ID.
+        """
+        build_id = await self.fetch_build_id()
+        self.base = f'https://rvlt.gg/_next/data/{build_id}'
+        return build_id
 
     async def request(self, method: str, path: str, **kwargs) -> typing.Any:
         response = await self._request(method, path, **kwargs)
@@ -443,5 +497,6 @@ __all__ = (
     'BotSearchResult',
     'ThemeSearchResult',
     'DISCOVERY_BUILD_ID',
+    'RE_DISCOVERY_BUILD_ID',
     'DiscoveryClient',
 )
