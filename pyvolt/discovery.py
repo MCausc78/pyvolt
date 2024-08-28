@@ -274,7 +274,7 @@ class ThemeSearchResult:
 
 DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'
 
-RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s+"([0-9A-Za-z]+)"')
+RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":"([0-9A-Za-z_-]+)"')
 
 
 class DiscoveryClient:
@@ -347,7 +347,7 @@ class DiscoveryClient:
             The build ID.
         """
         build_id = await self.fetch_build_id()
-        self.base = f'https://rvlt.gg/_next/data/{build_id}'
+        self._base = f'https://rvlt.gg/_next/data/{build_id}'
         return build_id
 
     async def request(self, method: str, path: str, **kwargs) -> typing.Any:
@@ -361,6 +361,11 @@ class DiscoveryClient:
         """|coro|
 
         Retrieves servers on a main page.
+
+        Raises
+        ------
+        DiscoveryError
+            Getting the servers failed.
 
         Returns
         -------
@@ -376,6 +381,11 @@ class DiscoveryClient:
         """|coro|
 
         Retrieves bots on a main page.
+
+        Raises
+        ------
+        DiscoveryError
+            Getting the bots failed.
 
         Returns
         -------
@@ -393,6 +403,11 @@ class DiscoveryClient:
         """|coro|
 
         Retrieves themes on a main page.
+
+        Raises
+        ------
+        DiscoveryError
+            Getting the themes failed.
 
         Returns
         -------
@@ -413,6 +428,11 @@ class DiscoveryClient:
         ----------
         query: :class:`str`
             The query to search for.
+
+        Raises
+        ------
+        DiscoveryError
+            Searching failed.
 
         Returns
         -------
@@ -441,6 +461,11 @@ class DiscoveryClient:
         query: :class:`str`
             The query to search for.
 
+        Raises
+        ------
+        DiscoveryError
+            Searching failed.
+
         Returns
         -------
         :class:`BotSearchResult`
@@ -467,6 +492,11 @@ class DiscoveryClient:
         ----------
         query: :class:`str`
             The query to search for.
+
+        Raises
+        ------
+        DiscoveryError
+            Searching failed.
 
         Returns
         -------
