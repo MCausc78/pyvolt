@@ -140,8 +140,6 @@ class BaseFlags:
 
             cls.__init__ = init_without_kwargs  # type: ignore
 
-        cls.__slots__ = ('value',)
-
         if cls.INVERTED:
             cls._get = cls._get1
             cls._set = cls._set1
