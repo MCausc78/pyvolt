@@ -274,7 +274,7 @@ class ThemeSearchResult:
 
 DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'
 
-RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":"([0-9A-Za-z_-]+)"')
+RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"')
 
 
 class DiscoveryClient:
