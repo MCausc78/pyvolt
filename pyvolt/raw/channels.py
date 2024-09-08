@@ -59,7 +59,9 @@ class VoiceChannel(typing.TypedDict):
     nsfw: typing.NotRequired[bool]
 
 
-Channel = SavedMessagesChannel | DirectMessageChannel | GroupChannel | TextChannel | VoiceChannel
+PrivateChannel = SavedMessagesChannel | DirectMessageChannel | GroupChannel
+ServerChannel = TextChannel | VoiceChannel
+Channel = PrivateChannel | ServerChannel
 
 
 class PartialChannel(typing.TypedDict):
@@ -128,6 +130,8 @@ __all__ = (
     'GroupChannel',
     'TextChannel',
     'VoiceChannel',
+    'PrivateChannel',
+    'ServerChannel',
     'Channel',
     'PartialChannel',
     'FieldsChannel',

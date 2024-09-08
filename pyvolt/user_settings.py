@@ -48,6 +48,8 @@ if typing.TYPE_CHECKING:
     from .server import BaseServer
     from .state import State
 
+D = typing.TypeVar('D')
+
 
 class UserSettings:
     """Represents Revolt user settings.
@@ -71,6 +73,7 @@ class UserSettings:
         'partial',
         '_android',
         '_revite',
+        '_jolt',
     )
 
     def __init__(
@@ -101,6 +104,8 @@ class UserSettings:
                 self._android._update(android_payload)
             if isinstance(self._revite, ReviteUserSettings):
                 self._revite._update(partial, full=False)
+            if isinstance(self._jolt, JoltUserSettings):
+                self._jolt._update(partial, full=False)
         else:
             try:
                 self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
@@ -111,6 +116,11 @@ class UserSettings:
                 self._revite: ReviteUserSettings | Exception = ReviteUserSettings(self)
             except Exception as exc:
                 self._revite = exc
+
+            try:
+                self._jolt: JoltUserSettings | Exception = JoltUserSettings(self)
+            except Exception as exc:
+                self._jolt = exc
 
     def _update(self, partial: UserSettings) -> None:
         self.data.update(partial.data)
@@ -142,20 +152,27 @@ class UserSettings:
             raise self._revite from None
         return self._revite
 
+    @property
+    def jolt(self) -> JoltUserSettings:
+        """:class:`JoltUserSettings`: The Jolt user settings.
+
+        Raises
+        ------
+        Exception
+            If user settings are corrupted.
+        """
+        if isinstance(self._jolt, Exception):
+            raise self._jolt from None
+        return self._jolt
+
     def __getitem__(self, key: str) -> str:
         return self.data[key][1]
 
-    @typing.overload
-    def get(self, key: str) -> str | None: ...
-
-    @typing.overload
-    def get(self, key: str, default: str, /) -> str: ...
-
-    def get(self, key: str, *default: str) -> str | None:
-        """Optional[:class:`str`]: Get a user setting."""
+    def get(self, key: str, default: D = None) -> str | D:
+        """Unionl[:class:`str`, D]: Get a user setting."""
         if key in self.data:
             return self.data[key][1]
-        return default[0] if default else None
+        return default
 
     async def edit(
         self,
@@ -450,11 +467,11 @@ class ReviteUserSettings:
 
     def is_seasonal(self) -> bool:
         """:class:`bool`: Whether to display effects in the home tab during holiday seasons or not."""
-        return True if self.seasonal is None else self.seasonal
+        return self.seasonal is not False
 
     def is_transparent(self) -> bool:
         """Whether to enable transparency effects throughout the app or not."""
-        return True if self.transparent is None else self.transparent
+        return self.transparent is not False
 
     def is_ligatures_enabled(self) -> bool:
         """:class:`bool`: Whether to combine characters together or not.
@@ -462,7 +479,7 @@ class ReviteUserSettings:
 
         Applicable only for supported fonts (such as :attr:`ReviteFont.inter`).
         """
-        return True if self.ligatures is None else self.ligatures
+        return self.ligatures is not False
 
     def get_base_theme(self) -> ReviteBaseTheme | None:
         """Optional[:class:`ReviteBaseTheme`]: The current base theme."""
@@ -505,23 +522,23 @@ class ReviteUserSettings:
         """Dict[:class:`ReviteThemeVariable`, :class:`str`]: The theme overrides."""
         return self._appearance_theme_overrides or {}
 
-    def _on_changelog(self, changelog: raw.ReviteChangelog) -> None:
+    def _on_changelog(self, changelog: raw.ReviteChangelog, /) -> None:
         self._changelog_payload: raw.ReviteChangelog | None = changelog
         self.last_viewed_changelog_entry: ReviteChangelogEntry | None = ReviteChangelogEntry(changelog['viewed'])
 
-    def _on_locale(self, locale: raw.ReviteLocaleOptions) -> None:
+    def _on_locale(self, locale: raw.ReviteLocaleOptions, /) -> None:
         self._locale_payload: raw.ReviteLocaleOptions | None = locale
         self._language: Language | None = Language(locale['lang'])
 
-    def _on_notifications(self, notifications: raw.ReviteNotificationOptions) -> None:
+    def _on_notifications(self, notifications: raw.ReviteNotificationOptions, /) -> None:
         self._notifications_payload: raw.ReviteNotificationOptions | None = notifications
         self._notification_options: ReviteNotificationOptions | None = ReviteNotificationOptions(notifications)
 
-    def _on_ordering(self, ordering: raw.ReviteOrdering) -> None:
+    def _on_ordering(self, ordering: raw.ReviteOrdering, /) -> None:
         self._ordering_payload: raw.ReviteOrdering | None = ordering
         self._ordering: list[str] | None = ordering['servers']
 
-    def _on_appearance(self, appearance: raw.ReviteAppearanceSettings) -> None:
+    def _on_appearance(self, appearance: raw.ReviteAppearanceSettings, /) -> None:
         self._appearance_payload: raw.ReviteAppearanceSettings | None = appearance
 
         appearance_emoji_pack = appearance.get('appearance:emoji')
@@ -533,7 +550,7 @@ class ReviteUserSettings:
         self.seasonal: bool | None = appearance.get('appearance:seasonal')
         self.transparent: bool | None = appearance.get('appearance:transparency')
 
-    def _on_theme(self, theme: raw.ReviteThemeSettings) -> None:
+    def _on_theme(self, theme: raw.ReviteThemeSettings, /) -> None:
         self._theme_payload: raw.ReviteThemeSettings | None = None
 
         self.ligatures: bool | None = theme.get('appearance:ligatures')
@@ -564,7 +581,7 @@ class ReviteUserSettings:
             'appearance:theme:overrides'
         )
 
-    def _update(self, payload: UserSettings, *, full: bool) -> None:
+    def _update(self, payload: UserSettings, /, *, full: bool) -> None:
         changelog_json = payload.get('changelog')
         if changelog_json:
             changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
@@ -999,10 +1016,165 @@ class ReviteUserSettings:
         await self.parent.edit({}, edited_at, **payload)
 
 
+class JoltUserSettings:
+    """Represents Jolt user settings.
+
+    Attributes
+    ----------
+    parent: :class:`UserSettings`
+        The raw user settings.
+    low_data_mode: Optional[:class:`bool`]
+        Whether Jolt should NOT load images and fetch users if not found in cache.
+    compact_mode: Optional[:class:`bool`]
+        Whether to hide user profile pictures in chats. Easier on the eyes.
+    send_typing_indicators: Optional[:class:`bool`]
+        Whether to send typing indicators when writing messages.
+    receive_typing_indicators: Optional[:class:`bool`]
+        Whether to show typing indicators ('<user> is typing...').
+    """
+
+    __slots__ = (
+        'parent',
+        'low_data_mode',
+        'compact_mode',
+        'send_typing_indicators',
+        'receive_typing_indicators',
+    )
+
+    def __init__(self, parent: UserSettings) -> None:
+        self.parent: UserSettings = parent
+        self._update(parent, full=True)
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} >'
+
+    def is_low_data_mode_enabled(self) -> bool:
+        """:class:`bool`: Whether Jolt should NOT load images and fetch users if not found in cache."""
+        return self.low_data_mode is True
+
+    def is_compact_mode_enabled(self) -> bool:
+        """:class:`bool`: Whether to hide user profile pictures in chats. Easier on the eyes."""
+        return self.compact_mode is True
+
+    def is_send_typing_indicators(self) -> bool:
+        """:class:`bool`: Whether to send typing indicators when writing messages."""
+        return self.send_typing_indicators is not False
+
+    def is_receive_typing_indicators(self) -> bool:
+        """:class:`bool`: Whether to show typing indicators ('<user> is typing...')."""
+        return self.receive_typing_indicators is not False
+
+    def _update(self, payload: UserSettings, /, *, full: bool) -> None:
+        low_data_mode = payload.get('jolt:low-data-mode')
+        if low_data_mode is None:
+            if full:
+                self.low_data_mode: bool | None = None
+        else:
+            self.low_data_mode = utils._decode_bool(low_data_mode)
+
+        compact_mode = payload.get('jolt:compact-mode')
+        if compact_mode is None:
+            if full:
+                self.compact_mode: bool | None = None
+        else:
+            self.compact_mode = utils._decode_bool(compact_mode)
+
+        send_typing_indicators = payload.get('jolt:send-typing-indicators')
+        if send_typing_indicators is None:
+            if full:
+                self.send_typing_indicators: bool | None = None
+        else:
+            self.send_typing_indicators = utils._decode_bool(send_typing_indicators)
+
+        receive_typing_indicators = payload.get('jolt:receive-typing-indicators')
+        if receive_typing_indicators is None:
+            if full:
+                self.receive_typing_indicators: bool | None = None
+        else:
+            self.receive_typing_indicators = utils._decode_bool(receive_typing_indicators)
+
+    def payload_for(
+        self,
+        *,
+        low_data_mode: UndefinedOr[bool] = UNDEFINED,
+        compact_mode: UndefinedOr[bool] = UNDEFINED,
+        send_typing_indicators: UndefinedOr[bool] = UNDEFINED,
+        receive_typing_indicators: UndefinedOr[bool] = UNDEFINED,
+    ) -> raw.JoltUserSettings:
+        """Builds a payload for Jolt user settings. You must pass it as first argument to :meth:`HTTPClient.edit_user_settings`, like so:
+
+        .. code-block:: python3
+
+            payload = settings.payload_for(low_data_mode=True)
+            await http.edit_user_settings(payload)
+
+        Parameters
+        ----------
+        low_data_mode: :class:`UndefinedOr`[:class:`bool`]
+            Whether Jolt should NOT load images and fetch users if not found in cache.
+        compact_mode: :class:`UndefinedOr`[:class:`bool`]
+            Whether to hide user profile pictures in chats. Easier on the eyes.
+        send_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+            Whether to send typing indicators when writing messages.
+        receive_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+            Whether to show typing indicators ('<user> is typing...').
+
+        Returns
+        -------
+        Dict[:class:`str`, Any]
+            The payload that must to be passed in :meth:`HTTPClient.edit_user_settings`.
+        """
+        payload: raw.JoltUserSettings = {}
+        if low_data_mode is not UNDEFINED:
+            payload['jolt:low-data-mode'] = utils._bool(low_data_mode)
+        if compact_mode is not UNDEFINED:
+            payload['jolt:compact-mode'] = utils._bool(compact_mode)
+        if send_typing_indicators is not UNDEFINED:
+            payload['jolt:send-typing-indicators'] = utils._bool(send_typing_indicators)
+        if receive_typing_indicators is not UNDEFINED:
+            payload['jolt:receive-typing-indicators'] = utils._bool(receive_typing_indicators)
+        return payload
+
+    async def edit(
+        self,
+        *,
+        edited_at: datetime | int | None = None,
+        low_data_mode: UndefinedOr[bool] = UNDEFINED,
+        compact_mode: UndefinedOr[bool] = UNDEFINED,
+        send_typing_indicators: UndefinedOr[bool] = UNDEFINED,
+        receive_typing_indicators: UndefinedOr[bool] = UNDEFINED,
+    ) -> None:
+        """|coro|
+
+        Edits the Jolt user settings.
+
+        Parameters
+        ----------
+        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
+            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
+        low_data_mode: :class:`UndefinedOr`[:class:`bool`]
+            Whether Jolt should NOT load images and fetch users if not found in cache.
+        compact_mode: :class:`UndefinedOr`[:class:`bool`]
+            Whether to hide user profile pictures in chats. Easier on the eyes.
+        send_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+            Whether to send typing indicators when writing messages.
+        receive_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+            Whether to show typing indicators ('<user> is typing...').
+        """
+        payload = self.payload_for(
+            low_data_mode=low_data_mode,
+            compact_mode=compact_mode,
+            send_typing_indicators=send_typing_indicators,
+            receive_typing_indicators=receive_typing_indicators,
+        )
+        await self.parent.edit({}, edited_at, **payload)
+
+
 __all__ = (
     'UserSettings',
     'AndroidUserSettings',
     'ReviteNotificationOptions',
     'ReviteThemeVariable',
     'ReviteUserSettings',
+    'JoltUserSettings',
 )

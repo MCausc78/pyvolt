@@ -525,6 +525,21 @@ class Parser:
             after=None,
         )
 
+    @typing.overload
+    def parse_channel(self, d: raw.SavedMessagesChannel) -> SavedMessagesChannel: ...
+
+    @typing.overload
+    def parse_channel(self, d: raw.DirectMessageChannel) -> DMChannel: ...
+
+    @typing.overload
+    def parse_channel(self, d: raw.GroupChannel) -> GroupChannel: ...
+
+    @typing.overload
+    def parse_channel(self, d: raw.TextChannel) -> ServerTextChannel: ...
+
+    @typing.overload
+    def parse_channel(self, d: raw.VoiceChannel) -> VoiceChannel: ...
+
     def parse_channel(self, d: raw.Channel) -> Channel:
         return self._channel_parsers[d['channel_type']](d)
 
@@ -1423,7 +1438,7 @@ class Parser:
     def parse_server(
         self,
         d: raw.Server,
-        channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[raw.Channel]]),
+        channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[raw.ServerChannel]]),
         /,
     ) -> Server:
         internal_channels: (

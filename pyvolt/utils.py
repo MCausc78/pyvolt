@@ -114,6 +114,28 @@ def _bool(b: bool) -> typing.Literal['true', 'false']:
     return _TRUE if b else _FALSE
 
 
+def _decode_bool(
+    b: typing.Literal[
+        '1',
+        'TRUE',
+        'YES',
+        'Yes',
+        'True',
+        'true',
+        'yes',  # true
+        '0',
+        'FALSE',
+        'False',
+        'NO',
+        'No',
+        'false',
+        'no',  # false
+    ]
+    | str,
+) -> bool:
+    return b in ('1', 'TRUE', 'YES', 'Yes', 'True', _TRUE, 'yes')
+
+
 async def _json_or_text(response: aiohttp.ClientResponse) -> typing.Any:
     text = await response.text(encoding='utf-8')
     try:
@@ -277,6 +299,7 @@ __all__ = (
     '_maybe_coroutine',
     'copy_doc',
     '_bool',
+    '_decode_bool',
     '_json_or_text',
     'utcnow',
     'is_docker',

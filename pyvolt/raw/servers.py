@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 
 from .basic import Bool
-from .channels import Channel
+from .channels import ServerChannel
 from .files import File
 from .permissions import Override, OverrideField
 
@@ -97,7 +97,7 @@ class NewRoleResponse(typing.TypedDict):
 
 class CreateServerLegacyResponse(typing.TypedDict):
     server: Server
-    channels: list[Channel]
+    channels: list[ServerChannel]
 
 
 class OptionsFetchServer(typing.TypedDict):
@@ -105,7 +105,7 @@ class OptionsFetchServer(typing.TypedDict):
 
 
 class ServerWithChannels(BaseServer):
-    channels: list[Channel]
+    channels: list[ServerChannel]
 
 
 FetchServerResponse = Server | ServerWithChannels

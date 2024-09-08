@@ -150,6 +150,17 @@ class ReviteUserSettingsPayload(typing.TypedDict):
     theme: typing.NotRequired[str]
 
 
+JoltUserSettings = typing.TypedDict(
+    'JoltUserSettings',
+    {
+        'jolt:low-data-mode': typing.NotRequired[typing.Literal['true', 'false']],
+        'jolt:compact-mode': typing.NotRequired[typing.Literal['true', 'false']],
+        'jolt:send-typing-indicators': typing.NotRequired[typing.Literal['true', 'false']],
+        'jolt:receive-typing-indicators': typing.NotRequired[typing.Literal['true', 'false']],
+    },
+)
+
+
 __all__ = (
     'UserSettings',
     'OptionsFetchSettings',
@@ -173,4 +184,5 @@ __all__ = (
     'ReviteThemeVariable',
     'ReviteThemeSettings',
     'ReviteUserSettingsPayload',
+    'JoltUserSettings',
 )

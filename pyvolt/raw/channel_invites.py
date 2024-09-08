@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing
 
-from .channels import GroupChannel, Channel
+from .channels import GroupChannel, ServerChannel
 from .files import File
 from .servers import Server
 from .users import User
@@ -57,7 +57,7 @@ InviteResponse = ServerInviteResponse | GroupInviteResponse
 
 class ServerInviteJoinResponse(typing.TypedDict):
     type: typing.Literal['Server']
-    channels: list[Channel]
+    channels: list[ServerChannel]
     server: Server
 
 

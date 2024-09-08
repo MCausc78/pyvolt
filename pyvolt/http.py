@@ -1792,7 +1792,7 @@ class HTTPClient:
             The updated server channel with new permissions.
         """
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
-        resp: raw.Channel = await self.request(
+        resp: raw.TextChannel | raw.VoiceChannel = await self.request(
             routes.CHANNELS_PERMISSIONS_SET.compile(
                 channel_id=resolve_id(channel),
                 role_id=resolve_id(role),
@@ -1800,7 +1800,7 @@ class HTTPClient:
             json=payload,
         )
         r = self.state.parser.parse_channel(resp)
-        return r  # type: ignore
+        return r
 
     async def set_default_channel_permissions(
         self,

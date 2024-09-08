@@ -15,6 +15,7 @@ from .channels import (
     GroupChannel,
     TextChannel,
     VoiceChannel,
+    ServerChannel,
     Channel,
     PartialChannel,
     FieldsChannel,
@@ -126,7 +127,7 @@ class ClientServerCreateEvent(typing.TypedDict):
     type: typing.Literal['ServerCreate']
     id: str
     server: Server
-    channels: list[Channel]
+    channels: list[ServerChannel]
     emojis: list[ServerEmoji]
 
 
