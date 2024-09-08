@@ -321,7 +321,7 @@ class Shard:
         # `msgpack` wont be unbound here
         k: raw.ClientEvent = msgpack.unpackb(message.data, use_list=True)  # type: ignore
         if k['type'] != 'Ready':
-            _L.debug('received %s', k)
+            _L.debug('Received %s', k)
         return k
 
     def _headers(self) -> dict[str, str]:
@@ -353,23 +353,28 @@ class Shard:
             params['__user_settings_keys'] = ','.join(self.request_user_settings)
 
         errors = []
-        for i in range(self.retries):
+
+        i = 0
+        _L.debug('Connecting to %s, format=%s', self.base, self.format)
+
+        headers = self._headers()
+        while True:
             try:
-                _L.debug('Connecting to %s, format=%s, try=%i', self.base, self.format, i)
                 return await session.ws_connect(
                     self.base,
-                    headers=self._headers(),
+                    headers=headers,
                     params=params,  # type: ignore # Not true
                 )
             except OSError as exc:
-                # TODO: Handle 10053?
-                if exc.errno in (54, 10054):  # Connection reset by peer
-                    await asyncio.sleep(1.5)
-                    continue
-                errors.append(exc)
+                if i == 0:
+                    _L.warning('Connection failed (code: %i)', exc.errno)
+                if exc.errno == 11001:
+                    await asyncio.sleep(1)
+                i += 1
             except Exception as exc:
+                i += 1
                 errors.append(exc)
-                _L.debug('connection failed on try=%i: %s', i, exc)
+                _L.debug('Connection failed on %i attempt: %s', i, exc)
                 if self.connect_delay is not None:
                     await asyncio.sleep(self.connect_delay)
         raise ConnectError(self.retries, errors)

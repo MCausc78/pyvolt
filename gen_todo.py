@@ -20,7 +20,7 @@ def get_branch() -> str:
 
 
 def main():
-    branch = get_branch()
+    branch = 'master'
 
     RE_TODO = re.compile(r"TODO: (.*)")
 
