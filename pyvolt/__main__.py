@@ -3,6 +3,7 @@ from __future__ import annotations
 import aiohttp
 import argparse
 import asyncio
+import logging
 import platform
 import pyvolt
 import sys
@@ -72,6 +73,9 @@ async def login(email: str, password: str, friendly_name: str | None):
 
 
 def _login(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.debug:
+        pyvolt.utils.setup_logging(level=logging.DEBUG)
+
     asyncio.run(login(args.email, args.password, args.friendly_name))
 
 
@@ -81,7 +85,7 @@ def add_login_args(subparser: argparse._SubParsersAction[argparse.ArgumentParser
 
     parser.add_argument('email', help='account email')
     parser.add_argument('password', help='account password')
-    parser.add_argument('--friendly-name', nargs=1, required=False, help='device name')
+    parser.add_argument('-f', '--friendly-name', action='store', required=False, help='device name')
 
 
 def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -94,6 +98,7 @@ def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     parser = argparse.ArgumentParser(prog='pyvolt', description='Tools for helping with pyvolt')
     parser.add_argument('-v', '--version', action='store_true', help='shows the library version')
+    parser.add_argument('-d', '--debug', action='store_true', help='whether to enable debug logging')
     parser.set_defaults(func=core)
 
     subparser = parser.add_subparsers(dest='subcommand', title='subcommands')
