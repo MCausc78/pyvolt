@@ -371,10 +371,16 @@ class Shard:
                 if exc.errno == 11001:
                     await asyncio.sleep(1)
                 i += 1
+            except aiohttp.WSServerHandshakeError as exc:
+                _L.debug('Server replied with %i', exc.code)
+                if exc.code in (502, 525):
+                    await asyncio.sleep(1.5)
+                    continue
+                raise exc from None
             except Exception as exc:
                 i += 1
                 errors.append(exc)
-                _L.debug('Connection failed on %i attempt: %s', i, exc)
+                _L.exception('Connection failed on %i attempt', i)
                 if self.connect_delay is not None:
                     await asyncio.sleep(self.connect_delay)
         raise ConnectError(self.retries, errors)

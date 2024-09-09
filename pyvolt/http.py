@@ -552,15 +552,22 @@ class HTTPClient:
             if response.status >= 400:
                 _L.debug('%s %s has returned %s', method, path, response.status)
 
+                if response.status == 525:
+                    await asyncio.sleep(1)
+                    continue
+
+                retries += 1
+
                 if response.status == 502:
                     if retries >= self.max_retries:
-                        raise BadGateway(response, await utils._json_or_text(response))
+                        data = await utils._json_or_text(response)
+                        raise BadGateway(response, data)
                     continue
                 if response.status == 429:
                     if retries < self.max_retries:
-                        j = await utils._json_or_text(response)
-                        if isinstance(j, dict):
-                            retry_after: float = j['retry_after'] / 1000.0
+                        data = await utils._json_or_text(response)
+                        if isinstance(data, dict):
+                            retry_after: float = data['retry_after'] / 1000.0
                         else:
                             retry_after = 1
                         _L.debug(
@@ -571,15 +578,15 @@ class HTTPClient:
                         )
                         await asyncio.sleep(retry_after)
                         continue
-                j = await utils._json_or_text(response)
-                if isinstance(j, dict) and isinstance(j.get('error'), dict):
-                    error = j['error']
+                data = await utils._json_or_text(response)
+                if isinstance(data, dict) and isinstance(data.get('error'), dict):
+                    error = data['error']
                     code = error.get('code')
                     reason = error.get('reason')
                     description = error.get('description')
-                    j['type'] = 'RocketError'
-                    j['err'] = f'{code} {reason}: {description}'
-                raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
+                    data['type'] = 'RocketError'
+                    data['err'] = f'{code} {reason}: {description}'
+                raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
             return response
 
     async def request(
