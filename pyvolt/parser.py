@@ -896,8 +896,29 @@ class Parser:
         payload: raw.Message,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
+        cls: type[Message] = Message,
         /,
     ) -> Message:
+        """Parses a message object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The message payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for trying populating :attr:`Message.author`.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for trying populating :attr:`Message.author`.
+        cls: Type[:class:`Message`]
+            The message class to use when constructing final object.
+            The constructor of provided class must be compatible with default one.
+
+        Returns
+        -------
+        :class:`Message`
+            The parsed message object.
+        """
+
         author_id = payload['author']
         webhook = payload.get('webhook')
         system = payload.get('system')
@@ -921,7 +942,7 @@ class Parser:
         flags = _new_message_flags(MessageFlags)
         flags.value = payload.get('flags', 0)
 
-        return Message(
+        return cls(
             state=self.state,
             id=payload['_id'],
             nonce=payload.get('nonce'),
