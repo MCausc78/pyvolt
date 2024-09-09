@@ -225,6 +225,9 @@ _L = logging.getLogger(__name__)
 
 _EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 
+_new_bot_flags = BotFlags.__new__
+_new_message_flags = MessageFlags.__new__
+_new_permissions = Permissions.__new__
 _new_server_flags = ServerFlags.__new__
 _new_user_badges = UserBadges.__new__
 _new_user_flags = UserFlags.__new__
@@ -232,6 +235,17 @@ _parse_dt = datetime.fromisoformat
 
 
 class Parser:
+    __slots__ = (
+        'state',
+        '_channel_parsers',
+        '_embed_parsers',
+        '_embed_special_parsers',
+        '_emoji_parsers',
+        '_invite_parsers',
+        '_message_system_event_parsers',
+        '_public_invite_parsers',
+    )
+
     def __init__(self, *, state: State) -> None:
         self.state = state
         self._channel_parsers = {
@@ -318,121 +332,121 @@ class Parser:
             object_id=d.get('object_id'),
         )
 
-    def parse_auth_event(self, shard: Shard, d: raw.ClientAuthEvent) -> AuthifierEvent:
-        if d['event_type'] == 'CreateSession':
+    def parse_auth_event(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> AuthifierEvent:
+        if payload['event_type'] == 'CreateSession':
             return SessionCreateEvent(
                 shard=shard,
-                session=self.parse_session(d['session']),
+                session=self.parse_session(payload['session']),
             )
-        elif d['event_type'] == 'DeleteSession':
+        elif payload['event_type'] == 'DeleteSession':
             return SessionDeleteEvent(
                 shard=shard,
-                user_id=d['user_id'],
-                session_id=d['session_id'],
+                user_id=payload['user_id'],
+                session_id=payload['session_id'],
             )
-        elif d['event_type'] == 'DeleteAllSessions':
+        elif payload['event_type'] == 'DeleteAllSessions':
             return SessionDeleteAllEvent(
                 shard=shard,
-                user_id=d['user_id'],
-                exclude_session_id=d.get('exclude_session_id'),
+                user_id=payload['user_id'],
+                exclude_session_id=payload.get('exclude_session_id'),
             )
         else:
-            raise NotImplementedError('Unimplemented auth event type', d)
+            raise NotImplementedError('Unimplemented auth event type', payload)
 
-    def parse_authenticated_event(self, shard: Shard, d: raw.ClientAuthenticatedEvent) -> AuthenticatedEvent:
+    def parse_authenticated_event(self, shard: Shard, payload: raw.ClientAuthenticatedEvent, /) -> AuthenticatedEvent:
         return AuthenticatedEvent(shard=shard)
 
     # basic end, internals start
 
-    def _parse_group_channel(self, d: raw.GroupChannel) -> GroupChannel:
+    def _parse_group_channel(self, payload: raw.GroupChannel, /) -> GroupChannel:
         return self.parse_group_channel(
-            d,
-            (
-                True,
-                d['recipients'],
-            ),
+            payload,
+            (True, payload['recipients']),
         )
 
     # internals end
 
-    def parse_ban(self, d: raw.ServerBan, users: dict[str, DisplayUser]) -> Ban:
-        id = d['_id']
+    def parse_ban(self, payload: raw.ServerBan, users: dict[str, DisplayUser], /) -> Ban:
+        id = payload['_id']
         user_id = id['user']
 
         return Ban(
             server_id=id['server'],
             user_id=user_id,
-            reason=d['reason'],
+            reason=payload['reason'],
             user=users.get(user_id),
         )
 
-    def parse_bandcamp_embed_special(self, d: raw.BandcampSpecial) -> BandcampEmbedSpecial:
+    def parse_bandcamp_embed_special(self, payload: raw.BandcampSpecial, /) -> BandcampEmbedSpecial:
         return BandcampEmbedSpecial(
-            content_type=BandcampContentType(d['content_type']),
-            id=d['id'],
+            content_type=BandcampContentType(payload['content_type']),
+            id=payload['id'],
         )
 
-    def parse_bans(self, d: raw.BanListResult) -> list[Ban]:
-        banned_users = {bu.id: bu for bu in (self.parse_display_user(e) for e in d['users'])}
-        return [self.parse_ban(e, banned_users) for e in d['bans']]
+    def parse_bans(self, payload: raw.BanListResult, /) -> list[Ban]:
+        banned_users = {bu.id: bu for bu in map(self.parse_display_user, payload['users'])}
+        return [self.parse_ban(e, banned_users) for e in payload['bans']]
 
-    def _parse_bot(self, d: raw.Bot, user: User) -> Bot:
+    def _parse_bot(self, payload: raw.Bot, user: User, /) -> Bot:
+        flags = _new_bot_flags(BotFlags)
+        flags.value = payload.get('flags', 0)
+
         return Bot(
             state=self.state,
-            id=d['_id'],
-            owner_id=d['owner'],
-            token=d['token'],
-            public=d['public'],
-            analytics=d.get('analytics', False),
-            discoverable=d.get('discoverable', False),
-            interactions_url=d.get('interactions_url'),
-            terms_of_service_url=d.get('terms_of_service_url'),
-            privacy_policy_url=d.get('privacy_policy_url'),
-            flags=BotFlags(d.get('flags', 0)),
+            id=payload['_id'],
+            owner_id=payload['owner'],
+            token=payload['token'],
+            public=payload['public'],
+            analytics=payload.get('analytics', False),
+            discoverable=payload.get('discoverable', False),
+            interactions_url=payload.get('interactions_url'),
+            terms_of_service_url=payload.get('terms_of_service_url'),
+            privacy_policy_url=payload.get('privacy_policy_url'),
+            flags=flags,
             user=user,
         )
 
-    def parse_bot(self, d: raw.Bot, user: raw.User) -> Bot:
-        return self._parse_bot(d, self.parse_user(user))
+    def parse_bot(self, payload: raw.Bot, user: raw.User, /) -> Bot:
+        return self._parse_bot(payload, self.parse_user(user))
 
-    def parse_bot_user_info(self, d: raw.BotInformation, /) -> BotUserInfo:
-        return BotUserInfo(owner_id=d['owner'])
+    def parse_bot_user_info(self, payload: raw.BotInformation, /) -> BotUserInfo:
+        return BotUserInfo(owner_id=payload['owner'])
 
-    def parse_bots(self, d: raw.OwnedBotsResponse) -> list[Bot]:
-        bots = d['bots']
-        users = d['users']
+    def parse_bots(self, payload: raw.OwnedBotsResponse, /) -> list[Bot]:
+        bots = payload['bots']
+        users = payload['users']
 
         if len(bots) != len(users):
             raise RuntimeError(f'Expected {len(bots)} users but got {len(users)}')
         return [self.parse_bot(e, users[i]) for i, e in enumerate(bots)]
 
     def parse_bulk_message_delete_event(
-        self, shard: Shard, d: raw.ClientBulkMessageDeleteEvent
+        self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /
     ) -> BulkMessageDeleteEvent:
         return BulkMessageDeleteEvent(
             shard=shard,
-            channel_id=d['channel'],
-            message_ids=d['ids'],
+            channel_id=payload['channel'],
+            message_ids=payload['ids'],
             messages=[],
         )
 
-    def parse_category(self, d: raw.Category, /) -> Category:
+    def parse_category(self, payload: raw.Category, /) -> Category:
         return Category(
-            id=d['id'],
-            title=d['title'],
-            channels=d['channels'],  # type: ignore
+            id=payload['id'],
+            title=payload['title'],
+            channels=payload['channels'],  # type: ignore
         )
 
-    def parse_channel_ack_event(self, shard: Shard, d: raw.ClientChannelAckEvent) -> MessageAckEvent:
+    def parse_channel_ack_event(self, shard: Shard, payload: raw.ClientChannelAckEvent, /) -> MessageAckEvent:
         return MessageAckEvent(
             shard=shard,
-            channel_id=d['id'],
-            message_id=d['message_id'],
-            user_id=d['user'],
+            channel_id=payload['id'],
+            message_id=payload['message_id'],
+            user_id=payload['user'],
         )
 
-    def parse_channel_create_event(self, shard: Shard, d: raw.ClientChannelCreateEvent) -> ChannelCreateEvent:
-        channel = self.parse_channel(d)
+    def parse_channel_create_event(self, shard: Shard, payload: raw.ClientChannelCreateEvent, /) -> ChannelCreateEvent:
+        channel = self.parse_channel(payload)
         if isinstance(
             channel,
             (SavedMessagesChannel, DMChannel, GroupChannel),
@@ -441,54 +455,65 @@ class Parser:
         else:
             return ServerChannelCreateEvent(shard=shard, channel=channel)
 
-    def parse_channel_delete_event(self, shard: Shard, d: raw.ClientChannelDeleteEvent) -> ChannelDeleteEvent:
+    def parse_channel_delete_event(self, shard: Shard, payload: raw.ClientChannelDeleteEvent, /) -> ChannelDeleteEvent:
         return ChannelDeleteEvent(
             shard=shard,
-            channel_id=d['id'],
+            channel_id=payload['id'],
             channel=None,
         )
 
     def parse_channel_group_join_event(
-        self, shard: Shard, d: raw.ClientChannelGroupJoinEvent
+        self, shard: Shard, payload: raw.ClientChannelGroupJoinEvent, /
     ) -> GroupRecipientAddEvent:
         return GroupRecipientAddEvent(
             shard=shard,
-            channel_id=d['id'],
-            user_id=d['user'],
+            channel_id=payload['id'],
+            user_id=payload['user'],
             group=None,
         )
 
     def parse_channel_group_leave_event(
-        self, shard: Shard, d: raw.ClientChannelGroupLeaveEvent
+        self, shard: Shard, payload: raw.ClientChannelGroupLeaveEvent, /
     ) -> GroupRecipientRemoveEvent:
         return GroupRecipientRemoveEvent(
             shard=shard,
-            channel_id=d['id'],
-            user_id=d['user'],
+            channel_id=payload['id'],
+            user_id=payload['user'],
             group=None,
         )
 
     def parse_channel_start_typing_event(
-        self, shard: Shard, d: raw.ClientChannelStartTypingEvent
+        self, shard: Shard, payload: raw.ClientChannelStartTypingEvent, /
     ) -> ChannelStartTypingEvent:
         return ChannelStartTypingEvent(
             shard=shard,
-            channel_id=d['id'],
-            user_id=d['user'],
+            channel_id=payload['id'],
+            user_id=payload['user'],
         )
 
     def parse_channel_stop_typing_event(
-        self, shard: Shard, d: raw.ClientChannelStopTypingEvent
+        self, shard: Shard, payload: raw.ClientChannelStopTypingEvent, /
     ) -> ChannelStopTypingEvent:
         return ChannelStopTypingEvent(
             shard=shard,
-            channel_id=d['id'],
-            user_id=d['user'],
+            channel_id=payload['id'],
+            user_id=payload['user'],
         )
 
-    def parse_channel_update_event(self, shard: Shard, d: raw.ClientChannelUpdateEvent) -> ChannelUpdateEvent:
-        clear = d['clear']
-        data = d['data']
+    def parse_channel_unread(self, payload: raw.ChannelUnread, /) -> ReadState:
+        id = payload['_id']
+
+        return ReadState(
+            state=self.state,
+            channel_id=id['channel'],
+            user_id=id['user'],
+            last_message_id=payload.get('last_id'),
+            mentioned_in=payload.get('mentions', []),
+        )
+
+    def parse_channel_update_event(self, shard: Shard, payload: raw.ClientChannelUpdateEvent, /) -> ChannelUpdateEvent:
+        clear = payload['clear']
+        data = payload['data']
 
         owner = data.get('owner')
         icon = data.get('icon')
@@ -501,7 +526,7 @@ class Parser:
             shard=shard,
             channel=PartialChannel(
                 state=self.state,
-                id=d['id'],
+                id=payload['id'],
                 name=data.get('name', UNDEFINED),
                 owner_id=owner if owner else UNDEFINED,
                 description=(None if 'Description' in clear else data.get('description', UNDEFINED)),
@@ -526,225 +551,230 @@ class Parser:
         )
 
     @typing.overload
-    def parse_channel(self, d: raw.SavedMessagesChannel) -> SavedMessagesChannel: ...
+    def parse_channel(self, payload: raw.SavedMessagesChannel, /) -> SavedMessagesChannel: ...
 
     @typing.overload
-    def parse_channel(self, d: raw.DirectMessageChannel) -> DMChannel: ...
+    def parse_channel(self, payload: raw.DirectMessageChannel, /) -> DMChannel: ...
 
     @typing.overload
-    def parse_channel(self, d: raw.GroupChannel) -> GroupChannel: ...
+    def parse_channel(self, payload: raw.GroupChannel, /) -> GroupChannel: ...
 
     @typing.overload
-    def parse_channel(self, d: raw.TextChannel) -> ServerTextChannel: ...
+    def parse_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel: ...
 
     @typing.overload
-    def parse_channel(self, d: raw.VoiceChannel) -> VoiceChannel: ...
+    def parse_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel: ...
 
-    def parse_channel(self, d: raw.Channel) -> Channel:
-        return self._channel_parsers[d['channel_type']](d)
+    def parse_channel(self, payload: raw.Channel, /) -> Channel:
+        return self._channel_parsers[payload['channel_type']](payload)
 
-    def parse_detached_emoji(self, d: raw.DetachedEmoji) -> DetachedEmoji:
+    def parse_detached_emoji(self, payload: raw.DetachedEmoji, /) -> DetachedEmoji:
         return DetachedEmoji(
             state=self.state,
-            id=d['_id'],
-            creator_id=d['creator_id'],
-            name=d['name'],
-            animated=d.get('animated', False),
-            nsfw=d.get('nsfw', False),
+            id=payload['_id'],
+            creator_id=payload['creator_id'],
+            name=payload['name'],
+            animated=payload.get('animated', False),
+            nsfw=payload.get('nsfw', False),
         )
 
-    def parse_disabled_response_login(self, d: raw.a.DisabledResponseLogin) -> AccountDisabled:
-        return AccountDisabled(user_id=d['user_id'])
+    def parse_disabled_response_login(self, payload: raw.a.DisabledResponseLogin, /) -> AccountDisabled:
+        return AccountDisabled(user_id=payload['user_id'])
 
-    def parse_direct_message_channel(self, d: raw.DirectMessageChannel) -> DMChannel:
-        recipient_ids = d['recipients']
+    def parse_direct_message_channel(self, payload: raw.DirectMessageChannel, /) -> DMChannel:
+        recipient_ids = payload['recipients']
 
         return DMChannel(
             state=self.state,
-            id=d['_id'],
-            active=d['active'],
+            id=payload['_id'],
+            active=payload['active'],
             recipient_ids=(
                 recipient_ids[0],
                 recipient_ids[1],
             ),
-            last_message_id=d.get('last_message_id'),
+            last_message_id=payload.get('last_message_id'),
         )
 
     # Discovery
-    def parse_discovery_bot(self, d: raw.DiscoveryBot) -> discovery.DiscoveryBot:
-        avatar = d.get('avatar')
+    def parse_discovery_bot(self, payload: raw.DiscoveryBot, /) -> discovery.DiscoveryBot:
+        avatar = payload.get('avatar')
 
         return discovery.DiscoveryBot(
             state=self.state,
-            id=d['_id'],
-            name=d['username'],
+            id=payload['_id'],
+            name=payload['username'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            internal_profile=self.parse_user_profile(d['profile']),
-            tags=d['tags'],
-            server_count=d['servers'],
-            usage=BotUsage(d['usage']),
+            internal_profile=self.parse_user_profile(payload['profile']),
+            tags=payload['tags'],
+            server_count=payload['servers'],
+            usage=BotUsage(payload['usage']),
         )
 
-    def parse_discovery_bot_search_result(self, d: raw.DiscoveryBotSearchResult) -> discovery.BotSearchResult:
+    def parse_discovery_bot_search_result(self, payload: raw.DiscoveryBotSearchResult, /) -> discovery.BotSearchResult:
         return discovery.BotSearchResult(
-            query=d['query'],
-            count=d['count'],
-            bots=[self.parse_discovery_bot(s) for s in d['bots']],
-            related_tags=d['relatedTags'],
+            query=payload['query'],
+            count=payload['count'],
+            bots=list(map(self.parse_discovery_bot, payload['bots'])),
+            related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_bots_page(self, d: raw.DiscoveryBotsPage) -> discovery.DiscoveryBotsPage:
+    def parse_discovery_bots_page(self, payload: raw.DiscoveryBotsPage, /) -> discovery.DiscoveryBotsPage:
         return discovery.DiscoveryBotsPage(
-            bots=[self.parse_discovery_bot(b) for b in d['bots']],
-            popular_tags=d['popularTags'],
+            bots=list(map(self.parse_discovery_bot, payload['bots'])),
+            popular_tags=payload['popularTags'],
         )
 
-    def parse_discovery_server(self, d: raw.DiscoveryServer) -> discovery.DiscoveryServer:
-        icon = d.get('icon')
-        banner = d.get('banner')
+    def parse_discovery_server(self, payload: raw.DiscoveryServer, /) -> discovery.DiscoveryServer:
+        icon = payload.get('icon')
+        banner = payload.get('banner')
 
         return discovery.DiscoveryServer(
             state=self.state,
-            id=d['_id'],
-            name=d['name'],
-            description=d.get('description'),
+            id=payload['_id'],
+            name=payload['name'],
+            description=payload.get('description'),
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=ServerFlags(d.get('flags') or 0),
-            tags=d['tags'],
-            member_count=d['members'],
-            activity=ServerActivity(d['activity']),
+            flags=ServerFlags(payload.get('flags') or 0),
+            tags=payload['tags'],
+            member_count=payload['members'],
+            activity=ServerActivity(payload['activity']),
         )
 
-    def parse_discovery_servers_page(self, d: raw.DiscoveryServersPage) -> discovery.DiscoveryServersPage:
+    def parse_discovery_servers_page(self, payload: raw.DiscoveryServersPage, /) -> discovery.DiscoveryServersPage:
         return discovery.DiscoveryServersPage(
-            servers=[self.parse_discovery_server(s) for s in d['servers']],
-            popular_tags=d['popularTags'],
+            servers=list(map(self.parse_discovery_server, payload['servers'])),
+            popular_tags=payload['popularTags'],
         )
 
-    def parse_discovery_server_search_result(self, d: raw.DiscoveryServerSearchResult) -> discovery.ServerSearchResult:
+    def parse_discovery_server_search_result(
+        self, payload: raw.DiscoveryServerSearchResult, /
+    ) -> discovery.ServerSearchResult:
         return discovery.ServerSearchResult(
-            query=d['query'],
-            count=d['count'],
-            servers=[self.parse_discovery_server(s) for s in d['servers']],
-            related_tags=d['relatedTags'],
+            query=payload['query'],
+            count=payload['count'],
+            servers=list(map(self.parse_discovery_server, payload['servers'])),
+            related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_theme(self, d: raw.DiscoveryTheme) -> discovery.DiscoveryTheme:
+    def parse_discovery_theme(self, payload: raw.DiscoveryTheme, /) -> discovery.DiscoveryTheme:
         return discovery.DiscoveryTheme(
             state=self.state,
-            name=d['name'],
-            description=d['description'],
-            creator=d['creator'],
-            slug=d['slug'],
-            tags=d['tags'],
-            overrides=d['variables'],
-            version=d['version'],
-            custom_css=d.get('css'),
+            name=payload['name'],
+            description=payload['description'],
+            creator=payload['creator'],
+            slug=payload['slug'],
+            tags=payload['tags'],
+            overrides=payload['variables'],
+            version=payload['version'],
+            custom_css=payload.get('css'),
         )
 
-    def parse_discovery_theme_search_result(self, d: raw.DiscoveryThemeSearchResult) -> discovery.ThemeSearchResult:
+    def parse_discovery_theme_search_result(
+        self, payload: raw.DiscoveryThemeSearchResult, /
+    ) -> discovery.ThemeSearchResult:
         return discovery.ThemeSearchResult(
-            query=d['query'],
-            count=d['count'],
-            themes=[self.parse_discovery_theme(s) for s in d['themes']],
-            related_tags=d['relatedTags'],
+            query=payload['query'],
+            count=payload['count'],
+            themes=list(map(self.parse_discovery_theme, payload['themes'])),
+            related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_themes_page(self, d: raw.DiscoveryThemesPage) -> discovery.DiscoveryThemesPage:
+    def parse_discovery_themes_page(self, payload: raw.DiscoveryThemesPage, /) -> discovery.DiscoveryThemesPage:
         return discovery.DiscoveryThemesPage(
-            themes=[self.parse_discovery_theme(b) for b in d['themes']],
-            popular_tags=d['popularTags'],
+            themes=list(map(self.parse_discovery_theme, payload['themes'])),
+            popular_tags=payload['popularTags'],
         )
 
-    def parse_display_user(self, d: raw.BannedUser) -> DisplayUser:
-        avatar = d.get('avatar')
+    def parse_display_user(self, payload: raw.BannedUser, /) -> DisplayUser:
+        avatar = payload.get('avatar')
 
         return DisplayUser(
             state=self.state,
-            id=d['_id'],
-            name=d['username'],
-            discriminator=d['discriminator'],
+            id=payload['_id'],
+            name=payload['username'],
+            discriminator=payload['discriminator'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
         )
 
-    def parse_embed(self, d: raw.Embed) -> Embed:
-        return self._embed_parsers[d['type']](d)
+    def parse_embed(self, payload: raw.Embed, /) -> Embed:
+        return self._embed_parsers[payload['type']](payload)
 
-    def parse_embed_special(self, d: raw.Special) -> EmbedSpecial:
-        return self._embed_special_parsers[d['type']](d)
+    def parse_embed_special(self, payload: raw.Special, /) -> EmbedSpecial:
+        return self._embed_special_parsers[payload['type']](payload)
 
-    def parse_emoji(self, d: raw.Emoji) -> Emoji:
-        return self._emoji_parsers[d['parent']['type']](d)
+    def parse_emoji(self, payload: raw.Emoji, /) -> Emoji:
+        return self._emoji_parsers[payload['parent']['type']](payload)
 
-    def parse_emoji_create_event(self, shard: Shard, d: raw.ClientEmojiCreateEvent) -> ServerEmojiCreateEvent:
+    def parse_emoji_create_event(self, shard: Shard, payload: raw.ClientEmojiCreateEvent, /) -> ServerEmojiCreateEvent:
         return ServerEmojiCreateEvent(
             shard=shard,
-            emoji=self.parse_server_emoji(d),
+            emoji=self.parse_server_emoji(payload),
         )
 
-    def parse_emoji_delete_event(self, shard: Shard, d: raw.ClientEmojiDeleteEvent) -> ServerEmojiDeleteEvent:
+    def parse_emoji_delete_event(self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /) -> ServerEmojiDeleteEvent:
         return ServerEmojiDeleteEvent(
             shard=shard,
             emoji=None,
             server_id=None,
-            emoji_id=d['id'],
+            emoji_id=payload['id'],
         )
 
-    def parse_gif_embed_special(self, _: raw.GIFSpecial) -> GifEmbedSpecial:
+    def parse_gif_embed_special(self, _: raw.GIFSpecial, /) -> GifEmbedSpecial:
         return _GIF_EMBED_SPECIAL
 
     def parse_group_channel(
         self,
-        d: raw.GroupChannel,
+        payload: raw.GroupChannel,
         recipients: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]]),
+        /,
     ) -> GroupChannel:
-        icon = d.get('icon')
-        permissions = d.get('permissions')
+        icon = payload.get('icon')
+        permissions = payload.get('permissions')
 
         return GroupChannel(
             state=self.state,
-            id=d['_id'],
-            name=d['name'],
-            owner_id=d['owner'],
-            description=d.get('description'),
+            id=payload['_id'],
+            name=payload['name'],
+            owner_id=payload['owner'],
+            description=payload.get('description'),
             internal_recipients=recipients,
             internal_icon=self.parse_asset(icon) if icon else None,
-            last_message_id=d.get('last_message_id'),
+            last_message_id=payload.get('last_message_id'),
             permissions=None if permissions is None else Permissions(permissions),
-            nsfw=d.get('nsfw', False),
+            nsfw=payload.get('nsfw', False),
         )
 
-    def parse_group_invite(self, d: raw.GroupInvite) -> GroupInvite:
+    def parse_group_invite(self, payload: raw.GroupInvite, /) -> GroupInvite:
         return GroupInvite(
             state=self.state,
-            code=d['_id'],
-            creator_id=d['creator'],
-            channel_id=d['channel'],
+            code=payload['_id'],
+            creator_id=payload['creator'],
+            channel_id=payload['channel'],
         )
 
-    def parse_group_public_invite(self, d: raw.GroupInviteResponse) -> GroupPublicInvite:
-        user_avatar = d.get('user_avatar')
+    def parse_group_public_invite(self, payload: raw.GroupInviteResponse, /) -> GroupPublicInvite:
+        user_avatar = payload.get('user_avatar')
 
         return GroupPublicInvite(
             state=self.state,
-            code=d['code'],
-            channel_id=d['channel_id'],
-            channel_name=d['channel_name'],
-            channel_description=d.get('channel_description'),
-            user_name=d['user_name'],
+            code=payload['code'],
+            channel_id=payload['channel_id'],
+            channel_name=payload['channel_name'],
+            channel_description=payload.get('channel_description'),
+            user_name=payload['user_name'],
             internal_user_avatar=self.parse_asset(user_avatar) if user_avatar else None,
         )
 
-    def parse_image_embed(self, d: raw.Image) -> ImageEmbed:
+    def parse_image_embed(self, payload: raw.Image, /) -> ImageEmbed:
         return ImageEmbed(
-            url=d['url'],
-            width=d['width'],
-            height=d['height'],
-            size=ImageSize(d['size']),
+            url=payload['url'],
+            width=payload['width'],
+            height=payload['height'],
+            size=ImageSize(payload['size']),
         )
 
-    def parse_instance(self, payload: raw.RevoltConfig) -> Instance:
+    def parse_instance(self, payload: raw.RevoltConfig, /) -> Instance:
         return Instance(
             version=payload['revolt'],
             features=self.parse_instance_features_config(payload['features']),
@@ -754,7 +784,7 @@ class Parser:
             build=self.parse_instance_build(payload['build']),
         )
 
-    def parse_instance_build(self, payload: raw.BuildInformation) -> InstanceBuild:
+    def parse_instance_build(self, payload: raw.BuildInformation, /) -> InstanceBuild:
         try:
             committed_at = _parse_dt(payload['commit_timestamp'])
         except Exception:
@@ -773,13 +803,13 @@ class Parser:
             built_at=built_at,
         )
 
-    def parse_instance_captcha_feature(self, payload: raw.CaptchaFeature) -> InstanceCaptchaFeature:
+    def parse_instance_captcha_feature(self, payload: raw.CaptchaFeature, /) -> InstanceCaptchaFeature:
         return InstanceCaptchaFeature(
             enabled=payload['enabled'],
             key=payload['key'],
         )
 
-    def parse_instance_features_config(self, payload: raw.RevoltFeatures) -> InstanceFeaturesConfig:
+    def parse_instance_features_config(self, payload: raw.RevoltFeatures, /) -> InstanceFeaturesConfig:
         try:
             voice: raw.VoiceFeature = payload['livekit']  # pyright: ignore[reportTypedDictNotRequiredAccess]
         except KeyError:
@@ -794,38 +824,37 @@ class Parser:
             voice=self.parse_instance_voice_feature(voice),
         )
 
-    def parse_instance_generic_feature(self, payload: raw.Feature) -> InstanceGenericFeature:
+    def parse_instance_generic_feature(self, payload: raw.Feature, /) -> InstanceGenericFeature:
         return InstanceGenericFeature(
             enabled=payload['enabled'],
             url=payload['url'],
         )
 
-    def parse_instance_voice_feature(self, payload: raw.VoiceFeature) -> InstanceVoiceFeature:
+    def parse_instance_voice_feature(self, payload: raw.VoiceFeature, /) -> InstanceVoiceFeature:
         return InstanceVoiceFeature(
             enabled=payload['enabled'],
             url=payload['url'],
             websocket_url=payload['ws'],
         )
 
-    def parse_invite(self, d: raw.Invite) -> Invite:
-        return self._invite_parsers[d['type']](d)
+    def parse_invite(self, payload: raw.Invite, /) -> Invite:
+        return self._invite_parsers[payload['type']](payload)
 
-    def parse_lightspeed_embed_special(self, d: raw.LightspeedSpecial) -> LightspeedEmbedSpecial:
+    def parse_lightspeed_embed_special(self, payload: raw.LightspeedSpecial, /) -> LightspeedEmbedSpecial:
         return LightspeedEmbedSpecial(
-            content_type=LightspeedContentType(d['content_type']),
-            id=d['id'],
+            content_type=LightspeedContentType(payload['content_type']),
+            id=payload['id'],
         )
 
-    def parse_logout_event(self, shard: Shard, d: raw.ClientLogoutEvent) -> LogoutEvent:
+    def parse_logout_event(self, shard: Shard, payload: raw.ClientLogoutEvent, /) -> LogoutEvent:
         return LogoutEvent(shard=shard)
 
     def parse_member(
         self,
         d: raw.Member,
-        /,
-        *,
         user: User | None = None,
         users: dict[str, User] | None = None,
+        /,
     ) -> Member:
         if user and users:
             raise ValueError('Cannot specify both user and users')
@@ -846,42 +875,42 @@ class Parser:
             joined_at=_parse_dt(d['joined_at']),
             nick=d.get('nickname'),
             internal_server_avatar=self.parse_asset(avatar) if avatar else None,
-            roles=d.get('roles') or [],
+            roles=d.get('roles', []),
             timed_out_until=_parse_dt(timeout) if timeout else None,
         )
 
-    def parse_member_list(self, d: raw.AllMemberResponse) -> MemberList:
+    def parse_member_list(self, payload: raw.AllMemberResponse, /) -> MemberList:
         return MemberList(
-            members=[self.parse_member(m) for m in d['members']],
-            users=[self.parse_user(u) for u in d['users']],
+            members=list(map(self.parse_member, payload['members'])),
+            users=list(map(self.parse_user, payload['users'])),
         )
 
-    def parse_members_with_users(self, d: raw.AllMemberResponse) -> list[Member]:
-        users = [self.parse_user(u) for u in d['users']]
+    def parse_members_with_users(self, payload: raw.AllMemberResponse, /) -> list[Member]:
+        users = list(map(self.parse_user, payload['users']))
 
-        return [self.parse_member(e, user=users[i]) for i, e in enumerate(d['members'])]
+        p = self.parse_member
+        return [p(e, users[i]) for i, e in enumerate(payload['members'])]
 
     def parse_message(
         self,
-        d: raw.Message,
-        /,
-        *,
+        payload: raw.Message,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
+        /,
     ) -> Message:
-        author_id = d['author']
-        webhook = d.get('webhook')
-        system = d.get('system')
-        edited_at = d.get('edited')
-        interactions = d.get('interactions')
-        masquerade = d.get('masquerade')
+        author_id = payload['author']
+        webhook = payload.get('webhook')
+        system = payload.get('system')
+        edited_at = payload.get('edited')
+        interactions = payload.get('interactions')
+        masquerade = payload.get('masquerade')
 
-        member = d.get('member')
-        user = d.get('user')
+        member = payload.get('member')
+        user = payload.get('user')
 
         if member:
             if user:
-                author = self.parse_member(member, user=self.parse_user(user))
+                author = self.parse_member(member, self.parse_user(user))
             else:
                 author = self.parse_member(member)
         elif user:
@@ -889,114 +918,121 @@ class Parser:
         else:
             author = members.get(author_id) or users.get(author_id) or author_id
 
+        flags = _new_message_flags(MessageFlags)
+        flags.value = payload.get('flags', 0)
+
         return Message(
             state=self.state,
-            id=d['_id'],
-            nonce=d.get('nonce'),
-            channel_id=d['channel'],
+            id=payload['_id'],
+            nonce=payload.get('nonce'),
+            channel_id=payload['channel'],
             internal_author=author,
             webhook=self.parse_message_webhook(webhook) if webhook else None,
-            content=d.get('content', ''),
+            content=payload.get('content', ''),
             internal_system_event=self.parse_message_system_event(system, members, users) if system else None,
-            internal_attachments=[self.parse_asset(a) for a in d.get('attachments', ())],
+            internal_attachments=[self.parse_asset(a) for a in payload.get('attachments', ())],
             edited_at=_parse_dt(edited_at) if edited_at else None,
-            internal_embeds=[self.parse_embed(e) for e in d.get('embeds', ())],
-            mention_ids=d.get('mentions', []),
-            replies=d.get('replies', []),
-            reactions={k: tuple(v) for k, v in (d.get('reactions') or {}).items()},
+            internal_embeds=[self.parse_embed(e) for e in payload.get('embeds', ())],
+            mention_ids=payload.get('mentions', []),
+            replies=payload.get('replies', []),
+            reactions={k: tuple(v) for k, v in (payload.get('reactions') or {}).items()},
             interactions=(self.parse_message_interactions(interactions) if interactions else None),
             masquerade=(self.parse_message_masquerade(masquerade) if masquerade else None),
-            pinned=d.get('pinned', False),
-            flags=MessageFlags(d.get('flags', 0)),
+            pinned=payload.get('pinned', False),
+            flags=flags,
         )
 
-    def parse_message_append_event(self, shard: Shard, d: raw.ClientMessageAppendEvent) -> MessageAppendEvent:
-        data = d['append']
+    def parse_message_append_event(self, shard: Shard, payload: raw.ClientMessageAppendEvent, /) -> MessageAppendEvent:
+        data = payload['append']
         embeds = data.get('embeds')
 
         return MessageAppendEvent(
             shard=shard,
             data=MessageAppendData(
                 state=self.state,
-                id=d['id'],
-                channel_id=d['channel'],
-                internal_embeds=([self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED),
+                id=payload['id'],
+                channel_id=payload['channel'],
+                internal_embeds=list(map(self.parse_embed, embeds)) if embeds is not None else UNDEFINED,
             ),
             message=None,
         )
 
     def parse_message_channel_description_changed_system_event(
         self,
-        d: raw.ChannelDescriptionChangedSystemMessage,
+        payload: raw.ChannelDescriptionChangedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessChannelDescriptionChangedSystemEvent:
-        by_id = d['by']
+        by_id = payload['by']
 
         return StatelessChannelDescriptionChangedSystemEvent(internal_by=users.get(by_id, by_id))
 
     def parse_message_channel_icon_changed_system_event(
-        self, d: raw.ChannelIconChangedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+        self,
+        payload: raw.ChannelIconChangedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
     ) -> StatelessChannelIconChangedSystemEvent:
-        by_id = d['by']
+        by_id = payload['by']
 
         return StatelessChannelIconChangedSystemEvent(internal_by=users.get(by_id, by_id))
 
     def parse_message_channel_renamed_system_event(
-        self, d: raw.ChannelRenamedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+        self, payload: raw.ChannelRenamedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
     ) -> StatelessChannelRenamedSystemEvent:
-        by_id = d['by']
+        by_id = payload['by']
 
         return StatelessChannelRenamedSystemEvent(
-            name=d['name'],
+            name=payload['name'],
             internal_by=users.get(by_id, by_id),
         )
 
     def parse_message_channel_ownership_changed_system_event(
         self,
-        d: raw.ChannelOwnershipChangedSystemMessage,
+        payload: raw.ChannelOwnershipChangedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessChannelOwnershipChangedSystemEvent:
-        from_id = d['from']
-        to_id = d['to']
+        from_id = payload['from']
+        to_id = payload['to']
 
         return StatelessChannelOwnershipChangedSystemEvent(
             internal_from=users.get(from_id, from_id),
             internal_to=users.get(to_id, to_id),
         )
 
-    def parse_message_delete_event(self, shard: Shard, d: raw.ClientMessageDeleteEvent) -> MessageDeleteEvent:
+    def parse_message_delete_event(self, shard: Shard, payload: raw.ClientMessageDeleteEvent, /) -> MessageDeleteEvent:
         return MessageDeleteEvent(
             shard=shard,
-            channel_id=d['channel'],
-            message_id=d['id'],
+            channel_id=payload['channel'],
+            message_id=payload['id'],
             message=None,
         )
 
-    def parse_message_event(self, shard: Shard, d: raw.ClientMessageEvent) -> MessageCreateEvent:
-        return MessageCreateEvent(shard=shard, message=self.parse_message(d))
+    def parse_message_event(self, shard: Shard, payload: raw.ClientMessageEvent, /) -> MessageCreateEvent:
+        return MessageCreateEvent(shard=shard, message=self.parse_message(payload))
 
-    def parse_message_interactions(self, d: raw.Interactions) -> Interactions:
+    def parse_message_interactions(self, payload: raw.Interactions, /) -> Interactions:
         return Interactions(
-            reactions=d.get('reactions', []),
-            restrict_reactions=d.get('restrict_reactions', False),
+            reactions=payload.get('reactions', []),
+            restrict_reactions=payload.get('restrict_reactions', False),
         )
 
-    def parse_message_masquerade(self, d: raw.Masquerade) -> Masquerade:
-        return Masquerade(name=d.get('name'), avatar=d.get('avatar'), colour=d.get('colour'))
+    def parse_message_masquerade(self, payload: raw.Masquerade, /) -> Masquerade:
+        return Masquerade(name=payload.get('name'), avatar=payload.get('avatar'), colour=payload.get('colour'))
 
     def parse_message_message_pinned_system_event(
         self,
-        d: raw.MessagePinnedSystemMessage,
+        payload: raw.MessagePinnedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessMessagePinnedSystemEvent:
-        pinned_message_id = d['id']
-        by_id = d['by']
+        pinned_message_id = payload['id']
+        by_id = payload['by']
 
         return StatelessMessagePinnedSystemEvent(
             pinned_message_id=pinned_message_id,
@@ -1004,67 +1040,70 @@ class Parser:
         )
 
     def parse_message_message_unpinned_system_event(
-        self, d: raw.MessageUnpinnedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
+        self, payload: raw.MessageUnpinnedSystemMessage, members: dict[str, Member] = {}, users: dict[str, User] = {}, /
     ) -> StatelessMessageUnpinnedSystemEvent:
-        unpinned_message_id = d['id']
-        by_id = d['by']
+        unpinned_message_id = payload['id']
+        by_id = payload['by']
 
         return StatelessMessageUnpinnedSystemEvent(
             unpinned_message_id=unpinned_message_id,
             internal_by=members.get(by_id, users.get(by_id, by_id)),
         )
 
-    def parse_message_react_event(self, shard: Shard, d: raw.ClientMessageReactEvent) -> MessageReactEvent:
+    def parse_message_react_event(self, shard: Shard, payload: raw.ClientMessageReactEvent, /) -> MessageReactEvent:
         return MessageReactEvent(
             shard=shard,
-            channel_id=d['channel_id'],
-            message_id=d['id'],
-            user_id=d['user_id'],
-            emoji=d['emoji_id'],
+            channel_id=payload['channel_id'],
+            message_id=payload['id'],
+            user_id=payload['user_id'],
+            emoji=payload['emoji_id'],
             message=None,
         )
 
     def parse_message_remove_reaction_event(
-        self, shard: Shard, d: raw.ClientMessageRemoveReactionEvent
+        self, shard: Shard, payload: raw.ClientMessageRemoveReactionEvent, /
     ) -> MessageClearReactionEvent:
         return MessageClearReactionEvent(
             shard=shard,
-            channel_id=d['channel_id'],
-            message_id=d['id'],
-            emoji=d['emoji_id'],
+            channel_id=payload['channel_id'],
+            message_id=payload['id'],
+            emoji=payload['emoji_id'],
             message=None,
         )
 
     def parse_message_system_event(
         self,
-        d: raw.SystemMessage,
+        payload: raw.SystemMessage,
         members: dict[str, Member],
         users: dict[str, User],
         /,
     ) -> StatelessSystemEvent:
-        return self._message_system_event_parsers[d['type']](d, members, users)
+        return self._message_system_event_parsers[payload['type']](payload, members, users)
 
     def parse_message_text_system_event(
         self,
-        d: raw.TextSystemMessage,
+        payload: raw.TextSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
+        /,
     ) -> TextSystemEvent:
-        return TextSystemEvent(content=d['content'])
+        return TextSystemEvent(content=payload['content'])
 
-    def parse_message_unreact_event(self, shard: Shard, d: raw.ClientMessageUnreactEvent) -> MessageUnreactEvent:
+    def parse_message_unreact_event(
+        self, shard: Shard, payload: raw.ClientMessageUnreactEvent, /
+    ) -> MessageUnreactEvent:
         return MessageUnreactEvent(
             shard=shard,
-            channel_id=d['channel_id'],
-            message_id=d['id'],
-            user_id=d['user_id'],
-            emoji=d['emoji_id'],
+            channel_id=payload['channel_id'],
+            message_id=payload['id'],
+            user_id=payload['user_id'],
+            emoji=payload['emoji_id'],
             message=None,
         )
 
-    def parse_message_update_event(self, shard: Shard, d: raw.ClientMessageUpdateEvent) -> MessageUpdateEvent:
-        data = d['data']
-        clear = d.get('clear', [])
+    def parse_message_update_event(self, shard: Shard, payload: raw.ClientMessageUpdateEvent, /) -> MessageUpdateEvent:
+        data = payload['data']
+        clear = payload.get('clear', ())
 
         content = data.get('content')
         edited_at = data.get('edited')
@@ -1075,8 +1114,8 @@ class Parser:
             shard=shard,
             message=PartialMessage(
                 state=self.state,
-                id=d['id'],
-                channel_id=d['channel'],
+                id=payload['id'],
+                channel_id=payload['channel'],
                 content=content if content is not None else UNDEFINED,
                 edited_at=_parse_dt(edited_at) if edited_at else UNDEFINED,
                 internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED,
@@ -1089,13 +1128,13 @@ class Parser:
 
     def parse_message_user_added_system_event(
         self,
-        d: raw.UserAddedSystemMessage,
+        payload: raw.UserAddedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessUserAddedSystemEvent:
-        user_id = d['id']
-        by_id = d['by']
+        user_id = payload['id']
+        by_id = payload['by']
 
         return StatelessUserAddedSystemEvent(
             internal_user=members.get(user_id, users.get(user_id, user_id)),
@@ -1104,205 +1143,209 @@ class Parser:
 
     def parse_message_user_banned_system_event(
         self,
-        d: raw.UserBannedSystemMessage,
+        payload: raw.UserBannedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessUserBannedSystemEvent:
-        user_id = d['id']
+        user_id = payload['id']
 
         return StatelessUserBannedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
 
     def parse_message_user_joined_system_event(
         self,
-        d: raw.UserJoinedSystemMessage,
+        payload: raw.UserJoinedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessUserJoinedSystemEvent:
-        user_id = d['id']
+        user_id = payload['id']
 
         return StatelessUserJoinedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
 
     def parse_message_user_kicked_system_event(
         self,
-        d: raw.UserKickedSystemMessage,
+        payload: raw.UserKickedSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessUserKickedSystemEvent:
-        user_id = d['id']
+        user_id = payload['id']
 
         return StatelessUserKickedSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
 
     def parse_message_user_left_system_event(
         self,
-        d: raw.UserLeftSystemMessage,
+        payload: raw.UserLeftSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
         /,
     ) -> StatelessUserLeftSystemEvent:
-        user_id = d['id']
+        user_id = payload['id']
 
         return StatelessUserLeftSystemEvent(internal_user=members.get(user_id, users.get(user_id, user_id)))
 
     def parse_message_user_remove_system_event(
         self,
-        d: raw.UserRemoveSystemMessage,
+        payload: raw.UserRemoveSystemMessage,
         members: dict[str, Member] = {},
         users: dict[str, User] = {},
+        /,
     ) -> StatelessUserRemovedSystemEvent:
-        user_id = d['id']
-        by_id = d['by']
+        user_id = payload['id']
+        by_id = payload['by']
 
         return StatelessUserRemovedSystemEvent(
             internal_user=members.get(user_id, users.get(user_id, user_id)),
             internal_by=members.get(by_id, users.get(by_id, by_id)),
         )
 
-    def parse_message_webhook(self, d: raw.MessageWebhook) -> MessageWebhook:
+    def parse_message_webhook(self, payload: raw.MessageWebhook, /) -> MessageWebhook:
         return MessageWebhook(
-            name=d['name'],
-            avatar=d.get('avatar'),
+            name=payload['name'],
+            avatar=payload.get('avatar'),
         )
 
-    def parse_messages(self, d: raw.BulkMessageResponse) -> list[Message]:
-        if isinstance(d, list):
-            return [self.parse_message(e) for e in d]
-        elif isinstance(d, dict):
-            users = [self.parse_user(e) for e in d['users']]
+    def parse_messages(self, payload: raw.BulkMessageResponse, /) -> list[Message]:
+        if isinstance(payload, list):
+            return list(map(self.parse_message, payload))
+        elif isinstance(payload, dict):
+            users = list(map(self.parse_user, payload['users']))
             users_mapping = {u.id: u for u in users}
 
-            members = [self.parse_member(e, users=users_mapping) for e in d.get('members') or {}]
+            members = [self.parse_member(e, None, users_mapping) for e in payload.get('members', ())]
             members_mapping = {m.id: m for m in members}
 
-            return [self.parse_message(e, members=members_mapping, users=users_mapping) for e in d['messages']]
+            return [self.parse_message(e, members_mapping, users_mapping) for e in payload['messages']]
         raise RuntimeError('Unreachable')
 
-    def parse_mfa_response_login(self, d: raw.a.MFAResponseLogin, friendly_name: str | None) -> MFARequired:
+    def parse_mfa_response_login(self, payload: raw.a.MFAResponseLogin, friendly_name: str | None, /) -> MFARequired:
         return MFARequired(
-            ticket=d['ticket'],
-            allowed_methods=[MFAMethod(m) for m in d['allowed_methods']],
+            ticket=payload['ticket'],
+            allowed_methods=list(map(MFAMethod, payload['allowed_methods'])),
             state=self.state,
             internal_friendly_name=friendly_name,
         )
 
-    def parse_mfa_ticket(self, d: raw.a.MFATicket) -> MFATicket:
+    def parse_mfa_ticket(self, payload: raw.a.MFATicket, /) -> MFATicket:
         return MFATicket(
-            id=d['_id'],
-            account_id=d['account_id'],
-            token=d['token'],
-            validated=d['validated'],
-            authorised=d['authorised'],
-            last_totp_code=d.get('last_totp_code'),
+            id=payload['_id'],
+            account_id=payload['account_id'],
+            token=payload['token'],
+            validated=payload['validated'],
+            authorised=payload['authorised'],
+            last_totp_code=payload.get('last_totp_code'),
         )
 
-    def parse_multi_factor_status(self, d: raw.a.MultiFactorStatus) -> MFAStatus:
+    def parse_multi_factor_status(self, payload: raw.a.MultiFactorStatus, /) -> MFAStatus:
         return MFAStatus(
-            totp_mfa=d['totp_mfa'],
-            recovery_active=d['recovery_active'],
+            totp_mfa=payload['totp_mfa'],
+            recovery_active=payload['recovery_active'],
         )
 
-    def parse_mutuals(self, d: raw.MutualResponse) -> Mutuals:
+    def parse_mutuals(self, payload: raw.MutualResponse, /) -> Mutuals:
         return Mutuals(
-            user_ids=d['users'],
-            server_ids=d['servers'],
+            user_ids=payload['users'],
+            server_ids=payload['servers'],
         )
 
-    def parse_none_embed(self, _: raw.NoneEmbed) -> NoneEmbed:
+    def parse_none_embed(self, _: raw.NoneEmbed, /) -> NoneEmbed:
         return _NONE_EMBED
 
-    def parse_none_embed_special(self, _: raw.NoneSpecial) -> NoneEmbedSpecial:
+    def parse_none_embed_special(self, _: raw.NoneSpecial, /) -> NoneEmbedSpecial:
         return _NONE_EMBED_SPECIAL
 
-    def parse_own_user(self, d: raw.User, /) -> OwnUser:
-        avatar = d.get('avatar')
-        status = d.get('status')
-        # profile = d.get("profile")
-        privileged = d.get('privileged')
-        bot = d.get('bot')
+    def parse_own_user(self, payload: raw.User, /) -> OwnUser:
+        avatar = payload.get('avatar')
+        status = payload.get('status')
+        # profile = payload.get("profile")
+        privileged = payload.get('privileged', False)
 
-        relations = [self.parse_relationship(r) for r in d.get('relations', ())]
+        badges = _new_user_badges(UserBadges)
+        badges.value = payload.get('badges', 0)
+
+        flags = _new_user_flags(UserFlags)
+        flags.value = payload.get('flags', 0)
+
+        bot = payload.get('bot')
+
+        relations = list(map(self.parse_relationship, payload.get('relations', ())))
 
         return OwnUser(
             state=self.state,
-            id=d['_id'],
-            name=d['username'],
-            discriminator=d['discriminator'],
-            display_name=d.get('display_name'),
+            id=payload['_id'],
+            name=payload['username'],
+            discriminator=payload['discriminator'],
+            display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             relations={relation.id: relation for relation in relations},
-            badges=UserBadges(d.get('badges', 0)),
+            badges=badges,
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=UserFlags(d.get('flags', 0)),
+            flags=flags,
             privileged=privileged or False,
             bot=self.parse_bot_user_info(bot) if bot else None,
-            relationship=RelationshipStatus(d['relationship']),
-            online=d['online'],
+            relationship=RelationshipStatus(payload['relationship']),
+            online=payload['online'],
         )
 
-    def parse_partial_account(self, d: raw.a.AccountInfo) -> PartialAccount:
-        return PartialAccount(id=d['_id'], email=d['email'])
+    def parse_partial_account(self, payload: raw.a.AccountInfo, /) -> PartialAccount:
+        return PartialAccount(id=payload['_id'], email=payload['email'])
 
-    def parse_partial_session(self, d: raw.a.SessionInfo) -> PartialSession:
-        return PartialSession(state=self.state, id=d['_id'], name=d['name'])
+    def parse_partial_session(self, payload: raw.a.SessionInfo, /) -> PartialSession:
+        return PartialSession(state=self.state, id=payload['_id'], name=payload['name'])
 
-    def parse_partial_user_profile(self, d: raw.UserProfile, clear: list[raw.FieldsUser]) -> PartialUserProfile:
-        background = d.get('background')
+    def parse_partial_user_profile(
+        self, payload: raw.UserProfile, clear: list[raw.FieldsUser], /
+    ) -> PartialUserProfile:
+        background = payload.get('background')
 
         return PartialUserProfile(
             state=self.state,
-            content=(None if 'ProfileContent' in clear else d.get('content') or UNDEFINED),
+            content=(None if 'ProfileContent' in clear else payload.get('content') or UNDEFINED),
             internal_background=(
                 None if 'ProfileBackground' in clear else self.parse_asset(background) if background else UNDEFINED
             ),
         )
 
-    def parse_permission_override(self, d: raw.Override) -> PermissionOverride:
-        return PermissionOverride(
-            allow=Permissions(d['allow']),
-            deny=Permissions(d['deny']),
-        )
+    def parse_permission_override(self, payload: raw.Override, /) -> PermissionOverride:
+        allow = _new_permissions(Permissions)
+        allow.value = payload['allow']
 
-    def parse_permission_override_field(self, d: raw.OverrideField) -> PermissionOverride:
-        return PermissionOverride(
-            allow=Permissions(d['a']),
-            deny=Permissions(d['d']),
-        )
+        deny = _new_permissions(Permissions)
+        deny.value = payload['deny']
 
-    def parse_public_bot(self, d: raw.PublicBot) -> PublicBot:
+        return PermissionOverride(allow=allow, deny=deny)
+
+    def parse_permission_override_field(self, payload: raw.OverrideField, /) -> PermissionOverride:
+        allow = _new_permissions(Permissions)
+        allow.value = payload['a']
+
+        deny = _new_permissions(Permissions)
+        deny.value = payload['d']
+
+        return PermissionOverride(allow=allow, deny=deny)
+
+    def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
         return PublicBot(
             state=self.state,
-            id=d['_id'],
-            username=d['username'],
-            internal_avatar_id=d.get('avatar'),
-            description=d.get('description', ''),
+            id=payload['_id'],
+            username=payload['username'],
+            internal_avatar_id=payload.get('avatar'),
+            description=payload.get('description', ''),
         )
 
-    def parse_public_invite(self, d: raw.InviteResponse) -> BaseInvite:
-        return self._public_invite_parsers.get(d['type'], self.parse_unknown_public_invite)(d)
+    def parse_public_invite(self, payload: raw.InviteResponse, /) -> BaseInvite:
+        return self._public_invite_parsers.get(payload['type'], self.parse_unknown_public_invite)(payload)
 
-    def parse_read_state(self, d: raw.ChannelUnread) -> ReadState:
-        id = d['_id']
-        last_id = d.get('last_id')
-
-        return ReadState(
-            state=self.state,
-            channel_id=id['channel'],
-            user_id=id['user'],
-            last_message_id=last_id if last_id else None,
-            mentioned_in=d.get('mentions') or [],
-        )
-
-    def parse_ready_event(self, shard: Shard, d: raw.ClientReadyEvent) -> ReadyEvent:
-        users = [self.parse_user(u) for u in d.get('users', ())]
-        servers = [self.parse_server(s, (True, s['channels'])) for s in d.get('servers', ())]
-        channels = [self.parse_channel(c) for c in d.get('channels', ())]
-        members = [self.parse_member(m) for m in d.get('members', ())]
-        emojis = [self.parse_server_emoji(e) for e in d.get('emojis', ())]
-        user_settings = self.parse_user_settings(d.get('user_settings', {}), False)
-        read_states = [self.parse_read_state(rs) for rs in d.get('channel_unreads', ())]
+    def parse_ready_event(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> ReadyEvent:
+        users = list(map(self.parse_user, payload.get('users', ())))
+        servers = [self.parse_server(s, (True, s['channels'])) for s in payload.get('servers', ())]
+        channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
+        members = list(map(self.parse_member, payload.get('members', ())))
+        emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
+        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
+        read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
 
         me = users[-1]
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
@@ -1325,30 +1368,32 @@ class Parser:
             read_states=read_states,
         )
 
-    def parse_relationship(self, d: raw.Relationship) -> Relationship:
+    def parse_relationship(self, payload: raw.Relationship, /) -> Relationship:
         return Relationship(
-            id=d['_id'],
-            status=RelationshipStatus(d['status']),
+            id=payload['_id'],
+            status=RelationshipStatus(payload['status']),
         )
 
-    def parse_response_login(self, d: raw.a.ResponseLogin, friendly_name: str | None) -> LoginResult:
-        if d['result'] == 'Success':
-            return self.parse_session(d)
-        elif d['result'] == 'MFA':
-            return self.parse_mfa_response_login(d, friendly_name)
-        elif d['result'] == 'Disabled':
-            return self.parse_disabled_response_login(d)
+    def parse_response_login(self, payload: raw.a.ResponseLogin, friendly_name: str | None, /) -> LoginResult:
+        if payload['result'] == 'Success':
+            return self.parse_session(payload)
+        elif payload['result'] == 'MFA':
+            return self.parse_mfa_response_login(payload, friendly_name)
+        elif payload['result'] == 'Disabled':
+            return self.parse_disabled_response_login(payload)
         else:
-            raise NotImplementedError(d)
+            raise NotImplementedError(payload)
 
-    def parse_response_webhook(self, d: raw.ResponseWebhook) -> Webhook:
-        avatar = d.get('avatar')
-        webhook_id = d['id']
+    def parse_response_webhook(self, payload: raw.ResponseWebhook, /) -> Webhook:
+        id = payload['id']
+        avatar = payload.get('avatar')
+        permissions = _new_permissions(Permissions)
+        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
-            id=webhook_id,
-            name=d['name'],
+            id=id,
+            name=payload['name'],
             internal_avatar=(
                 StatelessAsset(
                     id=avatar,
@@ -1363,35 +1408,35 @@ class Parser:
                     deleted=False,
                     reported=False,
                     message_id=None,
-                    user_id=webhook_id,
+                    user_id=id,
                     server_id=None,
                     object_id=None,
                 )
                 if avatar
                 else None
             ),
-            channel_id=d['channel_id'],
-            permissions=Permissions(d['permissions']),
+            channel_id=payload['channel_id'],
+            permissions=permissions,
             token=None,
         )
 
-    def parse_role(self, d: raw.Role, role_id: str, server_id: str, /) -> Role:
+    def parse_role(self, payload: raw.Role, role_id: str, server_id: str, /) -> Role:
         return Role(
             state=self.state,
             id=role_id,
-            name=d['name'],
-            permissions=self.parse_permission_override_field(d['permissions']),
-            colour=d.get('colour'),
-            hoist=d.get('hoist', False),
-            rank=d['rank'],
+            name=payload['name'],
+            permissions=self.parse_permission_override_field(payload['permissions']),
+            colour=payload.get('colour'),
+            hoist=payload.get('hoist', False),
+            rank=payload['rank'],
             server_id=server_id,
         )
 
-    def parse_saved_messages_channel(self, d: raw.SavedMessagesChannel) -> SavedMessagesChannel:
+    def parse_saved_messages_channel(self, payload: raw.SavedMessagesChannel, /) -> SavedMessagesChannel:
         return SavedMessagesChannel(
             state=self.state,
-            id=d['_id'],
-            user_id=d['user'],
+            id=payload['_id'],
+            user_id=payload['user'],
         )
 
     def _parse_server(
@@ -1460,42 +1505,42 @@ class Parser:
             emojis=[self.parse_server_emoji(e) for e in d['emojis']],
         )
 
-    def parse_server_delete_event(self, shard: Shard, d: raw.ClientServerDeleteEvent) -> ServerDeleteEvent:
+    def parse_server_delete_event(self, shard: Shard, payload: raw.ClientServerDeleteEvent, /) -> ServerDeleteEvent:
         return ServerDeleteEvent(
             shard=shard,
-            server_id=d['id'],
+            server_id=payload['id'],
             server=None,
         )
 
-    def parse_server_emoji(self, d: raw.ServerEmoji) -> ServerEmoji:
+    def parse_server_emoji(self, payload: raw.ServerEmoji, /) -> ServerEmoji:
         return ServerEmoji(
             state=self.state,
-            id=d['_id'],
-            server_id=d['parent']['id'],
-            creator_id=d['creator_id'],
-            name=d['name'],
-            animated=d.get('animated', False),
-            nsfw=d.get('nsfw', False),
+            id=payload['_id'],
+            server_id=payload['parent']['id'],
+            creator_id=payload['creator_id'],
+            name=payload['name'],
+            animated=payload.get('animated', False),
+            nsfw=payload.get('nsfw', False),
         )
 
-    def parse_server_invite(self, d: raw.ServerInvite) -> ServerInvite:
+    def parse_server_invite(self, payload: raw.ServerInvite, /) -> ServerInvite:
         return ServerInvite(
             state=self.state,
-            code=d['_id'],
-            creator_id=d['creator'],
-            server_id=d['server'],
-            channel_id=d['channel'],
+            code=payload['_id'],
+            creator_id=payload['creator'],
+            server_id=payload['server'],
+            channel_id=payload['channel'],
         )
 
     def parse_server_member_join_event(
-        self, shard: Shard, d: raw.ClientServerMemberJoinEvent, joined_at: datetime
+        self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, joined_at: datetime, /
     ) -> ServerMemberJoinEvent:
         return ServerMemberJoinEvent(
             shard=shard,
             member=Member(
                 state=self.state,
-                server_id=d['id'],
-                _user=d['user'],
+                server_id=payload['id'],
+                _user=payload['user'],
                 joined_at=joined_at,
                 nick=None,
                 internal_server_avatar=None,
@@ -1505,22 +1550,22 @@ class Parser:
         )
 
     def parse_server_member_leave_event(
-        self, shard: Shard, d: raw.ClientServerMemberLeaveEvent
+        self, shard: Shard, payload: raw.ClientServerMemberLeaveEvent, /
     ) -> ServerMemberRemoveEvent:
         return ServerMemberRemoveEvent(
             shard=shard,
-            server_id=d['id'],
-            user_id=d['user'],
+            server_id=payload['id'],
+            user_id=payload['user'],
             member=None,
-            reason=MemberRemovalIntention(d['reason']),
+            reason=MemberRemovalIntention(payload['reason']),
         )
 
     def parse_server_member_update_event(
-        self, shard: Shard, d: raw.ClientServerMemberUpdateEvent
+        self, shard: Shard, payload: raw.ClientServerMemberUpdateEvent, /
     ) -> ServerMemberUpdateEvent:
-        id = d['id']
-        data = d['data']
-        clear = d['clear']
+        id = payload['id']
+        data = payload['data']
+        clear = payload['clear']
 
         avatar = data.get('avatar')
         roles = data.get('roles')
@@ -1541,41 +1586,46 @@ class Parser:
             after=None,  # filled on dispatch
         )
 
-    def parse_server_public_invite(self, d: raw.ServerInviteResponse) -> ServerPublicInvite:
-        server_icon = d.get('server_icon')
-        server_banner = d.get('server_banner')
-        user_avatar = d.get('user_avatar')
+    def parse_server_public_invite(self, payload: raw.ServerInviteResponse, /) -> ServerPublicInvite:
+        server_icon = payload.get('server_icon')
+        server_banner = payload.get('server_banner')
+        server_flags = _new_server_flags(ServerFlags)
+        server_flags.value = payload.get('server_flags', 0)
+
+        user_avatar = payload.get('user_avatar')
 
         return ServerPublicInvite(
             state=self.state,
-            code=d['code'],
-            server_id=d['server_id'],
-            server_name=d['server_name'],
+            code=payload['code'],
+            server_id=payload['server_id'],
+            server_name=payload['server_name'],
             internal_server_icon=self.parse_asset(server_icon) if server_icon else None,
             internal_server_banner=(self.parse_asset(server_banner) if server_banner else None),
-            flags=ServerFlags(d.get('server_flags', 0)),
-            channel_id=d['channel_id'],
-            channel_name=d['channel_name'],
-            channel_description=d.get('channel_description'),
-            user_name=d['user_name'],
+            flags=server_flags,
+            channel_id=payload['channel_id'],
+            channel_name=payload['channel_name'],
+            channel_description=payload.get('channel_description'),
+            user_name=payload['user_name'],
             internal_user_avatar=self.parse_asset(user_avatar) if user_avatar else None,
-            members_count=d['member_count'],
+            members_count=payload['member_count'],
         )
 
-    def parse_server_role_delete_event(self, shard: Shard, d: raw.ClientServerRoleDeleteEvent) -> ServerRoleDeleteEvent:
+    def parse_server_role_delete_event(
+        self, shard: Shard, payload: raw.ClientServerRoleDeleteEvent, /
+    ) -> ServerRoleDeleteEvent:
         return ServerRoleDeleteEvent(
             shard=shard,
-            server_id=d['id'],
-            role_id=d['role_id'],
+            server_id=payload['id'],
+            role_id=payload['role_id'],
             server=None,
             role=None,
         )
 
     def parse_server_role_update_event(
-        self, shard: Shard, d: raw.ClientServerRoleUpdateEvent
+        self, shard: Shard, payload: raw.ClientServerRoleUpdateEvent, /
     ) -> RawServerRoleUpdateEvent:
-        data = d['data']
-        clear = d['clear']
+        data = payload['data']
+        clear = payload['clear']
 
         permissions = data.get('permissions')
 
@@ -1583,8 +1633,8 @@ class Parser:
             shard=shard,
             role=PartialRole(
                 state=self.state,
-                id=d['role_id'],
-                server_id=d['id'],
+                id=payload['role_id'],
+                server_id=payload['id'],
                 name=data.get('name') or UNDEFINED,
                 permissions=(self.parse_permission_override_field(permissions) if permissions else UNDEFINED),
                 colour=(None if 'Colour' in clear else data.get('colour', UNDEFINED)),
@@ -1596,9 +1646,9 @@ class Parser:
             server=None,
         )
 
-    def parse_server_update_event(self, shard: Shard, d: raw.ClientServerUpdateEvent) -> ServerUpdateEvent:
-        data = d['data']
-        clear = d['clear']
+    def parse_server_update_event(self, shard: Shard, payload: raw.ClientServerUpdateEvent, /) -> ServerUpdateEvent:
+        data = payload['data']
+        clear = payload['clear']
 
         description = data.get('description')
         categories = data.get('categories')
@@ -1612,8 +1662,8 @@ class Parser:
             shard=shard,
             server=PartialServer(
                 state=self.state,
-                id=d['id'],
-                owner_id=d.get('owner', UNDEFINED),
+                id=payload['id'],
+                owner_id=data.get('owner', UNDEFINED),
                 name=data.get('name', UNDEFINED),
                 description=(None if 'Description' in clear else description if description is not None else UNDEFINED),
                 channel_ids=data.get('channels', UNDEFINED),
@@ -1637,161 +1687,163 @@ class Parser:
                 internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
                 internal_banner=(None if 'Banner' in clear else self.parse_asset(banner) if banner else UNDEFINED),
                 flags=(ServerFlags(flags) if flags is not None else UNDEFINED),
-                discoverable=d.get('discoverable', UNDEFINED),
-                analytics=d.get('analytics', UNDEFINED),
+                discoverable=data.get('discoverable', UNDEFINED),
+                analytics=data.get('analytics', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
 
-    def parse_session(self, d: raw.a.Session) -> Session:
-        subscription = d.get('subscription')
+    def parse_session(self, payload: raw.a.Session, /) -> Session:
+        subscription = payload.get('subscription')
 
         return Session(
             state=self.state,
-            id=d['_id'],
-            name=d['name'],
-            user_id=d['user_id'],
-            token=d['token'],
+            id=payload['_id'],
+            name=payload['name'],
+            user_id=payload['user_id'],
+            token=payload['token'],
             subscription=(self.parse_webpush_subscription(subscription) if subscription else None),
         )
 
-    def parse_soundcloud_embed_special(self, _: raw.SoundcloudSpecial) -> SoundcloudEmbedSpecial:
+    def parse_soundcloud_embed_special(self, _: raw.SoundcloudSpecial, /) -> SoundcloudEmbedSpecial:
         return _SOUNDCLOUD_EMBED_SPECIAL
 
-    def parse_spotify_embed_special(self, d: raw.SpotifySpecial) -> SpotifyEmbedSpecial:
+    def parse_spotify_embed_special(self, payload: raw.SpotifySpecial, /) -> SpotifyEmbedSpecial:
         return SpotifyEmbedSpecial(
-            content_type=d['content_type'],
-            id=d['id'],
+            content_type=payload['content_type'],
+            id=payload['id'],
         )
 
-    def parse_streamable_embed_special(self, d: raw.StreamableSpecial) -> StreamableEmbedSpecial:
-        return StreamableEmbedSpecial(id=d['id'])
+    def parse_streamable_embed_special(self, payload: raw.StreamableSpecial, /) -> StreamableEmbedSpecial:
+        return StreamableEmbedSpecial(id=payload['id'])
 
-    def parse_system_message_channels(self, d: raw.SystemMessageChannels, /) -> SystemMessageChannels:
+    def parse_system_message_channels(self, payload: raw.SystemMessageChannels, /) -> SystemMessageChannels:
         return SystemMessageChannels(
-            user_joined=d.get('user_joined'),
-            user_left=d.get('user_left'),
-            user_kicked=d.get('user_kicked'),
-            user_banned=d.get('user_banned'),
+            user_joined=payload.get('user_joined'),
+            user_left=payload.get('user_left'),
+            user_kicked=payload.get('user_kicked'),
+            user_banned=payload.get('user_banned'),
         )
 
-    def parse_text_channel(self, d: raw.TextChannel, /) -> ServerTextChannel:
-        icon = d.get('icon')
-        default_permissions = d.get('default_permissions')
-        role_permissions = d.get('role_permissions', {})
+    def parse_text_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel:
+        icon = payload.get('icon')
+        default_permissions = payload.get('default_permissions')
+        role_permissions = payload.get('role_permissions', {})
 
         try:
-            last_message_id = d['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            last_message_id = payload['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
         except KeyError:
             last_message_id = None
 
         return ServerTextChannel(
             state=self.state,
-            id=d['_id'],
-            server_id=d['server'],
-            name=d['name'],
-            description=d.get('description'),
+            id=payload['_id'],
+            server_id=payload['server'],
+            name=payload['name'],
+            description=payload.get('description'),
             internal_icon=self.parse_asset(icon) if icon else None,
             last_message_id=last_message_id,
             default_permissions=(
                 None if default_permissions is None else self.parse_permission_override_field(default_permissions)
             ),
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
-            nsfw=d.get('nsfw', False),
+            nsfw=payload.get('nsfw', False),
         )
 
-    def parse_text_embed(self, d: raw.TextEmbed) -> StatelessTextEmbed:
-        media = d.get('media')
+    def parse_text_embed(self, payload: raw.TextEmbed, /) -> StatelessTextEmbed:
+        media = payload.get('media')
 
         return StatelessTextEmbed(
-            icon_url=d.get('icon_url'),
-            url=d.get('url'),
-            title=d.get('title'),
-            description=d.get('description'),
+            icon_url=payload.get('icon_url'),
+            url=payload.get('url'),
+            title=payload.get('title'),
+            description=payload.get('description'),
             internal_media=self.parse_asset(media) if media else None,
-            colour=d.get('colour'),
+            colour=payload.get('colour'),
         )
 
-    def parse_twitch_embed_special(self, d: raw.TwitchSpecial) -> TwitchEmbedSpecial:
+    def parse_twitch_embed_special(self, payload: raw.TwitchSpecial, /) -> TwitchEmbedSpecial:
         return TwitchEmbedSpecial(
-            content_type=TwitchContentType(d['content_type']),
-            id=d['id'],
+            content_type=TwitchContentType(payload['content_type']),
+            id=payload['id'],
         )
 
-    def parse_unknown_public_invite(self, d: dict[str, typing.Any]) -> UnknownPublicInvite:
-        return UnknownPublicInvite(state=self.state, code=d['code'], payload=d)
+    def parse_unknown_public_invite(self, payload: dict[str, typing.Any], /) -> UnknownPublicInvite:
+        return UnknownPublicInvite(state=self.state, code=payload['code'], payload=payload)
 
-    def parse_user(self, d: raw.User, /) -> User | OwnUser:
-        if d['relationship'] == 'User':
-            return self.parse_own_user(d)
+    def parse_user(self, payload: raw.User, /) -> User | OwnUser:
+        if payload['relationship'] == 'User':
+            return self.parse_own_user(payload)
 
-        avatar = d.get('avatar')
-        status = d.get('status')
+        avatar = payload.get('avatar')
+        status = payload.get('status')
 
         badges = _new_user_badges(UserBadges)
-        badges.value = d.get('badges', 0)
+        badges.value = payload.get('badges', 0)
 
         flags = _new_user_flags(UserFlags)
-        flags.value = d.get('flags', 0)
+        flags.value = payload.get('flags', 0)
 
-        bot = d.get('bot')
+        bot = payload.get('bot')
 
         return User(
             state=self.state,
-            id=d['_id'],
-            name=d['username'],
-            discriminator=d['discriminator'],
-            display_name=d.get('display_name'),
+            id=payload['_id'],
+            name=payload['username'],
+            discriminator=payload['discriminator'],
+            display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             badges=badges,
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
             flags=flags,
-            privileged=d.get('privileged', False),
+            privileged=payload.get('privileged', False),
             bot=self.parse_bot_user_info(bot) if bot else None,
-            relationship=RelationshipStatus(d['relationship']),
-            online=d['online'],
+            relationship=RelationshipStatus(payload['relationship']),
+            online=payload['online'],
         )
 
-    def parse_user_platform_wipe_event(self, shard: Shard, d: raw.ClientUserPlatformWipeEvent) -> UserPlatformWipeEvent:
+    def parse_user_platform_wipe_event(
+        self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /
+    ) -> UserPlatformWipeEvent:
         return UserPlatformWipeEvent(
             shard=shard,
-            user_id=d['user_id'],
-            flags=UserFlags(d['flags']),
+            user_id=payload['user_id'],
+            flags=UserFlags(payload['flags']),
         )
 
-    def parse_user_profile(self, d: raw.UserProfile) -> StatelessUserProfile:
-        background = d.get('background')
+    def parse_user_profile(self, payload: raw.UserProfile, /) -> StatelessUserProfile:
+        background = payload.get('background')
 
         return StatelessUserProfile(
-            content=d.get('content'),
+            content=payload.get('content'),
             internal_background=self.parse_asset(background) if background else None,
         )
 
     def parse_user_relationship_event(
-        self, shard: Shard, d: raw.ClientUserRelationshipEvent
+        self, shard: Shard, payload: raw.ClientUserRelationshipEvent, /
     ) -> UserRelationshipUpdateEvent:
         return UserRelationshipUpdateEvent(
             shard=shard,
-            current_user_id=d['id'],
+            current_user_id=payload['id'],
             old_user=None,
-            new_user=self.parse_user(d['user']),
+            new_user=self.parse_user(payload['user']),
             before=None,
         )
 
-    def parse_user_settings(self, d: raw.UserSettings, partial: bool) -> UserSettings:
+    def parse_user_settings(self, payload: raw.UserSettings, partial: bool, /) -> UserSettings:
         return UserSettings(
-            data={k: (s1, s2) for (k, (s1, s2)) in d.items()},
+            data={k: (s1, s2) for (k, (s1, s2)) in payload.items()},
             state=self.state,
             mocked=False,
             partial=partial,
         )
 
     def parse_user_settings_update_event(
-        self, shard: Shard, d: raw.ClientUserSettingsUpdateEvent
+        self, shard: Shard, payload: raw.ClientUserSettingsUpdateEvent, /
     ) -> UserSettingsUpdateEvent:
-        partial = self.parse_user_settings(d['update'], True)
+        partial = self.parse_user_settings(payload['update'], True)
 
         before = shard.state.settings
 
@@ -1804,32 +1856,32 @@ class Parser:
 
         return UserSettingsUpdateEvent(
             shard=shard,
-            current_user_id=d['id'],
+            current_user_id=payload['id'],
             partial=partial,
             before=before,
             after=after,
         )
 
-    def parse_user_status(self, d: raw.UserStatus, /) -> UserStatus:
-        presence = d.get('presence')
+    def parse_user_status(self, payload: raw.UserStatus, /) -> UserStatus:
+        presence = payload.get('presence')
 
         return UserStatus(
-            text=d.get('text'),
+            text=payload.get('text'),
             presence=Presence(presence) if presence else None,
         )
 
-    def parse_user_status_edit(self, d: raw.UserStatus, clear: list[raw.FieldsUser]) -> UserStatusEdit:
-        presence = d.get('presence')
+    def parse_user_status_edit(self, payload: raw.UserStatus, clear: list[raw.FieldsUser], /) -> UserStatusEdit:
+        presence = payload.get('presence')
 
         return UserStatusEdit(
-            text=None if 'StatusText' in clear else d.get('text', UNDEFINED),
+            text=None if 'StatusText' in clear else payload.get('text', UNDEFINED),
             presence=(None if 'StatusPresence' in clear else Presence(presence) if presence else UNDEFINED),
         )
 
-    def parse_user_update_event(self, shard: Shard, d: raw.ClientUserUpdateEvent) -> UserUpdateEvent:
-        user_id = d['id']
-        data = d['data']
-        clear = d['clear']
+    def parse_user_update_event(self, shard: Shard, payload: raw.ClientUserUpdateEvent, /) -> UserUpdateEvent:
+        user_id = payload['id']
+        data = payload['data']
+        clear = payload['clear']
 
         avatar = data.get('avatar')
         badges = data.get('badges')
@@ -1852,60 +1904,62 @@ class Parser:
                     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
                 ),
                 flags=UserFlags(flags) if flags is not None else UNDEFINED,
-                online=d.get('online', UNDEFINED),
+                online=data.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
 
-    def parse_video_embed(self, d: raw.Video) -> VideoEmbed:
+    def parse_video_embed(self, payload: raw.Video, /) -> VideoEmbed:
         return VideoEmbed(
-            url=d['url'],
-            width=d['width'],
-            height=d['height'],
+            url=payload['url'],
+            width=payload['width'],
+            height=payload['height'],
         )
 
-    def parse_voice_channel(self, d: raw.VoiceChannel) -> VoiceChannel:
-        icon = d.get('icon')
-        default_permissions = d.get('default_permissions')
-        role_permissions = d.get('role_permissions', {})
+    def parse_voice_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel:
+        icon = payload.get('icon')
+        default_permissions = payload.get('default_permissions')
+        role_permissions = payload.get('role_permissions', {})
 
         return VoiceChannel(
             state=self.state,
-            id=d['_id'],
-            server_id=d['server'],
-            name=d['name'],
-            description=d.get('description'),
+            id=payload['_id'],
+            server_id=payload['server'],
+            name=payload['name'],
+            description=payload.get('description'),
             internal_icon=self.parse_asset(icon) if icon else None,
             default_permissions=(
                 None if default_permissions is None else self.parse_permission_override_field(default_permissions)
             ),
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
-            nsfw=d.get('nsfw', False),
+            nsfw=payload.get('nsfw', False),
         )
 
-    def parse_webhook(self, d: raw.Webhook) -> Webhook:
-        avatar = d.get('avatar')
+    def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
+        avatar = payload.get('avatar')
+        permissions = _new_permissions(Permissions)
+        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
-            id=d['id'],
-            name=d['name'],
+            id=payload['id'],
+            name=payload['name'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            channel_id=d['channel_id'],
-            permissions=Permissions(d['permissions']),
-            token=d.get('token'),
+            channel_id=payload['channel_id'],
+            permissions=permissions,
+            token=payload.get('token'),
         )
 
-    def parse_webhook_create_event(self, shard: Shard, d: raw.ClientWebhookCreateEvent) -> WebhookCreateEvent:
+    def parse_webhook_create_event(self, shard: Shard, payload: raw.ClientWebhookCreateEvent, /) -> WebhookCreateEvent:
         return WebhookCreateEvent(
             shard=shard,
-            webhook=self.parse_webhook(d),
+            webhook=self.parse_webhook(payload),
         )
 
-    def parse_webhook_update_event(self, shard: Shard, d: raw.ClientWebhookUpdateEvent) -> WebhookUpdateEvent:
-        data = d['data']
-        remove = d['remove']
+    def parse_webhook_update_event(self, shard: Shard, payload: raw.ClientWebhookUpdateEvent, /) -> WebhookUpdateEvent:
+        data = payload['data']
+        remove = payload['remove']
 
         avatar = data.get('avatar')
         permissions = data.get('permissions')
@@ -1914,47 +1968,47 @@ class Parser:
             shard=shard,
             new_webhook=PartialWebhook(
                 state=self.state,
-                id=d['id'],
+                id=payload['id'],
                 name=data.get('name', UNDEFINED),
                 internal_avatar=(None if 'Avatar' in remove else self.parse_asset(avatar) if avatar else UNDEFINED),
                 permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
             ),
         )
 
-    def parse_webhook_delete_event(self, shard: Shard, d: raw.ClientWebhookDeleteEvent) -> WebhookDeleteEvent:
+    def parse_webhook_delete_event(self, shard: Shard, payload: raw.ClientWebhookDeleteEvent, /) -> WebhookDeleteEvent:
         return WebhookDeleteEvent(
             shard=shard,
             webhook=None,
-            webhook_id=d['id'],
+            webhook_id=payload['id'],
         )
 
-    def parse_webpush_subscription(self, d: raw.a.WebPushSubscription) -> WebPushSubscription:
+    def parse_webpush_subscription(self, payload: raw.a.WebPushSubscription, /) -> WebPushSubscription:
         return WebPushSubscription(
-            endpoint=d['endpoint'],
-            p256dh=d['p256dh'],
-            auth=d['auth'],
+            endpoint=payload['endpoint'],
+            p256dh=payload['p256dh'],
+            auth=payload['auth'],
         )
 
-    def parse_website_embed(self, d: raw.WebsiteEmbed) -> WebsiteEmbed:
-        special = d.get('special')
-        image = d.get('image')
-        video = d.get('video')
+    def parse_website_embed(self, payload: raw.WebsiteEmbed, /) -> WebsiteEmbed:
+        special = payload.get('special')
+        image = payload.get('image')
+        video = payload.get('video')
 
         return WebsiteEmbed(
-            url=d.get('url'),
-            original_url=d.get('original_url'),
+            url=payload.get('url'),
+            original_url=payload.get('original_url'),
             special=self.parse_embed_special(special) if special else None,
-            title=d.get('title'),
-            description=d.get('description'),
+            title=payload.get('title'),
+            description=payload.get('description'),
             image=self.parse_image_embed(image) if image else None,
             video=self.parse_video_embed(video) if video else None,
-            site_name=d.get('site_name'),
-            icon_url=d.get('icon_url'),
-            colour=d.get('colour'),
+            site_name=payload.get('site_name'),
+            icon_url=payload.get('icon_url'),
+            colour=payload.get('colour'),
         )
 
-    def parse_youtube_embed_special(self, d: raw.YouTubeSpecial) -> YouTubeEmbedSpecial:
-        return YouTubeEmbedSpecial(id=d['id'], timestamp=d.get('timestamp'))
+    def parse_youtube_embed_special(self, payload: raw.YouTubeSpecial) -> YouTubeEmbedSpecial:
+        return YouTubeEmbedSpecial(id=payload['id'], timestamp=payload.get('timestamp'))
 
 
 __all__ = ('Parser',)

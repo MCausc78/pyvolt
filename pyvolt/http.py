@@ -1140,7 +1140,7 @@ class HTTPClient:
         resp: raw.GroupChannel = await self.request(routes.CHANNELS_GROUP_CREATE.compile(), json=payload)
         return self.state.parser.parse_group_channel(
             resp,
-            recipients=(True, []),
+            (True, []),
         )
 
     async def remove_recipient_from_group(
@@ -3123,7 +3123,7 @@ class HTTPClient:
         resp: raw.UserSettings = await self.request(routes.SYNC_GET_SETTINGS.compile(), json=payload)
         return self.state.parser.parse_user_settings(
             resp,
-            partial=True,
+            True,
         )
 
     async def get_read_states(self) -> list[ReadState]:
@@ -3140,7 +3140,7 @@ class HTTPClient:
             The channel read states.
         """
         resp: list[raw.ChannelUnread] = await self.request(routes.SYNC_GET_UNREADS.compile())
-        return [self.state.parser.parse_read_state(d) for d in resp]
+        return list(map(self.state.parser.parse_channel_unread, resp))
 
     async def edit_user_settings(
         self,
