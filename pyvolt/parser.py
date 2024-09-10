@@ -304,10 +304,10 @@ class Parser:
 
     # basic start
 
-    def parse_apple_music_embed_special(self, d: raw.AppleMusicSpecial, /) -> AppleMusicEmbedSpecial:
+    def parse_apple_music_embed_special(self, payload: raw.AppleMusicSpecial, /) -> AppleMusicEmbedSpecial:
         return AppleMusicEmbedSpecial(
-            album_id=d['album_id'],
-            track_id=d.get('track_id'),
+            album_id=payload['album_id'],
+            track_id=payload.get('track_id'),
         )
 
     def parse_asset_metadata(self, d: raw.Metadata, /) -> AssetMetadata:

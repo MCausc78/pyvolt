@@ -207,35 +207,83 @@ class PartialChannel(BaseChannel):
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
 
 
-def _calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str) -> Permissions:
+def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str, /) -> Permissions:
+    """Calculates the permissions in :class:`SavedMessagesChannel` scope.
+
+    Parameters
+    ----------
+    perspective_id: :class:`str`
+        The ID of perspective user.
+    user_id: :class:`str`
+        The ID of channel owner (:attr:`SavedMessagesChannel.owner_id`).
+
+    Returns
+    -------
+    :class:`Permissions`
+        The calculated permissions.
+    """
     if perspective_id == user_id:
         return DEFAULT_SAVED_MESSAGES_PERMISSIONS
-    return Permissions.NONE
+    return Permissions.none()
 
 
-def _calculate_dm_channel_permissions(
-    user_permissions: UserPermissions,
+def calculate_dm_channel_permissions(
+    permissions: UserPermissions,
+    /,
 ) -> Permissions:
-    if user_permissions.send_messages:
+    """Calculates the permissions in :class:`DMChannel` scope.
+
+    Parameters
+    ----------
+    permissions: :class:`UserPermissions`
+        The user permissions.
+
+    Returns
+    -------
+    :class:`Permissions`
+        The calculated permissions.
+    """
+    if permissions.send_messages:
         return DEFAULT_DM_PERMISSIONS
     return VIEW_ONLY_PERMISSIONS
 
 
-def _calculate_group_channel_permissions(
+def calculate_group_channel_permissions(
     perspective_id: str,
+    /,
     *,
     group_owner_id: str,
-    group_permissions: Permissions,
+    group_permissions: Permissions | None,
     group_recipients: list[str],
 ) -> Permissions:
+    """Calculates the permissions in :class:`GroupChannel` scope.
+
+    Parameters
+    ----------
+    perspective_id: :class:`str`
+        The ID of perspective user.
+    group_owner_id: :class:`str`
+        The ID of group owner (:attr:`GroupChannel.owner_id`).
+    group_permissions: Optional[:class:`Permissions`]
+        The default group permissions (:attr:`GroupChannel.permissions`).
+    group_recipients: List[:class:`str`]
+        The IDs of group recipients (:attr:`GroupChannel.recipient_ids`).
+
+    Returns
+    -------
+    :class:`Permissions`
+        The calculated permissions.
+    """
     if perspective_id == group_owner_id:
-        return Permissions.ALL
+        return Permissions.all()
     elif perspective_id in group_recipients:
+        if group_permissions is None:
+            group_permissions = DEFAULT_DM_PERMISSIONS
         return VIEW_ONLY_PERMISSIONS | group_permissions
-    return Permissions.NONE
+    return Permissions.none()
 
 
-def _calculate_server_channel_permissions(
+def calculate_server_channel_permissions(
     initial_permissions: Permissions,
     roles: list[Role],
     /,
@@ -243,6 +291,25 @@ def _calculate_server_channel_permissions(
     default_permissions: PermissionOverride | None,
     role_permissions: dict[str, PermissionOverride],
 ) -> Permissions:
+    """Calculates the permissions in :class:`BaseServerChannel` scope.
+
+    Parameters
+    ----------
+    initial_permissions: :class:`str`
+        The initial permissions to use. Should be ``server.permissions_for(member)`` for members
+        and :attr:`Server.default_permissions` for users.
+    roles: List[:class:`Role`]
+        The member's roles. Should be empty list if calculating for :class:`User`.
+    default_permissions: :class:`str`
+        The default channel permissions (:attr:`BaseServerChannel.default_permissions`).
+    role_permissions: Dict[:class:`str`, :class:`Permissions`]
+        The permissions overrides for roles in the channel (:attr:`BaseServerChannel.role_permissions`).
+
+    Returns
+    -------
+    :class:`Permissions`
+        The calculated permissions.
+    """
     result = initial_permissions.value
 
     if default_permissions:
@@ -250,12 +317,10 @@ def _calculate_server_channel_permissions(
         result &= ~default_permissions.deny.value
 
     for role in roles:
-        try:
-            override = role_permissions[role.id]
+        override = role_permissions.get(role.id)
+        if override:
             result |= override.allow.value
             result &= ~override.deny.value
-        except KeyError:
-            pass
 
     return Permissions(result)
 
@@ -421,7 +486,7 @@ class TextChannel(BaseChannel):
         )
 
     def typing(self) -> Typing:
-        """Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
+        """:class:`Typing`: Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
         return Typing(self.state.shard, self.id)
 
 
@@ -436,8 +501,21 @@ class SavedMessagesChannel(TextChannel):
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
 
-    def permissions_for(self, perspective: User | Member, /) -> Permissions:
-        return _calculate_saved_messages_channel_permissions(perspective.id, self.user_id)
+    def permissions_for(self, target: User | Member, /) -> Permissions:
+        """Calculate permissions for given member.
+
+        Parameters
+        ----------
+        target: Union[:class:`User`, :class:`Member`]
+            The user to calculate permissions for.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+
+        return calculate_saved_messages_channel_permissions(target.id, self.user_id)
 
 
 @define(slots=True)
@@ -476,6 +554,40 @@ class DMChannel(TextChannel):
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
+
+    def permissions_for(self, target: User | Member, /) -> Permissions:
+        """Calculate permissions for given user.
+
+        Parameters
+        ----------
+        target: Union[:class:`User`, :class:`Member`]
+            The member or user to calculate permissions for.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+        me = self.state.me
+        if not me:
+            raise TypeError('Missing own user')
+
+        from .server import Member
+        from .user import calculate_user_permissions
+
+        if isinstance(target, Member):
+            target = target.user
+
+        return calculate_dm_channel_permissions(
+            calculate_user_permissions(
+                target.id,
+                target.relationship,
+                target.bot,
+                perspective_id=me.id,
+                perspective_bot=me.bot,
+                perspective_privileged=me.privileged,
+            )
+        )
 
 
 @define(slots=True)
@@ -668,6 +780,40 @@ class GroupChannel(TextChannel):
         assert isinstance(result, GroupChannel)
         return result
 
+    def permissions_for(self, target: User | Member, /) -> Permissions:
+        """Calculate permissions for given user.
+
+        Parameters
+        ----------
+        target: Union[:class:`User`, :class:`Member`]
+            The member or user to calculate permissions for.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+        me = self.state.me
+        if not me:
+            raise TypeError('Missing own user')
+
+        from .server import Member
+        from .user import calculate_user_permissions
+
+        if isinstance(target, Member):
+            target = target.user
+
+        return calculate_dm_channel_permissions(
+            calculate_user_permissions(
+                target.id,
+                target.relationship,
+                target.bot,
+                perspective_id=me.id,
+                perspective_bot=me.bot,
+                perspective_privileged=me.privileged,
+            )
+        )
+
 
 PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
 
@@ -816,6 +962,56 @@ class BaseServerChannel(BaseChannel):
         result = await self.state.http.set_default_channel_permissions(self.id, permissions)
         return result  # type: ignore
 
+    def permissions_for(
+        self, target: User | Member, /, *, safe: bool = True, with_ownership: bool = True, include_timeout: bool = True
+    ) -> Permissions:
+        """Calculate permissions for given user.
+
+        Parameters
+        ----------
+        target: Union[:class:`User`, :class:`Member`]
+            The member or user to calculate permissions for.
+        safe: :class:`bool`
+            Whether to raise exception or not if role is missing in cache.
+        with_ownership: :class:`bool`
+            Whether to account for ownership.
+        include_timeout: :class:`bool`
+            Whether to account for timeout.
+
+        Raises
+        ------
+        NoData
+            The server or role is not found in cache.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+        server = self.get_server()
+        if server is None:
+            raise NoData(self.server_id, 'server')
+
+        from .server import sort_member_roles, calculate_server_permissions
+        from .user import User
+
+        if isinstance(target, User):
+            initial_permissions = server.default_permissions
+
+            # No point in providing roles since user doesn't have roles.
+            return calculate_server_channel_permissions(
+                server.default_permissions, [], default_permissions=self.default_permissions, role_permissions={}
+            )
+
+        initial_permissions = calculate_server_permissions([], None, default_permissions=server.default_permissions)
+        roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
+        return calculate_server_channel_permissions(
+            initial_permissions,
+            roles,
+            default_permissions=self.default_permissions,
+            role_permissions=self.role_permissions,
+        )
+
 
 @define(slots=True)
 class ServerTextChannel(BaseServerChannel, TextChannel):
@@ -843,10 +1039,10 @@ __all__ = (
     'BaseChannel',
     'PartialChannel',
     'Typing',
-    '_calculate_saved_messages_channel_permissions',
-    '_calculate_dm_channel_permissions',
-    '_calculate_group_channel_permissions',
-    '_calculate_server_channel_permissions',
+    'calculate_saved_messages_channel_permissions',
+    'calculate_dm_channel_permissions',
+    'calculate_group_channel_permissions',
+    'calculate_server_channel_permissions',
     'TextChannel',
     'SavedMessagesChannel',
     'DMChannel',

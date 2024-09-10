@@ -723,13 +723,34 @@ class PartialServer(BaseServer):
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
-def _sort_roles(
+def sort_member_roles(
     target_roles: list[str],
     /,
     *,
-    safe: bool,
+    safe: bool = True,
     server_roles: dict[str, Role],
 ) -> list[Role]:
+    """Sorts the member roles.
+
+    Parameters
+    ----------
+    target_roles: List[:class:`str`]
+        The IDs of roles to sort (:attr:`Member.roles`).
+    safe: :class:`bool`
+        Whether to raise exception or not if role is missing in cache.
+    server_roles: Dict[:class:`str`, :class:`Role`]
+        The mapping of role IDs to role objects (:attr:`Server.roles`).
+
+    Raises
+    ------
+    NoData
+        The role is not found in cache.
+
+    Returns
+    -------
+    List[:class:`Role`]
+        The sorted result.
+    """
     if not safe:
         return sorted(
             (server_roles[tr] for tr in target_roles if tr in server_roles),
@@ -746,20 +767,39 @@ def _sort_roles(
         raise NoData(ke.args[0], 'role')
 
 
-def _calculate_server_permissions(
-    roles: list[Role],
+def calculate_server_permissions(
+    target_roles: list[Role],
     target_timeout: datetime | None,
+    /,
     *,
     default_permissions: Permissions,
 ) -> Permissions:
+    """Calculates the permissions in :class:`Server` scope.
+
+    Parameters
+    ----------
+    target_roles: List[:class:`Role`]
+        The target member's roles. Should be empty list if calculating against :class:`User`,
+        and ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)``
+        for member.
+    target_timeout: Optional[:class:`~datetime.datetime`]
+        The target timeout, if applicable (:attr:`Member.timed_out_until`).
+    default_permissions: :class:`Permissions`
+        The default channel permissions (:attr:`Server.default_permissions`).
+
+    Returns
+    -------
+    :class:`Permissions`
+        The calculated permissions.
+    """
     result = default_permissions.copy()
 
-    for role in roles:
+    for role in target_roles:
         result |= role.permissions.allow
         result &= ~role.permissions.deny
 
-    if target_timeout is not None and target_timeout > utils.utcnow():
-        result.send_messages = True
+    if target_timeout is not None and target_timeout <= utils.utcnow():
+        result.send_messages = False
 
     return result
 
@@ -962,6 +1002,11 @@ class Server(BaseServer):
         include_timeout: :class:`bool`
             Whether to account for timeout.
 
+        Raises
+        ------
+        NoData
+            The role is not found in cache.
+
         Returns
         -------
         :class:`Permissions`
@@ -969,10 +1014,10 @@ class Server(BaseServer):
         """
 
         if with_ownership and member.id == self.owner_id:
-            return Permissions.ALL
+            return Permissions.all()
 
-        return _calculate_server_permissions(
-            _sort_roles(member.roles, safe=safe, server_roles=self.roles),
+        return calculate_server_permissions(
+            sort_member_roles(member.roles, safe=safe, server_roles=self.roles),
             member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
         )
@@ -1077,7 +1122,7 @@ class BaseMember:
             return user.status
 
     @property
-    def user_flags(self) -> UserFlags:
+    def flags(self) -> UserFlags:
         """Optional[:class:`UserFlags`]: The user flags."""
         user = self.get_user()
         if user:
@@ -1252,8 +1297,8 @@ __all__ = (
     'Role',
     'BaseServer',
     'PartialServer',
-    '_sort_roles',
-    '_calculate_server_permissions',
+    'sort_member_roles',
+    'calculate_server_permissions',
     'Server',
     'Ban',
     'BaseMember',

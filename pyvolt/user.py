@@ -481,15 +481,34 @@ class DisplayUser(BaseUser):
     internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless avatar of the user."""
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
     def avatar(self) -> Asset | None:
         """Optional[:class:`Asset`]: The avatar of the user."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
+    @property
+    def tag(self) -> str:
+        """:class:`str`: The tag of the user.
+
+        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``,
+        example output would be ``'vlf#3510'``.
+        """
+        return f'{self.name}#{self.discriminator}'
+
     async def send_friend_request(self) -> User:
         """|coro|
 
-        Send a friend request to this user.
+        Sends the user a friend request.
+
+        Raises
+        ------
+        Forbidden
+            Not allowed to send a friend request to the user.
+        HTTPException
+            Sending the friend request failed.
         """
         return await self.state.http.send_friend_request(self.name, self.discriminator)
 
@@ -503,17 +522,40 @@ class BotUserInfo:
         return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
 
 
-def _calculate_user_permissions(
+def calculate_user_permissions(
     user_id: str,
-    user_privileged: bool,
     user_relationship: RelationshipStatus,
     user_bot: BotUserInfo | None,
+    /,
     *,
     perspective_id: str,
     perspective_bot: BotUserInfo | None,
+    perspective_privileged: bool,
 ) -> UserPermissions:
-    if user_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
-        return UserPermissions.ALL
+    """Calculates the permissions between two users.
+
+    Parameters
+    ----------
+    user_id: :class:`str`
+        The target ID.
+    user_relationship: :class:`RelationshipStatus`
+        The relationship between us and target user (:attr:`User.relationship`).
+    user_bot: Optional[:class:`BotUserInfo`]
+        The bot information about the user (:attr:`User.bot`), if applicable.
+    perspective_id: :class:`str`
+        The ID of the current user.
+    perspective_bot: Optional[:class:`BotUserInfo`]
+        The bot information about the current user (:attr:`User.bot`), if applicable.
+    perspective_privileged: :class:`bool`
+        Whether the current user is privileged (:attr:`User.privileged`).
+
+    Returns
+    -------
+    :class:`UserPermissions`
+        The calculated permissions.
+    """
+    if perspective_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
+        return UserPermissions.all()
 
     if user_relationship in (
         RelationshipStatus.blocked,
@@ -521,14 +563,10 @@ def _calculate_user_permissions(
     ):
         return UserPermissions(access=True)
 
-    result = UserPermissions()
-    if user_relationship in (RelationshipStatus.incoming, RelationshipStatus.outgoing):
-        result.access = True
-
-    if user_bot or perspective_bot:
-        result.send_messages = True
-
-    return result
+    return UserPermissions(
+        access=user_relationship in (RelationshipStatus.incoming, RelationshipStatus.outgoing),
+        send_messages=bool(user_bot or perspective_bot),
+    )
 
 
 @define(slots=True)
@@ -558,15 +596,6 @@ class User(DisplayUser):
 
     online: bool = field(repr=True, kw_only=True)
     """Whether this user is currently online."""
-
-    def __str__(self) -> str:
-        return self.name
-
-    @property
-    def tag(self) -> str:
-        """:class:`str`: The tag of the user.
-        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``, example output would be ``'vlf#3510'``."""
-        return f'{self.name}#{self.discriminator}'
 
     def _update(self, data: PartialUser) -> None:
         if data.name is not UNDEFINED:
@@ -725,7 +754,7 @@ __all__ = (
     'PartialUser',
     'DisplayUser',
     'BotUserInfo',
-    '_calculate_user_permissions',
+    'calculate_user_permissions',
     'User',
     'OwnUser',
 )
