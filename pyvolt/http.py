@@ -1674,7 +1674,6 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                # TODO: is this pyright bug?
                 flags |= MessageFlags.suppress_notifications.value
 
         if flags is not None:
@@ -3767,7 +3766,6 @@ class HTTPClient:
         if silent is not None:
             flags = 0
             if silent:
-                # TODO: is this pyright bug?
                 flags |= MessageFlags.suppress_notifications.value
 
         if flags is not None:

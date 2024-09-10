@@ -18,17 +18,9 @@
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L696C11-L696C49
+  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L703C11-L703C49
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L772C11-L772C49
-
-* TODO: is this pyright bug?
-
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L1670C19-L1670C45
-
-* TODO: is this pyright bug?
-
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L3763C19-L3763C45
+  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L779C11-L779C49
 
