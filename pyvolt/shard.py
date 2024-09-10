@@ -36,6 +36,8 @@ from .enums import ShardFormat
 from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
+    from datetime import datetime
+
     from . import raw
     from .channel import TextChannel
     from .server import BaseServer
@@ -68,24 +70,54 @@ DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/py
 
 
 class Shard:
-    """Implementation of Revolt WebSocket client."""
+    """Implementation of Revolt WebSocket client.
 
-    _closing_future: asyncio.Future[None] | None
-    _ws: aiohttp.ClientWebSocketResponse | None
+    Attributes
+    ----------
+    base: :class:`str`
+        The base WebSocket URL.
+    bot: :class:`bool`
+        Whether the token belongs to bot account. Defaults to ``True``.
+    connect_delay: Optional[Union[:class:`float`, :class:`int`]]
+        The duration in seconds to sleep when reconnecting to WebSocket due to aiohttp errors. Defaults to 2.
+    format: :class:`ShardFormat`
+        The message format to use when communicating with Revolt WebSocket.
+    handler: Optional[:class:`EventHandler`]
+        The handler that receives events. Defaults to ``None`` if not provided.
+    last_ping_at: Optional[:class:`~datetime.datetime`]
+        When the shard sent ping.
+    last_pong_at: Optional[:class:`~datetime.datetime`]
+        When the shard received response to ping.
+    logged_out: :class:`bool`
+        Whether the shard got logged out.
+    reconnect_on_timeout: :class:`bool`
+        Whether to reconnect when received pong nonce is not equal to current ping nonce. Defaults to ``True``.
+    request_user_settings: Optional[List[:class:`str`]]
+        The list of user setting keys to request.
+    state: :class:`State`
+        The state.
+    token: :class:`str`
+        The shard token. May be empty if not started.
+    user_agent: :class:`str`
+        The HTTP user agent used when connecting to WebSocket.
+    """
+
+    _socket: aiohttp.ClientWebSocketResponse | None
 
     __slots__ = (
         '_closed',
-        '_closing_future',
         '_heartbeat_sequence',
         '_last_close_code',
         '_sequence',
         '_session',
-        '_ws',
+        '_socket',
         'base',
         'bot',
         'connect_delay',
         'format',
         'handler',
+        'last_ping_at',
+        'last_pong_at',
         'logged_out',
         'reconnect_on_timeout',
         'request_user_settings',
@@ -116,31 +148,32 @@ class Shard:
         if format is ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError('Cannot use msgpack format without dependency')
 
-        self._closed = False
-        self._closing_future = None
-        self._heartbeat_sequence = 1
-        self._last_close_code = None
-        self._sequence = 0
-        self._ws = None
-        self.base = base or 'wss://ws.revolt.chat/'
-        self.bot = bot
-        self.connect_delay = connect_delay
-        self.format = format
-        self.handler = handler
-        self.logged_out = False
-        self.reconnect_on_timeout = reconnect_on_timeout
-        self.request_user_settings = request_user_settings
-        self.retries = retries or 150
+        self._closed: bool = False
+        self._heartbeat_sequence: int = 1
+        self._last_close_code: int | None = None
+        self._sequence: int = 0
         self._session = session
-        self.state = state
-        self.token = token
-        self.user_agent = user_agent or DEFAULT_SHARD_USER_AGENT
+        self._socket: aiohttp.ClientWebSocketResponse | None = None
+        self.base: str = base or 'wss://ws.revolt.chat/'
+        self.bot: bool = bot
+        self.connect_delay: int | float | None = connect_delay
+        self.format: ShardFormat = format
+        self.handler: EventHandler | None = handler
+        self.last_ping_at: datetime | None = None
+        self.last_pong_at: datetime | None = None
+        self.logged_out: bool = False
+        self.reconnect_on_timeout: bool = reconnect_on_timeout
+        self.request_user_settings = request_user_settings
+        self.retries: int = retries or 150
+        self.state: State = state
+        self.token: str = token
+        self.user_agent: str = user_agent or DEFAULT_SHARD_USER_AGENT
 
         self.recv = self._recv_json if format is ShardFormat.json else self._recv_msgpack
         self.send = self._send_json if format is ShardFormat.json else self._send_msgpack
 
     def is_closed(self) -> bool:
-        return self._closed and not self._ws
+        return self._closed and not self._socket
 
     async def cleanup(self) -> None:
         """|coro|
@@ -155,21 +188,21 @@ class Shard:
 
         Closes the connection to Revolt.
         """
-        if self._ws:
+        if self._socket:
             if self._closed:
                 raise ShardError('Already closed')
-            self._closing_future = None
             self._closed = True
-            await self._ws.close(code=1000)
+            await self._socket.close(code=1000)
 
     @property
-    def ws(self) -> aiohttp.ClientWebSocketResponse:
-        if self._ws is None:
+    def socket(self) -> aiohttp.ClientWebSocketResponse:
+        """:class:`aiohttp.ClientWebSocketResponse`: The current WebSocket connection."""
+        if self._socket is None:
             raise TypeError('No websocket')
-        return self._ws
+        return self._socket
 
     def with_credentials(self, token: str, *, bot: bool = True) -> None:
-        """Modifies HTTP client credentials.
+        """Modifies HTTP request credentials.
 
         Parameters
         ----------
@@ -203,8 +236,9 @@ class Shard:
             'data': self._heartbeat_sequence,
         }
         await self.send(payload)
+        self.last_ping_at = utils.utcnow()
 
-    async def begin_typing(self, channel: ULIDOr[TextChannel]) -> None:
+    async def begin_typing(self, channel: ULIDOr[TextChannel], /) -> None:
         """|coro|
 
         Begins typing in a channel.
@@ -217,7 +251,7 @@ class Shard:
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
         await self.send(payload)
 
-    async def end_typing(self, channel: ULIDOr[TextChannel]) -> None:
+    async def end_typing(self, channel: ULIDOr[TextChannel], /) -> None:
         """|coro|
 
         Ends typing in a channel.
@@ -230,7 +264,7 @@ class Shard:
         payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
         await self.send(payload)
 
-    async def subscribe_to(self, server: ULIDOr[BaseServer]) -> None:
+    async def subscribe_to(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
         Subscribes to a server. After calling this method, you'll receive :class:`UserUpdateEvent`'s.
@@ -245,18 +279,18 @@ class Shard:
 
     async def _send_json(self, d: raw.ServerEvent, /) -> None:
         _L.debug('sending %s', d)
-        await self.ws.send_str(utils.to_json(d))
+        await self.socket.send_str(utils.to_json(d))
 
     async def _send_msgpack(self, d: raw.ServerEvent, /) -> None:
         _L.debug('sending %s', d)
 
         # Will never none according to stubs: https://github.com/sbdchd/msgpack-types/blob/a9ab1c861933fa11aff706b21c303ee52a2ee359/msgpack-stubs/__init__.pyi#L40-L49
         payload: bytes = msgpack.packb(d)  # type: ignore
-        await self.ws.send_bytes(payload)
+        await self.socket.send_bytes(payload)
 
     async def _recv_json(self) -> raw.ClientEvent:
         try:
-            message = await self.ws.receive()
+            message = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
         if message.type in (
@@ -264,8 +298,7 @@ class Shard:
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
-            data = message.data
-            self._last_close_code = data
+            self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
             if self._closed:
                 raise Close
@@ -291,7 +324,7 @@ class Shard:
 
     async def _recv_msgpack(self) -> raw.ClientEvent:
         try:
-            message = await self.ws.receive()
+            message = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
         if message.type in (
@@ -299,8 +332,7 @@ class Shard:
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
-            data = message.data
-            self._last_close_code = data
+            self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
             if self._closed:
                 raise Close
@@ -335,7 +367,7 @@ class Shard:
     async def connect(self) -> None:
         await self._connect()
 
-    async def _ws_connect(self) -> aiohttp.ClientWebSocketResponse:
+    async def _socket_connect(self) -> aiohttp.ClientWebSocketResponse:
         session = self._session
         if callable(session):
             session = await utils._maybe_coroutine(session, self)
@@ -359,6 +391,8 @@ class Shard:
 
         headers = self._headers()
         while True:
+            if i >= self.retries:
+                break
             try:
                 return await session.ws_connect(
                     self.base,
@@ -386,14 +420,13 @@ class Shard:
         raise ConnectError(self.retries, errors)
 
     async def _connect(self) -> None:
-        if self._ws:
+        if self._socket:
             raise PyvoltError('The connection is already open.')
-        self._closing_future = asyncio.Future()
-        self._last_close_code = None
         while not self._closed:
-            ws = await self._ws_connect()
+            socket = await self._socket_connect()
+            self._last_close_code = None
 
-            self._ws = ws
+            self._socket = socket
             await self.authenticate()
 
             message = await self.recv()
@@ -417,15 +450,15 @@ class Shard:
                         raise Close
                 except Close:
                     heartbeat_task.cancel()
-                    await ws.close()
+                    await socket.close()
                     return
                 except Reconnect:
                     await asyncio.sleep(3)
                     heartbeat_task.cancel()
-                    _ws = self.ws
-                    self._ws = None
+                    _socket = self.socket
+                    self._socket = None
                     try:
-                        await _ws.close()
+                        await _socket.close()
                     except Exception:
                         pass
                     break
@@ -433,19 +466,17 @@ class Shard:
                     if not await self._handle(message):
                         if self.logged_out:
                             try:
-                                await ws.close()
+                                await socket.close()
                             except Exception:  # Ignore close error
                                 pass
                             return
                         exc = Reconnect()
 
-            if not ws.closed:
+            if not socket.closed:
                 try:
-                    await ws.close()
+                    await socket.close()
                 except Exception as exc:
                     _L.warning('failed to close websocket', exc_info=exc)
-        if self._closing_future:
-            self._closing_future.set_result(None)
         self._last_close_code = None
 
     async def _handle(self, payload: raw.ClientEvent, /) -> bool:
@@ -464,13 +495,14 @@ class Shard:
                         extra,
                     )
                 else:
-                    _L.warn(
+                    _L.warning(
                         'missed Pong, expected %s, got %s (%s)',
                         self._heartbeat_sequence,
                         nonce,
                         extra,
                     )
                 return not self.reconnect_on_timeout
+            self.last_pong_at = utils.utcnow()
         elif payload['type'] == 'Logout':
             authenticated = False
 
