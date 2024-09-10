@@ -40,3 +40,10 @@ from .user_settings import *
 from .user import *
 from .utils import *
 from .webhook import *
+
+import typing
+
+if typing.TYPE_CHECKING:
+    from . import raw as raw
+
+del typing
