@@ -190,16 +190,43 @@ class BaseChannel(Base, abc.ABC):
         """
         return await self.state.http.join_call(self.id)
 
+    def permissions_for(self, target: User | Member, /) -> Permissions:
+        """Calculate permissions for given user.
+
+        By default, this returns no permissions.
+
+        Parameters
+        ----------
+        target: Union[:class:`User`, :class:`Member`]
+            The member or user to calculate permissions for.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The calculated permissions.
+        """
+        return Permissions.none()
+
 
 @define(slots=True)
 class PartialChannel(BaseChannel):
     """Partial representation of a channel on Revolt."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    """The new channel name, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    """The ID of new group owner, if applicable. (only for :class:`GroupChannel`)"""
+
     description: UndefinedOr[str | None] = field(repr=True, kw_only=True, eq=True)
+    """The new channel's description, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+
     internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True, eq=True)
+    """The new channel's stateless icon, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+
     nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
+    """Whether the channel have been marked as NSFW, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+
     active: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
     permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True, eq=True)
     role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
@@ -592,16 +619,16 @@ class DMChannel(TextChannel):
 
 @define(slots=True)
 class GroupChannel(TextChannel):
-    """Group channel between 1 or more participants."""
+    """Represesnts Revolt group channel between 1 or more participants."""
 
     name: str = field(repr=True, kw_only=True)
-    """Display name of the channel."""
+    """The group's name."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """User ID of the owner of the group."""
+    """The user's ID who owns this group."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """Channel description."""
+    """The group description."""
 
     _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
         repr=True, kw_only=True, alias='internal_recipients'
@@ -611,10 +638,10 @@ class GroupChannel(TextChannel):
     """The stateless group icon."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """ID of the last message sent in this channel."""
+    """The ID of the last message sent in this channel."""
 
     permissions: Permissions | None = field(repr=True, kw_only=True)
-    """Permissions assigned to members of this group. (does not apply to the owner of the group)"""
+    """The permissions assigned to members of this group. (does not apply to the owner of the group)"""
 
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
