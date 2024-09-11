@@ -472,7 +472,16 @@ def _private_channel_sort_new(channel: DMChannel | GroupChannel) -> str:
 class Client:
     """A Revolt client."""
 
-    __slots__ = ('_handlers', '_types', '_i', '_state', 'extra', '_token', 'bot')
+    __slots__ = (
+        '_handlers',
+        '_i',
+        '_state',
+        '_token',
+        '_types',
+        'bot',
+        'closed',
+        'extra',
+    )
 
     @typing.overload
     def __init__(
@@ -516,6 +525,7 @@ class Client:
         request_user_settings: list[str] | None = None,
         websocket_base: str | None = None,
     ) -> None:
+        self.closed: bool = True
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
         self._handlers: dict[
             type[BaseEvent],
@@ -745,31 +755,6 @@ class Client:
             return self.subscribe(event, handler)
 
         return decorator
-
-    """
-    @staticmethod
-    def listens_on(
-        event: type[EventT],
-    ) -> Callable[
-        [utils.MaybeAwaitableFunc[[ClientT, EventT], None]],
-        utils.MaybeAwaitableFunc[[ClientT, EventT], None],
-    ]:
-        def decorator(
-            handler: utils.MaybeAwaitableFunc[[ClientT, EventT], None],
-        ) -> utils.MaybeAwaitableFunc[[ClientT, EventT], None]:
-            @wraps(handler)
-            def callback(*args, **kwargs) -> utils.MaybeAwaitable[None]:
-                return handler(*args, **kwargs)
-
-            callback.__pyvolt_handles__ = event  # type: ignore
-            return callback
-
-        return decorator
-
-    def _subscribe_methods(self) -> None:
-        for _, callback in inspect.getmembers(self, lambda func: hasattr(func, '__pyvolt_handles__')):
-            self.subscribe(callback.__pyvolt_handles__, callback)
-    """
 
     def wait_for(
         self,
@@ -1142,6 +1127,7 @@ class Client:
 
         Starts up the client.
         """
+        self.closed = False
         await self._state.shard.connect()
 
     async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
@@ -1149,6 +1135,8 @@ class Client:
 
         Closes all HTTP sessions, and websocket connections.
         """
+
+        self.closed = True
 
         await self.shard.close()
         if cleanup_websocket:
@@ -1227,8 +1215,9 @@ class Client:
 
         async def runner():
             await self.start()
-            if cleanup:
+            if cleanup and not self.closed:
                 await self.close()
+            self.closed = True
 
         if log_handler is not None:
             utils.setup_logging(
