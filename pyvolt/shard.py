@@ -300,11 +300,9 @@ class Shard:
         ):
             self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
-            if self._closed:
-                raise Close
-            else:
-                await asyncio.sleep(0.5)
-                raise Reconnect
+            self._closed = True
+            await asyncio.sleep(0.5)
+            raise Reconnect
 
         if message.type is aiohttp.WSMsgType.ERROR:
             _L.debug('Received invalid websocket payload. Reconnecting.')
@@ -334,11 +332,9 @@ class Shard:
         ):
             self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
-            if self._closed:
-                raise Close
-            else:
-                await asyncio.sleep(0.5)
-                raise Reconnect
+            self._closed = True
+            await asyncio.sleep(0.5)
+            raise Reconnect
         if message.type is aiohttp.WSMsgType.ERROR:
             _L.debug('Received invalid websocket payload, reconnecting')
             raise Reconnect
@@ -424,6 +420,7 @@ class Shard:
             raise PyvoltError('The connection is already open.')
         while not self._closed:
             socket = await self._socket_connect()
+            self._closed = False
             self._last_close_code = None
 
             self._socket = socket
