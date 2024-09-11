@@ -1,6 +1,5 @@
 from aiohttp import ClientSession, web
 import json
-import pytest_asyncio
 import pytest
 import pyvolt
 
@@ -27,7 +26,7 @@ routes = web.RouteTableDef()
 
 
 @routes.get('/discover/bots.json')
-async def discover_bots(request: web.Request) -> web.Response:
+async def discover_bots(_request: web.Request) -> web.Response:
     return web.json_response(
         {
             'pageProps': bots,
@@ -37,7 +36,7 @@ async def discover_bots(request: web.Request) -> web.Response:
 
 
 @routes.get('/discover/servers.json')
-async def discover_servers(request: web.Request) -> web.Response:
+async def discover_servers(_request: web.Request) -> web.Response:
     return web.json_response(
         {
             'pageProps': servers,
@@ -47,7 +46,7 @@ async def discover_servers(request: web.Request) -> web.Response:
 
 
 @routes.get('/discover/themes.json')
-async def discover_themes(request: web.Request) -> web.Response:
+async def discover_themes(_request: web.Request) -> web.Response:
     return web.json_response(
         {
             'pageProps': themes,
@@ -73,7 +72,7 @@ async def test_bots():
     site = await run_discovery_site(5101)
 
     state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state))
+    state.setup(parser=pyvolt.Parser(state=state))
     client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5101/', session=ClientSession(), state=state)
 
     page = await client.bots()
@@ -136,7 +135,7 @@ async def test_servers():
     site = await run_discovery_site(5102)
 
     state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state))
+    state.setup(parser=pyvolt.Parser(state=state))
     client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5102/', session=ClientSession(), state=state)
 
     page = await client.servers()
@@ -286,7 +285,7 @@ async def test_themes():
     site = await run_discovery_site(5103)
 
     state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state))
+    state.setup(parser=pyvolt.Parser(state=state))
     client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5103/', session=ClientSession(), state=state)
 
     page = await client.themes()

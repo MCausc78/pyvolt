@@ -42,6 +42,7 @@ from .errors import NoData
 from .flags import (
     Permissions,
     UserPermissions,
+    ALLOW_PERMISSIONS_IN_TIMEOUT,
     VIEW_ONLY_PERMISSIONS,
     DEFAULT_SAVED_MESSAGES_PERMISSIONS,
     DEFAULT_DM_PERMISSIONS,
@@ -190,7 +191,7 @@ class BaseChannel(Base, abc.ABC):
         """
         return await self.state.http.join_call(self.id)
 
-    def permissions_for(self, target: User | Member, /) -> Permissions:
+    def permissions_for(self, _target: User | Member, /) -> Permissions:
         """Calculate permissions for given user.
 
         By default, this returns no permissions.
@@ -1019,6 +1020,9 @@ class BaseServerChannel(BaseChannel):
         if server is None:
             raise NoData(self.server_id, 'server')
 
+        if with_ownership and server.owner_id == target.id:
+            return Permissions.all()
+
         from .server import sort_member_roles, calculate_server_permissions
         from .user import User
 
@@ -1032,12 +1036,15 @@ class BaseServerChannel(BaseChannel):
 
         initial_permissions = calculate_server_permissions([], None, default_permissions=server.default_permissions)
         roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
-        return calculate_server_channel_permissions(
+        result = calculate_server_channel_permissions(
             initial_permissions,
             roles,
             default_permissions=self.default_permissions,
             role_permissions=self.role_permissions,
         )
+        if include_timeout and target.timed_out_until is not None:
+            result &= ALLOW_PERMISSIONS_IN_TIMEOUT
+        return result
 
 
 @define(slots=True)

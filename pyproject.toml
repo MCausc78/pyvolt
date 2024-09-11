@@ -56,10 +56,17 @@ quote-style = "single"
 docstring-code-format = true
 
 [tool.ruff.lint]
-select = ["UP037"]
+select = [
+    "ARG001",
+    "ARG003",
+    "ARG004",
+    "ARG005",
+    "F401",
+    "F841",
+    "F842",
+    "UP037"
+]
 
-[tool.ruff.lint.flake8-copyright]
-author = "MCausc78"
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

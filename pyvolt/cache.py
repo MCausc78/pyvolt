@@ -538,7 +538,7 @@ class EmptyCache(Cache):
 V = typing.TypeVar('V')
 
 
-def _put0(d: dict[str, V], k: str, max_size: int, required_keys: int = 1) -> bool:
+def _put0(d: dict[str, V], k: str, max_size: int, required_keys: int = 1) -> bool:  # noqa: ARG001
     if max_size == 0:
         return False
     map_size = len(d)

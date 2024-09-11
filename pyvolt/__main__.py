@@ -72,7 +72,7 @@ async def login(email: str, password: str, friendly_name: str | None):
         print('Token:', resp.token)
 
 
-def _login(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+def _login(_parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.debug:
         pyvolt.utils.setup_logging(level=logging.DEBUG)
 

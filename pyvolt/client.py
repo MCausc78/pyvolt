@@ -28,7 +28,6 @@ import aiohttp
 import asyncio
 import builtins
 import inspect
-from functools import wraps
 import logging
 import sys
 import typing
@@ -620,7 +619,7 @@ class Client:
             exc_info=exc,
         )
 
-    async def on_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception) -> None:
+    async def on_library_error(self, _shard: Shard, payload: raw.ClientEvent, exc: Exception, /) -> None:
         """Handles library errors. By default, this logs exception.
 
         .. note::

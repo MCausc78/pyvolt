@@ -155,7 +155,7 @@ class BaseFlags:
         def __init__(self, value: int = 0, /, **kwargs: bool) -> None:
             pass
 
-        def _get(self, other: flag[Self], /) -> bool:
+        def _get(self, _other: flag[Self], /) -> bool:
             return False
 
         def _set(self, flag: flag[Self], value: bool, /) -> None:
@@ -197,14 +197,14 @@ class BaseFlags:
 
     # used if flag is inverted
     def _set1(self, flag: flag[Self], value: bool, /) -> None:
-        if flag.inverted:
+        if flag.inverted ^ value:
             self.value &= ~flag.value
         else:
             self.value |= flag.value
 
     # used if flag is uninverted
     def _set2(self, flag: flag[Self], value: bool, /) -> None:
-        if flag.inverted:
+        if flag.inverted ^ value:
             self.value |= flag.value
         else:
             self.value &= ~flag.value
