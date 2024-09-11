@@ -300,6 +300,8 @@ class Shard:
         ):
             self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
+            if self._closed:
+                raise Close
             self._closed = True
             await asyncio.sleep(0.5)
             raise Reconnect
@@ -332,6 +334,8 @@ class Shard:
         ):
             self._last_close_code = data = message.data
             _L.debug('Websocket closed: %s', data)
+            if self._closed:
+                raise Close
             self._closed = True
             await asyncio.sleep(0.5)
             raise Reconnect
