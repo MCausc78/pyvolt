@@ -375,7 +375,7 @@ class TextChannel(BaseChannel):
             return
         return cache.get_message(self.id, message_id, caching._USER_REQUEST)
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
 
@@ -525,7 +525,7 @@ class SavedMessagesChannel(TextChannel):
     user_id: str = field(repr=True, kw_only=True)
     """The ID of the user this channel belongs to."""
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
 
@@ -577,7 +577,7 @@ class DMChannel(TextChannel):
 
         return a if me.id != a else b
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         if data.active is not UNDEFINED:
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
@@ -647,7 +647,7 @@ class GroupChannel(TextChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.owner_id is not UNDEFINED:
@@ -869,7 +869,7 @@ class BaseServerChannel(BaseChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this channel is marked as not safe for work."""
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.description is not UNDEFINED:
@@ -1054,7 +1054,7 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
     last_message_id: str | None = field(repr=True, kw_only=True)
     """ID of the last message sent in this channel."""
 
-    def _update(self, data: PartialChannel) -> None:
+    def _update(self, data: PartialChannel, /) -> None:
         BaseServerChannel._update(self, data)
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
