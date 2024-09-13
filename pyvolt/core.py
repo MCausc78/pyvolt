@@ -34,7 +34,7 @@ from .ulid import _ulid_timestamp
 class _Sentinel(Enum):
     """The library sentinels."""
 
-    _undefined = 'UNDEFINED'
+    undefined = 'UNDEFINED'
 
     def __bool__(self) -> typing.Literal[False]:
         return False
@@ -46,8 +46,8 @@ class _Sentinel(Enum):
         return self is other
 
 
-Undefined: typing.TypeAlias = typing.Literal[_Sentinel._undefined]
-UNDEFINED: Undefined = _Sentinel._undefined
+Undefined: typing.TypeAlias = typing.Literal[_Sentinel.undefined]
+UNDEFINED: Undefined = _Sentinel.undefined
 
 
 T = typing.TypeVar('T')

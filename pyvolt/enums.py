@@ -25,9 +25,12 @@ DEALINGS IN THE SOFTWARE.
 # Thanks Danny https://github.com/Rapptz/discord.py/blob/7d3eff9d9d115dc29b5716c42eaeedf1a008e9b0/discord/enums.py
 from __future__ import annotations
 
-from collections import abc as ca, namedtuple
+from collections import namedtuple
 import types
 import typing
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
 
 
 def _create_value_cls(name: str, comparable: bool):
@@ -44,7 +47,7 @@ def _create_value_cls(name: str, comparable: bool):
     return cls
 
 
-def _is_descriptor(obj):
+def _is_descriptor(obj) -> bool:
     return hasattr(obj, '__get__') or hasattr(obj, '__set__') or hasattr(obj, '__delete__')
 
 
@@ -100,10 +103,10 @@ class EnumMeta(type):
         value_cls._actual_enum_cls_ = actual_cls  # type: ignore # Runtime attribute isn't understood
         return actual_cls
 
-    def __iter__(cls) -> ca.Iterator[typing.Any]:
+    def __iter__(cls) -> Iterator[typing.Any]:
         return (cls._enum_member_map_[name] for name in cls._enum_member_names_)
 
-    def __reversed__(cls) -> ca.Iterator[typing.Any]:
+    def __reversed__(cls) -> Iterator[typing.Any]:
         return (cls._enum_member_map_[name] for name in reversed(cls._enum_member_names_))
 
     def __len__(cls) -> int:
@@ -113,7 +116,7 @@ class EnumMeta(type):
         return f'<enum {cls.__name__}>'
 
     @property
-    def __members__(cls) -> ca.Mapping[str, typing.Any]:
+    def __members__(cls) -> Mapping[str, typing.Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
     def __call__(cls, value: str) -> typing.Any:
