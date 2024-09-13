@@ -268,20 +268,28 @@ async def resolve_resource(state: State, resolvable: ResolvableResource, *, tag:
 
 
 class CDNClient:
+    __slots__ = (
+        '_base',
+        '_session',
+        'state',
+        'user_agent',
+    )
+
     def __init__(
         self,
-        state: State,
         *,
-        session: (utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession),
         base: str | None = None,
+        session: utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession,
+        state: State,
         user_agent: str | None = None,
     ) -> None:
-        self.state = state
-        self._session = session
         if base is None:
             base = 'https://autumn.revolt.chat'
+
         self._base = base.rstrip('/')
-        self.user_agent = user_agent or DEFAULT_USER_AGENT
+        self._session: utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
+        self.state: State = state
+        self.user_agent: str = user_agent or DEFAULT_USER_AGENT
 
     @property
     def base(self) -> str:
