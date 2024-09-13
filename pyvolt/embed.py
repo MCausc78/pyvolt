@@ -182,7 +182,7 @@ class VideoEmbed(_BaseEmbed):
 
 @define(slots=True)
 class WebsiteEmbed(_BaseEmbed):
-    """Representation of website embed within Revolt message."""
+    """Represents website embed within Revolt message."""
 
     url: str | None = field(repr=True, kw_only=True, eq=True)
     """The direct URL to web page."""
