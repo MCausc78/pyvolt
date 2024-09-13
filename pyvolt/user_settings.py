@@ -1012,6 +1012,7 @@ class ReviteUserSettings:
             monofont=monofont,
             overrides=overrides,
         )
+
         # It works tho
         await self.parent.edit({}, edited_at, **payload)
 

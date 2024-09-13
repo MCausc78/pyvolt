@@ -540,7 +540,7 @@ class Client:
         self.extra = {}
         if state:
             if callable(state):
-                self._state = state(self)
+                self._state: State = state(self)
             else:
                 self._state = state
         else:  # elif any(x is not None for x in (cache, cdn_client, http, parser, shard)):
@@ -558,7 +558,13 @@ class Client:
             state.setup(
                 cache=c,
                 cdn_client=(
-                    cdn_client(self, state) if cdn_client else CDNClient(state, session=_session_factory, base=cdn_base)
+                    cdn_client(self, state)
+                    if cdn_client
+                    else CDNClient(
+                        base=cdn_base,
+                        session=_session_factory,
+                        state=state,
+                    )
                 ),
                 http=(
                     http(self, state)
@@ -567,8 +573,8 @@ class Client:
                         token,
                         base=http_base,
                         bot=bot,
-                        state=state,
                         session=_session_factory,
+                        state=state,
                     )
                 ),
             )
