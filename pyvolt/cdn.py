@@ -312,7 +312,7 @@ class CDNClient:
             # Do not call factory on future requests
             self._session = session
 
-        _L.debug('sending request to %s', route)
+        _L.debug('Sending request to %s', route)
 
         response = await session.request(
             method,

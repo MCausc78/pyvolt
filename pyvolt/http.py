@@ -242,7 +242,7 @@ class DefaultRateLimit(RateLimit):
             else:
                 _L.debug('Bucket %s expired.', self.bucket)
                 # Nothing to do here ┬─┬ノ( º _ ºノ)
-                # bucket ratelimited. No 429 :)
+                # bucket expired. No 429 :)
 
                 # I was dumb. Ignore this.
                 # # getting here means someone fucking up ratelimit info.
@@ -307,9 +307,26 @@ class DefaultRateLimiter(RateLimiter):
         self._ratelimits: dict[str, RateLimit] = {}
         self._routes_to_bucket: dict[str, str] = {}
 
+    def get_ratelimit_key_for(self, route: routes.CompiledRoute, /) -> str:
+        """Gets ratelimit key for this compiled route.
+
+        By default this just calls :meth:`routes.CompiledRoute.build_ratelimit_key`.
+
+        Parameters
+        ----------
+        route: :class:`~routes.CompiledRoute`
+            The route to fetch ratelimit key for.
+
+        Returns
+        -------
+        :class:`str`
+            The ratelimit key.
+        """
+        return route.build_ratelimit_key()
+
     @utils.copy_doc(RateLimiter.fetch_ratelimit_for)
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
-        key = route.build_ratelimit_key()
+        key = self.get_ratelimit_key_for(route)
         try:
             bucket = self._routes_to_bucket[key]
         except KeyError:
@@ -322,7 +339,7 @@ class DefaultRateLimiter(RateLimiter):
         if self._no_concurrent_block:
             return self._noop_blocker
 
-        key = route.build_ratelimit_key()
+        key = self.get_ratelimit_key_for(route)
         try:
             return self._pending_requests[key]
         except KeyError:
@@ -355,7 +372,7 @@ class DefaultRateLimiter(RateLimiter):
                 reset_after=reset_after,
             )
             self._ratelimits[ratelimit.bucket] = ratelimit
-            self._routes_to_bucket[route.build_ratelimit_key()] = bucket
+            self._routes_to_bucket[self.get_ratelimit_key_for(route)] = bucket
         else:
             ratelimit.on_response(route, response)
 
@@ -364,11 +381,29 @@ class DefaultRateLimiter(RateLimiter):
         self, response: aiohttp.ClientResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
     ) -> None:
         self._ratelimits[new_bucket] = self._ratelimits.pop(old_bucket)
-        self._routes_to_bucket[route.build_ratelimit_key()] = new_bucket
+        self._routes_to_bucket[self.get_ratelimit_key_for(route)] = new_bucket
 
 
 class HTTPClient:
-    """The Revolt HTTP API client."""
+    """Represents an HTTP client sending HTTP requests to the Revolt API.
+
+    Attributes
+    ----------
+    bot: :class:`bool`
+        Whether the token belongs to bot account.
+    cookie: :class:`str`
+        The cookie used to make requests. If ``cf_clearance`` cookie is present, then it's used to prevent HTML pages when service is down.
+    max_retries: :class:`int`
+        How many times to retry requests that received 429 or 502 HTTP status code.
+    rate_limiter: Optional[:class:`RateLimiter`]
+        The rate limiter in use.
+    state: :class:`State`
+        The state.
+    token: :class:`str`
+        The token in use. May be empty if not started.
+    user_agent: :class:`str`
+        The HTTP user agent used when making requests.
+    """
 
     # To prevent unexpected 200's with HTML page the user must pass cookie with ``cf_clearance`` key.
 
@@ -400,14 +435,19 @@ class HTTPClient:
         if base is None:
             base = 'https://api.revolt.chat'
         self._base: str = base.rstrip('/')
-        self.bot = bot
+        self.bot: bool = bot
         self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
         self.cookie: str | None = cookie
         self.max_retries: int = max_retries or 3
         self.rate_limiter: RateLimiter | None = DefaultRateLimiter() if rate_limiter is UNDEFINED else rate_limiter
         self.state: State = state
-        self.token = token
+        self.token: str = token or ''
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
+
+    @property
+    def base(self) -> str:
+        """:class:`str`: The base URL used for API requests."""
+        return self._base
 
     def url_for(self, route: routes.CompiledRoute) -> str:
         """Returns a URL for route.
