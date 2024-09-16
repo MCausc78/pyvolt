@@ -96,7 +96,7 @@ class Category:
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, Category) and self.id == other.id
 
     def build(self) -> raw.Category:
@@ -132,12 +132,12 @@ class SystemMessageChannels:
         user_kicked: ULIDOr[TextChannel] | None = None,
         user_banned: ULIDOr[TextChannel] | None = None,
     ) -> None:
-        self.user_joined = None if user_joined is None else resolve_id(user_joined)
-        self.user_left = None if user_left is None else resolve_id(user_left)
-        self.user_kicked = None if user_kicked is None else resolve_id(user_kicked)
-        self.user_banned = None if user_banned is None else resolve_id(user_banned)
+        self.user_joined: str | None = None if user_joined is None else resolve_id(user_joined)
+        self.user_left: str | None = None if user_left is None else resolve_id(user_left)
+        self.user_kicked: str | None = None if user_kicked is None else resolve_id(user_kicked)
+        self.user_banned: str | None = None if user_banned is None else resolve_id(user_banned)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, SystemMessageChannels)
@@ -171,7 +171,7 @@ class BaseRole(Base):
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseRole) and self.id == other.id
 
     async def delete(self) -> None:
@@ -373,7 +373,7 @@ class BaseServer(Base):
             return
         return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseServer) and self.id == other.id
 
     @property
@@ -1042,7 +1042,7 @@ class Ban:
     def __hash__(self) -> int:
         return hash((self.server_id, self.user_id))
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, Ban)
@@ -1071,7 +1071,7 @@ class BaseMember:
             return None
         return cache.get_user(self._user, caching._USER_REQUEST)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or (isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id)

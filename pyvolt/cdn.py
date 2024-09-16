@@ -100,7 +100,7 @@ class StatelessAsset:
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessAsset) and self.id == other.id
 
     def _stateful(self, state: State, tag: Tag) -> Asset:

@@ -89,9 +89,9 @@ class Typing(contextlib.AbstractAsyncContextManager):
 
 
 class BaseChannel(Base, abc.ABC):
-    """Representation of channel on Revolt."""
+    """Represents channel on Revolt."""
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseChannel) and self.id == other.id
 
     def message(self, message: ULIDOr[BaseMessage]) -> BaseMessage:

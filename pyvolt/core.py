@@ -42,7 +42,7 @@ class _Sentinel(Enum):
     def __repr__(self) -> typing.Literal['UNDEFINED']:
         return self.value
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other
 
 

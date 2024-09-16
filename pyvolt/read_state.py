@@ -52,7 +52,7 @@ class ReadState:
     def __hash__(self) -> int:
         return hash((self.channel_id, self.user_id))
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, ReadState)

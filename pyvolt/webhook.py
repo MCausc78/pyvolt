@@ -48,7 +48,7 @@ from .permissions import Permissions
 class BaseWebhook(Base):
     """Representation of Revolt webhook."""
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseWebhook) and self.id == other.id
 
     def _token(self) -> str | None:

@@ -215,7 +215,7 @@ class BaseMessage(Base):
     def __hash__(self) -> int:
         return hash((self.channel_id, self.id))
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, BaseMessage)
@@ -526,7 +526,7 @@ class TextSystemEvent(BaseSystemEvent):
 class StatelessUserAddedSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessUserAddedSystemEvent)
@@ -646,7 +646,7 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 class StatelessUserRemovedSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessUserRemovedSystemEvent)
@@ -766,7 +766,7 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 class StatelessUserJoinedSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserJoinedSystemEvent) and self.user_id == other.user_id
 
     @property
@@ -835,7 +835,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
 class StatelessUserLeftSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserLeftSystemEvent) and self.user_id == other.user_id
 
     @property
@@ -904,7 +904,7 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 class StatelessUserKickedSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserKickedSystemEvent) and self.user_id == other.user_id
 
     @property
@@ -973,7 +973,7 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 class StatelessUserBannedSystemEvent(BaseSystemEvent):
     _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserBannedSystemEvent) and self.user_id == other.user_id
 
     @property
@@ -1045,7 +1045,7 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
 
     _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessChannelRenamedSystemEvent)
@@ -1113,7 +1113,7 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
     _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessChannelDescriptionChangedSystemEvent)
@@ -1179,7 +1179,7 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
     _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessChannelIconChangedSystemEvent) and self.by_id == other.by_id
 
     @property
@@ -1242,7 +1242,7 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
     _from: User | str = field(repr=False, kw_only=True, alias='internal_from')
     _to: User | str = field(repr=False, kw_only=True, alias='internal_to')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessChannelOwnershipChangedSystemEvent)
@@ -1348,7 +1348,7 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
 
     _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessMessagePinnedSystemEvent)
@@ -1426,7 +1426,7 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
 
     _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return (
             self is other
             or isinstance(other, StatelessMessageUnpinnedSystemEvent)

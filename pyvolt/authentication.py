@@ -182,7 +182,7 @@ class ByPassword(BaseMFAResponse):
     def __init__(self, password: str, /) -> None:
         self.password = password
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByPassword) and self.password == other.password
 
     def build(self) -> raw.a.PasswordMFAResponse:
@@ -195,7 +195,7 @@ class ByRecoveryCode(BaseMFAResponse):
     def __init__(self, code: str, /) -> None:
         self.code = code
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByRecoveryCode) and self.code == other.code
 
     def build(self) -> raw.a.RecoveryMFAResponse:
@@ -208,7 +208,7 @@ class ByTOTP(BaseMFAResponse):
     def __init__(self, code: str, /) -> None:
         self.code = code
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByTOTP) and self.code == other.code
 
     def build(self) -> raw.a.TotpMFAResponse:

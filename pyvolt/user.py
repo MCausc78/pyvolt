@@ -207,7 +207,7 @@ class Relationship:
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, Relationship) and self.id == other.id and self.status == other.status
 
 
@@ -229,7 +229,7 @@ class BaseUser(Base):
         """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""
         return self is self.state.system
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         from .server import BaseMember
 
         return self is other or isinstance(other, (BaseUser, BaseMember)) and self.id == other.id
@@ -518,7 +518,7 @@ class BotUserInfo:
     owner_id: str = field(repr=True, kw_only=True)
     """The ID of the owner of this bot."""
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
 
 

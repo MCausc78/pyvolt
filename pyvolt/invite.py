@@ -48,7 +48,7 @@ class BaseInvite:
     def __hash__(self) -> int:
         return hash(self.code)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseInvite) and self.code == other.code
 
     async def accept(self) -> Server | GroupChannel:
