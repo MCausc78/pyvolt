@@ -102,6 +102,8 @@ _L = logging.getLogger(__name__)
 
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Callable
+
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
     from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
@@ -427,7 +429,7 @@ class HTTPClient:
         bot: bool = True,
         cookie: str | None = None,
         max_retries: int | None = None,
-        rate_limiter: UndefinedOr[RateLimiter | None] = UNDEFINED,
+        rate_limiter: UndefinedOr[Callable[[HTTPClient], RateLimiter | None] | RateLimiter | None] = UNDEFINED,
         state: State,
         session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
         user_agent: str | None = None,
@@ -439,7 +441,14 @@ class HTTPClient:
         self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
         self.cookie: str | None = cookie
         self.max_retries: int = max_retries or 3
-        self.rate_limiter: RateLimiter | None = DefaultRateLimiter() if rate_limiter is UNDEFINED else rate_limiter
+
+        if rate_limiter is UNDEFINED:
+            self.rate_limiter: RateLimiter | None = DefaultRateLimiter()
+        elif callable(rate_limiter):
+            self.rate_limiter = rate_limiter(self)
+        else:
+            self.rate_limiter = rate_limiter
+
         self.state: State = state
         self.token: str = token or ''
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
