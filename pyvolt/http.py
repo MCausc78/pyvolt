@@ -102,7 +102,7 @@ _L = logging.getLogger(__name__)
 
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
@@ -180,7 +180,7 @@ class RateLimiter(ABC):
         ...
 
     @abstractmethod
-    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str) -> RateLimitBlocker:
+    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimitBlocker:
         """:class:`.RateLimitBlocker`: Returns request blocker."""
         ...
 
@@ -337,7 +337,7 @@ class DefaultRateLimiter(RateLimiter):
             return self._ratelimits[bucket]
 
     @utils.copy_doc(RateLimiter.fetch_blocker_for)
-    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str) -> RateLimitBlocker:
+    def fetch_blocker_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimitBlocker:
         if self._no_concurrent_block:
             return self._noop_blocker
 
@@ -1284,27 +1284,25 @@ class HTTPClient:
         return [self.state.parser.parse_user(user) for user in resp]
 
     async def bulk_delete_messages(
-        self,
-        channel: ULIDOr[TextChannel],
-        messages: typing.Sequence[ULIDOr[BaseMessage]],
+        self, channel: ULIDOr[TextChannel], messages: Sequence[ULIDOr[BaseMessage]], /
     ) -> None:
         """|coro|
 
         Delete multiple messages you've sent or one you have permission to delete.
-        This will always require `ManageMessages` permission regardless of whether you own the message or not.
+        You must have :attr:`~Permissions.manage_messages` to do this.
         Messages must have been sent within the past 1 week.
 
         Parameters
         ----------
         channel: :class:`ULIDOr`[:class:`TextChannel`]
             The channel.
-        messages: :class:`typing.Sequence`[:class:`ULIDOr`[:class:`BaseMessage`]]
+        messages: Sequence[:class:`ULIDOr`[:class:`BaseMessage`]]
             The messages to delete.
 
         Raises
         ------
         Forbidden
-            You do not have permissions to delete
+            You do not have permissions to delete the messages.
         HTTPException
             Deleting messages failed.
         """
@@ -1315,14 +1313,12 @@ class HTTPClient:
         )
 
     async def remove_all_reactions_from_message(
-        self,
-        channel: ULIDOr[TextChannel],
-        message: ULIDOr[BaseMessage],
+        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
     ) -> None:
         """|coro|
 
         Removes your own, someone else's or all of a given reaction.
-        Requires `ManageMessages` permission.
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Parameters
         ----------
@@ -1345,10 +1341,11 @@ class HTTPClient:
             )
         )
 
-    async def delete_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def delete_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
-        Deletes a message you've sent or one you have permission to delete.
+        Deletes the message.
+        You must have :attr:`~Permissions.manage_messages` to do this if message is not your's.
 
         Parameters
         ----------
@@ -1525,6 +1522,7 @@ class HTTPClient:
         """|coro|
 
         React to a given message.
+        You must have :attr:`~Permissions.react` to do this.
 
         Parameters
         ----------
@@ -1626,7 +1624,7 @@ class HTTPClient:
         """|coro|
 
         Pins a message.
-        You must have `ManageMessages` permission.
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Parameters
         ----------
@@ -1665,7 +1663,7 @@ class HTTPClient:
         """|coro|
 
         Sends a message to the given channel.
-        You must have `SendMessages` permission.
+        You must have :attr:`~Permissions.send_messages` to do this.
 
         Parameters
         ----------
@@ -1742,7 +1740,7 @@ class HTTPClient:
         """|coro|
 
         Unpins a message.
-        You must have `ManageMessages` permission.
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Parameters
         ----------
@@ -1778,7 +1776,7 @@ class HTTPClient:
         """|coro|
 
         Remove your own, someone else's or all of a given reaction.
-        Requires `ManageMessages` permission if changing other's reactions.
+        You must have :attr:`~Permissions.manage_messages` to do this if changing other's reactions.
 
         Parameters
         ----------
@@ -1789,9 +1787,9 @@ class HTTPClient:
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
         user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
-            Remove reactions from this user. Requires `ManageMessages` permission if provided.
+            Remove reactions from this user. You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
-            Whether to remove all reactions. Requires `ManageMessages` permission if provided.
+            Whether to remove all reactions. You must have :attr:`~Permissions.manage_messages` to provide this.
 
         Raises
         ------
@@ -1820,8 +1818,8 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         /,
         *,
-        allow: Permissions = Permissions.NONE,
-        deny: Permissions = Permissions.NONE,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
         """|coro|
 

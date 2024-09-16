@@ -24,7 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
 from attrs import define, field
 from datetime import datetime
 import typing
@@ -33,7 +32,7 @@ import typing
 from . import cache as caching
 from .base import Base
 from .channel import TextChannel, ServerChannel
-from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
+from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -42,9 +41,9 @@ from .core import (
     ZID,
 )
 from .emoji import ResolvableEmoji
-from .enums import ContentReportReason
+from .enums import AssetMetadataType, ContentReportReason, RelationshipStatus
 from .errors import NoData
-from .flags import MessageFlags
+from .flags import MessageFlags, UserBadges, UserFlags
 from .server import Member
 from .user import BaseUser, User
 
@@ -178,7 +177,7 @@ class SendableEmbed:
         self.media = media
         self.colour = colour
 
-    async def build(self, state: State) -> raw.SendableEmbed:
+    async def build(self, state: State, /) -> raw.SendableEmbed:
         payload: raw.SendableEmbed = {}
         if self.icon_url is not None:
             payload['icon_url'] = self.icon_url
@@ -240,7 +239,7 @@ class BaseMessage(Base):
     async def acknowledge(self) -> None:
         """|coro|
 
-        Lets the server and all other clients know that we've seen this message in this channel.
+        Marks this message as read.
 
         Raises
         ------
@@ -268,7 +267,8 @@ class BaseMessage(Base):
     async def delete(self) -> None:
         """|coro|
 
-        Delete a message you've sent or one you have permission to delete.
+        Deletes the message.
+        You must have :attr:`~Permissions.manage_messages` to do this if message is not your's.
 
         Raises
         ------
@@ -502,7 +502,9 @@ class MessageAppendData(BaseMessage):
         )
 
 
-class BaseSystemEvent(abc.ABC):
+class BaseSystemEvent:
+    __slots__ = ()
+
     """Represents system event within message."""
 
 
@@ -511,8 +513,13 @@ class TextSystemEvent(BaseSystemEvent):
     content: str = field(repr=True, kw_only=True, eq=True)
     """The event contents."""
 
-    def _stateful(self, message: Message) -> TextSystemEvent:
+    def _stateful(self, message: Message, /) -> TextSystemEvent:
         return self
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+        return self.content
 
 
 @define(slots=True)
@@ -559,6 +566,20 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
             internal_by=self._by,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{user} was added by {by}'
 
 
 @define(slots=True)
@@ -666,6 +687,20 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{user} was removed by {by}'
+
 
 @define(slots=True)
 class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
@@ -752,6 +787,16 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} joined'
+
 
 @define(slots=True)
 class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
@@ -810,6 +855,16 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
             message=message,
             internal_user=self._user,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} left'
 
 
 @define(slots=True)
@@ -870,6 +925,16 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} was kicked'
+
 
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
@@ -928,6 +993,16 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
             message=message,
             internal_user=self._user,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} was banned'
 
 
 @define(slots=True)
@@ -997,6 +1072,16 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} renamed the channel to {self.name}'
+
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
@@ -1053,6 +1138,16 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} changed the channel description'
+
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSystemEvent):
@@ -1104,6 +1199,16 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
             message=message,
             internal_by=self._by,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} changed the channel icon'
 
 
 @define(slots=True)
@@ -1175,6 +1280,19 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             internal_from=self._from,
             internal_to=self._to,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        before = self.get_from()
+        if before is None:
+            before = '<Unknown User>'
+        after = self.get_to()
+        if after is None:
+            after = '<Unknown User>'
+
+        return f'{before} gave {after} group ownership'
 
 
 @define(slots=True)
@@ -1256,6 +1374,16 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
             pinned_message_id=self.pinned_message_id,
             internal_by=self._by,
         )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} pinned a message to this channel'
 
 
 @define(slots=True)
@@ -1358,6 +1486,16 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
             raise NoData(self.by_id, 'user')
         return by
 
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} unpinned a message from this channel'
+
 
 StatelessSystemEvent = (
     TextSystemEvent
@@ -1441,11 +1579,30 @@ class Message(BaseMessage):
     flags: MessageFlags = field(repr=True, kw_only=True)
     """The message flags."""
 
-    def _append(self, data: MessageAppendData) -> None:
+    def _append(self, data: MessageAppendData, /) -> None:
         if data.internal_embeds is not UNDEFINED:
             self.internal_embeds.extend(data.internal_embeds)
 
-    def _update(self, data: PartialMessage) -> None:
+    def _clear(self, emoji: str, /) -> None:
+        self.reactions.pop(emoji, None)
+
+    def _react(self, user_id: str, emoji: str, /) -> None:
+        try:
+            reaction = self.reactions[emoji]
+        except KeyError:
+            self.reactions[emoji] = (user_id,)
+        else:
+            self.reactions[emoji] = (*reaction, user_id)
+
+    def _unreact(self, user_id: str, emoji: str, /) -> None:
+        try:
+            reaction = self.reactions[emoji]
+        except KeyError:
+            self.reactions[emoji] = ()
+        else:
+            self.reactions[emoji] = tuple(reactor_id for reactor_id in reaction if reactor_id != user_id)
+
+    def _update(self, data: PartialMessage, /) -> None:
         if data.content is not UNDEFINED:
             self.content = data.content
         if data.edited_at is not UNDEFINED:
@@ -1457,32 +1614,53 @@ class Message(BaseMessage):
         if data.reactions is not UNDEFINED:
             self.reactions = data.reactions
 
-    def _react(self, user_id: str, emoji: str) -> None:
-        try:
-            reaction = self.reactions[emoji]
-        except KeyError:
-            self.reactions[emoji] = (user_id,)
-        else:
-            self.reactions[emoji] = (*reaction, user_id)
-
-    def _unreact(self, user_id: str, emoji: str) -> None:
-        try:
-            reaction = self.reactions[emoji]
-        except KeyError:
-            self.reactions[emoji] = ()
-        else:
-            self.reactions[emoji] = tuple(reactor_id for reactor_id in reaction if reactor_id != user_id)
-
-    def _clear(self, emoji: str) -> None:
-        self.reactions.pop(emoji, None)
-
     def get_author(self) -> User | Member | None:
         """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
+
         if self._author == ZID:
             return self.state.system
+
         state = self.state
+        if self.webhook:
+            webhook = self.webhook
+            webhook_id = self.author_id
+
+            return User(
+                state=state,
+                id=webhook_id,
+                name=webhook.name,
+                discriminator='0000',
+                internal_avatar=StatelessAsset(
+                    id=webhook.avatar,
+                    filename='',
+                    metadata=AssetMetadata(
+                        type=AssetMetadataType.image,
+                        width=0,
+                        height=0,
+                    ),
+                    content_type='',
+                    size=0,
+                    deleted=False,
+                    reported=False,
+                    message_id=None,
+                    user_id=webhook_id,
+                    server_id=None,
+                    object_id=webhook_id,
+                )
+                if webhook.avatar
+                else None,
+                display_name=None,
+                badges=UserBadges.none(),
+                status=None,
+                flags=UserFlags.none(),
+                privileged=False,
+                bot=None,
+                relationship=RelationshipStatus.none,
+                online=False,
+            )
+
         cache = state.cache
         if not cache:
             return None
@@ -1502,11 +1680,6 @@ class Message(BaseMessage):
             if 'Message.get_author' in state.provide_cache_context_in
             else caching._UNDEFINED,
         )
-
-    def system_event(self) -> SystemEvent | None:
-        """Optional[:class:`SystemEvent`]: The system event information, occured in this message, if any."""
-        if self.internal_system_event:
-            return self.internal_system_event._stateful(self)
 
     @property
     def attachments(self) -> list[Asset]:
@@ -1532,6 +1705,22 @@ class Message(BaseMessage):
     def embeds(self) -> list[Embed]:
         """List[:class:`Embed`]: The attached embeds to this message."""
         return [e._stateful(self.state) for e in self.internal_embeds]
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed message's content."""
+
+        system_event = self.system_event
+        if system_event is None:
+            return self.content
+
+        return system_event.system_content
+
+    @property
+    def system_event(self) -> SystemEvent | None:
+        """Optional[:class:`SystemEvent`]: The system event information, occured in this message, if any."""
+        if self.internal_system_event:
+            return self.internal_system_event._stateful(self)
 
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message is silent."""
