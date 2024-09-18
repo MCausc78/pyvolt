@@ -15,7 +15,7 @@ class File(typing.TypedDict):
     message_id: typing.NotRequired[str]
     user_id: typing.NotRequired[str]
     server_id: typing.NotRequired[str]
-    object: typing.NotRequired[str]
+    object_id: typing.NotRequired[str]
 
 
 class FileMetadata(typing.TypedDict):

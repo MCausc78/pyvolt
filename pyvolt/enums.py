@@ -464,7 +464,7 @@ class ReviteFont(Enum):
 
 class ReviteMonoFont(Enum):
     fira_code = 'Fira Code'
-    roboto_mono = 'Robot Mono'
+    roboto_mono = 'Roboto Mono'
     source_code_pro = 'Source Code Pro'
     space_mono = 'Space Mono'
     ubuntu_mono = 'Ubuntu Mono'
