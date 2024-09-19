@@ -319,8 +319,8 @@ class ClientEventHandler(EventHandler):
     async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:
         try:
             await utils._maybe_coroutine(self._client.on_library_error, shard, payload, exc)
-        except Exception as exc:
-            _L.exception('on_library_error (task: %s) raised an exception', name, exc_info=exc)
+        except Exception:
+            _L.exception('on_library_error (task: %s) raised an exception', name)
 
     async def _handle(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
         type = payload['type']
@@ -337,7 +337,7 @@ class ClientEventHandler(EventHandler):
                     # This is fatal
                     raise
 
-                _L.exception('%s handler raised an exception', type, exc_info=exc)
+                _L.exception('%s handler raised an exception', type)
 
                 name = f'pyvolt-dispatch-{self._client._get_i()}'
                 asyncio.create_task(self._handle_library_error(shard, payload, exc, name), name=name)
@@ -387,10 +387,10 @@ class EventSubscription(typing.Generic[EventT]):
         callback: utils.MaybeAwaitableFunc[[EventT], None],
         event: type[EventT],
     ) -> None:
-        self.client = client
-        self.id = id
-        self.callback = callback
-        self.event = event
+        self.client: Client = client
+        self.id: int = id
+        self.callback: utils.MaybeAwaitableFunc[[EventT], None] = callback
+        self.event: type[EventT] = event
 
     def __call__(self, arg: EventT, /) -> utils.MaybeAwaitable[None]:
         return self.callback(arg)
@@ -422,15 +422,15 @@ class TemporarySubscription(typing.Generic[EventT]):
         id: int,
         event: type[EventT],
         future: asyncio.Future[EventT],
-        coro: Coroutine[typing.Any, typing.Any, EventT],
         check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+        coro: Coroutine[typing.Any, typing.Any, EventT],
     ) -> None:
-        self.client = client
-        self.id = id
-        self.event = event
-        self.future = future
-        self.check = check
-        self.coro = coro
+        self.client: Client = client
+        self.id: int = id
+        self.event: type[EventT] = event
+        self.future: asyncio.Future[EventT] = future
+        self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
+        self.coro: Coroutine[typing.Any, typing.Any, EventT] = coro
 
     def __await__(self) -> Generator[typing.Any, typing.Any, EventT]:
         return self.coro.__await__()
@@ -447,8 +447,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         except Exception as exc:
             try:
                 self.future.set_exception(exc)
-            except Exception as exc:
-                _L.exception('Checker function (task: %s) raised an exception', name, exc_info=exc)
+            except Exception:
+                _L.exception('Checker function (task: %s) raised an exception', name)
             return True
 
     def cancel(self) -> None:
@@ -618,11 +618,9 @@ class Client:
 
         By default, this logs exception.
         """
-        _, exc, _ = sys.exc_info()
         _L.exception(
             'One of %s handlers raised an exception',
             event.__class__.__name__,
-            exc_info=exc,
         )
 
     async def on_library_error(self, _shard: Shard, payload: raw.ClientEvent, exc: Exception, /) -> None:
@@ -644,8 +642,8 @@ class Client:
         except Exception:
             try:
                 await utils._maybe_coroutine(self.on_user_error, arg)
-            except Exception as exc:
-                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
+            except Exception:
+                _L.exception('on_user_error (task: %s) raised an exception', name)
 
     async def _dispatch(self, types: list[type[BaseEvent]], event: BaseEvent, name: str, /) -> None:
         event.before_dispatch()
@@ -694,8 +692,8 @@ class Client:
         except Exception:
             try:
                 await utils._maybe_coroutine(self.on_user_error, event)
-            except Exception as exc:
-                _L.exception('on_user_error (task: %s) raised an exception', name, exc_info=exc)
+            except Exception:
+                _L.exception('on_user_error (task: %s) raised an exception', name)
 
     def dispatch(self, event: BaseEvent) -> asyncio.Task[None]:
         """Dispatches a event.
