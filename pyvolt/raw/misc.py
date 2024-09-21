@@ -1,5 +1,5 @@
 import typing
-
+import typing_extensions
 
 class CaptchaFeature(typing.TypedDict):
     enabled: bool
@@ -24,7 +24,7 @@ class RevoltFeatures(typing.TypedDict):
     autumn: Feature
     january: Feature
     voso: VoiceFeature
-    livekit: typing.NotRequired[VoiceFeature]
+    livekit: typing_extensions.NotRequired[VoiceFeature]
 
 
 class BuildInformation(typing.TypedDict):

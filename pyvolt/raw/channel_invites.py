@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+import typing_extensions
 
 from .channels import GroupChannel, ServerChannel
 from .files import File
@@ -31,14 +32,14 @@ class ServerInviteResponse(typing.TypedDict):
     code: str
     server_id: str
     server_name: str
-    server_icon: typing.NotRequired[File]
-    server_banner: typing.NotRequired[File]
-    server_flags: typing.NotRequired[int]
+    server_icon: typing_extensions.NotRequired[File]
+    server_banner: typing_extensions.NotRequired[File]
+    server_flags: typing_extensions.NotRequired[int]
     channel_id: str
     channel_name: str
-    channel_description: typing.NotRequired[str]
+    channel_description: typing_extensions.NotRequired[str]
     user_name: str
-    user_avatar: typing.NotRequired[File]
+    user_avatar: typing_extensions.NotRequired[File]
     member_count: int
 
 
@@ -47,9 +48,9 @@ class GroupInviteResponse(typing.TypedDict):
     code: str
     channel_id: str
     channel_name: str
-    channel_description: typing.NotRequired[str]
+    channel_description: typing_extensions.NotRequired[str]
     user_name: str
-    user_avatar: typing.NotRequired[File]
+    user_avatar: typing_extensions.NotRequired[File]
 
 
 InviteResponse = ServerInviteResponse | GroupInviteResponse

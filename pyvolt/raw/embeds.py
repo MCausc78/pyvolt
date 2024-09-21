@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .files import File
 
 ImageSize = typing.Literal['Large', 'Preview']
@@ -36,7 +36,7 @@ class GIFSpecial(typing.TypedDict):
 class YouTubeSpecial(typing.TypedDict):
     type: typing.Literal['YouTube']
     id: str
-    timestamp: typing.NotRequired[str]
+    timestamp: typing_extensions.NotRequired[str]
 
 
 class LightspeedSpecial(typing.TypedDict):
@@ -70,7 +70,7 @@ class BandcampSpecial(typing.TypedDict):
 class AppleMusicSpecial(typing.TypedDict):
     type: typing.Literal['AppleMusic']
     album_id: str
-    track_id: typing.NotRequired[str]
+    track_id: typing_extensions.NotRequired[str]
 
 
 class StreamableSpecial(typing.TypedDict):
@@ -92,25 +92,25 @@ Special = (
 
 
 class WebsiteMetadata(typing.TypedDict):
-    url: typing.NotRequired[str]
-    original_url: typing.NotRequired[str]
-    special: typing.NotRequired[Special]
-    title: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    image: typing.NotRequired[Image]
-    video: typing.NotRequired[Video]
-    site_name: typing.NotRequired[str]
-    icon_url: typing.NotRequired[str]
-    colour: typing.NotRequired[str]
+    url: typing_extensions.NotRequired[str]
+    original_url: typing_extensions.NotRequired[str]
+    special: typing_extensions.NotRequired[Special]
+    title: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    image: typing_extensions.NotRequired[Image]
+    video: typing_extensions.NotRequired[Video]
+    site_name: typing_extensions.NotRequired[str]
+    icon_url: typing_extensions.NotRequired[str]
+    colour: typing_extensions.NotRequired[str]
 
 
 class Text(typing.TypedDict):
-    icon_url: typing.NotRequired[str]
-    url: typing.NotRequired[str]
-    title: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    media: typing.NotRequired[File]
-    colour: typing.NotRequired[str]
+    icon_url: typing_extensions.NotRequired[str]
+    url: typing_extensions.NotRequired[str]
+    title: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    media: typing_extensions.NotRequired[File]
+    colour: typing_extensions.NotRequired[str]
 
 
 class WebsiteEmbed(WebsiteMetadata):

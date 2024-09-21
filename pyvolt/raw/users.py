@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .files import File
 
 
@@ -9,29 +9,29 @@ class User(typing.TypedDict):
     _id: str
     username: str
     discriminator: str
-    display_name: typing.NotRequired[str]
-    avatar: typing.NotRequired[File]
-    relations: typing.NotRequired[list[Relationship]]
-    badges: typing.NotRequired[int]
-    status: typing.NotRequired[UserStatus]
-    profile: typing.NotRequired[UserProfile]
-    flags: typing.NotRequired[int]
-    privileged: typing.NotRequired[bool]
-    bot: typing.NotRequired[BotInformation]
+    display_name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[File]
+    relations: typing_extensions.NotRequired[list[Relationship]]
+    badges: typing_extensions.NotRequired[int]
+    status: typing_extensions.NotRequired[UserStatus]
+    profile: typing_extensions.NotRequired[UserProfile]
+    flags: typing_extensions.NotRequired[int]
+    privileged: typing_extensions.NotRequired[bool]
+    bot: typing_extensions.NotRequired[BotInformation]
     relationship: RelationshipStatus
     online: bool
 
 
 class PartialUser(typing.TypedDict):
-    username: typing.NotRequired[str]
-    discriminator: typing.NotRequired[str]
-    display_name: typing.NotRequired[str]
-    avatar: typing.NotRequired[File]
-    badges: typing.NotRequired[int]
-    status: typing.NotRequired[UserStatus]
-    # profile: typing.NotRequired[UserProfile]
-    flags: typing.NotRequired[int]
-    online: typing.NotRequired[bool]
+    username: typing_extensions.NotRequired[str]
+    discriminator: typing_extensions.NotRequired[str]
+    display_name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[File]
+    badges: typing_extensions.NotRequired[int]
+    status: typing_extensions.NotRequired[UserStatus]
+    # profile: typing_extensions.NotRequired[UserProfile]
+    flags: typing_extensions.NotRequired[int]
+    online: typing_extensions.NotRequired[bool]
 
 
 FieldsUser = typing.Literal[
@@ -54,28 +54,28 @@ Presence = typing.Literal['Online', 'Idle', 'Focus', 'Busy', 'Invisible']
 
 
 class UserStatus(typing.TypedDict):
-    text: typing.NotRequired[str]
-    presence: typing.NotRequired[Presence]
+    text: typing_extensions.NotRequired[str]
+    presence: typing_extensions.NotRequired[Presence]
 
 
 class UserProfile(typing.TypedDict):
-    content: typing.NotRequired[str]
-    background: typing.NotRequired[File]
+    content: typing_extensions.NotRequired[str]
+    background: typing_extensions.NotRequired[File]
 
 
 class DataUserProfile(typing.TypedDict):
-    content: typing.NotRequired[str]
-    background: typing.NotRequired[str]
+    content: typing_extensions.NotRequired[str]
+    background: typing_extensions.NotRequired[str]
 
 
 class DataEditUser(typing.TypedDict):
-    display_name: typing.NotRequired[str]
-    avatar: typing.NotRequired[str]
-    status: typing.NotRequired[UserStatus]
-    profile: typing.NotRequired[DataUserProfile]
-    badges: typing.NotRequired[int]
-    flags: typing.NotRequired[int]
-    remove: typing.NotRequired[list[FieldsUser]]
+    display_name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[str]
+    status: typing_extensions.NotRequired[UserStatus]
+    profile: typing_extensions.NotRequired[DataUserProfile]
+    badges: typing_extensions.NotRequired[int]
+    flags: typing_extensions.NotRequired[int]
+    remove: typing_extensions.NotRequired[list[FieldsUser]]
 
 
 class FlagResponse(typing.TypedDict):

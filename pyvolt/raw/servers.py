@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .basic import Bool
 from .channels import ServerChannel
 from .files import File
@@ -13,18 +13,18 @@ class BaseServer(typing.TypedDict):
     _id: str
     owner: str
     name: str
-    description: typing.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
     # channels: list[C]
-    categories: typing.NotRequired[list[Category]]
-    system_messages: typing.NotRequired[SystemMessageChannels]
-    roles: typing.NotRequired[dict[str, Role]]
+    categories: typing_extensions.NotRequired[list[Category]]
+    system_messages: typing_extensions.NotRequired[SystemMessageChannels]
+    roles: typing_extensions.NotRequired[dict[str, Role]]
     default_permissions: int
-    icon: typing.NotRequired[File]
-    banner: typing.NotRequired[File]
-    flags: typing.NotRequired[int]
-    nsfw: typing.NotRequired[bool]
-    analytics: typing.NotRequired[bool]
-    discoverable: typing.NotRequired[bool]
+    icon: typing_extensions.NotRequired[File]
+    banner: typing_extensions.NotRequired[File]
+    flags: typing_extensions.NotRequired[int]
+    nsfw: typing_extensions.NotRequired[bool]
+    analytics: typing_extensions.NotRequired[bool]
+    discoverable: typing_extensions.NotRequired[bool]
 
 
 class Server(BaseServer):
@@ -32,34 +32,34 @@ class Server(BaseServer):
 
 
 class PartialServer(typing.TypedDict):
-    owner: typing.NotRequired[str]
-    name: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    channels: typing.NotRequired[list[str]]
-    categories: typing.NotRequired[list[Category]]
-    system_messages: typing.NotRequired[SystemMessageChannels]
-    default_permissions: typing.NotRequired[int]
-    icon: typing.NotRequired[File]
-    banner: typing.NotRequired[File]
-    flags: typing.NotRequired[int]
-    discoverable: typing.NotRequired[bool]
-    analytics: typing.NotRequired[bool]
+    owner: typing_extensions.NotRequired[str]
+    name: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    channels: typing_extensions.NotRequired[list[str]]
+    categories: typing_extensions.NotRequired[list[Category]]
+    system_messages: typing_extensions.NotRequired[SystemMessageChannels]
+    default_permissions: typing_extensions.NotRequired[int]
+    icon: typing_extensions.NotRequired[File]
+    banner: typing_extensions.NotRequired[File]
+    flags: typing_extensions.NotRequired[int]
+    discoverable: typing_extensions.NotRequired[bool]
+    analytics: typing_extensions.NotRequired[bool]
 
 
 class Role(typing.TypedDict):
     name: str
     permissions: OverrideField
-    colour: typing.NotRequired[str]
-    hoist: typing.NotRequired[bool]
+    colour: typing_extensions.NotRequired[str]
+    hoist: typing_extensions.NotRequired[bool]
     rank: int
 
 
 class PartialRole(typing.TypedDict):
-    name: typing.NotRequired[str]
-    permissions: typing.NotRequired[OverrideField]
-    colour: typing.NotRequired[str]
-    hoist: typing.NotRequired[bool]
-    rank: typing.NotRequired[int]
+    name: typing_extensions.NotRequired[str]
+    permissions: typing_extensions.NotRequired[OverrideField]
+    colour: typing_extensions.NotRequired[str]
+    hoist: typing_extensions.NotRequired[bool]
+    rank: typing_extensions.NotRequired[int]
 
 
 FieldsServer = typing.Literal['Description', 'Categories', 'SystemMessages', 'Icon', 'Banner']
@@ -73,21 +73,21 @@ class Category(typing.TypedDict):
 
 
 class SystemMessageChannels(typing.TypedDict):
-    user_joined: typing.NotRequired[str]
-    user_left: typing.NotRequired[str]
-    user_kicked: typing.NotRequired[str]
-    user_banned: typing.NotRequired[str]
+    user_joined: typing_extensions.NotRequired[str]
+    user_left: typing_extensions.NotRequired[str]
+    user_kicked: typing_extensions.NotRequired[str]
+    user_banned: typing_extensions.NotRequired[str]
 
 
 class DataCreateServer(typing.TypedDict):
     name: str
-    description: typing.NotRequired[str | None]
-    nsfw: typing.NotRequired[bool]
+    description: typing_extensions.NotRequired[str | None]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 class DataCreateRole(typing.TypedDict):
     name: str
-    rank: typing.NotRequired[int | None]
+    rank: typing_extensions.NotRequired[int | None]
 
 
 class NewRoleResponse(typing.TypedDict):
@@ -101,7 +101,7 @@ class CreateServerLegacyResponse(typing.TypedDict):
 
 
 class OptionsFetchServer(typing.TypedDict):
-    include_channels: typing.NotRequired[Bool]
+    include_channels: typing_extensions.NotRequired[Bool]
 
 
 class ServerWithChannels(BaseServer):
@@ -112,24 +112,24 @@ FetchServerResponse = Server | ServerWithChannels
 
 
 class DataEditServer(typing.TypedDict):
-    name: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    icon: typing.NotRequired[str]
-    banner: typing.NotRequired[str]
-    categories: typing.NotRequired[list[Category]]
-    system_messages: typing.NotRequired[SystemMessageChannels]
-    flags: typing.NotRequired[int]
-    discoverable: typing.NotRequired[bool]
-    analytics: typing.NotRequired[bool]
-    remove: typing.NotRequired[list[FieldsServer]]
+    name: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[str]
+    banner: typing_extensions.NotRequired[str]
+    categories: typing_extensions.NotRequired[list[Category]]
+    system_messages: typing_extensions.NotRequired[SystemMessageChannels]
+    flags: typing_extensions.NotRequired[int]
+    discoverable: typing_extensions.NotRequired[bool]
+    analytics: typing_extensions.NotRequired[bool]
+    remove: typing_extensions.NotRequired[list[FieldsServer]]
 
 
 class DataEditRole(typing.TypedDict):
-    name: typing.NotRequired[str]
-    colour: typing.NotRequired[str]
-    hoist: typing.NotRequired[bool]
-    rank: typing.NotRequired[int]
-    remove: typing.NotRequired[list[FieldsRole]]
+    name: typing_extensions.NotRequired[str]
+    colour: typing_extensions.NotRequired[str]
+    hoist: typing_extensions.NotRequired[bool]
+    rank: typing_extensions.NotRequired[int]
+    remove: typing_extensions.NotRequired[list[FieldsRole]]
 
 
 class DataSetServerRolePermission(typing.TypedDict):
@@ -137,7 +137,7 @@ class DataSetServerRolePermission(typing.TypedDict):
 
 
 class OptionsServerDelete(typing.TypedDict):
-    leave_silently: typing.NotRequired[Bool]
+    leave_silently: typing_extensions.NotRequired[Bool]
 
 
 __all__ = (

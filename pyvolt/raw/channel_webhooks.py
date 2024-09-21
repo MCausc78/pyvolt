@@ -1,23 +1,23 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .files import File
 
 
 class Webhook(typing.TypedDict):
     id: str
     name: str
-    avatar: typing.NotRequired[File]
+    avatar: typing_extensions.NotRequired[File]
     channel_id: str
     permissions: int
     token: str | None
 
 
 class PartialWebhook(typing.TypedDict):
-    name: typing.NotRequired[str]
-    avatar: typing.NotRequired[File]
-    permissions: typing.NotRequired[int]
+    name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[File]
+    permissions: typing_extensions.NotRequired[int]
 
 
 class MessageWebhook(typing.TypedDict):
@@ -26,10 +26,10 @@ class MessageWebhook(typing.TypedDict):
 
 
 class DataEditWebhook(typing.TypedDict):
-    name: typing.NotRequired[str]
-    avatar: typing.NotRequired[str]
-    permissions: typing.NotRequired[int]
-    remove: typing.NotRequired[list[FieldsWebhook]]
+    name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[str]
+    permissions: typing_extensions.NotRequired[int]
+    remove: typing_extensions.NotRequired[list[FieldsWebhook]]
 
 
 class ResponseWebhook(typing.TypedDict):
@@ -45,7 +45,7 @@ FieldsWebhook = typing.Literal['Avatar']
 
 class CreateWebhookBody(typing.TypedDict):
     name: str
-    avatar: typing.NotRequired[str | None]
+    avatar: typing_extensions.NotRequired[str | None]
 
 
 __all__ = (

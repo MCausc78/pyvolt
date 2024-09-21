@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .authifier import (
     AuthifierCreateSessionEvent,
     AuthifierDeleteSessionEvent,
@@ -50,15 +50,15 @@ class ClientLogoutEvent(typing.TypedDict):
 
 class ClientReadyEvent(typing.TypedDict):
     type: typing.Literal['Ready']
-    users: typing.NotRequired[list[User]]
-    servers: typing.NotRequired[list[Server]]
-    channels: typing.NotRequired[list[Channel]]
-    members: typing.NotRequired[list[Member]]
-    emojis: typing.NotRequired[list[ServerEmoji]]
+    users: typing_extensions.NotRequired[list[User]]
+    servers: typing_extensions.NotRequired[list[Server]]
+    channels: typing_extensions.NotRequired[list[Channel]]
+    members: typing_extensions.NotRequired[list[Member]]
+    emojis: typing_extensions.NotRequired[list[ServerEmoji]]
     # Insert please....
     # me: User
-    user_settings: typing.NotRequired[UserSettings]
-    channel_unreads: typing.NotRequired[list[ChannelUnread]]
+    user_settings: typing_extensions.NotRequired[UserSettings]
+    channel_unreads: typing_extensions.NotRequired[list[ChannelUnread]]
 
 
 Ping = list[int] | int
@@ -398,8 +398,8 @@ ServerEvent = (
 class BonfireConnectionParameters(typing.TypedDict):
     version: typing.Literal['1']
     format: typing.Literal['json', 'msgpack']
-    token: typing.NotRequired[str]
-    __user_settings_keys: typing.NotRequired[str]
+    token: typing_extensions.NotRequired[str]
+    __user_settings_keys: typing_extensions.NotRequired[str]
 
 
 __all__ = (

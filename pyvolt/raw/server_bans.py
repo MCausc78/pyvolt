@@ -1,5 +1,5 @@
 import typing
-
+import typing_extensions
 from .files import File
 from .server_members import MemberCompositeKey
 
@@ -10,7 +10,7 @@ class ServerBan(typing.TypedDict):
 
 
 class DataBanCreate(typing.TypedDict):
-    reason: typing.NotRequired[str | None]
+    reason: typing_extensions.NotRequired[str | None]
 
 
 class BannedUser(typing.TypedDict):

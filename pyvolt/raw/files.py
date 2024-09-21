@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 
 class File(typing.TypedDict):
     _id: str
@@ -10,12 +10,12 @@ class File(typing.TypedDict):
     metadata: Metadata
     content_type: str
     size: int
-    deleted: typing.NotRequired[bool]
-    reported: typing.NotRequired[bool]
-    message_id: typing.NotRequired[str]
-    user_id: typing.NotRequired[str]
-    server_id: typing.NotRequired[str]
-    object_id: typing.NotRequired[str]
+    deleted: typing_extensions.NotRequired[bool]
+    reported: typing_extensions.NotRequired[bool]
+    message_id: typing_extensions.NotRequired[str]
+    user_id: typing_extensions.NotRequired[str]
+    server_id: typing_extensions.NotRequired[str]
+    object_id: typing_extensions.NotRequired[str]
 
 
 class FileMetadata(typing.TypedDict):

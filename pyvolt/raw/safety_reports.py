@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 
 class BaseReport(typing.TypedDict):
     _id: str
@@ -55,7 +55,7 @@ class UserReportedContent(typing.TypedDict):
     type: typing.Literal['User']
     id: str
     report_reason: UserReportReason
-    message_id: typing.NotRequired[str]
+    message_id: typing_extensions.NotRequired[str]
 
 
 ReportedContent = MessageReportedContent | ServerReportedContent | UserReportedContent
@@ -81,7 +81,7 @@ Report = CreatedReport | RejectedReport | ResolvedReport
 
 class DataReportContent(typing.TypedDict):
     content: ReportedContent
-    additional_context: typing.NotRequired[str]
+    additional_context: typing_extensions.NotRequired[str]
 
 
 __all__ = (

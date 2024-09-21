@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .files import File
 from .user_settings import ReviteThemeVariable
 from .users import UserProfile
@@ -16,9 +16,9 @@ class DiscoveryServer(typing.TypedDict):
     _id: str
     name: str
     description: str | None
-    icon: typing.NotRequired[File]
-    banner: typing.NotRequired[File]
-    flags: typing.NotRequired[int]
+    icon: typing_extensions.NotRequired[File]
+    banner: typing_extensions.NotRequired[File]
+    flags: typing_extensions.NotRequired[int]
     tags: list[str]
     members: int
     activity: DiscoveryServerActivity
@@ -44,7 +44,7 @@ DiscoveryBotUsage = typing.Literal['high', 'medium', 'low']
 class DiscoveryBot(typing.TypedDict):
     _id: str
     username: str
-    avatar: typing.NotRequired[File]
+    avatar: typing_extensions.NotRequired[File]
     profile: UserProfile
     tags: list[str]
     servers: int
@@ -73,7 +73,7 @@ class DiscoveryTheme(typing.TypedDict):
     description: str
     tags: list[str]
     variables: dict[ReviteThemeVariable, str]
-    css: typing.NotRequired[str]
+    css: typing_extensions.NotRequired[str]
 
 
 class DiscoveryThemesPage(typing.TypedDict):

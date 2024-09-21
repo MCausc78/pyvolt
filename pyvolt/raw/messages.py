@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .basic import Bool
 from .channel_webhooks import MessageWebhook
 from .embeds import Embed
@@ -12,38 +12,38 @@ from .users import User
 
 class Message(typing.TypedDict):
     _id: str
-    nonce: typing.NotRequired[str]
+    nonce: typing_extensions.NotRequired[str]
     channel: str
     author: str
-    user: typing.NotRequired[User]
-    member: typing.NotRequired[Member]
-    webhook: typing.NotRequired[MessageWebhook]
-    content: typing.NotRequired[str]
-    system: typing.NotRequired[SystemMessage]
-    attachments: typing.NotRequired[list[File]]
-    edited: typing.NotRequired[str]
-    embeds: typing.NotRequired[list[Embed]]
-    mentions: typing.NotRequired[list[str]]
-    replies: typing.NotRequired[list[str]]
-    reactions: typing.NotRequired[dict[str, list[str]]]
-    interactions: typing.NotRequired[Interactions]
-    masquerade: typing.NotRequired[Masquerade]
-    pinned: typing.NotRequired[bool]
-    flags: typing.NotRequired[int]
+    user: typing_extensions.NotRequired[User]
+    member: typing_extensions.NotRequired[Member]
+    webhook: typing_extensions.NotRequired[MessageWebhook]
+    content: typing_extensions.NotRequired[str]
+    system: typing_extensions.NotRequired[SystemMessage]
+    attachments: typing_extensions.NotRequired[list[File]]
+    edited: typing_extensions.NotRequired[str]
+    embeds: typing_extensions.NotRequired[list[Embed]]
+    mentions: typing_extensions.NotRequired[list[str]]
+    replies: typing_extensions.NotRequired[list[str]]
+    reactions: typing_extensions.NotRequired[dict[str, list[str]]]
+    interactions: typing_extensions.NotRequired[Interactions]
+    masquerade: typing_extensions.NotRequired[Masquerade]
+    pinned: typing_extensions.NotRequired[bool]
+    flags: typing_extensions.NotRequired[int]
 
 
 class PartialMessage(typing.TypedDict):
-    content: typing.NotRequired[str]
-    edited: typing.NotRequired[str]
-    embeds: typing.NotRequired[list[Embed]]
-    pinned: typing.NotRequired[bool]
-    reactions: typing.NotRequired[dict[str, list[str]]]
+    content: typing_extensions.NotRequired[str]
+    edited: typing_extensions.NotRequired[str]
+    embeds: typing_extensions.NotRequired[list[Embed]]
+    pinned: typing_extensions.NotRequired[bool]
+    reactions: typing_extensions.NotRequired[dict[str, list[str]]]
 
 
 class MessagesAndUsersBulkMessageResponse(typing.TypedDict):
     messages: list[Message]
     users: list[User]
-    members: typing.NotRequired[list[Member]]
+    members: typing_extensions.NotRequired[list[Member]]
 
 
 BulkMessageResponse = list[Message] | MessagesAndUsersBulkMessageResponse
@@ -138,30 +138,30 @@ SystemMessage = (
 
 
 class Masquerade(typing.TypedDict):
-    name: typing.NotRequired[str]
-    avatar: typing.NotRequired[str]
-    colour: typing.NotRequired[str]
+    name: typing_extensions.NotRequired[str]
+    avatar: typing_extensions.NotRequired[str]
+    colour: typing_extensions.NotRequired[str]
 
 
 class Interactions(typing.TypedDict):
-    reactions: typing.NotRequired[list[str]]
-    restrict_reactions: typing.NotRequired[bool]
+    reactions: typing_extensions.NotRequired[list[str]]
+    restrict_reactions: typing_extensions.NotRequired[bool]
 
 
 class AppendMessage(typing.TypedDict):
-    embeds: typing.NotRequired[list[Embed]]
+    embeds: typing_extensions.NotRequired[list[Embed]]
 
 
 MessageSort = typing.Literal['Relevance', 'Latest', 'Oldest']
 
 
 class SendableEmbed(typing.TypedDict):
-    icon_url: typing.NotRequired[str]
-    url: typing.NotRequired[str]
-    title: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    media: typing.NotRequired[str]
-    colour: typing.NotRequired[str]
+    icon_url: typing_extensions.NotRequired[str]
+    url: typing_extensions.NotRequired[str]
+    title: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    media: typing_extensions.NotRequired[str]
+    colour: typing_extensions.NotRequired[str]
 
 
 class ReplyIntent(typing.TypedDict):
@@ -170,37 +170,37 @@ class ReplyIntent(typing.TypedDict):
 
 
 class DataMessageSend(typing.TypedDict):
-    content: typing.NotRequired[str]
-    attachments: typing.NotRequired[list[str]]
-    replies: typing.NotRequired[list[ReplyIntent]]
-    embeds: typing.NotRequired[list[SendableEmbed]]
-    masquerade: typing.NotRequired[Masquerade]
-    interactions: typing.NotRequired[Interactions]
-    flags: typing.NotRequired[int]
+    content: typing_extensions.NotRequired[str]
+    attachments: typing_extensions.NotRequired[list[str]]
+    replies: typing_extensions.NotRequired[list[ReplyIntent]]
+    embeds: typing_extensions.NotRequired[list[SendableEmbed]]
+    masquerade: typing_extensions.NotRequired[Masquerade]
+    interactions: typing_extensions.NotRequired[Interactions]
+    flags: typing_extensions.NotRequired[int]
 
 
 class OptionsQueryMessages(typing.TypedDict):
-    limit: typing.NotRequired[int]
-    before: typing.NotRequired[str]
-    after: typing.NotRequired[str]
-    sort: typing.NotRequired[MessageSort]
-    nearby: typing.NotRequired[str]
-    include_users: typing.NotRequired[Bool]
+    limit: typing_extensions.NotRequired[int]
+    before: typing_extensions.NotRequired[str]
+    after: typing_extensions.NotRequired[str]
+    sort: typing_extensions.NotRequired[MessageSort]
+    nearby: typing_extensions.NotRequired[str]
+    include_users: typing_extensions.NotRequired[Bool]
 
 
 class DataMessageSearch(typing.TypedDict):
-    query: typing.NotRequired[str]
-    pinned: typing.NotRequired[bool]
-    limit: typing.NotRequired[int]
-    before: typing.NotRequired[str]
-    after: typing.NotRequired[str]
-    sort: typing.NotRequired[MessageSort]
-    include_users: typing.NotRequired[bool]
+    query: typing_extensions.NotRequired[str]
+    pinned: typing_extensions.NotRequired[bool]
+    limit: typing_extensions.NotRequired[int]
+    before: typing_extensions.NotRequired[str]
+    after: typing_extensions.NotRequired[str]
+    sort: typing_extensions.NotRequired[MessageSort]
+    include_users: typing_extensions.NotRequired[bool]
 
 
 class DataEditMessage(typing.TypedDict):
-    content: typing.NotRequired[str]
-    embeds: typing.NotRequired[list[SendableEmbed]]
+    content: typing_extensions.NotRequired[str]
+    embeds: typing_extensions.NotRequired[list[SendableEmbed]]
 
 
 class OptionsBulkDelete(typing.TypedDict):
@@ -208,8 +208,8 @@ class OptionsBulkDelete(typing.TypedDict):
 
 
 class OptionsUnreact(typing.TypedDict):
-    user_id: typing.NotRequired[str]
-    remove_all: typing.NotRequired[Bool]
+    user_id: typing_extensions.NotRequired[str]
+    remove_all: typing_extensions.NotRequired[Bool]
 
 
 FieldsMessage = typing.Literal['Pinned']

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 T = typing.TypeVar('T')
 
 
@@ -10,8 +10,8 @@ class BaseEmoji(typing.Generic[T], typing.TypedDict):
     parent: T
     creator_id: str
     name: str
-    animated: typing.NotRequired[bool]
-    nsfw: typing.NotRequired[bool]
+    animated: typing_extensions.NotRequired[bool]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 ServerEmoji = BaseEmoji['ServerEmojiParent']
@@ -34,7 +34,7 @@ EmojiParent = ServerEmojiParent | DetachedEmojiParent
 class DataCreateEmoji(typing.TypedDict):
     name: str
     parent: EmojiParent
-    nsfw: typing.NotRequired[bool]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 __all__ = (

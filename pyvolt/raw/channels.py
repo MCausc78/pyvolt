@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .basic import Bool
 from .files import File
 from .permissions import Override, OverrideField
@@ -18,7 +18,7 @@ class DirectMessageChannel(typing.TypedDict):
     _id: str
     active: bool
     recipients: list[str]
-    last_message_id: typing.NotRequired[str]
+    last_message_id: typing_extensions.NotRequired[str]
 
 
 class GroupChannel(typing.TypedDict):
@@ -26,12 +26,12 @@ class GroupChannel(typing.TypedDict):
     _id: str
     name: str
     owner: str
-    description: typing.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
     recipients: list[str]
-    icon: typing.NotRequired[File]
-    last_message_id: typing.NotRequired[str]
-    permissions: typing.NotRequired[int]
-    nsfw: typing.NotRequired[bool]
+    icon: typing_extensions.NotRequired[File]
+    last_message_id: typing_extensions.NotRequired[str]
+    permissions: typing_extensions.NotRequired[int]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 class TextChannel(typing.TypedDict):
@@ -39,12 +39,12 @@ class TextChannel(typing.TypedDict):
     _id: str
     server: str
     name: str
-    description: typing.NotRequired[str]
-    icon: typing.NotRequired[File]
-    last_message_id: typing.NotRequired[str]
-    default_permissions: typing.NotRequired[OverrideField]
-    role_permissions: typing.NotRequired[dict[str, OverrideField]]
-    nsfw: typing.NotRequired[bool]
+    description: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[File]
+    last_message_id: typing_extensions.NotRequired[str]
+    default_permissions: typing_extensions.NotRequired[OverrideField]
+    role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 class VoiceChannel(typing.TypedDict):
@@ -52,11 +52,11 @@ class VoiceChannel(typing.TypedDict):
     _id: str
     server: str
     name: str
-    description: typing.NotRequired[str]
-    icon: typing.NotRequired[File]
-    default_permissions: typing.NotRequired[OverrideField]
-    role_permissions: typing.NotRequired[dict[str, OverrideField]]
-    nsfw: typing.NotRequired[bool]
+    description: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[File]
+    default_permissions: typing_extensions.NotRequired[OverrideField]
+    role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 PrivateChannel = SavedMessagesChannel | DirectMessageChannel | GroupChannel
@@ -65,47 +65,47 @@ Channel = PrivateChannel | ServerChannel
 
 
 class PartialChannel(typing.TypedDict):
-    name: typing.NotRequired[str]
-    owner: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    icon: typing.NotRequired[File]
-    nsfw: typing.NotRequired[bool]
-    active: typing.NotRequired[bool]
-    permissions: typing.NotRequired[int]
-    role_permissions: typing.NotRequired[dict[str, OverrideField]]
-    default_permissions: typing.NotRequired[OverrideField]
-    last_message_id: typing.NotRequired[str]
+    name: typing_extensions.NotRequired[str]
+    owner: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[File]
+    nsfw: typing_extensions.NotRequired[bool]
+    active: typing_extensions.NotRequired[bool]
+    permissions: typing_extensions.NotRequired[int]
+    role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
+    default_permissions: typing_extensions.NotRequired[OverrideField]
+    last_message_id: typing_extensions.NotRequired[str]
 
 
 FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions']
 
 
 class DataEditChannel(typing.TypedDict):
-    name: typing.NotRequired[str]
-    description: typing.NotRequired[str]
-    owner: typing.NotRequired[str]
-    icon: typing.NotRequired[str]
-    nsfw: typing.NotRequired[bool]
-    archived: typing.NotRequired[bool]
-    remove: typing.NotRequired[list[FieldsChannel]]
+    name: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
+    owner: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[str]
+    nsfw: typing_extensions.NotRequired[bool]
+    archived: typing_extensions.NotRequired[bool]
+    remove: typing_extensions.NotRequired[list[FieldsChannel]]
 
 
 class DataCreateGroup(typing.TypedDict):
     name: str
-    description: typing.NotRequired[str | None]
-    icon: typing.NotRequired[str | None]
-    users: typing.NotRequired[list[str]]
-    nsfw: typing.NotRequired[bool | None]
+    description: typing_extensions.NotRequired[str | None]
+    icon: typing_extensions.NotRequired[str | None]
+    users: typing_extensions.NotRequired[list[str]]
+    nsfw: typing_extensions.NotRequired[bool | None]
 
 
 LegacyServerChannelType = typing.Literal['Text', 'Voice']
 
 
 class DataCreateServerChannel(typing.TypedDict):
-    type: typing.NotRequired[LegacyServerChannelType]
+    type: typing_extensions.NotRequired[LegacyServerChannelType]
     name: str
-    description: typing.NotRequired[str | None]
-    nsfw: typing.NotRequired[bool]
+    description: typing_extensions.NotRequired[str | None]
+    nsfw: typing_extensions.NotRequired[bool]
 
 
 class DataDefaultChannelPermissions(typing.TypedDict):
@@ -117,7 +117,7 @@ class DataSetRolePermissions(typing.TypedDict):
 
 
 class OptionsChannelDelete(typing.TypedDict):
-    leave_silently: typing.NotRequired[Bool]
+    leave_silently: typing_extensions.NotRequired[Bool]
 
 
 class LegacyCreateVoiceUserResponse(typing.TypedDict):

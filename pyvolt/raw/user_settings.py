@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 from .localization import Language
 
 UserSettings = dict[str, tuple[int, str]]
@@ -12,7 +12,7 @@ class OptionsFetchSettings(typing.TypedDict):
 
 
 class OptionsSetSettings(typing.TypedDict):
-    timestamp: typing.NotRequired[int]
+    timestamp: typing_extensions.NotRequired[int]
 
 
 DataSetSettings = dict[str, str]
@@ -25,12 +25,12 @@ AndroidMessageReplyStyle = typing.Literal['None', 'SwipeFromEnd', 'DoubleTap']
 
 
 class AndroidUserSettings(typing.TypedDict):
-    theme: typing.NotRequired[AndroidTheme]
-    colourOverrides: typing.NotRequired[dict[str, int]]
+    theme: typing_extensions.NotRequired[AndroidTheme]
+    colourOverrides: typing_extensions.NotRequired[dict[str, int]]
     # If not provided, defaults to SwipeFromEnd
-    messageReplyStyle: typing.NotRequired[AndroidMessageReplyStyle]
+    messageReplyStyle: typing_extensions.NotRequired[AndroidMessageReplyStyle]
     # If not provided, defaults to 50
-    avatarRadius: typing.NotRequired[AndroidProfilePictureShape]
+    avatarRadius: typing_extensions.NotRequired[AndroidProfilePictureShape]
 
 
 # Revite User Settings
@@ -61,9 +61,9 @@ ReviteAppearanceEmojiPack = typing.Literal['mutant', 'twemoji', 'openmoji', 'not
 ReviteAppearanceSettings = typing.TypedDict(
     'ReviteAppearanceSettings',
     {
-        'appearance:emoji': typing.NotRequired[ReviteAppearanceEmojiPack],
-        'appearance:seasonal': typing.NotRequired[bool],
-        'appearance:transparency': typing.NotRequired[bool],
+        'appearance:emoji': typing_extensions.NotRequired[ReviteAppearanceEmojiPack],
+        'appearance:seasonal': typing_extensions.NotRequired[bool],
+        'appearance:transparency': typing_extensions.NotRequired[bool],
     },
 )
 
@@ -123,40 +123,40 @@ ReviteThemeVariable = typing.Literal[
 ReviteThemeSettings = typing.TypedDict(
     'ReviteThemeSettings',
     {
-        'appearance:ligatures': typing.NotRequired[bool],
-        'appearance:theme:base': typing.NotRequired[ReviteAppearanceTheme],
-        'appearance:theme:css': typing.NotRequired[str],
-        'appearance:theme:font': typing.NotRequired[ReviteAppearanceFont],
+        'appearance:ligatures': typing_extensions.NotRequired[bool],
+        'appearance:theme:base': typing_extensions.NotRequired[ReviteAppearanceTheme],
+        'appearance:theme:css': typing_extensions.NotRequired[str],
+        'appearance:theme:font': typing_extensions.NotRequired[ReviteAppearanceFont],
         # Deprecated by `base`
-        # 'appearance:theme:light': typing.NotRequired[bool],
-        'appearance:theme:monoFont': typing.NotRequired[ReviteAppearanceMonoFont],
-        'appearance:theme:overrides': typing.NotRequired[dict[ReviteThemeVariable, str]],
+        # 'appearance:theme:light': typing_extensions.NotRequired[bool],
+        'appearance:theme:monoFont': typing_extensions.NotRequired[ReviteAppearanceMonoFont],
+        'appearance:theme:overrides': typing_extensions.NotRequired[dict[ReviteThemeVariable, str]],
     },
 )
 
 
 class ReviteUserSettingsPayload(typing.TypedDict):
-    # changelog: typing.NotRequired[ReviteChangelog]
-    # locale: typing.NotRequired[ReviteLocaleOptions]
-    # notifications: typing.NotRequired[ReviteNotificationOptions]
-    # ordering: typing.NotRequired[ReviteOrdering]
-    # appearance: typing.NotRequired[ReviteAppearanceSettings]
-    # theme: typing.NotRequired[ReviteThemeSettings]
-    changelog: typing.NotRequired[str]
-    locale: typing.NotRequired[str]
-    notifications: typing.NotRequired[str]
-    ordering: typing.NotRequired[str]
-    appearance: typing.NotRequired[str]
-    theme: typing.NotRequired[str]
+    # changelog: typing_extensions.NotRequired[ReviteChangelog]
+    # locale: typing_extensions.NotRequired[ReviteLocaleOptions]
+    # notifications: typing_extensions.NotRequired[ReviteNotificationOptions]
+    # ordering: typing_extensions.NotRequired[ReviteOrdering]
+    # appearance: typing_extensions.NotRequired[ReviteAppearanceSettings]
+    # theme: typing_extensions.NotRequired[ReviteThemeSettings]
+    changelog: typing_extensions.NotRequired[str]
+    locale: typing_extensions.NotRequired[str]
+    notifications: typing_extensions.NotRequired[str]
+    ordering: typing_extensions.NotRequired[str]
+    appearance: typing_extensions.NotRequired[str]
+    theme: typing_extensions.NotRequired[str]
 
 
 JoltUserSettings = typing.TypedDict(
     'JoltUserSettings',
     {
-        'jolt:low-data-mode': typing.NotRequired[typing.Literal['true', 'false']],
-        'jolt:compact-mode': typing.NotRequired[typing.Literal['true', 'false']],
-        'jolt:send-typing-indicators': typing.NotRequired[typing.Literal['true', 'false']],
-        'jolt:receive-typing-indicators': typing.NotRequired[typing.Literal['true', 'false']],
+        'jolt:low-data-mode': typing_extensions.NotRequired[typing.Literal['true', 'false']],
+        'jolt:compact-mode': typing_extensions.NotRequired[typing.Literal['true', 'false']],
+        'jolt:send-typing-indicators': typing_extensions.NotRequired[typing.Literal['true', 'false']],
+        'jolt:receive-typing-indicators': typing_extensions.NotRequired[typing.Literal['true', 'false']],
     },
 )
 

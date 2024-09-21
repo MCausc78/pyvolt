@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+import typing_extensions
 
 from .users import User
 
@@ -10,11 +11,11 @@ class Bot(typing.TypedDict):
     owner: str
     token: str
     public: bool
-    analytics: typing.NotRequired[bool]
-    discoverable: typing.NotRequired[bool]
-    interactions_url: typing.NotRequired[str]
-    terms_of_service_url: typing.NotRequired[str]
-    privacy_policy_url: typing.NotRequired[str]
+    analytics: typing_extensions.NotRequired[bool]
+    discoverable: typing_extensions.NotRequired[bool]
+    interactions_url: typing_extensions.NotRequired[str]
+    terms_of_service_url: typing_extensions.NotRequired[str]
+    privacy_policy_url: typing_extensions.NotRequired[str]
     flags: int
 
 
@@ -24,8 +25,8 @@ FieldsBot = typing.Literal['Token', 'InteractionsURL']
 class PublicBot(typing.TypedDict):
     _id: str
     username: str
-    avatar: typing.NotRequired[str]
-    description: typing.NotRequired[str]
+    avatar: typing_extensions.NotRequired[str]
+    description: typing_extensions.NotRequired[str]
 
 
 class FetchBotResponse(typing.TypedDict):
@@ -38,11 +39,11 @@ class DataCreateBot(typing.TypedDict):
 
 
 class DataEditBot(typing.TypedDict):
-    name: typing.NotRequired[str]
-    public: typing.NotRequired[bool]
-    analytics: typing.NotRequired[bool]
-    interactions_url: typing.NotRequired[str]
-    remove: typing.NotRequired[list[FieldsBot]]
+    name: typing_extensions.NotRequired[str]
+    public: typing_extensions.NotRequired[bool]
+    analytics: typing_extensions.NotRequired[bool]
+    interactions_url: typing_extensions.NotRequired[str]
+    remove: typing_extensions.NotRequired[list[FieldsBot]]
 
 
 class ServerInviteBotDestination(typing.TypedDict):

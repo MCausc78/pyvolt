@@ -934,10 +934,10 @@ class Client:
         if not cache:
             return {}
 
-        result = {}
+        result: dict[str, DMChannel] = {}
         for k, v in self.dm_channel_ids.items():
             channel = cache.get_channel(v, caching._USER_REQUEST)
-            if channel and channel.__class__ is DMChannel or isinstance(channel, DMChannel):
+            if channel and isinstance(channel, DMChannel):
                 result[k] = channel
         return result
 

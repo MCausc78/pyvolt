@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import typing
-
+import typing_extensions
 
 # >> /models/mfa/mod.rs
 class MultiFactorAuthentication(typing.TypedDict):
-    totp_token: typing.NotRequired[Totp]
-    recovery_codes: typing.NotRequired[list[str]]
+    totp_token: typing_extensions.NotRequired[Totp]
+    recovery_codes: typing_extensions.NotRequired[list[str]]
 
 
 MFAMethod = typing.Literal['Password', 'Recovery', 'Totp']
@@ -117,7 +117,7 @@ class Session(typing.TypedDict):
     user_id: str
     token: str
     name: str
-    subscription: typing.NotRequired[WebPushSubscription]
+    subscription: typing_extensions.NotRequired[WebPushSubscription]
 
 
 # >> /models/ticket.rs
@@ -192,7 +192,7 @@ class AccountInfo(typing.TypedDict):
 class DataPasswordReset(typing.TypedDict):
     token: str
     password: str
-    remove_sessions: typing.NotRequired[bool | None]
+    remove_sessions: typing_extensions.NotRequired[bool | None]
 
 
 class DataResendVerification(typing.TypedDict):
