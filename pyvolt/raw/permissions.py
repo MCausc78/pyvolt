@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing
-import typing_extensions
 
 
 class Override(typing.TypedDict):
