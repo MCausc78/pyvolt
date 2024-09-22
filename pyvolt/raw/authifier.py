@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 import typing_extensions
 
+
 # >> /models/mfa/mod.rs
 class MultiFactorAuthentication(typing.TypedDict):
     totp_token: typing_extensions.NotRequired[Totp]

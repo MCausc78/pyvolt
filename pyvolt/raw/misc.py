@@ -1,6 +1,7 @@
 import typing
 import typing_extensions
 
+
 class CaptchaFeature(typing.TypedDict):
     enabled: bool
     key: str

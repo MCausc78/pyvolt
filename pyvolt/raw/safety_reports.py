@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 import typing_extensions
 
+
 class BaseReport(typing.TypedDict):
     _id: str
     author_id: str
