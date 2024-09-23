@@ -51,6 +51,7 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    ServerTextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
@@ -1855,6 +1856,22 @@ class HTTPClient:
         r = self.state.parser.parse_channel(resp)
         return r
 
+    @typing.overload
+    async def set_default_channel_permissions(
+        self,
+        channel: ULIDOr[GroupChannel],
+        permissions: Permissions,
+        /,
+    ) -> GroupChannel: ...
+
+    @typing.overload
+    async def set_default_channel_permissions(
+        self,
+        channel: ULIDOr[ServerChannel],
+        permissions: PermissionOverride,
+        /,
+    ) -> ServerChannel: ...
+
     async def set_default_channel_permissions(
         self,
         channel: ULIDOr[GroupChannel | ServerChannel],
@@ -2398,6 +2415,54 @@ class HTTPClient:
             routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
         )
 
+    @typing.overload
+    async def create_server_channel(
+        self,
+        server: ULIDOr[BaseServer],
+        /,
+        *,
+        type: typing.Literal[ChannelType.text] = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> ServerTextChannel: ...
+
+    @typing.overload
+    async def create_server_channel(
+        self,
+        server: ULIDOr[BaseServer],
+        /,
+        *,
+        type: None = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> ServerTextChannel: ...
+
+    @typing.overload
+    async def create_server_channel(
+        self,
+        server: ULIDOr[BaseServer],
+        /,
+        *,
+        type: typing.Literal[ChannelType.voice] = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> VoiceChannel: ...
+
+    @typing.overload
+    async def create_server_channel(
+        self,
+        server: ULIDOr[BaseServer],
+        /,
+        *,
+        type: ChannelType = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> typing.NoReturn: ...
+
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
@@ -2430,6 +2495,10 @@ class HTTPClient:
         HTTPException
             Creating the channel failed.
         """
+
+        if type not in (ChannelType.text, ChannelType.voice, None):
+            raise TypeError('Cannot create non-text/voice channels')
+
         payload: raw.DataCreateServerChannel = {'name': name}
         if type is not None:
             payload['type'] = type.value
@@ -2437,13 +2506,11 @@ class HTTPClient:
             payload['description'] = description
         if nsfw is not None:
             payload['nsfw'] = nsfw
-        resp: raw.Channel = await self.request(
+        resp: raw.ServerChannel = await self.request(
             routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
             json=payload,
         )
-        channel = self.state.parser.parse_channel(resp)
-        assert isinstance(channel, ServerChannel)
-        return channel
+        return self.state.parser.parse_channel(resp)
 
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
@@ -2463,7 +2530,7 @@ class HTTPClient:
         resp: list[raw.ServerEmoji] = await self.request(
             routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server))
         )
-        return [self.state.parser.parse_server_emoji(e) for e in resp]
+        return list(map(self.state.parser.parse_server_emoji, resp))
 
     async def get_server_invites(self, server: ULIDOr[BaseServer], /) -> list[ServerInvite]:
         """|coro|
@@ -2490,7 +2557,7 @@ class HTTPClient:
         resp: list[raw.ServerInvite] = await self.request(
             routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server))
         )
-        return [self.state.parser.parse_server_invite(i) for i in resp]
+        return list(map(self.state.parser.parse_server_invite, resp))
 
     async def edit_member(
         self,
@@ -2707,8 +2774,8 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         /,
         *,
-        allow: Permissions = Permissions.NONE,
-        deny: Permissions = Permissions.NONE,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
     ) -> Server:
         """|coro|
 
@@ -3446,8 +3513,7 @@ class HTTPClient:
         resp: list[raw.SavedMessagesChannel | raw.DirectMessageChannel | raw.GroupChannel] = await self.request(
             routes.USERS_FETCH_DMS.compile()
         )
-        ret = [self.state.parser.parse_channel(e) for e in resp]
-        return ret  # type: ignore[return-value] # The returned channels are always DM/Groups
+        return list(map(self.state.parser.parse_channel, resp))  # type: ignore[return-value]
 
     async def get_user_profile(self, user: ULIDOr[BaseUser], /) -> UserProfile:
         """|coro|

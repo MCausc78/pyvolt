@@ -423,6 +423,36 @@ class BaseServer(Base):
         """
         return await self.state.http.ban(self.id, user, reason=reason)
 
+    @typing.overload
+    async def create_channel(
+        self,
+        *,
+        type: None = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> ServerTextChannel: ...
+
+    @typing.overload
+    async def create_channel(
+        self,
+        *,
+        type: typing.Literal[ChannelType.text] = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> ServerTextChannel: ...
+
+    @typing.overload
+    async def create_channel(
+        self,
+        *,
+        type: typing.Literal[ChannelType.voice] = ...,
+        name: str,
+        description: str | None = ...,
+        nsfw: bool | None = ...,
+    ) -> VoiceChannel: ...
+
     async def create_channel(
         self,
         *,
@@ -461,7 +491,7 @@ class BaseServer(Base):
             Creating the channel failed.
         """
         channel = await self.create_channel(type=ChannelType.text, name=name, description=description, nsfw=nsfw)
-        return channel  # type: ignore
+        return channel
 
     async def create_voice_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
@@ -478,7 +508,7 @@ class BaseServer(Base):
             Creating the channel failed.
         """
         channel = await self.create_channel(type=ChannelType.voice, name=name, description=description, nsfw=nsfw)
-        return channel  # type: ignore
+        return channel
 
     async def create_role(self, *, name: str, rank: int | None = None) -> Role:
         """|coro|

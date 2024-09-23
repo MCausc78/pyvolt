@@ -38,6 +38,7 @@ from .core import (
     ULIDOr,
     resolve_id,
 )
+from .enums import ChannelType
 from .errors import NoData
 from .flags import (
     Permissions,
@@ -529,6 +530,11 @@ class SavedMessagesChannel(TextChannel):
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
 
+    @property
+    def type(self) -> typing.Literal[ChannelType.saved_messages]:
+        """Literal[:attr:`ChannelType.saved_messages`]: The channel's type."""
+        return ChannelType.saved_messages
+
     def permissions_for(self, target: User | Member, /) -> Permissions:
         """Calculate permissions for given member.
 
@@ -582,6 +588,11 @@ class DMChannel(TextChannel):
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.dm]:
+        """Literal[:attr:`ChannelType.dm`]: The channel's type."""
+        return ChannelType.dm
 
     def permissions_for(self, target: User | Member, /) -> Permissions:
         """Calculate permissions for given user.
@@ -711,6 +722,11 @@ class GroupChannel(TextChannel):
             return recipients
         else:
             return self._recipients[1]  # type: ignore
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.group]:
+        """Literal[:attr:`ChannelType.group`]: The channel's type."""
+        return ChannelType.group
 
     async def add(
         self,
@@ -1059,10 +1075,20 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
 
+    @property
+    def type(self) -> typing.Literal[ChannelType.text]:
+        """Literal[:attr:`ChannelType.text`]: The channel's type."""
+        return ChannelType.text
+
 
 @define(slots=True)
 class VoiceChannel(BaseServerChannel):
     """Voice channel belonging to a server."""
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.voice]:
+        """Literal[:attr:`ChannelType.voice`]: The channel's type."""
+        return ChannelType.voice
 
 
 ServerChannel = ServerTextChannel | VoiceChannel

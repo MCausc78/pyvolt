@@ -180,6 +180,10 @@ class AssetMetadataType(Enum):
 
 
 class ChannelType(Enum):
+    saved_messages = 'SavedMessages'
+    dm = 'DirectMessage'
+    group = 'Group'
+
     text = 'Text'
     """Text channel."""
 

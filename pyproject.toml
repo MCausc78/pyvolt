@@ -46,6 +46,9 @@ test = [
     "tzdata; sys_platform == 'win32'",
 ]
 
+[tool.pyright]
+typeCheckingMode = "standard"
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
