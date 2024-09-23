@@ -293,16 +293,16 @@ class Shard:
             message = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
+
         if message.type in (
             aiohttp.WSMsgType.CLOSE,
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
             self._last_close_code = data = message.data
-            _L.debug('Websocket closed: %s', data)
+            _L.debug('Websocket closed: %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
-            self._closed = True
             await asyncio.sleep(0.5)
             raise Reconnect
 
@@ -333,10 +333,9 @@ class Shard:
             aiohttp.WSMsgType.CLOSING,
         ):
             self._last_close_code = data = message.data
-            _L.debug('Websocket closed: %s', data)
+            _L.debug('Websocket closed: %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
-            self._closed = True
             await asyncio.sleep(0.5)
             raise Reconnect
         if message.type is aiohttp.WSMsgType.ERROR:
@@ -454,7 +453,7 @@ class Shard:
                     await socket.close()
                     return
                 except Reconnect:
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(1)
                     heartbeat_task.cancel()
                     _socket = self.socket
                     self._socket = None
