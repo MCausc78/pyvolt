@@ -45,16 +45,16 @@ _L = logging.getLogger(__name__)
 
 
 class ContextType(Enum):
-    UNDEFINED = 'UNDEFINED'
+    undefined = 'UNDEFINED'
     """Context is not provided."""
 
-    USER_REQUEST = 'USER_REQUEST'
+    user_request = 'USER_REQUEST'
     """The end user is asking for object."""
 
-    LIBRARY_REQUEST = 'LIBRARY_REQUEST'
+    library_request = 'LIBRARY_REQUEST'
     """Library needs the object for internal purposes."""
 
-    READY = 'READY'
+    ready = 'READY'
     """Populated data from Ready event."""
 
     message_ack = 'MESSAGE_ACK'
@@ -107,9 +107,9 @@ class MessageContext(BaseContext):
     message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
 
 
-_UNDEFINED = BaseContext(type=ContextType.UNDEFINED)
-_USER_REQUEST = BaseContext(type=ContextType.USER_REQUEST)
-_READY = BaseContext(type=ContextType.READY)
+_UNDEFINED = BaseContext(type=ContextType.undefined)
+_USER_REQUEST = BaseContext(type=ContextType.user_request)
+_READY = BaseContext(type=ContextType.ready)
 _MESSAGE_ACK = BaseContext(type=ContextType.message_ack)
 _MESSAGE_CREATE = BaseContext(type=ContextType.message_create)
 _MESSAGE_UPDATE = BaseContext(type=ContextType.message_update)
