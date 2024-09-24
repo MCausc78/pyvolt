@@ -1282,7 +1282,7 @@ class HTTPClient:
                 channel_id=resolve_id(channel),
             )
         )
-        return [self.state.parser.parse_user(user) for user in resp]
+        return list(map(self.state.parser.parse_user, resp))
 
     async def bulk_delete_messages(
         self, channel: ULIDOr[TextChannel], messages: Sequence[ULIDOr[BaseMessage]], /
@@ -1999,7 +1999,7 @@ class HTTPClient:
         resp: list[raw.Webhook] = await self.request(
             routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(channel_id=resolve_id(channel))
         )
-        return [self.state.parser.parse_webhook(e) for e in resp]
+        return list(map(self.state.parser.parse_webhook, resp))
 
     # Customization control (emojis)
     async def create_emoji(
@@ -3539,7 +3539,7 @@ class HTTPClient:
         resp: raw.UserProfile = await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
         return self.state.parser.parse_user_profile(resp)._stateful(self.state, user_id)
 
-    async def get_me(self) -> User:
+    async def get_me(self) -> OwnUser:
         """|coro|
 
         Retrieve your user information.
@@ -3548,9 +3548,14 @@ class HTTPClient:
         ------
         Unauthorized
             Invalid token.
+
+        Returns
+        -------
+        :class:`OwnUser`
+            The retrieved user.
         """
         resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile())
-        return self.state.parser.parse_user(resp)
+        return self.state.parser.parse_own_user(resp)
 
     async def get_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
@@ -4367,8 +4372,8 @@ class HTTPClient:
         List[:class:`PartialSession`]
             The sessions.
         """
-        sessions: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
-        return [self.state.parser.parse_partial_session(e) for e in sessions]
+        resp: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
+        return list(map(self.state.parser.parse_partial_session, resp))
 
     async def login_with_email(self, email: str, password: str, /, *, friendly_name: str | None = None) -> LoginResult:
         """|coro|
