@@ -236,7 +236,7 @@ class ChannelDeleteEvent(BaseEvent):
 
     channel: Channel | None = field(repr=True, kw_only=True)
 
-    def before_process(self) -> None:
+    def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
@@ -716,7 +716,7 @@ class ServerDeleteEvent(BaseEvent):
     server_id: str = field(repr=True, kw_only=True)
     server: Server | None = field(repr=True, kw_only=True)
 
-    def before_process(self) -> None:
+    def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
@@ -820,7 +820,7 @@ class RawServerRoleUpdateEvent(BaseEvent):
 
     server: Server | None = field(repr=True, kw_only=True)
 
-    def before_process(self) -> None:
+    def before_dispatch(self) -> None:
         self.new_role = self.role.into_full()
 
         cache = self.shard.state.cache
@@ -850,7 +850,7 @@ class ServerRoleDeleteEvent(BaseEvent):
     server: Server | None = field(repr=True, kw_only=True)
     role: Role | None = field(repr=True, kw_only=True)
 
-    def before_process(self) -> None:
+    def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
