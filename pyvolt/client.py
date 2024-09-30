@@ -100,6 +100,8 @@ if typing.TYPE_CHECKING:
         WebhookCreateEvent,
         WebhookDeleteEvent,
         WebhookUpdateEvent,
+        BeforeConnectEvent,
+        AfterConnectEvent,
     )
     from .message import Message
     from .read_state import ReadState
@@ -345,8 +347,18 @@ class ClientEventHandler(EventHandler):
                 name = f'pyvolt-dispatch-{self._client._get_i()}'
                 asyncio.create_task(self._handle_library_error(shard, payload, exc, name), name=name)
 
-    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
-        return await self._handle(shard, payload)
+    def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> utils.MaybeAwaitable[None]:
+        return self._handle(shard, payload)
+
+    def before_connect(self, shard: Shard, /) -> utils.MaybeAwaitable[None]:
+        from .events import BeforeConnectEvent
+
+        return self.dispatch(BeforeConnectEvent(shard=shard))
+
+    def after_connect(self, shard: Shard, socket: aiohttp.ClientWebSocketResponse, /) -> utils.MaybeAwaitable[None]:
+        from .events import AfterConnectEvent
+
+        return self.dispatch(AfterConnectEvent(shard=shard, socket=socket))
 
 
 # OOP in Python sucks.
@@ -1311,6 +1323,8 @@ class Client:
         def on_webhook_create(self, arg: WebhookCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_webhook_delete(self, arg: WebhookDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_webhook_update(self, arg: WebhookUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_before_connect(self, arg: BeforeConnectEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_after_connect(self, arg: AfterConnectEvent, /) -> utils.MaybeAwaitable[None]: ...
 
     async def create_group(
         self,

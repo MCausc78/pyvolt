@@ -27,6 +27,7 @@ from __future__ import annotations
 import abc
 import aiohttp
 import asyncio
+from inspect import isawaitable
 import logging
 import typing
 
@@ -63,7 +64,31 @@ class Reconnect(Exception):
 
 class EventHandler(abc.ABC):
     @abc.abstractmethod
-    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> None: ...
+    def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> utils.MaybeAwaitable[None]:
+        """Handles dispatched event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard that received the event.
+        payload: Dict[:class:`str`, Any]
+            The received event payload.
+        """
+        ...
+
+    def before_connect(self, shard: Shard, /) -> utils.MaybeAwaitable[None]:
+        """Called before connecting to Revolt."""
+        ...
+
+    def after_connect(self, shard: Shard, socket: aiohttp.ClientWebSocketResponse, /) -> utils.MaybeAwaitable[None]:
+        """Called when successfully connected to Revolt WebSocket.
+
+        Parameters
+        ----------
+        socket: :class:`aiohttp.ClientWebSocketResponse`
+            The connected WebSocket.
+        """
+        ...
 
 
 DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {version})'
@@ -422,7 +447,17 @@ class Shard:
         if self._socket:
             raise PyvoltError('The connection is already open.')
         while not self._closed:
+            if self.handler:
+                r = self.handler.before_connect(self)
+                if isawaitable(r):
+                    await r
+
             socket = await self._socket_connect()
+            if self.handler:
+                r = self.handler.after_connect(self, socket)
+                if isawaitable(r):
+                    await r
+
             self._closed = False
             self._last_close_code = None
 
@@ -463,7 +498,10 @@ class Shard:
                         pass
                     break
                 else:
-                    if not await self._handle(message):
+                    r = self._handle(message)
+                    if isawaitable(r):
+                        r = await r
+                    if not r:
                         if self.logged_out:
                             try:
                                 await socket.close()
@@ -507,7 +545,9 @@ class Shard:
             authenticated = False
 
         if self.handler is not None:
-            await self.handler.handle_raw(self, payload)
+            r = self.handler.handle_raw(self, payload)
+            if isawaitable(r):
+                await r
             self._sequence += 1
         return authenticated
 

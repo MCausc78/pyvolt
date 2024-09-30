@@ -341,13 +341,13 @@ class Parser:
         elif payload['event_type'] == 'DeleteSession':
             return SessionDeleteEvent(
                 shard=shard,
-                user_id=payload['user_id'],
+                current_user_id=payload['user_id'],
                 session_id=payload['session_id'],
             )
         elif payload['event_type'] == 'DeleteAllSessions':
             return SessionDeleteAllEvent(
                 shard=shard,
-                user_id=payload['user_id'],
+                current_user_id=payload['user_id'],
                 exclude_session_id=payload.get('exclude_session_id'),
             )
         else:
@@ -1832,6 +1832,8 @@ class Parser:
             shard=shard,
             user_id=payload['user_id'],
             flags=UserFlags(payload['flags']),
+            before=None,
+            after=None,
         )
 
     def parse_user_profile(self, payload: raw.UserProfile, /) -> StatelessUserProfile:
@@ -1987,7 +1989,7 @@ class Parser:
 
         return WebhookUpdateEvent(
             shard=shard,
-            new_webhook=PartialWebhook(
+            webhook=PartialWebhook(
                 state=self.state,
                 id=payload['id'],
                 name=data.get('name', UNDEFINED),
