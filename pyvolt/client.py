@@ -27,9 +27,8 @@ from __future__ import annotations
 import aiohttp
 import asyncio
 import builtins
-import inspect
+from inspect import isawaitable
 import logging
-import sys
 import typing
 
 from . import cache as caching, utils
@@ -318,7 +317,9 @@ class ClientEventHandler(EventHandler):
 
     async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:
         try:
-            await utils._maybe_coroutine(self._client.on_library_error, shard, payload, exc)
+            r = self._client.on_library_error(shard, payload, exc)
+            if isawaitable(r):
+                await r
         except Exception:
             _L.exception('on_library_error (task: %s) raised an exception', name)
 
@@ -331,7 +332,9 @@ class ClientEventHandler(EventHandler):
         else:
             _L.debug('Handling %s', type)
             try:
-                await utils._maybe_coroutine(handler, shard, payload)
+                r = handler(shard, payload)
+                if isawaitable(r):
+                    await r
             except Exception as exc:
                 if type == 'Ready':
                     # This is fatal
@@ -342,7 +345,7 @@ class ClientEventHandler(EventHandler):
                 name = f'pyvolt-dispatch-{self._client._get_i()}'
                 asyncio.create_task(self._handle_library_error(shard, payload, exc, name), name=name)
 
-    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent) -> None:
+    async def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
         return await self._handle(shard, payload)
 
 
@@ -438,7 +441,7 @@ class TemporarySubscription(typing.Generic[EventT]):
     async def _handle(self, arg: EventT, name: str, /) -> bool:
         try:
             can = self.check(arg)
-            if inspect.isawaitable(can):
+            if isawaitable(can):
                 can = await can
 
             if can:
@@ -609,6 +612,7 @@ class Client:
         exc_type: type[BaseException],
         exc_value: BaseException | None,
         traceback: TracebackType | None,
+        /,
     ) -> None:
         await self.close()
 
@@ -638,10 +642,14 @@ class Client:
         self, callback: Callable[[EventT], utils.MaybeAwaitable[None]], arg: EventT, name: str, /
     ) -> None:
         try:
-            await utils._maybe_coroutine(callback, arg)
+            r = callback(arg)
+            if isawaitable(r):
+                await r
         except Exception:
             try:
-                await utils._maybe_coroutine(self.on_user_error, arg)
+                r = self.on_user_error(arg)
+                if isawaitable(r):
+                    await r
             except Exception:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
@@ -659,19 +667,32 @@ class Client:
                     event.__class__.__name__,
                 )
 
+            remove = None
             for handler in temporary_handlers.values():
-                if await handler._handle(event, name):
-                    temporary_handlers.pop(handler.id, None)
+                r = handler._handle(event, name)
+                if isawaitable(r):
+                    r = await r
+
+                if r:
+                    remove = handler.id
                     break
 
+            if remove is not None:
+                del temporary_handlers[remove]
+                break
+
             for handler in handlers.values():
-                await handler._handle(event, name)
+                r = handler._handle(event, name)
+                if isawaitable(r):
+                    await r
 
             event_name: str | None = getattr(type, 'event_name', None)
             if event_name:
                 handler = getattr(self, 'on_' + event_name, None)
                 if handler:
-                    await self._run_callback(handler, event, name)
+                    r = self._run_callback(handler, event, name)
+                    if isawaitable(r):
+                        await r
 
         handler = getattr(self, 'on_event', None)
         if handler:
@@ -688,10 +709,14 @@ class Client:
         if not hook:
             return
         try:
-            await utils._maybe_coroutine(hook, self)
+            r = hook(self)
+            if isawaitable(r):
+                await r
         except Exception:
             try:
-                await utils._maybe_coroutine(self.on_user_error, event)
+                r = self.on_user_error(event)
+                if isawaitable(r):
+                    await r
             except Exception:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
