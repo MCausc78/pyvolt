@@ -135,31 +135,3 @@ class NoneEmbed(typing.TypedDict):
 
 
 Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
-
-__all__ = (
-    'ImageSize',
-    'Image',
-    'Video',
-    'TwitchType',
-    'LightspeedType',
-    'BandcampType',
-    'NoneSpecial',
-    'GIFSpecial',
-    'YouTubeSpecial',
-    'LightspeedSpecial',
-    'TwitchSpecial',
-    'SpotifySpecial',
-    'SoundcloudSpecial',
-    'BandcampSpecial',
-    'AppleMusicSpecial',
-    'StreamableSpecial',
-    'Special',
-    'WebsiteMetadata',
-    'Text',
-    'WebsiteEmbed',
-    'ImageEmbed',
-    'VideoEmbed',
-    'TextEmbed',
-    'NoneEmbed',
-    'Embed',
-)

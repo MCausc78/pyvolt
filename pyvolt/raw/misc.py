@@ -43,6 +43,3 @@ class RevoltConfig(typing.TypedDict):
     app: str
     vapid: str
     build: BuildInformation
-
-
-__all__ = ('CaptchaFeature', 'Feature', 'VoiceFeature', 'RevoltFeatures', 'BuildInformation', 'RevoltConfig')

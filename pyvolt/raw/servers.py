@@ -139,27 +139,3 @@ class DataSetServerRolePermission(typing.TypedDict):
 
 class OptionsServerDelete(typing.TypedDict):
     leave_silently: typing_extensions.NotRequired[Bool]
-
-
-__all__ = (
-    'BaseServer',
-    'Server',
-    'PartialServer',
-    'Role',
-    'PartialRole',
-    'FieldsServer',
-    'FieldsRole',
-    'Category',
-    'SystemMessageChannels',
-    'DataCreateServer',
-    'DataCreateRole',
-    'NewRoleResponse',
-    'CreateServerLegacyResponse',
-    'OptionsFetchServer',
-    'ServerWithChannels',
-    'FetchServerResponse',
-    'DataEditServer',
-    'DataEditRole',
-    'DataSetServerRolePermission',
-    'OptionsServerDelete',
-)

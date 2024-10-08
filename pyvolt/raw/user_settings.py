@@ -25,6 +25,11 @@ AndroidProfilePictureShape = int
 AndroidMessageReplyStyle = typing.Literal['None', 'SwipeFromEnd', 'DoubleTap']
 
 
+class AndroidUserSettingsSpecialEmbedSettings(typing.TypedDict):
+    embedYouTube: bool
+    embedAppleMusic: bool
+
+
 class AndroidUserSettings(typing.TypedDict):
     theme: typing_extensions.NotRequired[AndroidTheme]
     colourOverrides: typing_extensions.NotRequired[dict[str, int]]
@@ -32,6 +37,7 @@ class AndroidUserSettings(typing.TypedDict):
     messageReplyStyle: typing_extensions.NotRequired[AndroidMessageReplyStyle]
     # If not provided, defaults to 50
     avatarRadius: typing_extensions.NotRequired[AndroidProfilePictureShape]
+    specialEmbedSettings: typing_extensions.NotRequired[AndroidUserSettingsSpecialEmbedSettings]
 
 
 # Revite User Settings
@@ -159,31 +165,4 @@ JoltUserSettings = typing.TypedDict(
         'jolt:send-typing-indicators': typing_extensions.NotRequired[typing.Literal['true', 'false']],
         'jolt:receive-typing-indicators': typing_extensions.NotRequired[typing.Literal['true', 'false']],
     },
-)
-
-
-__all__ = (
-    'UserSettings',
-    'OptionsFetchSettings',
-    'OptionsSetSettings',
-    'DataSetSettings',
-    'AndroidTheme',
-    'AndroidProfilePictureShape',
-    'AndroidMessageReplyStyle',
-    'AndroidUserSettings',
-    'ReviteChangelogEntryID',
-    'ReviteChangelog',
-    'ReviteLocaleOptions',
-    'ReviteNotificationState',
-    'ReviteNotificationOptions',
-    'ReviteOrdering',
-    'ReviteAppearanceEmojiPack',
-    'ReviteAppearanceSettings',
-    'ReviteAppearanceTheme',
-    'ReviteAppearanceFont',
-    'ReviteAppearanceMonoFont',
-    'ReviteThemeVariable',
-    'ReviteThemeSettings',
-    'ReviteUserSettingsPayload',
-    'JoltUserSettings',
 )

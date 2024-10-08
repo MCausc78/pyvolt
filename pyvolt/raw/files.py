@@ -44,13 +44,3 @@ class AudioMetadata(typing.TypedDict):
 
 
 Metadata = FileMetadata | TextMetadata | ImageMetadata | VideoMetadata | AudioMetadata
-
-__all__ = (
-    'File',
-    'FileMetadata',
-    'TextMetadata',
-    'ImageMetadata',
-    'VideoMetadata',
-    'AudioMetadata',
-    'Metadata',
-)

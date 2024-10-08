@@ -36,15 +36,3 @@ class DataCreateEmoji(typing.TypedDict):
     name: str
     parent: EmojiParent
     nsfw: typing_extensions.NotRequired[bool]
-
-
-__all__ = (
-    'BaseEmoji',
-    'ServerEmoji',
-    'DetachedEmoji',
-    'Emoji',
-    'ServerEmojiParent',
-    'DetachedEmojiParent',
-    'EmojiParent',
-    'DataCreateEmoji',
-)

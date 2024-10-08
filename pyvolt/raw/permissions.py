@@ -22,12 +22,3 @@ DataPermissionPoly = DataPermissionsValue | DataPermissionsField
 class OverrideField(typing.TypedDict):
     a: int
     d: int
-
-
-__all__ = (
-    'Override',
-    'DataPermissionsField',
-    'DataPermissionsValue',
-    'DataPermissionPoly',
-    'OverrideField',
-)

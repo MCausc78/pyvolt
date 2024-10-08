@@ -24,6 +24,3 @@ class BannedUser(typing.TypedDict):
 class BanListResult(typing.TypedDict):
     users: list[BannedUser]
     bans: list[ServerBan]
-
-
-__all__ = ('ServerBan', 'DataBanCreate', 'BannedUser', 'BanListResult')

@@ -123,25 +123,3 @@ class OptionsChannelDelete(typing.TypedDict):
 
 class LegacyCreateVoiceUserResponse(typing.TypedDict):
     token: str
-
-
-__all__ = (
-    'SavedMessagesChannel',
-    'DirectMessageChannel',
-    'GroupChannel',
-    'TextChannel',
-    'VoiceChannel',
-    'PrivateChannel',
-    'ServerChannel',
-    'Channel',
-    'PartialChannel',
-    'FieldsChannel',
-    'DataEditChannel',
-    'DataCreateGroup',
-    'LegacyServerChannelType',
-    'DataCreateServerChannel',
-    'DataDefaultChannelPermissions',
-    'DataSetRolePermissions',
-    'OptionsChannelDelete',
-    'LegacyCreateVoiceUserResponse',
-)

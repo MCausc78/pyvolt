@@ -203,6 +203,7 @@ class AndroidUserSettings:
     __slots__ = (
         'parent',
         '_payload',
+        '_special_embed_settings_payload',
         '_theme',
         '_colour_overrides',
         '_reply_style',
@@ -234,6 +235,15 @@ class AndroidUserSettings:
 
         self._avatar_radius: int | None = payload.get('avatarRadius')
 
+        special_embed_settings = payload.get('specialEmbedSettings')
+
+        if special_embed_settings:
+            self._special_embed_settings_payload: raw.AndroidUserSettingsSpecialEmbedSettings | None = (
+                special_embed_settings
+            )
+        else:
+            self._special_embed_settings_payload = None
+
     @property
     def theme(self) -> AndroidTheme:
         """:class:`AndroidTheme`: The current theme."""
@@ -254,6 +264,22 @@ class AndroidUserSettings:
         """:class:`int`: The current profile picture shape."""
         return self._avatar_radius or 50
 
+    @property
+    def embed_youtube(self) -> bool:
+        """:class:`bool`: Whether to render special YouTube embeds."""
+
+        if self._special_embed_settings_payload is None:
+            return True
+        return self._special_embed_settings_payload['embedYouTube']
+
+    @property
+    def embed_apple_music(self) -> bool:
+        """:class:`bool`: Whether to render special Apple Music embeds."""
+
+        if self._special_embed_settings_payload is None:
+            return True
+        return self._special_embed_settings_payload['embedAppleMusic']
+
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} theme={self.theme!r} colour_overrides={self.colour_overrides!r} reply_style={self.reply_style!r} profile_picture_shape={self.profile_picture_shape!r}>'
 
@@ -265,6 +291,11 @@ class AndroidUserSettings:
         colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
         avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
+        embed_youtube: UndefinedOr[bool] = UNDEFINED,
+        embed_apple_music: UndefinedOr[bool] = UNDEFINED,
+        initial_special_embed_settings_payload: UndefinedOr[
+            raw.AndroidUserSettingsSpecialEmbedSettings | None
+        ] = UNDEFINED,
     ) -> raw.AndroidUserSettings:
         """Builds a payload for Android user settings. You must pass it as JSON string to :meth:`HTTPClient.edit_user_settings`, like so:
 
@@ -278,13 +309,22 @@ class AndroidUserSettings:
         initial_payload: :class:`UndefinedOr`[raw.AndroidUserSettings]
             The initial payload.
         theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
-            The new theme. Passing ``None`` denotes ``theme`` removal in internal object.
+            The new theme.  Could be ``None`` to remove it from internal object.
         colour_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
             The new colour overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
         reply_style: :class:`UndefinedOr`[Optional[:class:`AndroidMessageReplyStyle`]]
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
         avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
+        initial_special_embed_settings_payload: :class:`UndefinedOr`[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
+            The initial payload. Could be ``None`` to remove it from internal object.
+
+            .. note::
+                Passing ``embed_youtube`` and ``embed_apple_music`` .
+        embed_youtube: :class:`UndefinedOr`[:class:`bool`]
+            Whether to render special YouTube embeds.
+        embed_apple_music: :class:`UndefinedOr`[:class:`bool`]
+            Whether to render special Apple Music embeds.
         """
 
         if initial_payload is not UNDEFINED:
@@ -318,6 +358,30 @@ class AndroidUserSettings:
             else:
                 payload['avatarRadius'] = avatar_radius
 
+        if initial_special_embed_settings_payload is UNDEFINED:
+            special_embed_settings_payload: raw.AndroidUserSettingsSpecialEmbedSettings | None = (
+                self._special_embed_settings_payload
+            )
+        elif initial_special_embed_settings_payload is None:
+            special_embed_settings_payload = payload.pop('specialEmbedSettings', None)
+        else:
+            special_embed_settings_payload = self._special_embed_settings_payload
+
+        if embed_youtube is not UNDEFINED or embed_apple_music is not UNDEFINED:
+            if special_embed_settings_payload is None:
+                special_embed_settings_payload = {
+                    'embedYouTube': True if embed_youtube is UNDEFINED else embed_youtube,
+                    'embedAppleMusic': True if embed_apple_music is UNDEFINED else embed_apple_music,
+                }
+            else:
+                special_embed_settings_payload = special_embed_settings_payload | {
+                    'embedYouTube': True if embed_youtube is UNDEFINED else embed_youtube,
+                    'embedAppleMusic': True if embed_apple_music is UNDEFINED else embed_apple_music,
+                }
+
+        if special_embed_settings_payload is not None:
+            payload['specialEmbedSettings'] = special_embed_settings_payload
+
         return payload
 
     async def edit(
@@ -338,7 +402,7 @@ class AndroidUserSettings:
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
             External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
         theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
-            The new theme. Passing ``None`` denotes ``theme`` removal in internal object.
+            The new theme.  Could be ``None`` to remove it from internal object.
         colour_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
             The new colour overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
         reply_style: :class:`UndefinedOr`[Optional[:class:`AndroidMessageReplyStyle`]]

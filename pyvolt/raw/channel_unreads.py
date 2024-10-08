@@ -13,6 +13,3 @@ class ChannelUnread(typing.TypedDict):
 class ChannelCompositeKey(typing.TypedDict):
     channel: str
     user: str
-
-
-__all__ = ('ChannelUnread', 'ChannelCompositeKey')

@@ -96,19 +96,3 @@ P = typing.TypeVar('P')
 class NextPage(typing.Generic[P], typing.TypedDict):
     pageProps: P
     __N_SSP: bool
-
-
-__all__ = (
-    'DiscoveryServerActivity',
-    'DiscoveryServer',
-    'DiscoveryServersPage',
-    'DiscoveryServerSearchResult',
-    'DiscoveryBotUsage',
-    'DiscoveryBot',
-    'DiscoveryBotsPage',
-    'DiscoveryBotSearchResult',
-    'DiscoveryTheme',
-    'DiscoveryThemesPage',
-    'DiscoveryThemeSearchResult',
-    'NextPage',
-)

@@ -74,5 +74,3 @@ Language = typing.Literal[
     'piglatin',
     'enchantment',
 ]
-
-__all__ = ('Language',)

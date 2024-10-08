@@ -214,37 +214,3 @@ class OptionsUnreact(typing.TypedDict):
 
 
 FieldsMessage = typing.Literal['Pinned']
-
-__all__ = (
-    'Message',
-    'PartialMessage',
-    'MessagesAndUsersBulkMessageResponse',
-    'BulkMessageResponse',
-    'TextSystemMessage',
-    'UserAddedSystemMessage',
-    'UserRemoveSystemMessage',
-    'UserJoinedSystemMessage',
-    'UserLeftSystemMessage',
-    'UserKickedSystemMessage',
-    'UserBannedSystemMessage',
-    'ChannelRenamedSystemMessage',
-    'ChannelDescriptionChangedSystemMessage',
-    'ChannelIconChangedSystemMessage',
-    'ChannelOwnershipChangedSystemMessage',
-    'MessagePinnedSystemMessage',
-    'MessageUnpinnedSystemMessage',
-    'SystemMessage',
-    'Masquerade',
-    'Interactions',
-    'AppendMessage',
-    'MessageSort',
-    'SendableEmbed',
-    'ReplyIntent',
-    'DataMessageSend',
-    'OptionsQueryMessages',
-    'DataMessageSearch',
-    'DataEditMessage',
-    'OptionsBulkDelete',
-    'OptionsUnreact',
-    'FieldsMessage',
-)

@@ -143,6 +143,7 @@ class ClientEventHandler(EventHandler):
             'ServerUpdate': self.handle_server_update,
             'ServerDelete': self.handle_server_delete,
             'ServerMemberJoin': self.handle_server_member_join,
+            'ServerMemberUpdate': self.handle_server_member_update,
             'ServerMemberLeave': self.handle_server_member_leave,
             'ServerRoleUpdate': self.handle_server_role_update,
             'ServerRoleDelete': self.handle_server_role_delete,
@@ -231,6 +232,10 @@ class ClientEventHandler(EventHandler):
     def handle_server_member_join(self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, /) -> None:
         joined_at = utils.utcnow()
         event = self._state.parser.parse_server_member_join_event(shard, payload, joined_at)
+        self.dispatch(event)
+
+    def handle_server_member_update(self, shard: Shard, payload: raw.ClientServerMemberUpdateEvent, /) -> None:
+        event = self._state.parser.parse_server_member_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_member_leave(self, shard: Shard, payload: raw.ClientServerMemberLeaveEvent, /) -> None:

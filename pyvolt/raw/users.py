@@ -110,24 +110,3 @@ class DataHello(typing.TypedDict):
 
 class DataOnboard(typing.TypedDict):
     username: str
-
-
-__all__ = (
-    'User',
-    'PartialUser',
-    'FieldsUser',
-    'RelationshipStatus',
-    'Relationship',
-    'Presence',
-    'UserStatus',
-    'UserProfile',
-    'DataUserProfile',
-    'DataEditUser',
-    'FlagResponse',
-    'MutualResponse',
-    'BotInformation',
-    'DataSendFriendRequest',
-    'DataChangeUsername',
-    'DataHello',
-    'DataOnboard',
-)

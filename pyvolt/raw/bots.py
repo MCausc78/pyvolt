@@ -64,18 +64,3 @@ class OwnedBotsResponse(typing.TypedDict):
 
 class BotWithUserResponse(Bot):
     user: User
-
-
-__all__ = (
-    'Bot',
-    'FieldsBot',
-    'PublicBot',
-    'FetchBotResponse',
-    'DataCreateBot',
-    'DataEditBot',
-    'ServerInviteBotDestination',
-    'GroupInviteBotDestination',
-    'InviteBotDestination',
-    'OwnedBotsResponse',
-    'BotWithUserResponse',
-)

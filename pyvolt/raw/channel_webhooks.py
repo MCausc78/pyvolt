@@ -47,14 +47,3 @@ FieldsWebhook = typing.Literal['Avatar']
 class CreateWebhookBody(typing.TypedDict):
     name: str
     avatar: typing_extensions.NotRequired[str | None]
-
-
-__all__ = (
-    'Webhook',
-    'PartialWebhook',
-    'MessageWebhook',
-    'DataEditWebhook',
-    'ResponseWebhook',
-    'FieldsWebhook',
-    'CreateWebhookBody',
-)
