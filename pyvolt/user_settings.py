@@ -392,6 +392,11 @@ class AndroidUserSettings:
         colour_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
         reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
         avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
+        embed_youtube: UndefinedOr[bool] = UNDEFINED,
+        embed_apple_music: UndefinedOr[bool] = UNDEFINED,
+        initial_special_embed_settings_payload: UndefinedOr[
+            raw.AndroidUserSettingsSpecialEmbedSettings | None
+        ] = UNDEFINED,
     ) -> None:
         """|coro|
 
@@ -409,12 +414,24 @@ class AndroidUserSettings:
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
         avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
+        initial_special_embed_settings_payload: :class:`UndefinedOr`[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
+            The initial payload. Could be ``None`` to remove it from internal object.
+
+            .. note::
+                Passing ``embed_youtube`` and ``embed_apple_music`` .
+        embed_youtube: :class:`UndefinedOr`[:class:`bool`]
+            Whether to render special YouTube embeds.
+        embed_apple_music: :class:`UndefinedOr`[:class:`bool`]
+            Whether to render special Apple Music embeds.
         """
         payload = self.payload_for(
             theme=theme,
             colour_overrides=colour_overrides,
             reply_style=reply_style,
             avatar_radius=avatar_radius,
+            embed_youtube=embed_youtube,
+            embed_apple_music=embed_apple_music,
+            initial_special_embed_settings_payload=initial_special_embed_settings_payload,
         )
         await self.parent.edit({'android': utils.to_json(payload)}, edited_at)
 
