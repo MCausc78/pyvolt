@@ -234,7 +234,7 @@ class DefaultRateLimit(RateLimit):
 
     @utils.copy_doc(RateLimit.block)
     async def block(self) -> None:
-        # self.remaining -= 1
+        self.remaining -= 1
         if self.remaining <= 0:
             now = utils.utcnow()
 
