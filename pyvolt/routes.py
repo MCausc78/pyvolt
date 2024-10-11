@@ -201,7 +201,7 @@ SERVERS_PERMISSIONS_SET_DEFAULT: typing.Final[Route] = Route(PUT, '/servers/{ser
 SERVERS_ROLES_CREATE: typing.Final[Route] = Route(POST, '/servers/{server_id}/roles')
 SERVERS_ROLES_DELETE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}/roles/{role_id}')
 SERVERS_ROLES_EDIT: typing.Final[Route] = Route(PATCH, '/servers/{server_id}/roles/{role_id}')
-SERVERS_ROLES_FETCH: typing.Final[Route] = Route(GET, '/servers/{channel_id}/roles/{role_id}')
+SERVERS_ROLES_FETCH: typing.Final[Route] = Route(GET, '/servers/{server_id}/roles/{role_id}')
 SERVERS_SERVER_ACK: typing.Final[Route] = Route(PUT, '/servers/{server_id}/ack')
 SERVERS_SERVER_CREATE: typing.Final[Route] = Route(POST, '/servers/create', ratelimit_key_template='servers/create')
 SERVERS_SERVER_DELETE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}')
