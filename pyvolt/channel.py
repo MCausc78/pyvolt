@@ -1113,13 +1113,13 @@ Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | 
 
 
 @define(slots=True)
-class ChannelVoiceState:
+class ChannelVoiceStateContainer:
     """Represents voice state container for the channel."""
 
     channel_id: str = field(repr=True, kw_only=True)
     """The channel's ID."""
 
-    participants: list[UserVoiceState] = field(repr=True, kw_only=True)
+    participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
     """The channel's participants."""
 
 
@@ -1142,5 +1142,5 @@ __all__ = (
     'VoiceChannel',
     'ServerChannel',
     'Channel',
-    'ChannelVoiceState',
+    'ChannelVoiceStateContainer',
 )

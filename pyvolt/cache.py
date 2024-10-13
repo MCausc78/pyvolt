@@ -36,7 +36,7 @@ from .user import User
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from .channel import DMChannel, GroupChannel, Channel
+    from .channel import DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
@@ -91,6 +91,10 @@ class ContextType(Enum):
 
     channel_group_join = 'CHANNEL_GROUP_JOIN'
     channel_group_leave = 'CHANNEL_GROUP_LEAVE'
+
+    voice_channel_join = 'VOICE_CHANNEL_JOIN'
+    voice_channel_leave = 'VOICE_CHANNEL_LEAVE'
+    user_voice_state_update = 'USER_VOICE_STATE_UPDATE'
     """Data from websocket event."""
 
     message = 'MESSAGE'
@@ -137,7 +141,9 @@ _CHANNEL_UPDATE = BaseContext(type=ContextType.channel_update)
 _CHANNEL_DELETE = BaseContext(type=ContextType.channel_delete)
 _CHANNEL_GROUP_JOIN = BaseContext(type=ContextType.channel_group_join)
 _CHANNEL_GROUP_LEAVE = BaseContext(type=ContextType.channel_group_leave)
-
+_VOICE_CHANNEL_JOIN = BaseContext(type=ContextType.voice_channel_join)
+_VOICE_CHANNEL_LEAVE = BaseContext(type=ContextType.voice_channel_leave)
+_USER_VOICE_STATE_UPDATE = BaseContext(type=ContextType.user_voice_state_update)
 
 ProvideCacheContextIn = typing.Literal[
     'DMChannel.recipients',
@@ -177,6 +183,8 @@ ProvideCacheContextIn = typing.Literal[
 
 
 class Cache(abc.ABC):
+    __slots__ = ()
+
     ############
     # Channels #
     ############
@@ -370,8 +378,33 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None: ...
 
+    ########################
+    # Channel Voice States #
+    ########################
+    @abc.abstractmethod
+    def get_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> ChannelVoiceStateContainer | None: ...
+
+    def get_all_channel_voice_states(self, ctx: BaseContext, /) -> Sequence[ChannelVoiceStateContainer]:
+        return list(self.get_channel_voice_states_mapping().values())
+
+    @abc.abstractmethod
+    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]: ...
+
+    @abc.abstractmethod
+    def store_channel_voice_state(self, state: ChannelVoiceStateContainer, ctx: BaseContext, /) -> None: ...
+
+    @abc.abstractmethod
+    def bulk_store_channel_voice_states(
+        self, states: dict[str, ChannelVoiceStateContainer], ctx: BaseContext, /
+    ) -> None: ...
+
+    @abc.abstractmethod
+    def delete_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> None: ...
+
 
 class EmptyCache(Cache):
+    __slots__ = ()
+
     ############
     # Channels #
     ############
@@ -534,6 +567,26 @@ class EmptyCache(Cache):
     def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None:
         pass
 
+    ########################
+    # Channel Voice States #
+    ########################
+    def get_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> ChannelVoiceStateContainer | None:
+        return None
+
+    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]:
+        return {}
+
+    def store_channel_voice_state(self, state: ChannelVoiceStateContainer, ctx: BaseContext, /) -> None:
+        pass
+
+    def bulk_store_channel_voice_states(
+        self, states: dict[str, ChannelVoiceStateContainer], ctx: BaseContext, /
+    ) -> None:
+        pass
+
+    def delete_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> None:
+        pass
+
 
 V = typing.TypeVar('V')
 
@@ -564,6 +617,8 @@ class MapCache(Cache):
     __slots__ = (
         '_channels',
         '_channels_max_size',
+        '_channel_voice_states',
+        '_channel_voice_states_max_size',
         '_emojis',
         '_emojis_max_size',
         '_private_channels',
@@ -597,6 +652,7 @@ class MapCache(Cache):
         server_members_max_size: int = -1,
         servers_max_size: int = -1,
         users_max_size: int = -1,
+        channel_voice_states_max_size: int = -1,
     ) -> None:
         self._channels: dict[str, Channel] = {}
         self._channels_max_size: int = channels_max_size
@@ -618,6 +674,8 @@ class MapCache(Cache):
         self._server_members_max_size: int = server_members_max_size
         self._users: dict[str, User] = {}
         self._users_max_size: int = users_max_size
+        self._channel_voice_states: dict[str, ChannelVoiceStateContainer] = {}
+        self._channel_voice_states_max_size: int = channel_voice_states_max_size
 
     ############
     # Channels #
@@ -858,6 +916,26 @@ class MapCache(Cache):
     def delete_private_channel_by_user(self, user_id: str, ctx: BaseContext, /) -> None:
         self._private_channels_by_user.pop(user_id, None)
 
+    ########################
+    # Channel Voice States #
+    ########################
+    def get_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> ChannelVoiceStateContainer | None:
+        return self._channel_voice_states.get(channel_id)
+
+    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]:
+        return self._channel_voice_states
+
+    def store_channel_voice_state(self, state: ChannelVoiceStateContainer, ctx: BaseContext, /) -> None:
+        _put1(self._channel_voice_states, state.channel_id, state, self._channel_voice_states_max_size)
+
+    def bulk_store_channel_voice_states(
+        self, states: dict[str, ChannelVoiceStateContainer], ctx: BaseContext, /
+    ) -> None:
+        self._channel_voice_states.update(states)
+
+    def delete_channel_voice_state(self, channel_id: str, ctx: BaseContext, /) -> None:
+        self._channel_voice_states.pop(channel_id, None)
+
 
 # re-export internal functions as well for future usage
 __all__ = (
@@ -894,6 +972,9 @@ __all__ = (
     '_CHANNEL_DELETE',
     '_CHANNEL_GROUP_JOIN',
     '_CHANNEL_GROUP_LEAVE',
+    '_VOICE_CHANNEL_JOIN',
+    '_VOICE_CHANNEL_LEAVE',
+    '_USER_VOICE_STATE_UPDATE',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',

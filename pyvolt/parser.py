@@ -56,7 +56,7 @@ from .channel import (
     VoiceChannel,
     ServerChannel,
     Channel,
-    ChannelVoiceState,
+    ChannelVoiceStateContainer,
 )
 from .core import UNDEFINED
 from .embed import (
@@ -550,22 +550,22 @@ class Parser:
             after=None,
         )
 
-    def parse_channel_voice_state(self, payload: raw.ChannelVoiceState, /) -> ChannelVoiceState:
-        """Parses a channel voice state object.
+    def parse_channel_voice_state(self, payload: raw.ChannelVoiceState, /) -> ChannelVoiceStateContainer:
+        """Parses a channel voice state container object.
 
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
-            The channel voice state payload to parse.
+            The channel voice state container payload to parse.
 
         Returns
         -------
-        :class:`ChannelVoiceState`
-            The parsed channel voice state object.
+        :class:`ChannelVoiceStateContainer`
+            The parsed channel voice state container object.
         """
-        return ChannelVoiceState(
+        return ChannelVoiceStateContainer(
             channel_id=payload['id'],
-            participants=list(map(self.parse_user_voice_state, payload['participants'])),
+            participants={s.user_id: s for s in map(self.parse_user_voice_state, payload['participants'])},
         )
 
     @typing.overload
