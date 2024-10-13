@@ -188,6 +188,8 @@ class ReadyEvent(BaseEvent):
         for rs in self.read_states:
             cache.store_read_state(rs, caching._READY)
 
+        cache.bulk_store_channel_voice_states({vs.channel_id: vs for vs in self.voice_states}, caching._READY)
+
         return True
 
 
