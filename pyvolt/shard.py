@@ -324,8 +324,8 @@ class Shard:
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
-            self._last_close_code = data = message.data
-            _L.debug('Websocket closed: %s (closed: %s)', data, self._closed)
+            self._last_close_code = data = self.socket.close_code
+            _L.debug('Websocket closed with %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
             await asyncio.sleep(0.5)
@@ -357,8 +357,8 @@ class Shard:
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
-            self._last_close_code = data = message.data
-            _L.debug('Websocket closed: %s (closed: %s)', data, self._closed)
+            self._last_close_code = data = self.socket.close_code
+            _L.debug('Websocket closed with %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
             await asyncio.sleep(0.5)
@@ -462,16 +462,24 @@ class Shard:
             self._last_close_code = None
 
             self._socket = socket
-            await self.authenticate()
-
-            message = await self.recv()
-            if message is None or message['type'] != 'Authenticated':
-                raise AuthenticationError(message)
-            self.logged_out = False
-            await self._handle(message)
-            message = None
-
             heartbeat_task = asyncio.create_task(self._heartbeat())
+
+            try:
+                await self.authenticate()
+
+                message = await self.recv()
+                if message is None or message['type'] != 'Authenticated':
+                    raise AuthenticationError(message)
+                self.logged_out = False
+                await self._handle(message)
+                message = None
+            except:
+                heartbeat_task.cancel()
+                raise
+            else:
+                heartbeat_task.cancel()
+                heartbeat_task = asyncio.create_task(self._heartbeat())
+
             exc: BaseException | None = None
             while not self._closed:
                 try:
