@@ -1228,6 +1228,8 @@ class BaseMember:
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
+        can_publish: UndefinedOr[bool | None] = UNDEFINED,
+        can_receive: UndefinedOr[bool | None] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -1244,6 +1246,10 @@ class BaseMember:
         timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should send voice data.
+        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should receive voice data.
 
         Returns
         -------
@@ -1257,6 +1263,8 @@ class BaseMember:
             avatar=avatar,
             roles=roles,
             timeout=timeout,
+            can_publish=can_publish,
+            can_receive=can_receive,
         )
 
     async def kick(self) -> None:

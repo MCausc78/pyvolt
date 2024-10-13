@@ -2569,6 +2569,8 @@ class HTTPClient:
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
+        can_publish: UndefinedOr[bool | None] = UNDEFINED,
+        can_receive: UndefinedOr[bool | None] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -2589,6 +2591,10 @@ class HTTPClient:
         timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should send voice data.
+        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should receive voice data.
 
         Returns
         -------
@@ -2621,6 +2627,16 @@ class HTTPClient:
                 payload['timeout'] = (datetime.now() + timeout).isoformat()
             elif isinstance(timeout, (float, int)):
                 payload['timeout'] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
+        if can_publish is not UNDEFINED:
+            if can_publish is None:
+                remove.append('CanPublish')
+            else:
+                payload['can_publish'] = can_publish
+        if can_receive is not UNDEFINED:
+            if can_receive is None:
+                remove.append('CanReceive')
+            else:
+                payload['can_receive'] = can_receive
         if len(remove) > 0:
             payload['remove'] = remove
 
