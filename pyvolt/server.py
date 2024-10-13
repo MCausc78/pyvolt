@@ -115,13 +115,13 @@ class SystemMessageChannels:
     Attributes
     ----------
     user_joined: Optional[:class:`str`]
-        The ID of channel to send user join messages in.
+        The channel's ID to send user join messages in.
     user_left: Optional[:class:`str`]
-        The ID of channel to send user left messages in.
+        The channel's ID to send user left messages in.
     user_kicked: Optional[:class:`str`]
-        The ID of channel to send user kicked messages in.
+        The channel's ID to send user kicked messages in.
     user_banned: Optional[:class:`str`]
-        The ID of channel to send user banned messages in.
+        The channel's ID to send user banned messages in.
     """
 
     __slots__ = ('user_joined', 'user_left', 'user_kicked', 'user_banned')
