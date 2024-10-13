@@ -67,7 +67,7 @@ if typing.TYPE_CHECKING:
     )
     from .server import BaseRole, Role, Server, Member
     from .shard import Shard
-    from .user import BaseUser, User
+    from .user import BaseUser, User, UserVoiceState
 
 
 class Typing(contextlib.AbstractAsyncContextManager):
@@ -1111,6 +1111,18 @@ ServerChannel = ServerTextChannel | VoiceChannel
 
 Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
 
+
+@define(slots=True)
+class ChannelVoiceState:
+    """Represents voice state container for the channel."""
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """The channel's ID."""
+
+    participants: list[UserVoiceState] = field(repr=True, kw_only=True)
+    """The channel's participants."""
+
+
 __all__ = (
     'BaseChannel',
     'PartialChannel',
@@ -1130,4 +1142,5 @@ __all__ = (
     'VoiceChannel',
     'ServerChannel',
     'Channel',
+    'ChannelVoiceState',
 )

@@ -56,6 +56,7 @@ from .channel import (
     VoiceChannel,
     ServerChannel,
     Channel,
+    ChannelVoiceState,
 )
 from .core import UNDEFINED
 from .embed import (
@@ -213,6 +214,7 @@ from .user import (
     BotUserInfo,
     User,
     OwnUser,
+    UserVoiceState,
 )
 from .webhook import PartialWebhook, Webhook
 
@@ -222,9 +224,6 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 _L = logging.getLogger(__name__)
-
-
-_EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 
 _new_bot_flags = BotFlags.__new__
 _new_message_flags = MessageFlags.__new__
@@ -248,7 +247,7 @@ class Parser:
     )
 
     def __init__(self, *, state: State) -> None:
-        self.state = state
+        self.state: State = state
         self._channel_parsers = {
             'SavedMessages': self.parse_saved_messages_channel,
             'DirectMessage': self.parse_direct_message_channel,
@@ -549,6 +548,24 @@ class Parser:
             ),
             before=None,
             after=None,
+        )
+
+    def parse_channel_voice_state(self, payload: raw.ChannelVoiceState, /) -> ChannelVoiceState:
+        """Parses a channel voice state object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel voice state payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelVoiceState`
+            The parsed channel voice state object.
+        """
+        return ChannelVoiceState(
+            channel_id=payload['id'],
+            participants=list(map(self.parse_user_voice_state, payload['participants'])),
         )
 
     @typing.overload
@@ -2022,6 +2039,27 @@ class Parser:
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
+        )
+
+    def parse_user_voice_state(self, payload: raw.UserVoiceState, /) -> UserVoiceState:
+        """Parses a user voice state object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user voice state payload to parse.
+
+        Returns
+        -------
+        :class:`UserVoiceState`
+            The parsed user voice state object.
+        """
+        return UserVoiceState(
+            user_id=payload['id'],
+            can_publish=payload['can_publish'],
+            can_receive=payload['can_receive'],
+            screensharing=payload['screensharing'],
+            camera=payload['camera'],
         )
 
     def parse_video_embed(self, payload: raw.Video, /) -> VideoEmbed:
