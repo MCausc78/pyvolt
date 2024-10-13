@@ -2571,6 +2571,7 @@ class HTTPClient:
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
         can_publish: UndefinedOr[bool | None] = UNDEFINED,
         can_receive: UndefinedOr[bool | None] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | ServerTextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -2595,6 +2596,8 @@ class HTTPClient:
             Whether the member should send voice data.
         can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
             Whether the member should receive voice data.
+        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`ServerTextChannel`, :class:`VoiceChannel`]]]
+            The voice channel to move the member to.
 
         Returns
         -------
@@ -2604,10 +2607,10 @@ class HTTPClient:
         payload: raw.DataMemberEdit = {}
         remove: list[raw.FieldsMember] = []
         if nick is not UNDEFINED:
-            if nick is not None:
-                payload['nickname'] = nick
-            else:
+            if nick is None:
                 remove.append('Nickname')
+            else:
+                payload['nickname'] = nick
         if avatar is not UNDEFINED:
             if avatar is not None:
                 payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
@@ -2615,7 +2618,7 @@ class HTTPClient:
                 remove.append('Avatar')
         if roles is not UNDEFINED:
             if roles is not None:
-                payload['roles'] = [resolve_id(e) for e in roles]
+                payload['roles'] = list(map(resolve_id, roles))
             else:
                 remove.append('Roles')
         if timeout is not UNDEFINED:
@@ -2637,6 +2640,8 @@ class HTTPClient:
                 remove.append('CanReceive')
             else:
                 payload['can_receive'] = can_receive
+        if voice is not UNDEFINED:
+            payload['voice_channel'] = resolve_id(voice)
         if len(remove) > 0:
             payload['remove'] = remove
 

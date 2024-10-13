@@ -61,6 +61,8 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .channel import (
         TextChannel,
+        DMChannel,
+        GroupChannel,
         ServerTextChannel,
         VoiceChannel,
         ServerChannel,
@@ -1230,6 +1232,7 @@ class BaseMember:
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
         can_publish: UndefinedOr[bool | None] = UNDEFINED,
         can_receive: UndefinedOr[bool | None] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | ServerTextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -1250,6 +1253,8 @@ class BaseMember:
             Whether the member should send voice data.
         can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
             Whether the member should receive voice data.
+        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`ServerTextChannel`, :class:`VoiceChannel`]]]
+            The voice channel to move the member to.
 
         Returns
         -------
@@ -1265,6 +1270,7 @@ class BaseMember:
             timeout=timeout,
             can_publish=can_publish,
             can_receive=can_receive,
+            voice=voice,
         )
 
     async def kick(self) -> None:
