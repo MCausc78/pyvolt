@@ -62,6 +62,7 @@ if typing.TYPE_CHECKING:
     import aiohttp
 
     from .authentication import Session
+    from .channel import ChannelVoiceStateContainer
     from .client import Client
     from .flags import UserFlags
     from .message import PartialMessage, MessageAppendData, Message
@@ -148,6 +149,9 @@ class ReadyEvent(BaseEvent):
     .. note::
         This attribute is unavailable on bot accounts.
     """
+
+    voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
+    """The voice states of the text/voice channels."""
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching

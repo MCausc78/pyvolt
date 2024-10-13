@@ -1437,13 +1437,6 @@ class Parser:
 
     def parse_ready_event(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> ReadyEvent:
         users = list(map(self.parse_user, payload.get('users', ())))
-        servers = [self.parse_server(s, (True, s['channels'])) for s in payload.get('servers', ())]
-        channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
-        members = list(map(self.parse_member, payload.get('members', ())))
-        emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
-        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
-        read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
-
         me = users[-1]
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
             for user in users:
@@ -1452,6 +1445,14 @@ class Parser:
 
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
             raise TypeError('Unable to find own user')
+
+        servers = [self.parse_server(s, (True, s['channels'])) for s in payload.get('servers', ())]
+        channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
+        members = list(map(self.parse_member, payload.get('members', ())))
+        emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
+        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
+        read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
+        voice_states = list(map(self.parse_channel_voice_state, payload.get('voice_states', ())))
 
         return ReadyEvent(
             shard=shard,
@@ -1463,6 +1464,7 @@ class Parser:
             me=me,  # type: ignore
             user_settings=user_settings,
             read_states=read_states,
+            voice_states=voice_states,
         )
 
     def parse_relationship(self, payload: raw.Relationship, /) -> Relationship:
