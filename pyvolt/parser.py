@@ -139,6 +139,9 @@ from .events import (
     SessionDeleteAllEvent,
     LogoutEvent,
     AuthenticatedEvent,
+    VoiceChannelJoinEvent,
+    VoiceChannelLeaveEvent,
+    UserVoiceStateUpdateEvent,
 )
 from .flags import (
     BotFlags,
@@ -215,6 +218,7 @@ from .user import (
     User,
     OwnUser,
     UserVoiceState,
+    PartialUserVoiceState,
 )
 from .webhook import PartialWebhook, Webhook
 
@@ -2064,6 +2068,25 @@ class Parser:
             camera=payload['camera'],
         )
 
+    def parse_user_voice_state_update_event(
+        self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /
+    ) -> UserVoiceStateUpdateEvent:
+        data = payload['data']
+
+        return UserVoiceStateUpdateEvent(
+            shard=shard,
+            channel_id=payload['channel_id'],
+            state=PartialUserVoiceState(
+                user_id=payload['id'],
+                can_publish=data.get('can_publish', UNDEFINED),
+                can_receive=data.get('can_receive', UNDEFINED),
+                screensharing=data.get('screensharing', UNDEFINED),
+                camera=data.get('camera', UNDEFINED),
+            ),
+            before=None,
+            after=None,
+        )
+
     def parse_video_embed(self, payload: raw.Video, /) -> VideoEmbed:
         return VideoEmbed(
             url=payload['url'],
@@ -2105,6 +2128,25 @@ class Parser:
             ),
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
             nsfw=payload.get('nsfw', False),
+        )
+
+    def parse_voice_channel_join(
+        self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /
+    ) -> VoiceChannelJoinEvent:
+        return VoiceChannelJoinEvent(
+            shard=shard,
+            channel_id=payload['id'],
+            state=self.parse_user_voice_state(payload['state']),
+        )
+
+    def parse_voice_channel_leave(
+        self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /
+    ) -> VoiceChannelLeaveEvent:
+        return VoiceChannelLeaveEvent(
+            shard=shard,
+            channel_id=payload['id'],
+            user_id=payload['user'],
+            state=None,
         )
 
     def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:

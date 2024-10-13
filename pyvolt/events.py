@@ -1363,13 +1363,16 @@ class UserVoiceStateUpdateEvent(BaseEvent):
     event_name: typing.ClassVar[str] = 'user_voice_state_update'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the user left from."""
+    """The channel's ID the user's voice state is in."""
 
-    user_id: str = field(repr=True, kw_only=True)
-    """The user's ID that left the voice channel."""
-
-    state: PartialUserVoiceState | None = field(repr=True, kw_only=True)
+    state: PartialUserVoiceState = field(repr=True, kw_only=True)
     """The fields that were updated."""
+
+    before: UserVoiceState | None = field(repr=True, kw_only=True)
+    """The user's voice state as it was before being updated, if available."""
+
+    after: UserVoiceState | None = field(repr=True, kw_only=True)
+    """The user's voice state as it was updated, if available."""
 
 
 @define(slots=True)
