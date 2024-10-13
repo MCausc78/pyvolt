@@ -110,3 +110,18 @@ class DataHello(typing.TypedDict):
 
 class DataOnboard(typing.TypedDict):
     username: str
+
+
+class UserVoiceState(typing.TypedDict):
+    id: str
+    can_receive: bool
+    can_publish: bool
+    screensharing: bool
+    camera: bool
+
+
+class PartialUserVoiceState(typing.TypedDict):
+    can_receive: typing_extensions.NotRequired[bool]
+    can_publish: typing_extensions.NotRequired[bool]
+    screensharing: typing_extensions.NotRequired[bool]
+    camera: typing_extensions.NotRequired[bool]

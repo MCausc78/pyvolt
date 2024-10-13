@@ -6,6 +6,7 @@ import typing_extensions
 from .basic import Bool
 from .files import File
 from .permissions import Override, OverrideField
+from .users import UserVoiceState
 
 
 class SavedMessagesChannel(typing.TypedDict):
@@ -128,3 +129,8 @@ class OptionsChannelDelete(typing.TypedDict):
 
 class CreateVoiceUserResponse(typing.TypedDict):
     token: str
+
+
+class ChannelVoiceState(typing.TypedDict):
+    id: str
+    participants: list[UserVoiceState]
