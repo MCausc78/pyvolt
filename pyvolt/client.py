@@ -168,6 +168,9 @@ class ClientEventHandler(EventHandler):
             'WebhookUpdate': self.handle_webhook_update,
             'WebhookDelete': self.handle_webhook_delete,
             'Auth': self.handle_auth,
+            'VoiceChannelJoin': self.handle_voice_channel_join,
+            'VoiceChannelLeave': self.handle_voice_channel_leave,
+            'UserVoiceStateUpdate': self.handle_user_voice_state_update,
         }
 
     async def handle_bulk(self, shard: Shard, payload: raw.ClientBulkEvent, /) -> None:
@@ -323,6 +326,18 @@ class ClientEventHandler(EventHandler):
 
     def handle_auth(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> None:
         event = self._state.parser.parse_auth_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_voice_channel_join(self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /) -> None:
+        event = self._state.parser.parse_voice_channel_join_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_voice_channel_leave(self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /) -> None:
+        event = self._state.parser.parse_voice_channel_leave_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_voice_state_update(self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /) -> None:
+        event = self._state.parser.parse_user_voice_state_update_event(shard, payload)
         self.dispatch(event)
 
     async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:

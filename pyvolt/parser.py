@@ -2130,7 +2130,7 @@ class Parser:
             nsfw=payload.get('nsfw', False),
         )
 
-    def parse_voice_channel_join(
+    def parse_voice_channel_join_event(
         self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /
     ) -> VoiceChannelJoinEvent:
         return VoiceChannelJoinEvent(
@@ -2139,7 +2139,7 @@ class Parser:
             state=self.parse_user_voice_state(payload['state']),
         )
 
-    def parse_voice_channel_leave(
+    def parse_voice_channel_leave_event(
         self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /
     ) -> VoiceChannelLeaveEvent:
         return VoiceChannelLeaveEvent(
