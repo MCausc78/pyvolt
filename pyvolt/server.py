@@ -803,6 +803,8 @@ def calculate_server_permissions(
     /,
     *,
     default_permissions: Permissions,
+    can_publish: bool = True,
+    can_receive: bool = True,
 ) -> Permissions:
     """Calculates the permissions in :class:`Server` scope.
 
@@ -816,6 +818,10 @@ def calculate_server_permissions(
         The target timeout, if applicable (:attr:`Member.timed_out_until`).
     default_permissions: :class:`Permissions`
         The default channel permissions (:attr:`Server.default_permissions`).
+    can_publish: :class:`bool`
+        Whether the member can send voice data. Defaults to ``True``.
+    can_receive: :class:`bool`
+        Whether the member can receive voice data. Defaults to ``True``.
 
     Returns
     -------
@@ -831,12 +837,18 @@ def calculate_server_permissions(
     if target_timeout is not None and target_timeout <= utils.utcnow():
         result.send_messages = False
 
+    if not can_publish:
+        result.speak = False
+
+    if not can_receive:
+        result.listen = False
+
     return result
 
 
 @define(slots=True)
 class Server(BaseServer):
-    """Representation of a server on Revolt."""
+    """Represents a server on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the owner."""
@@ -1270,6 +1282,8 @@ class PartialMember(BaseMember):
     internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     roles: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
     timed_out_until: UndefinedOr[datetime | None] = field(repr=True, kw_only=True)
+    can_publish: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
+    can_receive: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
 
     def server_avatar(self) -> UndefinedOr[Asset | None]:
         """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The member's avatar on server."""
@@ -1295,6 +1309,12 @@ class Member(BaseMember):
     timed_out_until: datetime | None = field(repr=True, kw_only=True)
     """The timestamp this member is timed out until."""
 
+    can_publish: bool = field(repr=True, kw_only=True)
+    """Whether the member can send voice data."""
+
+    can_receive: bool = field(repr=True, kw_only=True)
+    """Whether the member can receive voice data."""
+
     def _update(self, data: PartialMember) -> None:
         if data.nick is not UNDEFINED:
             self.nick = data.nick
@@ -1302,8 +1322,10 @@ class Member(BaseMember):
             self.internal_server_avatar = data.internal_server_avatar
         if data.roles is not UNDEFINED:
             self.roles = data.roles or []
-        if data.timed_out_until is not UNDEFINED:
-            self.timed_out_until = data.timed_out_until
+        if data.can_publish is not UNDEFINED:
+            self.can_publish = True if data.can_publish is None else data.can_publish
+        if data.can_receive is not UNDEFINED:
+            self.can_receive = True if data.can_receive is None else data.can_receive
 
     @property
     def server_avatar(self) -> Asset | None:

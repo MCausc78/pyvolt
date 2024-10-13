@@ -579,6 +579,11 @@ class Permissions(BaseFlags, support_kwargs=True):
         """:class:`bool`: Whether the user can move members between voice channels."""
         return 1 << 35
 
+    @flag()
+    def listen(cls) -> int:
+        """:class:`bool`: Whether the user can listen to other users in voice channel."""
+        return 1 << 36
+
     @classmethod
     def voice(cls) -> Self:
         """:class:`Permissions`: Returns voice-related permissions."""
@@ -604,6 +609,7 @@ DEFAULT_PERMISSIONS = VIEW_ONLY_PERMISSIONS | Permissions(
     upload_files=True,
     connect=True,
     speak=True,
+    listen=True,
 )
 DEFAULT_SAVED_MESSAGES_PERMISSIONS = Permissions.all()
 DEFAULT_DM_PERMISSIONS = DEFAULT_PERMISSIONS | Permissions(manage_channels=True, react=True)

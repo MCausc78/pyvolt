@@ -771,6 +771,8 @@ class ServerCreateEvent(BaseEvent):
                     internal_server_avatar=None,
                     roles=[],
                     timed_out_until=None,
+                    can_publish=True,
+                    can_receive=True,
                 ),
                 caching._SERVER_CREATE,
             )

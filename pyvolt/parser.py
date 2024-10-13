@@ -893,32 +893,49 @@ class Parser:
 
     def parse_member(
         self,
-        d: raw.Member,
+        payload: raw.Member,
         user: User | None = None,
-        users: dict[str, User] | None = None,
+        users: dict[str, User] = {},
         /,
     ) -> Member:
-        if user and users:
-            raise ValueError('Cannot specify both user and users')
+        """Parses a member object.
 
-        id = d['_id']
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The member payload to parse.
+        user: Optional[:class:`User`]
+            The user.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for trying populating :attr:`Member.user`.
+
+        Returns
+        -------
+        :class:`Member`
+            The parsed member object.
+        """
+        assert not (user and users)
+
+        id = payload['_id']
         user_id = id['user']
 
         # if user:
         #    assert user.id == user_id, 'IDs do not match'
 
-        avatar = d.get('avatar')
-        timeout = d.get('timeout')
+        avatar = payload.get('avatar')
+        timeout = payload.get('timeout')
 
         return Member(
             state=self.state,
-            _user=user or (users or _EMPTY_DICT).get(user_id) or user_id,
+            _user=user or users.get(user_id, user_id),
             server_id=id['server'],
-            joined_at=_parse_dt(d['joined_at']),
-            nick=d.get('nickname'),
+            joined_at=_parse_dt(payload['joined_at']),
+            nick=payload.get('nickname'),
             internal_server_avatar=self.parse_asset(avatar) if avatar else None,
-            roles=d.get('roles', []),
+            roles=payload.get('roles', []),
             timed_out_until=_parse_dt(timeout) if timeout else None,
+            can_publish=payload.get('can_publish', True),
+            can_receive=payload.get('can_receive', True),
         )
 
     def parse_member_list(self, payload: raw.AllMemberResponse, /) -> MemberList:
@@ -1621,6 +1638,8 @@ class Parser:
                 internal_server_avatar=None,
                 roles=[],
                 timed_out_until=None,
+                can_publish=True,
+                can_receive=True,
             ),
         )
 
@@ -1656,6 +1675,8 @@ class Parser:
                 internal_server_avatar=None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED,
                 roles=[] if 'Roles' in clear else roles if roles is not None else UNDEFINED,
                 timed_out_until=(None if 'Timeout' in clear else _parse_dt(timeout) if timeout else UNDEFINED),
+                can_publish=data.get('can_publish', UNDEFINED),
+                can_receive=data.get('can_receive', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch

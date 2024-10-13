@@ -687,7 +687,7 @@ class User(DisplayUser):
 
 @define(slots=True)
 class OwnUser(User):
-    """Representation of a current user on Revolt."""
+    """Represents a current user on Revolt."""
 
     relations: dict[str, Relationship] = field(repr=True, kw_only=True)
     """The dictionary of relationships with other users."""
@@ -741,6 +741,24 @@ class OwnUser(User):
         )
 
 
+@define(slots=True)
+class UserVoiceState:
+    user_id: str = field(repr=True, kw_only=True)
+    """The user's ID this voice state belongs to."""
+
+    can_publish: bool = field(repr=True, kw_only=True)
+    """Whether the user can send voice data."""
+
+    can_receive: bool = field(repr=True, kw_only=True)
+    """Whether the user can receive voice data."""
+
+    screensharing: bool = field(repr=True, kw_only=True)
+    """Whether the user is sharing their screen."""
+
+    camera: bool = field(repr=True, kw_only=True)
+    """Whether the user is sharing their camera."""
+
+
 __all__ = (
     'UserStatus',
     'UserStatusEdit',
@@ -757,4 +775,5 @@ __all__ = (
     'calculate_user_permissions',
     'User',
     'OwnUser',
+    'UserVoiceState',
 )
