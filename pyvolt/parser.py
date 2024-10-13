@@ -51,6 +51,7 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    ChannelVoiceMetadata,
     ServerTextChannel,
     VoiceChannel,
     ServerChannel,
@@ -566,6 +567,19 @@ class Parser:
     def parse_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel: ...
 
     def parse_channel(self, payload: raw.Channel, /) -> Channel:
+        """Parses a channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel payload to parse.
+
+        Returns
+        -------
+        :class:`Channel`
+            The parsed channel object.
+        """
+
         return self._channel_parsers[payload['channel_type']](payload)
 
     def parse_detached_emoji(self, payload: raw.DetachedEmoji, /) -> DetachedEmoji:
@@ -582,6 +596,19 @@ class Parser:
         return AccountDisabled(user_id=payload['user_id'])
 
     def parse_direct_message_channel(self, payload: raw.DirectMessageChannel, /) -> DMChannel:
+        """Parses a DM channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The DM channel payload to parse.
+
+        Returns
+        -------
+        :class:`DMChannel`
+            The parsed DM channel object.
+        """
+
         recipient_ids = payload['recipients']
 
         return DMChannel(
@@ -729,6 +756,21 @@ class Parser:
         recipients: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]]),
         /,
     ) -> GroupChannel:
+        """Parses a group channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The group channel payload to parse.
+        recipients: Union[Tuple[Literal[True], List[:class:`str`]], Tuple[Literal[False], List[:class:`User`]]]
+            The group's recipients.
+
+        Returns
+        -------
+        :class:`GroupChannel`
+            The parsed group channel object.
+        """
+
         icon = payload.get('icon')
         permissions = payload.get('permissions')
 
@@ -1454,6 +1496,18 @@ class Parser:
         )
 
     def parse_saved_messages_channel(self, payload: raw.SavedMessagesChannel, /) -> SavedMessagesChannel:
+        """Parses a saved messages channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The saved messages channel payload to parse.
+
+        Returns
+        -------
+        :class:`SavedMessagesChannel`
+            The parsed saved messages channel object.
+        """
         return SavedMessagesChannel(
             state=self.state,
             id=payload['_id'],
@@ -1748,6 +1802,19 @@ class Parser:
         )
 
     def parse_text_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel:
+        """Parses a text channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The text channel payload to parse.
+
+        Returns
+        -------
+        :class:`ServerTextChannel`
+            The parsed text channel object.
+        """
+
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
         role_permissions = payload.get('role_permissions', {})
@@ -1756,6 +1823,8 @@ class Parser:
             last_message_id = payload['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
         except KeyError:
             last_message_id = None
+
+        voice = payload.get('voice')
 
         return ServerTextChannel(
             state=self.state,
@@ -1770,6 +1839,7 @@ class Parser:
             ),
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
             nsfw=payload.get('nsfw', False),
+            voice=self.parse_voice_information(voice) if voice else None,
         )
 
     def parse_text_embed(self, payload: raw.TextEmbed, /) -> StatelessTextEmbed:
@@ -1941,6 +2011,23 @@ class Parser:
         )
 
     def parse_voice_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel:
+        """Parses a voice channel object.
+
+        .. deprecated:: 0.7.0
+            The method was deprecated in favour of :meth:`.parse_text_channel` and
+            using :attr:`ServerTextChannel.voice` instead.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The voice channel payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannel`
+            The parsed voice channel object.
+        """
+
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
         role_permissions = payload.get('role_permissions', {})
@@ -1958,6 +2045,9 @@ class Parser:
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
             nsfw=payload.get('nsfw', False),
         )
+
+    def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:
+        return ChannelVoiceMetadata(max_users=payload.get('max_users') or 0)
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
         avatar = payload.get('avatar')

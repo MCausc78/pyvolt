@@ -1064,11 +1064,23 @@ class BaseServerChannel(BaseChannel):
 
 
 @define(slots=True)
+class ChannelVoiceMetadata:
+    max_users: int = field(repr=True, kw_only=True)
+    """The maximium amount of users allowed in the voice channel at once.
+    
+    Zero means a infinite amount of users can connect to voice channel.
+    """
+
+
+@define(slots=True)
 class ServerTextChannel(BaseServerChannel, TextChannel):
-    """Text channel belonging to a server."""
+    """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """ID of the last message sent in this channel."""
+    """The last's message ID sent in the channel."""
+
+    voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
+    """The voice's metadata in the channel."""
 
     def _update(self, data: PartialChannel, /) -> None:
         BaseServerChannel._update(self, data)
@@ -1083,7 +1095,11 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
 
 @define(slots=True)
 class VoiceChannel(BaseServerChannel):
-    """Voice channel belonging to a server."""
+    """Represents a voice channel that belongs to a server on Revolt.
+
+    .. deprecated:: 0.7.0
+        The voice channel type was deprecated in favour of :attr:`ServerTextChannel.voice`.
+    """
 
     @property
     def type(self) -> typing.Literal[ChannelType.voice]:
@@ -1109,6 +1125,7 @@ __all__ = (
     'GroupChannel',
     'PrivateChannel',
     'BaseServerChannel',
+    'ChannelVoiceMetadata',
     'ServerTextChannel',
     'VoiceChannel',
     'ServerChannel',

@@ -46,6 +46,7 @@ class TextChannel(typing.TypedDict):
     default_permissions: typing_extensions.NotRequired[OverrideField]
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
     nsfw: typing_extensions.NotRequired[bool]
+    voice: typing_extensions.NotRequired[VoiceInformation]
 
 
 class VoiceChannel(typing.TypedDict):
@@ -63,6 +64,10 @@ class VoiceChannel(typing.TypedDict):
 PrivateChannel = SavedMessagesChannel | DirectMessageChannel | GroupChannel
 ServerChannel = TextChannel | VoiceChannel
 Channel = PrivateChannel | ServerChannel
+
+
+class VoiceInformation(typing.TypedDict):
+    max_users: int | None
 
 
 class PartialChannel(typing.TypedDict):
