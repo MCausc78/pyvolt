@@ -68,6 +68,7 @@ if typing.TYPE_CHECKING:
     from .webhook import Webhook, PartialWebhook
     from .shard import Shard
     from .user_settings import UserSettings
+    from .user import UserVoiceState, PartialUserVoiceState
 
 
 @define(slots=True)
@@ -1321,6 +1322,51 @@ class LogoutEvent(BaseEvent):
 
 
 @define(slots=True)
+class VoiceChannelJoinEvent(BaseEvent):
+    """Dispatched when a user joins a voice channel."""
+
+    event_name: typing.ClassVar[str] = 'voice_channel_join'
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """The channel's ID the user joined to."""
+
+    state: UserVoiceState = field(repr=True, kw_only=True)
+    """The user's voice state."""
+
+
+@define(slots=True)
+class VoiceChannelLeaveEvent(BaseEvent):
+    """Dispatched when a user left voice channel."""
+
+    event_name: typing.ClassVar[str] = 'voice_channel_leave'
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """The channel's ID the user left from."""
+
+    user_id: str = field(repr=True, kw_only=True)
+    """The user's ID that left the voice channel."""
+
+    state: UserVoiceState | None = field(repr=True, kw_only=True)
+    """The user's voice state."""
+
+
+@define(slots=True)
+class UserVoiceStateUpdateEvent(BaseEvent):
+    """Dispatched when a user's voice state is updated."""
+
+    event_name: typing.ClassVar[str] = 'user_voice_state_update'
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """The channel's ID the user left from."""
+
+    user_id: str = field(repr=True, kw_only=True)
+    """The user's ID that left the voice channel."""
+
+    state: PartialUserVoiceState | None = field(repr=True, kw_only=True)
+    """The fields that were updated."""
+
+
+@define(slots=True)
 class AuthenticatedEvent(BaseEvent):
     """Dispatched when the WebSocket was successfully authenticated."""
 
@@ -1388,6 +1434,9 @@ __all__ = (
     'SessionDeleteEvent',
     'SessionDeleteAllEvent',
     'LogoutEvent',
+    'VoiceChannelJoinEvent',
+    'VoiceChannelLeaveEvent',
+    'UserVoiceStateUpdateEvent',
     'AuthenticatedEvent',
     'BeforeConnectEvent',
     'AfterConnectEvent',

@@ -102,6 +102,9 @@ if typing.TYPE_CHECKING:
         WebhookUpdateEvent,
         BeforeConnectEvent,
         AfterConnectEvent,
+        VoiceChannelJoinEvent,
+        VoiceChannelLeaveEvent,
+        UserVoiceStateUpdateEvent,
     )
     from .message import Message
     from .read_state import ReadState
@@ -1330,6 +1333,9 @@ class Client:
         def on_webhook_update(self, arg: WebhookUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_before_connect(self, arg: BeforeConnectEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_after_connect(self, arg: AfterConnectEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_voice_channel_join(self, arg: VoiceChannelJoinEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_voice_channel_leave(self, arg: VoiceChannelLeaveEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_user_voice_state_update(self, arg: UserVoiceStateUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
 
     async def create_group(
         self,
