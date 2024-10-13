@@ -126,5 +126,5 @@ class OptionsChannelDelete(typing.TypedDict):
     leave_silently: typing_extensions.NotRequired[Bool]
 
 
-class LegacyCreateVoiceUserResponse(typing.TypedDict):
+class CreateVoiceUserResponse(typing.TypedDict):
     token: str

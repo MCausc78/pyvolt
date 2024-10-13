@@ -1932,7 +1932,7 @@ class HTTPClient:
         :class:`str`
             Token for authenticating with the voice server.
         """
-        d: raw.LegacyCreateVoiceUserResponse = await self.request(
+        d: raw.CreateVoiceUserResponse = await self.request(
             routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
         )
         return d['token']
