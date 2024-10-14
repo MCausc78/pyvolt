@@ -1092,6 +1092,19 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
         """Literal[:attr:`ChannelType.text`]: The channel's type."""
         return ChannelType.text
 
+    @property
+    def voice_states(self) -> ChannelVoiceStateContainer:
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        cache = self.state.cache
+        if cache:
+            res = cache.get_channel_voice_state(
+                self.id,
+                caching._USER_REQUEST,
+            )
+        else:
+            res = None
+        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+
 
 @define(slots=True)
 class VoiceChannel(BaseServerChannel):
@@ -1105,6 +1118,19 @@ class VoiceChannel(BaseServerChannel):
     def type(self) -> typing.Literal[ChannelType.voice]:
         """Literal[:attr:`ChannelType.voice`]: The channel's type."""
         return ChannelType.voice
+
+    @property
+    def voice_states(self) -> ChannelVoiceStateContainer:
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        cache = self.state.cache
+        if cache:
+            res = cache.get_channel_voice_state(
+                self.id,
+                caching._USER_REQUEST,
+            )
+        else:
+            res = None
+        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
 
 
 ServerChannel = ServerTextChannel | VoiceChannel
