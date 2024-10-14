@@ -1368,18 +1368,30 @@ class VoiceChannelLeaveEvent(BaseEvent):
     user_id: str = field(repr=True, kw_only=True)
     """The user's ID that left the voice channel."""
 
+    container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    """The channel's voice state container."""
+
     state: UserVoiceState | None = field(repr=True, kw_only=True)
     """The user's voice state."""
 
-    def process(self) -> bool:
+    def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
-            return False
-        cs = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_LEAVE)
+            return
+        self.container = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_LEAVE)
 
-        if cs is not None:
-            cs.locally_remove(self.user_id)
-            cache.store_channel_voice_state(cs, caching._VOICE_CHANNEL_LEAVE)
+        if self.container is None:
+            return
+        self.state = self.container.participants.get(self.user_id)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+        if not cache or not self.container:
+            return False
+
+        container = self.container
+        container.locally_remove(self.user_id)
+        cache.store_channel_voice_state(container, caching._VOICE_CHANNEL_LEAVE)
 
         return True
 
@@ -1393,6 +1405,9 @@ class UserVoiceStateUpdateEvent(BaseEvent):
     channel_id: str = field(repr=True, kw_only=True)
     """The channel's ID the user's voice state is in."""
 
+    container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    """The channel's voice state container."""
+
     state: PartialUserVoiceState = field(repr=True, kw_only=True)
     """The fields that were updated."""
 
@@ -1401,6 +1416,35 @@ class UserVoiceStateUpdateEvent(BaseEvent):
 
     after: UserVoiceState | None = field(repr=True, kw_only=True)
     """The user's voice state as it was updated, if available."""
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+
+        container = cache.get_channel_voice_state(self.channel_id, caching._USER_VOICE_STATE_UPDATE)
+        if not container:
+            return
+
+        self.container = container
+
+        before = container.participants.get(self.state.user_id)
+        self.before = before
+
+        if before:
+            after = copy(before)
+            after.locally_update(self.state)
+            self.after = after
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if not cache or not self.container:
+            return False
+
+        cache.store_channel_voice_state(self.container, caching._USER_VOICE_STATE_UPDATE)
+        return True
 
 
 @define(slots=True)
