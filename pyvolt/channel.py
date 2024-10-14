@@ -1148,6 +1148,31 @@ class ChannelVoiceStateContainer:
     participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
     """The channel's participants."""
 
+    def locally_add(self, state: UserVoiceState, /) -> None:
+        """Locally adds user's voice state into this container.
+
+        Parameters
+        ----------
+        state: :class:`UserVoiceState`
+            The state to add.
+        """
+        self.participants[state.user_id] = state
+
+    def locally_remove(self, user_id: str, /) -> UserVoiceState | None:
+        """Locally removes user's voice state from this container.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user's ID to remove state from.
+
+        Returns
+        -------
+        Optional[:class:`UserVoiceState`]
+            The removed user's voice state.
+        """
+        return self.participants.pop(user_id, None)
+
 
 __all__ = (
     'BaseChannel',

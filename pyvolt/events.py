@@ -1339,6 +1339,22 @@ class VoiceChannelJoinEvent(BaseEvent):
     state: UserVoiceState = field(repr=True, kw_only=True)
     """The user's voice state."""
 
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+        if not cache:
+            return False
+        cs = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_JOIN)
+        if cs is not None:
+            cs.locally_add(self.state)
+        else:
+            cs = ChannelVoiceStateContainer(
+                channel_id=self.channel_id,
+                participants={self.state.user_id: self.state},
+            )
+        cache.store_channel_voice_state(cs, caching._VOICE_CHANNEL_JOIN)
+
+        return True
+
 
 @define(slots=True)
 class VoiceChannelLeaveEvent(BaseEvent):
@@ -1354,6 +1370,18 @@ class VoiceChannelLeaveEvent(BaseEvent):
 
     state: UserVoiceState | None = field(repr=True, kw_only=True)
     """The user's voice state."""
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+        if not cache:
+            return False
+        cs = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_LEAVE)
+
+        if cs is not None:
+            cs.locally_remove(self.user_id)
+            cache.store_channel_voice_state(cs, caching._VOICE_CHANNEL_LEAVE)
+
+        return True
 
 
 @define(slots=True)
