@@ -1064,6 +1064,8 @@ class Server(BaseServer):
             sort_member_roles(member.roles, safe=safe, server_roles=self.roles),
             member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
+            can_publish=self.can_publish,
+            can_receive=self.can_receive,
         )
 
 

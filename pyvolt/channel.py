@@ -1050,7 +1050,13 @@ class BaseServerChannel(BaseChannel):
                 server.default_permissions, [], default_permissions=self.default_permissions, role_permissions={}
             )
 
-        initial_permissions = calculate_server_permissions([], None, default_permissions=server.default_permissions)
+        initial_permissions = calculate_server_permissions(
+            [],
+            None,
+            default_permissions=server.default_permissions,
+            can_publish=True,
+            can_receive=True,
+        )
         roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
         result = calculate_server_channel_permissions(
             initial_permissions,
