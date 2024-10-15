@@ -239,6 +239,14 @@ _parse_dt = datetime.fromisoformat
 
 
 class Parser:
+    """An factory that produces wrapper objects from raw data.
+
+    Attributes
+    ----------
+    state: :class:`State`
+        The state the parser is attached to.
+    """
+
     __slots__ = (
         'state',
         '_channel_parsers',
@@ -1440,6 +1448,21 @@ class Parser:
         return self._public_invite_parsers.get(payload['type'], self.parse_unknown_public_invite)(payload)
 
     def parse_ready_event(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> ReadyEvent:
+        """Parses a Ready event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ReadyEvent`
+            The parsed ready event object.
+        """
+
         users = list(map(self.parse_user, payload.get('users', ())))
         me = users[-1]
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
@@ -1650,6 +1673,20 @@ class Parser:
     def parse_server_member_join_event(
         self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, joined_at: datetime, /
     ) -> ServerMemberJoinEvent:
+        """Parses a server member join event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerMemberJoinEvent`
+            The parsed server member join event object.
+        """
         return ServerMemberJoinEvent(
             shard=shard,
             member=Member(
@@ -1680,6 +1717,20 @@ class Parser:
     def parse_server_member_update_event(
         self, shard: Shard, payload: raw.ClientServerMemberUpdateEvent, /
     ) -> ServerMemberUpdateEvent:
+        """Parses a server member update event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerMemberUpdateEvent`
+            The parsed server member update event object.
+        """
         id = payload['id']
         data = payload['data']
         clear = payload['clear']
@@ -2071,11 +2122,25 @@ class Parser:
     def parse_user_voice_state_update_event(
         self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /
     ) -> UserVoiceStateUpdateEvent:
+        """Parses a user voice state update event.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserVoiceStateUpdateEvent`
+            The parsed user voice state update object.
+        """
+
         data = payload['data']
 
         return UserVoiceStateUpdateEvent(
             shard=shard,
             channel_id=payload['channel_id'],
+            container=None,
             state=PartialUserVoiceState(
                 user_id=payload['id'],
                 can_publish=data.get('can_publish', UNDEFINED),
@@ -2133,6 +2198,21 @@ class Parser:
     def parse_voice_channel_join_event(
         self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /
     ) -> VoiceChannelJoinEvent:
+        """Parses a voice channel join event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannelJoinEvent`
+            The parsed voice channel join event object.
+        """
+
         return VoiceChannelJoinEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -2142,14 +2222,42 @@ class Parser:
     def parse_voice_channel_leave_event(
         self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /
     ) -> VoiceChannelLeaveEvent:
+        """Parses a voice channel leave event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannelLeaveEvent`
+            The parsed voice channel leave event object.
+        """
+
         return VoiceChannelLeaveEvent(
             shard=shard,
             channel_id=payload['id'],
             user_id=payload['user'],
+            container=None,
             state=None,
         )
 
     def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:
+        """Parses a channel voice metadata object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel voice metadata payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelVoiceMetadata`
+            The parsed channel voice metadata object.
+        """
         return ChannelVoiceMetadata(max_users=payload.get('max_users') or 0)
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
