@@ -33,21 +33,21 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class ReadState:
-    """The channel read state."""
+    """Represents the read state of a channel."""
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The state channel ID."""
+    """The channel's ID the read state for."""
 
     user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The current user ID."""
+    """The user's ID the read state belongs to."""
 
-    last_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The ID of the last message read in this channel by current user."""
+    last_acked_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The ID of the last acknowledged message. It *may* not point to an existing or valid message."""
 
     mentioned_in: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The list of message IDs that mention the user."""
+    """The message's IDs that mention the user."""
 
     def __hash__(self) -> int:
         return hash((self.channel_id, self.user_id))

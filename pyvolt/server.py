@@ -263,16 +263,16 @@ class BaseRole(Base):
 
 @define(slots=True)
 class PartialRole(BaseRole):
-    """Partial representation of a server role."""
+    """Partially representation of a server role."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new role name."""
+    """The new role's name."""
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
     """The permissions available to this role."""
 
-    colour: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """New colour used for this. This can be any valid CSS colour."""
+    color: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    """New color used for this. This can be any valid CSS colour."""
 
     hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
@@ -288,14 +288,14 @@ class PartialRole(BaseRole):
             and self.hoist is not UNDEFINED
             and self.rank is not UNDEFINED
         ):
-            colour = None if not self.colour is not UNDEFINED else self.colour
+            color = None if not self.color is not UNDEFINED else self.color
             return Role(
                 state=self.state,
                 id=self.id,
                 server_id=self.server_id,
                 name=self.name,
                 permissions=self.permissions,
-                colour=colour,
+                color=color,
                 hoist=self.hoist,
                 rank=self.rank,
             )
@@ -303,30 +303,35 @@ class PartialRole(BaseRole):
 
 @define(slots=True)
 class Role(BaseRole):
-    """Representation of a server role."""
+    """Represents a role in Revolt server."""
 
     name: str = field(repr=True, kw_only=True)
-    """Role name."""
+    """The role's name."""
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
     """Permissions available to this role."""
 
-    colour: str | None = field(repr=True, kw_only=True)
-    """Colour used for this. This can be any valid CSS colour."""
+    color: str | None = field(repr=True, kw_only=True)
+    """The role's color. This is valid CSS color."""
 
     hoist: bool = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
     rank: int = field(repr=True, kw_only=True)
-    """Ranking of this role."""
+    """The role's rank."""
 
-    def _update(self, data: PartialRole) -> None:
+    def locally_update(self, data: PartialRole, /) -> None:
+        """Locally updates role with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+        """
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
-        if data.colour is not UNDEFINED:
-            self.colour = data.colour
+        if data.color is not UNDEFINED:
+            self.color = data.color
         if data.hoist is not UNDEFINED:
             self.hoist = data.hoist
         if data.rank is not UNDEFINED:
@@ -924,55 +929,6 @@ class Server(BaseServer):
                 if t.id == channel_id:
                     return t
 
-    def _prepare_cached(self) -> list[ServerChannel]:
-        if not self.internal_channels[0]:
-            channels = self.internal_channels[1]
-            self.internal_channels = (True, self.channel_ids)
-            return channels  # type: ignore
-        return []
-
-    def _update(self, data: PartialServer) -> None:
-        if data.owner_id is not UNDEFINED:
-            self.owner_id = data.owner_id
-        if data.name is not UNDEFINED:
-            self.name = data.name
-        if data.description is not UNDEFINED:
-            self.description = data.description
-        if data.channel_ids is not UNDEFINED:
-            self.internal_channels = (True, data.channel_ids)
-        if data.categories is not UNDEFINED:
-            self.categories = data.categories or []
-        if data.system_messages is not UNDEFINED:
-            self.system_messages = data.system_messages
-        if data.default_permissions is not UNDEFINED:
-            self.default_permissions = data.default_permissions
-        if data.internal_icon is not UNDEFINED:
-            self.internal_icon = data.internal_icon
-        if data.internal_banner is not UNDEFINED:
-            self.internal_banner = data.internal_banner
-        if data.flags is not UNDEFINED:
-            self.flags = data.flags
-        if data.discoverable is not UNDEFINED:
-            self.discoverable = data.discoverable
-        if data.analytics is not UNDEFINED:
-            self.analytics = data.analytics
-
-    def _role_update_full(self, data: PartialRole | Role) -> None:
-        if isinstance(data, PartialRole):
-            self.roles[data.id]._update(data)
-        else:
-            self.roles[data.id] = data
-
-    def _role_update(self, data: PartialRole) -> None:
-        try:
-            role = self.roles[data.id]
-        except KeyError:
-            role = data.into_full()
-            if role:
-                self.roles[role.id] = role
-        else:
-            role._update(data)
-
     @property
     def icon(self) -> Asset | None:
         """Optional[:class:`Asset`]: The server icon."""
@@ -1024,6 +980,38 @@ class Server(BaseServer):
         """:class:`bool`: Whether the server is ran by Revolt team."""
         return self.flags.official
 
+    def locally_update(self, data: PartialServer, /) -> None:
+        """Locally updates server with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+            You likely want to use :meth:`.edit` instead.
+        """
+        if data.owner_id is not UNDEFINED:
+            self.owner_id = data.owner_id
+        if data.name is not UNDEFINED:
+            self.name = data.name
+        if data.description is not UNDEFINED:
+            self.description = data.description
+        if data.channel_ids is not UNDEFINED:
+            self.internal_channels = (True, data.channel_ids)
+        if data.categories is not UNDEFINED:
+            self.categories = data.categories or []
+        if data.system_messages is not UNDEFINED:
+            self.system_messages = data.system_messages
+        if data.default_permissions is not UNDEFINED:
+            self.default_permissions = data.default_permissions
+        if data.internal_icon is not UNDEFINED:
+            self.internal_icon = data.internal_icon
+        if data.internal_banner is not UNDEFINED:
+            self.internal_banner = data.internal_banner
+        if data.flags is not UNDEFINED:
+            self.flags = data.flags
+        if data.discoverable is not UNDEFINED:
+            self.discoverable = data.discoverable
+        if data.analytics is not UNDEFINED:
+            self.analytics = data.analytics
+
     def permissions_for(
         self,
         member: Member,
@@ -1064,23 +1052,48 @@ class Server(BaseServer):
             sort_member_roles(member.roles, safe=safe, server_roles=self.roles),
             member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
-            can_publish=self.can_publish,
-            can_receive=self.can_receive,
+            can_publish=member.can_publish,
+            can_receive=member.can_receive,
         )
+
+    def prepare_cached(self) -> list[ServerChannel]:
+        """List[:class:`ServerChannel`]: Prepares the server to be cached."""
+        if not self.internal_channels[0]:
+            channels = self.internal_channels[1]
+            self.internal_channels = (True, self.channel_ids)
+            return channels  # type: ignore
+        return []
+
+    def upsert_role(self, data: PartialRole | Role, /) -> None:
+        """Locally upserts role into :attr:`Server.roles` mapping.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+            You likely want to use :meth:`.create_role` or :meth:`BaseRole.edit` instead.
+
+        Parameters
+        ----------
+        data: Union[:class:`PartialRole`, :class:`Role`]
+            The role to upsert.
+        """
+        if isinstance(data, PartialRole):
+            self.roles[data.id].locally_update(data)
+        else:
+            self.roles[data.id] = data
 
 
 @define(slots=True)
 class Ban:
-    """Representation of a server ban on Revolt."""
+    """Represents a server ban on Revolt."""
 
     server_id: str = field(repr=False, kw_only=True)
-    """The server ID."""
+    """The server's ID."""
 
     user_id: str = field(repr=False, kw_only=True)
-    """The user ID that was banned."""
+    """The user's ID that was banned."""
 
     reason: str | None = field(repr=False, kw_only=True)
-    """Reason for ban creation."""
+    """The ban's reason."""
 
     user: DisplayUser | None = field(repr=False, kw_only=True)
     """The user that was banned."""
@@ -1104,7 +1117,7 @@ class BaseMember:
     """State that controls this member."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """ID of the server that member is on."""
+    """The server's ID the member in."""
 
     _user: User | str = field(repr=True, kw_only=True, alias='_user')
 
@@ -1134,7 +1147,7 @@ class BaseMember:
 
     @property
     def id(self) -> str:
-        """The member's user ID."""
+        """:class:`str`: The member's user ID."""
         return self._user.id if isinstance(self._user, User) else self._user
 
     @property
@@ -1214,7 +1227,7 @@ class BaseMember:
         Parameters
         ----------
         reason: Optional[:class:`str`]
-            The ban reason. Should be between 1 and 1024 chars long.
+            The ban reason. Must be between 1 and 1024 chars long.
 
         Raises
         ------
@@ -1331,7 +1344,17 @@ class Member(BaseMember):
     can_receive: bool = field(repr=True, kw_only=True)
     """Whether the member can receive voice data."""
 
-    def _update(self, data: PartialMember) -> None:
+    def locally_update(self, data: PartialMember) -> None:
+        """Locally updates member with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialMember`
+            The data to update member with.
+        """
         if data.nick is not UNDEFINED:
             self.nick = data.nick
         if data.internal_server_avatar is not UNDEFINED:

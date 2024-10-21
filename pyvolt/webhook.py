@@ -169,7 +169,7 @@ class PartialWebhook(BaseWebhook):
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """The new avatar of the webhook."""
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
 
@@ -190,7 +190,17 @@ class Webhook(BaseWebhook):
     token: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """The private token for the webhook."""
 
-    def _update(self, data: PartialWebhook) -> None:
+    def locally_update(self, data: PartialWebhook, /) -> None:
+        """Locally updates webhook with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialWebhook`
+            The data to update webhook with.
+        """
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.internal_avatar is not UNDEFINED:

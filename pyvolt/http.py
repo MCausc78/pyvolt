@@ -1313,12 +1313,11 @@ class HTTPClient:
             json=payload,
         )
 
-    async def remove_all_reactions_from_message(
-        self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /
-    ) -> None:
+    async def clear_reactions(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
-        Removes your own, someone else's or all of a given reaction.
+        Removes all the reactions from the message.
+
         You must have :attr:`~Permissions.manage_messages` to do this.
 
         Parameters
@@ -1330,10 +1329,30 @@ class HTTPClient:
 
         Raises
         ------
+        Unauthorized
+            +---------------------------------------+--------------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The provided bot/user token is invalid. |
+            +------------------------------------------+-----------------------------------------+
         Forbidden
-            You do not have permissions to remove all reactions from message.
-        HTTPException
-            Removing reactions from message failed.
+            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                              | Populated attributes         |
+            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. | :attr:`Forbidden.permission` |
+            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                |
+            +--------------------------------------+---------------------------------------+
+            | ``NotFound``                         | The channel or message was not found. |
+            +--------------------------------------+---------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
         """
         await self.request(
             routes.CHANNELS_MESSAGE_CLEAR_REACTIONS.compile(

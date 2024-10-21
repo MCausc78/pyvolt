@@ -376,8 +376,17 @@ class TextChannel(BaseChannel):
             return
         return cache.get_message(self.id, message_id, caching._USER_REQUEST)
 
-    def _update(self, data: PartialChannel, /) -> None:
-        # PartialChannel has no fields that are related to SavedMessages yet
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
         pass
 
     @property
@@ -521,12 +530,22 @@ class TextChannel(BaseChannel):
 
 @define(slots=True)
 class SavedMessagesChannel(TextChannel):
-    """Personal "Saved Notes" channel which allows users to save messages."""
+    """Represents a personal "Saved Notes" channel which allows users to save messages."""
 
     user_id: str = field(repr=True, kw_only=True)
     """The ID of the user this channel belongs to."""
 
-    def _update(self, data: PartialChannel, /) -> None:
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
 
@@ -583,7 +602,17 @@ class DMChannel(TextChannel):
 
         return a if me.id != a else b
 
-    def _update(self, data: PartialChannel, /) -> None:
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
         if data.active is not UNDEFINED:
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
@@ -658,7 +687,17 @@ class GroupChannel(TextChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
 
-    def _update(self, data: PartialChannel, /) -> None:
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.owner_id is not UNDEFINED:
@@ -885,7 +924,17 @@ class BaseServerChannel(BaseChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this channel is marked as not safe for work."""
 
-    def _update(self, data: PartialChannel, /) -> None:
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.description is not UNDEFINED:
@@ -1088,8 +1137,18 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
     voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
     """The voice's metadata in the channel."""
 
-    def _update(self, data: PartialChannel, /) -> None:
-        BaseServerChannel._update(self, data)
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`PartialChannel`
+            The data to update channel with.
+        """
+        BaseServerChannel.locally_update(self, data)
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
 

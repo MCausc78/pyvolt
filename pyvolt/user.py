@@ -56,7 +56,12 @@ class UserStatus:
     presence: Presence | None = field(repr=True, kw_only=True)
     """The current presence option."""
 
-    def _update(self, data: UserStatusEdit) -> None:
+    def locally_update(self, data: UserStatusEdit, /) -> None:
+        """Locally updates user status with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+        """
         if data.text is not UNDEFINED:
             self.text = data.text
         if data.presence is not UNDEFINED:
@@ -185,7 +190,7 @@ class UserProfileEdit:
             remove.append('ProfileBackground')
         return remove
 
-    async def build(self, state: State) -> raw.DataUserProfile:
+    async def build(self, state: State, /) -> raw.DataUserProfile:
         payload: raw.DataUserProfile = {}
         if self.content:
             payload['content'] = self.content
@@ -199,10 +204,10 @@ class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
     id: str = field(repr=True, kw_only=True)
-    """Other user's ID."""
+    """The user's ID the relationship with."""
 
     status: RelationshipStatus = field(repr=True, kw_only=True)
-    """Relationship status with them."""
+    """The relationship status with them."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -597,7 +602,12 @@ class User(DisplayUser):
     online: bool = field(repr=True, kw_only=True)
     """Whether this user is currently online."""
 
-    def _update(self, data: PartialUser) -> None:
+    def locally_update(self, data: PartialUser, /) -> None:
+        """Locally updates user with provided data.
+
+        .. warn::
+            This is called by library internally to keep cache up to date.
+        """
         if data.name is not UNDEFINED:
             self.name = data.name
         if data.discriminator is not UNDEFINED:
@@ -616,7 +626,7 @@ class User(DisplayUser):
                     presence=status.presence,
                 )
             elif self.status:
-                self.status._update(status)
+                self.status.locally_update(status)
         if data.flags is not UNDEFINED:
             self.flags = data.flags
         if data.online is not UNDEFINED:

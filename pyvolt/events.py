@@ -267,7 +267,7 @@ class ChannelUpdateEvent(BaseEvent):
             return
 
         after = copy(before)
-        after._update(self.channel)
+        after.locally_update(self.channel)
         self.after = after
 
     def process(self) -> bool:
@@ -438,12 +438,12 @@ class MessageAckEvent(BaseEvent):
         read_state = cache.get_read_state(self.channel_id, caching._MESSAGE_ACK)
         if read_state:
             # opposite effect cannot be done
-            if read_state.last_message_id and self.message_id >= read_state.last_message_id:
-                acked_message_id = read_state.last_message_id
+            if read_state.last_acked_message_id and self.message_id >= read_state.last_acked_message_id:
+                acked_message_id = read_state.last_acked_message_id
 
                 read_state.mentioned_in = [m for m in read_state.mentioned_in if m >= acked_message_id]
 
-            read_state.last_message_id = self.message_id
+            read_state.last_acked_message_id = self.message_id
             cache.store_read_state(read_state, caching._MESSAGE_ACK)
 
         return True
@@ -518,7 +518,7 @@ class MessageUpdateEvent(BaseEvent):
             return
         self.before = before
         after = copy(before)
-        after._update(self.message)
+        after.locally_update(self.message)
         self.after = after
 
     def process(self) -> bool:
@@ -624,7 +624,7 @@ class MessageReactEvent(BaseEvent):
 
         if not cache or not self.message:
             return False
-        self.message._react(self.user_id, self.emoji)
+        self.message.locally_react(self.user_id, self.emoji)
         cache.store_message(self.message, caching._MESSAGE_REACT)
         return True
 
@@ -662,7 +662,7 @@ class MessageUnreactEvent(BaseEvent):
 
         if not cache or not self.message:
             return False
-        self.message._unreact(self.user_id, self.emoji)
+        self.message.locally_unreact(self.user_id, self.emoji)
         cache.store_message(self.message, caching._MESSAGE_UNREACT)
         return True
 
@@ -697,7 +697,7 @@ class MessageClearReactionEvent(BaseEvent):
 
         if not cache or not self.message:
             return False
-        self.message._clear(self.emoji)
+        self.message.locally_clear_reactions(self.emoji)
         cache.store_message(self.message, caching._MESSAGE_REACT)
         return True
 
@@ -763,7 +763,7 @@ class ServerCreateEvent(BaseEvent):
         if not cache:
             return False
 
-        for channel in self.server._prepare_cached():
+        for channel in self.server.prepare_cached():
             cache.store_channel(channel, caching._SERVER_CREATE)
         cache.store_server(self.server, caching._SERVER_CREATE)
 
@@ -862,7 +862,7 @@ class ServerUpdateEvent(BaseEvent):
             return
 
         after = copy(before)
-        after._update(self.server)
+        after.locally_update(self.server)
         self.after = after
 
     def process(self) -> bool:
@@ -943,7 +943,7 @@ class ServerMemberUpdateEvent(BaseEvent):
             return
 
         after = copy(before)
-        after._update(self.member)
+        after.locally_update(self.member)
         self.after = after
 
     def process(self) -> bool:
@@ -1028,7 +1028,7 @@ class RawServerRoleUpdateEvent(BaseEvent):
         if not cache or not self.server:
             return False
 
-        self.server._role_update_full(self.new_role or self.role)
+        self.server.upsert_role(self.new_role or self.role)
         cache.store_server(self.server, caching._SERVER_ROLE_UPDATE)
         return True
 
@@ -1095,7 +1095,7 @@ class UserUpdateEvent(BaseEvent):
             return
 
         after = copy(before)
-        after._update(self.user)
+        after.locally_update(self.user)
         self.after = after
 
     def process(self) -> bool:
@@ -1187,7 +1187,7 @@ class UserSettingsUpdateEvent(BaseEvent):
         settings = self.shard.state.settings
         if settings.mocked:
             return False
-        settings._update(self.partial)
+        settings.locally_update(self.partial)
         return True
 
 

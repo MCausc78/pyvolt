@@ -101,11 +101,11 @@ class UserSettings:
         if partial:
             if isinstance(self._android, AndroidUserSettings) and 'android' in partial.data:
                 android_payload: raw.AndroidUserSettings = utils.from_json(partial['android'])
-                self._android._update(android_payload)
+                self._android.locally_update(android_payload)
             if isinstance(self._revite, ReviteUserSettings):
-                self._revite._update(partial, full=False)
+                self._revite.locally_update(partial, full=False)
             if isinstance(self._jolt, JoltUserSettings):
-                self._jolt._update(partial, full=False)
+                self._jolt.locally_update(partial, full=False)
         else:
             try:
                 self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
@@ -122,7 +122,17 @@ class UserSettings:
             except Exception as exc:
                 self._jolt = exc
 
-    def _update(self, partial: UserSettings) -> None:
+    def locally_update(self, partial: UserSettings, /) -> None:
+        """Locally updates user settings with provided data.
+
+        .. warn::
+            This is called by library internally to keep settings up to date.
+
+        Parameters
+        ----------
+        partial: :class:`UserSettings`
+            The data to update settings with.
+        """
         self.data.update(partial.data)
         self._parse(partial=partial)
 
@@ -215,9 +225,19 @@ class AndroidUserSettings:
         payload: raw.AndroidUserSettings = utils.from_json(parent.get('android', '{}'))
         self._payload: raw.AndroidUserSettings = payload
 
-        self._update(payload)
+        self.locally_update(payload)
 
-    def _update(self, payload: raw.AndroidUserSettings) -> None:
+    def locally_update(self, payload: raw.AndroidUserSettings) -> None:
+        """Locally updates user settings with provided data.
+
+        .. warn::
+            This is called by library internally to keep settings up to date.
+
+        Parameters
+        ----------
+        payload: raw.AndroidUserSettings
+            The data to update settings with.
+        """
         theme = payload.get('theme')
 
         if theme:
@@ -509,7 +529,7 @@ class ReviteUserSettings:
 
     def __init__(self, parent: UserSettings) -> None:
         self.parent: UserSettings = parent
-        self._update(parent, full=True)
+        self.locally_update(parent, full=True)
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} last_viewed_changelog_entry={self.last_viewed_changelog_entry!r} language={self.language!r} notification_options={self._notification_options!r} ordering={self.ordering!r} emoji_pack={self.emoji_pack!r} seasonal={self.seasonal!r} transparent={self.transparent!r} ligatures={self.ligatures!r} base_theme={self.base_theme!r} custom_css={self.custom_css!r} font={self.font!r} monofont={self.monofont!r} theme_overrides={self.theme_overrides!r}>'
@@ -662,7 +682,19 @@ class ReviteUserSettings:
             'appearance:theme:overrides'
         )
 
-    def _update(self, payload: UserSettings, /, *, full: bool) -> None:
+    def locally_update(self, payload: UserSettings, /, *, full: bool) -> None:
+        """Locally updates user settings with provided data.
+
+        .. warn::
+            This is called by library internally to keep settings up to date.
+
+        Parameters
+        ----------
+        payload: :class:`UserSettings`
+            The data to update settings with.
+        full: :class:`bool`
+            Whether the payload is full.
+        """
         changelog_json = payload.get('changelog')
         if changelog_json:
             changelog: raw.ReviteChangelog = utils.from_json(changelog_json)
@@ -1125,7 +1157,7 @@ class JoltUserSettings:
 
     def __init__(self, parent: UserSettings) -> None:
         self.parent: UserSettings = parent
-        self._update(parent, full=True)
+        self.locally_update(parent, full=True)
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} >'
@@ -1146,7 +1178,19 @@ class JoltUserSettings:
         """:class:`bool`: Whether to show typing indicators ('<user> is typing...')."""
         return self.receive_typing_indicators is not False
 
-    def _update(self, payload: UserSettings, /, *, full: bool) -> None:
+    def locally_update(self, payload: UserSettings, /, *, full: bool) -> None:
+        """Locally updates user settings with provided data.
+
+        .. warn::
+            This is called by library internally to keep settings up to date.
+
+        Parameters
+        ----------
+        payload: :class:`UserSettings`
+            The data to update settings with.
+        full: :class:`bool`
+            Whether the payload is full.
+        """
         low_data_mode = payload.get('jolt:low-data-mode')
         if low_data_mode is None:
             if full:

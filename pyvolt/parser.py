@@ -519,7 +519,7 @@ class Parser:
             state=self.state,
             channel_id=id['channel'],
             user_id=id['user'],
-            last_message_id=payload.get('last_id'),
+            last_acked_message_id=payload.get('last_id'),
             mentioned_in=payload.get('mentions', []),
         )
 
@@ -1552,7 +1552,7 @@ class Parser:
             id=role_id,
             name=payload['name'],
             permissions=self.parse_permission_override_field(payload['permissions']),
-            colour=payload.get('colour'),
+            color=payload.get('colour'),
             hoist=payload.get('hoist', False),
             rank=payload['rank'],
             server_id=server_id,
@@ -1807,7 +1807,7 @@ class Parser:
                 server_id=payload['id'],
                 name=data.get('name') or UNDEFINED,
                 permissions=(self.parse_permission_override_field(permissions) if permissions else UNDEFINED),
-                colour=(None if 'Colour' in clear else data.get('colour', UNDEFINED)),
+                color=(None if 'Colour' in clear else data.get('colour', UNDEFINED)),
                 hoist=data.get('hoist', UNDEFINED),
                 rank=data.get('rank', UNDEFINED),
             ),
@@ -2038,7 +2038,7 @@ class Parser:
         if not before.mocked:
             before = copy(before)
             after = copy(before)
-            after._update(partial)
+            after.locally_update(partial)
         else:
             after = before
 
