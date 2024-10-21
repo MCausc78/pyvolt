@@ -555,7 +555,7 @@ class MessageAppendEvent(BaseEvent):
         if not cache or not self.message:
             return False
 
-        self.message._append(self.data)
+        self.message.locally_append(self.data)
         cache.store_message(self.message, caching._MESSAGE_APPEND)
         return True
 

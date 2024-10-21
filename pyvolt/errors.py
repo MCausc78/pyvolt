@@ -157,7 +157,7 @@ class ConnectError(ShardError):
         super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
 
 
-class DiscoveryError(PyvoltError):
+class DiscoverError(PyvoltError):
     __slots__ = ('response', 'status', 'data')
 
     def __init__(
@@ -207,7 +207,7 @@ __all__ = (
     'ShardError',
     'AuthenticationError',
     'ConnectError',
-    'DiscoveryError',
+    'DiscoverError',
     'InvalidData',
     'NoData',
 )

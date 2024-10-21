@@ -10,10 +10,10 @@ from .user_settings import ReviteThemeVariable
 from .users import UserProfile
 
 # Servers
-DiscoveryServerActivity = typing.Literal['high', 'medium', 'low', 'no']
+DiscoverableServerActivity = typing.Literal['high', 'medium', 'low', 'no']
 
 
-class DiscoveryServer(typing.TypedDict):
+class DiscoverableServer(typing.TypedDict):
     _id: str
     name: str
     description: str | None
@@ -22,51 +22,51 @@ class DiscoveryServer(typing.TypedDict):
     flags: typing_extensions.NotRequired[int]
     tags: list[str]
     members: int
-    activity: DiscoveryServerActivity
+    activity: DiscoverableServerActivity
 
 
-class DiscoveryServersPage(typing.TypedDict):
-    servers: list[DiscoveryServer]
+class DiscoverableServersPage(typing.TypedDict):
+    servers: list[DiscoverableServer]
     popularTags: list[str]
 
 
-class DiscoveryServerSearchResult(typing.TypedDict):
+class DiscoverableServerSearchResult(typing.TypedDict):
     query: str
     count: int
     type: typing.Literal['servers']
-    servers: list[DiscoveryServer]
+    servers: list[DiscoverableServer]
     relatedTags: list[str]
 
 
 # Bots
-DiscoveryBotUsage = typing.Literal['high', 'medium', 'low']
+DiscoverableBotUsage = typing.Literal['high', 'medium', 'low']
 
 
-class DiscoveryBot(typing.TypedDict):
+class DiscoverableBot(typing.TypedDict):
     _id: str
     username: str
     avatar: typing_extensions.NotRequired[File]
     profile: UserProfile
     tags: list[str]
     servers: int
-    usage: DiscoveryBotUsage
+    usage: DiscoverableBotUsage
 
 
-class DiscoveryBotsPage(typing.TypedDict):
-    bots: list[DiscoveryBot]
+class DiscoverableBotsPage(typing.TypedDict):
+    bots: list[DiscoverableBot]
     popularTags: list[str]
 
 
-class DiscoveryBotSearchResult(typing.TypedDict):
+class DiscoverableBotSearchResult(typing.TypedDict):
     query: str
     count: int
     type: typing.Literal['bots']
-    bots: list[DiscoveryBot]
+    bots: list[DiscoverableBot]
     relatedTags: list[str]
 
 
 # Themes
-class DiscoveryTheme(typing.TypedDict):
+class DiscoverableTheme(typing.TypedDict):
     name: str
     version: str
     slug: str
@@ -77,16 +77,16 @@ class DiscoveryTheme(typing.TypedDict):
     css: typing_extensions.NotRequired[str]
 
 
-class DiscoveryThemesPage(typing.TypedDict):
-    themes: list[DiscoveryTheme]
+class DiscoverableThemesPage(typing.TypedDict):
+    themes: list[DiscoverableTheme]
     popularTags: list[str]
 
 
-class DiscoveryThemeSearchResult(typing.TypedDict):
+class DiscoverableThemeSearchResult(typing.TypedDict):
     query: str
     count: int
     type: typing.Literal['themes']
-    themes: list[DiscoveryTheme]
+    themes: list[DiscoverableTheme]
     relatedTags: list[str]
 
 

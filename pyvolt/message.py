@@ -1579,7 +1579,7 @@ class Message(BaseMessage):
     flags: MessageFlags = field(repr=True, kw_only=True)
     """The message's flags."""
 
-    def _append(self, data: MessageAppendData, /) -> None:
+    def locally_append(self, data: MessageAppendData, /) -> None:
         if data.internal_embeds is not UNDEFINED:
             self.internal_embeds.extend(data.internal_embeds)
 

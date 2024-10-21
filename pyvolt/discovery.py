@@ -33,7 +33,7 @@ import typing
 from . import utils
 from .bot import BaseBot
 from .core import UNDEFINED, UndefinedOr, __version__ as version
-from .errors import DiscoveryError, InvalidData
+from .errors import DiscoverError, InvalidData
 from .server import ServerFlags, BaseServer
 
 if typing.TYPE_CHECKING:
@@ -50,14 +50,14 @@ DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCa
 
 
 @define(slots=True)
-class DiscoveryServer(BaseServer):
-    """Representation of a server on Revolt Discovery. The ID is a invite code."""
+class DiscoverableServer(BaseServer):
+    """Represents a server on Revolt Discovery. The ID is a invite code."""
 
     name: str = field(repr=True, kw_only=True)
-    """The server name."""
+    """The server's name."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The server description."""
+    """The server's description."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server icon."""
@@ -66,20 +66,20 @@ class DiscoveryServer(BaseServer):
     """The stateless server banner."""
 
     flags: ServerFlags = field(repr=True, kw_only=True)
-    """The server flags."""
+    """The server's flags."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The server tags."""
+    """The server's tags."""
 
     member_count: int = field(repr=True, kw_only=True)
-    """The server member count."""
+    """The server's member count."""
 
     activity: ServerActivity = field(repr=True, kw_only=True)
-    """The server activity."""
+    """The server's activity."""
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server icon."""
+        """Optional[:class:`Asset`]: The server's icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
@@ -89,13 +89,13 @@ class DiscoveryServer(BaseServer):
 
     @property
     def banner(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server banner."""
+        """Optional[:class:`Asset`]: The server's banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 @define(slots=True)
-class DiscoveryServersPage:
-    servers: list[DiscoveryServer] = field(repr=True, kw_only=True)
+class DiscoverableServersPage:
+    servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
     """The listed servers, up to 200 servers."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
@@ -103,7 +103,7 @@ class DiscoveryServersPage:
 
 
 @define(slots=True)
-class DiscoveryBot(BaseBot):
+class DiscoverableBot(BaseBot):
     name: str = field(repr=True, kw_only=True)
     """The bot's name."""
 
@@ -139,8 +139,8 @@ class DiscoveryBot(BaseBot):
 
 
 @define(slots=True)
-class DiscoveryBotsPage:
-    bots: list[DiscoveryBot] = field(repr=True, kw_only=True)
+class DiscoverableBotsPage:
+    bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
     """The listed bots, up to 200 bots."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
@@ -148,7 +148,7 @@ class DiscoveryBotsPage:
 
 
 @define(slots=True)
-class DiscoveryTheme:
+class DiscoverableTheme:
     state: State = field(repr=False)
     """State that controls this theme."""
 
@@ -182,7 +182,7 @@ class DiscoveryTheme:
     def __eq__(self, other: object, /) -> bool:
         return (
             self is other
-            or isinstance(other, DiscoveryTheme)
+            or isinstance(other, DiscoverableTheme)
             and self.name == other.name
             and self.creator == other.creator
         )
@@ -200,15 +200,15 @@ class DiscoveryTheme:
 
 
 @define(slots=True)
-class DiscoveryThemesPage:
-    themes: list[DiscoveryTheme] = field(
+class DiscoverableThemesPage:
+    themes: list[DiscoverableTheme] = field(
         repr=True,
         kw_only=True,
     )
     """The listed themes, up to 200 themes."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """Popular tags used in discovery themes."""
+    """The popular tags used in discoverable themes."""
 
 
 # 'relatedTags' contains deduplicated tags, calculated with:
@@ -231,7 +231,7 @@ class ServerSearchResult:
     count: int = field(repr=True, kw_only=True)
     """The servers count."""
 
-    servers: list[DiscoveryServer] = field(repr=True, kw_only=True)
+    servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
     """The listed servers."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
@@ -248,7 +248,7 @@ class BotSearchResult:
     count: int = field(repr=True, kw_only=True)
     """The bots count."""
 
-    bots: list[DiscoveryBot] = field(repr=True, kw_only=True)
+    bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
     """The listed bots."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
@@ -265,7 +265,7 @@ class ThemeSearchResult:
     count: int = field(repr=True, kw_only=True)
     """The themes count."""
 
-    themes: list[DiscoveryTheme] = field(repr=True, kw_only=True)
+    themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
     """The listed themes."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
@@ -302,7 +302,7 @@ class DiscoveryClient:
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Fetching the main page failed.
         InvalidData
             If library is unable look up build ID.
@@ -316,7 +316,7 @@ class DiscoveryClient:
             data = await utils._json_or_text(response)
             if response.status != 200:
                 data = await utils._json_or_text(response)
-                raise DiscoveryError(response, response.status, data)
+                raise DiscoverError(response, response.status, data)
             match = RE_DISCOVERY_BUILD_ID.findall(data)
             if not match:
                 raise InvalidData(
@@ -324,14 +324,14 @@ class DiscoveryClient:
                 )
             return match[0]
 
-    async def _request(self, method: str, path: str, **kwargs) -> aiohttp.ClientResponse:
+    async def _request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
         headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
         headers.update(kwargs.pop('headers', {}))
         response = await self.session.request(method, self._base + path, headers=headers, **kwargs)
         if response.status >= 400:
             data = await utils._json_or_text(response)
-            raise DiscoveryError(response, response.status, data)
+            raise DiscoverError(response, response.status, data)
         return response
 
     async def use_latest_build_id(self) -> str:
@@ -350,74 +350,74 @@ class DiscoveryClient:
         self._base = f'https://rvlt.gg/_next/data/{build_id}'
         return build_id
 
-    async def request(self, method: str, path: str, **kwargs) -> typing.Any:
+    async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
         response = await self._request(method, path, **kwargs)
         result = await utils._json_or_text(response)
         _L.debug('received from %s %s: %s', method, path, result)
         response.close()
         return result
 
-    async def servers(self) -> DiscoveryServersPage:
+    async def servers(self) -> DiscoverableServersPage:
         """|coro|
 
         Retrieves servers on a main page.
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Getting the servers failed.
 
         Returns
         -------
-        :class:`DiscoveryServersPage`
+        :class:`DiscoverableServersPage`
             The servers page.
         """
-        page: raw.NextPage[raw.DiscoveryServersPage] = await self.request(
+        page: raw.NextPage[raw.DiscoverableServersPage] = await self.request(
             'GET', '/discover/servers.json', params={'embedded': 'true'}
         )
-        return self.state.parser.parse_discovery_servers_page(page['pageProps'])
+        return self.state.parser.parse_discoverable_servers_page(page['pageProps'])
 
-    async def bots(self) -> DiscoveryBotsPage:
+    async def bots(self) -> DiscoverableBotsPage:
         """|coro|
 
         Retrieves bots on a main page.
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Getting the bots failed.
 
         Returns
         -------
-        :class:`DiscoveryBotsPage`
+        :class:`DiscoverableBotsPage`
             The bots page.
         """
 
-        page: raw.NextPage[raw.DiscoveryBotsPage] = await self.request(
+        page: raw.NextPage[raw.DiscoverableBotsPage] = await self.request(
             'GET', '/discover/bots.json', params={'embedded': 'true'}
         )
 
-        return self.state.parser.parse_discovery_bots_page(page['pageProps'])
+        return self.state.parser.parse_discoverable_bots_page(page['pageProps'])
 
-    async def themes(self) -> DiscoveryThemesPage:
+    async def themes(self) -> DiscoverableThemesPage:
         """|coro|
 
         Retrieves themes on a main page.
 
         Raises
         ------
-        DiscoveryError
+        DiscoverableError
             Getting the themes failed.
 
         Returns
         -------
-        :class:`DiscoveryThemesPage`
+        :class:`DiscoverableThemesPage`
             The themes page.
         """
-        page: raw.NextPage[raw.DiscoveryThemesPage] = await self.request(
+        page: raw.NextPage[raw.DiscoverableThemesPage] = await self.request(
             'GET', '/discover/themes.json', params={'embedded': 'true'}
         )
-        return self.state.parser.parse_discovery_themes_page(page['pageProps'])
+        return self.state.parser.parse_discoverable_themes_page(page['pageProps'])
 
     async def search_servers(self, query: str) -> ServerSearchResult:
         """|coro|
@@ -431,7 +431,7 @@ class DiscoveryClient:
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Searching failed.
 
         Returns
@@ -439,7 +439,7 @@ class DiscoveryClient:
         :class:`ServerSearchResult`
             The search results.
         """
-        page: raw.NextPage[raw.DiscoveryServerSearchResult] = await self.request(
+        page: raw.NextPage[raw.DiscoverableServerSearchResult] = await self.request(
             'GET',
             '/discover/search.json',
             params={
@@ -449,7 +449,7 @@ class DiscoveryClient:
             },
         )
 
-        return self.state.parser.parse_discovery_server_search_result(page['pageProps'])
+        return self.state.parser.parse_discoverable_server_search_result(page['pageProps'])
 
     async def search_bots(self, query: str) -> BotSearchResult:
         """|coro|
@@ -463,7 +463,7 @@ class DiscoveryClient:
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Searching failed.
 
         Returns
@@ -471,7 +471,7 @@ class DiscoveryClient:
         :class:`BotSearchResult`
             The search results.
         """
-        page: raw.NextPage[raw.DiscoveryBotSearchResult] = await self.request(
+        page: raw.NextPage[raw.DiscoverableBotSearchResult] = await self.request(
             'GET',
             '/discover/search.json',
             params={
@@ -481,7 +481,7 @@ class DiscoveryClient:
             },
         )
 
-        return self.state.parser.parse_discovery_bot_search_result(page['pageProps'])
+        return self.state.parser.parse_discoverable_bot_search_result(page['pageProps'])
 
     async def search_themes(self, query: str) -> ThemeSearchResult:
         """|coro|
@@ -495,7 +495,7 @@ class DiscoveryClient:
 
         Raises
         ------
-        DiscoveryError
+        DiscoverError
             Searching failed.
 
         Returns
@@ -503,7 +503,7 @@ class DiscoveryClient:
         :class:`ThemeSearchResult`
             The search results.
         """
-        page: raw.NextPage[raw.DiscoveryThemeSearchResult] = await self.request(
+        page: raw.NextPage[raw.DiscoverableThemeSearchResult] = await self.request(
             'GET',
             '/discover/search.json',
             params={
@@ -513,16 +513,16 @@ class DiscoveryClient:
             },
         )
 
-        return self.state.parser.parse_discovery_theme_search_result(page['pageProps'])
+        return self.state.parser.parse_discoverable_theme_search_result(page['pageProps'])
 
 
 __all__ = (
-    'DiscoveryServer',
-    'DiscoveryServersPage',
-    'DiscoveryBot',
-    'DiscoveryBotsPage',
-    'DiscoveryTheme',
-    'DiscoveryThemesPage',
+    'DiscoverableServer',
+    'DiscoverableServersPage',
+    'DiscoverableBot',
+    'DiscoverableBotsPage',
+    'DiscoverableTheme',
+    'DiscoverableThemesPage',
     'ServerSearchResult',
     'BotSearchResult',
     'ThemeSearchResult',

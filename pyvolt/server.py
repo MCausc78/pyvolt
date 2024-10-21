@@ -80,7 +80,7 @@ class Category:
     title: :class:`str`
         The category's title.
     channels: List[:class:`str`]
-        The IDs of channels in this category.
+        The channel's IDs inside this category.
     """
 
     __slots__ = ('id', 'title', 'channels')
@@ -166,7 +166,7 @@ class SystemMessageChannels:
 
 @define(slots=True)
 class BaseRole(Base):
-    """Base representation of a server role."""
+    """Represents a base role in Revolt server."""
 
     server_id: str = field(repr=True, kw_only=True)
 
@@ -263,7 +263,10 @@ class BaseRole(Base):
 
 @define(slots=True)
 class PartialRole(BaseRole):
-    """Partially representation of a server role."""
+    """Represents a partial role for the server.
+
+    Unmodified fields will have ``UNDEFINED`` value.
+    """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """The new role's name."""
@@ -734,7 +737,10 @@ class BaseServer(Base):
 
 @define(slots=True)
 class PartialServer(BaseServer):
-    """Partial representation of a server on Revolt."""
+    """Represents a server on Revolt.
+
+    Unmodified fields will have ``UNDEFINED`` value.
+    """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -1111,7 +1117,7 @@ class Ban:
 
 @define(slots=True)
 class BaseMember:
-    """Base representation of a member of a server on Revolt."""
+    """Represents a Revolt base member to a :class:`Server`."""
 
     state: State = field(repr=False, kw_only=True)
     """State that controls this member."""
@@ -1305,7 +1311,10 @@ class BaseMember:
 
 @define(slots=True)
 class PartialMember(BaseMember):
-    """Partial representation of a member of a server on Revolt."""
+    """Represents a Revolt member to a :class:`Server`.
+
+    Unmodified fields will have ``UNDEFINED`` value.
+    """
 
     nick: UndefinedOr[str | None] = field(repr=True, kw_only=True)
     internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
@@ -1321,7 +1330,7 @@ class PartialMember(BaseMember):
 
 @define(slots=True)
 class Member(BaseMember):
-    """Representation of a member of a server on Revolt."""
+    """Represents a Revolt member to a :class:`Server`."""
 
     joined_at: datetime = field(repr=True, kw_only=True)
     """Time at which this user joined the server."""

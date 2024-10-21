@@ -652,10 +652,10 @@ class Parser:
         )
 
     # Discovery
-    def parse_discovery_bot(self, payload: raw.DiscoveryBot, /) -> discovery.DiscoveryBot:
+    def parse_discoverable_bot(self, payload: raw.DiscoverableBot, /) -> discovery.DiscoverableBot:
         avatar = payload.get('avatar')
 
-        return discovery.DiscoveryBot(
+        return discovery.DiscoverableBot(
             state=self.state,
             id=payload['_id'],
             name=payload['username'],
@@ -666,25 +666,27 @@ class Parser:
             usage=BotUsage(payload['usage']),
         )
 
-    def parse_discovery_bot_search_result(self, payload: raw.DiscoveryBotSearchResult, /) -> discovery.BotSearchResult:
+    def parse_discoverable_bot_search_result(
+        self, payload: raw.DiscoverableBotSearchResult, /
+    ) -> discovery.BotSearchResult:
         return discovery.BotSearchResult(
             query=payload['query'],
             count=payload['count'],
-            bots=list(map(self.parse_discovery_bot, payload['bots'])),
+            bots=list(map(self.parse_discoverable_bot, payload['bots'])),
             related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_bots_page(self, payload: raw.DiscoveryBotsPage, /) -> discovery.DiscoveryBotsPage:
-        return discovery.DiscoveryBotsPage(
-            bots=list(map(self.parse_discovery_bot, payload['bots'])),
+    def parse_discoverable_bots_page(self, payload: raw.DiscoverableBotsPage, /) -> discovery.DiscoverableBotsPage:
+        return discovery.DiscoverableBotsPage(
+            bots=list(map(self.parse_discoverable_bot, payload['bots'])),
             popular_tags=payload['popularTags'],
         )
 
-    def parse_discovery_server(self, payload: raw.DiscoveryServer, /) -> discovery.DiscoveryServer:
+    def parse_discoverable_server(self, payload: raw.DiscoverableServer, /) -> discovery.DiscoverableServer:
         icon = payload.get('icon')
         banner = payload.get('banner')
 
-        return discovery.DiscoveryServer(
+        return discovery.DiscoverableServer(
             state=self.state,
             id=payload['_id'],
             name=payload['name'],
@@ -697,24 +699,26 @@ class Parser:
             activity=ServerActivity(payload['activity']),
         )
 
-    def parse_discovery_servers_page(self, payload: raw.DiscoveryServersPage, /) -> discovery.DiscoveryServersPage:
-        return discovery.DiscoveryServersPage(
-            servers=list(map(self.parse_discovery_server, payload['servers'])),
+    def parse_discoverable_servers_page(
+        self, payload: raw.DiscoverableServersPage, /
+    ) -> discovery.DiscoverableServersPage:
+        return discovery.DiscoverableServersPage(
+            servers=list(map(self.parse_discoverable_server, payload['servers'])),
             popular_tags=payload['popularTags'],
         )
 
-    def parse_discovery_server_search_result(
-        self, payload: raw.DiscoveryServerSearchResult, /
+    def parse_discoverable_server_search_result(
+        self, payload: raw.DiscoverableServerSearchResult, /
     ) -> discovery.ServerSearchResult:
         return discovery.ServerSearchResult(
             query=payload['query'],
             count=payload['count'],
-            servers=list(map(self.parse_discovery_server, payload['servers'])),
+            servers=list(map(self.parse_discoverable_server, payload['servers'])),
             related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_theme(self, payload: raw.DiscoveryTheme, /) -> discovery.DiscoveryTheme:
-        return discovery.DiscoveryTheme(
+    def parse_discoverable_theme(self, payload: raw.DiscoverableTheme, /) -> discovery.DiscoverableTheme:
+        return discovery.DiscoverableTheme(
             state=self.state,
             name=payload['name'],
             description=payload['description'],
@@ -726,19 +730,21 @@ class Parser:
             custom_css=payload.get('css'),
         )
 
-    def parse_discovery_theme_search_result(
-        self, payload: raw.DiscoveryThemeSearchResult, /
+    def parse_discoverable_theme_search_result(
+        self, payload: raw.DiscoverableThemeSearchResult, /
     ) -> discovery.ThemeSearchResult:
         return discovery.ThemeSearchResult(
             query=payload['query'],
             count=payload['count'],
-            themes=list(map(self.parse_discovery_theme, payload['themes'])),
+            themes=list(map(self.parse_discoverable_theme, payload['themes'])),
             related_tags=payload['relatedTags'],
         )
 
-    def parse_discovery_themes_page(self, payload: raw.DiscoveryThemesPage, /) -> discovery.DiscoveryThemesPage:
-        return discovery.DiscoveryThemesPage(
-            themes=list(map(self.parse_discovery_theme, payload['themes'])),
+    def parse_discoverable_themes_page(
+        self, payload: raw.DiscoverableThemesPage, /
+    ) -> discovery.DiscoverableThemesPage:
+        return discovery.DiscoverableThemesPage(
+            themes=list(map(self.parse_discoverable_theme, payload['themes'])),
             popular_tags=payload['popularTags'],
         )
 

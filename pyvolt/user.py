@@ -792,8 +792,10 @@ class UserVoiceState:
 
 @define(slots=True)
 class PartialUserVoiceState:
-    """Represents a partial voice state for the user. Unchanged fields will
-    have ``UNDEFINED`` value."""
+    """Represents a partial voice state for the user.
+
+    Unmodified fields will have ``UNDEFINED`` value.
+    """
 
     user_id: str = field(repr=True, kw_only=True)
     """The user's ID this voice state belongs to."""
