@@ -20,6 +20,7 @@ from .channels import (
     Channel,
     PartialChannel,
     FieldsChannel,
+    ChannelVoiceState,
 )
 from .emojis import ServerEmoji
 from .messages import Message, PartialMessage, AppendMessage, FieldsMessage
@@ -33,7 +34,7 @@ from .server_members import (
 )
 from .servers import Server, PartialServer, PartialRole, FieldsServer, FieldsRole
 from .user_settings import UserSettings
-from .users import User, PartialUser, FieldsUser
+from .users import User, PartialUser, FieldsUser, UserVoiceState, PartialUserVoiceState
 
 
 class ClientBulkEvent(typing.TypedDict):
@@ -56,6 +57,7 @@ class ClientReadyEvent(typing.TypedDict):
     channels: typing_extensions.NotRequired[list[Channel]]
     members: typing_extensions.NotRequired[list[Member]]
     emojis: typing_extensions.NotRequired[list[ServerEmoji]]
+    voice_states: typing_extensions.NotRequired[list[ChannelVoiceState]]
     # Insert please....
     # me: User
     user_settings: typing_extensions.NotRequired[UserSettings]
@@ -322,6 +324,26 @@ class ClientDeleteAllSessionsAuthEvent(AuthifierDeleteAllSessionsEvent):
 
 ClientAuthEvent = ClientCreateSessionAuthEvent | ClientDeleteSessionAuthEvent | ClientDeleteAllSessionsAuthEvent
 
+
+class ClientVoiceChannelJoinEvent(typing.TypedDict):
+    type: typing.Literal['VoiceChannelJoin']
+    id: str
+    state: UserVoiceState
+
+
+class ClientVoiceChannelLeaveEvent(typing.TypedDict):
+    type: typing.Literal['VoiceChannelLeave']
+    id: str
+    user: str
+
+
+class ClientUserVoiceStateUpdateEvent(typing.TypedDict):
+    type: typing.Literal['UserVoiceStateUpdate']
+    id: str
+    channel_id: str
+    data: PartialUserVoiceState
+
+
 ClientEvent = (
     ClientBulkEvent
     | ClientAuthenticatedEvent
@@ -363,6 +385,9 @@ ClientEvent = (
     | ClientWebhookUpdateEvent
     | ClientWebhookDeleteEvent
     | ClientAuthEvent
+    | ClientVoiceChannelJoinEvent
+    | ClientVoiceChannelLeaveEvent
+    | ClientUserVoiceStateUpdateEvent
 )
 
 

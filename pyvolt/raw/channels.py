@@ -6,6 +6,7 @@ import typing_extensions
 from .basic import Bool
 from .files import File
 from .permissions import Override, OverrideField
+from .users import UserVoiceState
 
 
 class SavedMessagesChannel(typing.TypedDict):
@@ -46,6 +47,7 @@ class TextChannel(typing.TypedDict):
     default_permissions: typing_extensions.NotRequired[OverrideField]
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
     nsfw: typing_extensions.NotRequired[bool]
+    voice: typing_extensions.NotRequired[VoiceInformation]
 
 
 class VoiceChannel(typing.TypedDict):
@@ -63,6 +65,10 @@ class VoiceChannel(typing.TypedDict):
 PrivateChannel = SavedMessagesChannel | DirectMessageChannel | GroupChannel
 ServerChannel = TextChannel | VoiceChannel
 Channel = PrivateChannel | ServerChannel
+
+
+class VoiceInformation(typing.TypedDict):
+    max_users: int | None
 
 
 class PartialChannel(typing.TypedDict):
@@ -121,5 +127,10 @@ class OptionsChannelDelete(typing.TypedDict):
     leave_silently: typing_extensions.NotRequired[Bool]
 
 
-class LegacyCreateVoiceUserResponse(typing.TypedDict):
+class CreateVoiceUserResponse(typing.TypedDict):
     token: str
+
+
+class ChannelVoiceState(typing.TypedDict):
+    id: str
+    participants: list[UserVoiceState]

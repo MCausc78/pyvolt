@@ -67,7 +67,7 @@ if typing.TYPE_CHECKING:
     )
     from .server import BaseRole, Role, Server, Member
     from .shard import Shard
-    from .user import BaseUser, User
+    from .user import BaseUser, User, UserVoiceState
 
 
 class Typing(contextlib.AbstractAsyncContextManager):
@@ -1050,7 +1050,13 @@ class BaseServerChannel(BaseChannel):
                 server.default_permissions, [], default_permissions=self.default_permissions, role_permissions={}
             )
 
-        initial_permissions = calculate_server_permissions([], None, default_permissions=server.default_permissions)
+        initial_permissions = calculate_server_permissions(
+            [],
+            None,
+            default_permissions=server.default_permissions,
+            can_publish=True,
+            can_receive=True,
+        )
         roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
         result = calculate_server_channel_permissions(
             initial_permissions,
@@ -1064,11 +1070,23 @@ class BaseServerChannel(BaseChannel):
 
 
 @define(slots=True)
+class ChannelVoiceMetadata:
+    max_users: int = field(repr=True, kw_only=True)
+    """The maximium amount of users allowed in the voice channel at once.
+    
+    Zero means a infinite amount of users can connect to voice channel.
+    """
+
+
+@define(slots=True)
 class ServerTextChannel(BaseServerChannel, TextChannel):
-    """Text channel belonging to a server."""
+    """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """ID of the last message sent in this channel."""
+    """The last's message ID sent in the channel."""
+
+    voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
+    """The voice's metadata in the channel."""
 
     def _update(self, data: PartialChannel, /) -> None:
         BaseServerChannel._update(self, data)
@@ -1080,20 +1098,87 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
         """Literal[:attr:`ChannelType.text`]: The channel's type."""
         return ChannelType.text
 
+    @property
+    def voice_states(self) -> ChannelVoiceStateContainer:
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        cache = self.state.cache
+        if cache:
+            res = cache.get_channel_voice_state(
+                self.id,
+                caching._USER_REQUEST,
+            )
+        else:
+            res = None
+        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+
 
 @define(slots=True)
 class VoiceChannel(BaseServerChannel):
-    """Voice channel belonging to a server."""
+    """Represents a voice channel that belongs to a server on Revolt.
+
+    .. deprecated:: 0.7.0
+        The voice channel type was deprecated in favour of :attr:`ServerTextChannel.voice`.
+    """
 
     @property
     def type(self) -> typing.Literal[ChannelType.voice]:
         """Literal[:attr:`ChannelType.voice`]: The channel's type."""
         return ChannelType.voice
 
+    @property
+    def voice_states(self) -> ChannelVoiceStateContainer:
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        cache = self.state.cache
+        if cache:
+            res = cache.get_channel_voice_state(
+                self.id,
+                caching._USER_REQUEST,
+            )
+        else:
+            res = None
+        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+
 
 ServerChannel = ServerTextChannel | VoiceChannel
 
 Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
+
+
+@define(slots=True)
+class ChannelVoiceStateContainer:
+    """Represents voice state container for the channel."""
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """The channel's ID."""
+
+    participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
+    """The channel's participants."""
+
+    def locally_add(self, state: UserVoiceState, /) -> None:
+        """Locally adds user's voice state into this container.
+
+        Parameters
+        ----------
+        state: :class:`UserVoiceState`
+            The state to add.
+        """
+        self.participants[state.user_id] = state
+
+    def locally_remove(self, user_id: str, /) -> UserVoiceState | None:
+        """Locally removes user's voice state from this container.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The user's ID to remove state from.
+
+        Returns
+        -------
+        Optional[:class:`UserVoiceState`]
+            The removed user's voice state.
+        """
+        return self.participants.pop(user_id, None)
+
 
 __all__ = (
     'BaseChannel',
@@ -1109,8 +1194,10 @@ __all__ = (
     'GroupChannel',
     'PrivateChannel',
     'BaseServerChannel',
+    'ChannelVoiceMetadata',
     'ServerTextChannel',
     'VoiceChannel',
     'ServerChannel',
     'Channel',
+    'ChannelVoiceStateContainer',
 )

@@ -61,6 +61,8 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .channel import (
         TextChannel,
+        DMChannel,
+        GroupChannel,
         ServerTextChannel,
         VoiceChannel,
         ServerChannel,
@@ -113,13 +115,13 @@ class SystemMessageChannels:
     Attributes
     ----------
     user_joined: Optional[:class:`str`]
-        The ID of channel to send user join messages in.
+        The channel's ID to send user join messages in.
     user_left: Optional[:class:`str`]
-        The ID of channel to send user left messages in.
+        The channel's ID to send user left messages in.
     user_kicked: Optional[:class:`str`]
-        The ID of channel to send user kicked messages in.
+        The channel's ID to send user kicked messages in.
     user_banned: Optional[:class:`str`]
-        The ID of channel to send user banned messages in.
+        The channel's ID to send user banned messages in.
     """
 
     __slots__ = ('user_joined', 'user_left', 'user_kicked', 'user_banned')
@@ -803,6 +805,8 @@ def calculate_server_permissions(
     /,
     *,
     default_permissions: Permissions,
+    can_publish: bool = True,
+    can_receive: bool = True,
 ) -> Permissions:
     """Calculates the permissions in :class:`Server` scope.
 
@@ -816,6 +820,10 @@ def calculate_server_permissions(
         The target timeout, if applicable (:attr:`Member.timed_out_until`).
     default_permissions: :class:`Permissions`
         The default channel permissions (:attr:`Server.default_permissions`).
+    can_publish: :class:`bool`
+        Whether the member can send voice data. Defaults to ``True``.
+    can_receive: :class:`bool`
+        Whether the member can receive voice data. Defaults to ``True``.
 
     Returns
     -------
@@ -831,12 +839,18 @@ def calculate_server_permissions(
     if target_timeout is not None and target_timeout <= utils.utcnow():
         result.send_messages = False
 
+    if not can_publish:
+        result.speak = False
+
+    if not can_receive:
+        result.listen = False
+
     return result
 
 
 @define(slots=True)
 class Server(BaseServer):
-    """Representation of a server on Revolt."""
+    """Represents a server on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the owner."""
@@ -1050,6 +1064,8 @@ class Server(BaseServer):
             sort_member_roles(member.roles, safe=safe, server_roles=self.roles),
             member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
+            can_publish=self.can_publish,
+            can_receive=self.can_receive,
         )
 
 
@@ -1216,6 +1232,9 @@ class BaseMember:
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
+        can_publish: UndefinedOr[bool | None] = UNDEFINED,
+        can_receive: UndefinedOr[bool | None] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | ServerTextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -1232,6 +1251,12 @@ class BaseMember:
         timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should send voice data.
+        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+            Whether the member should receive voice data.
+        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`ServerTextChannel`, :class:`VoiceChannel`]]]
+            The voice channel to move the member to.
 
         Returns
         -------
@@ -1245,6 +1270,9 @@ class BaseMember:
             avatar=avatar,
             roles=roles,
             timeout=timeout,
+            can_publish=can_publish,
+            can_receive=can_receive,
+            voice=voice,
         )
 
     async def kick(self) -> None:
@@ -1270,6 +1298,8 @@ class PartialMember(BaseMember):
     internal_server_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     roles: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
     timed_out_until: UndefinedOr[datetime | None] = field(repr=True, kw_only=True)
+    can_publish: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
+    can_receive: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
 
     def server_avatar(self) -> UndefinedOr[Asset | None]:
         """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The member's avatar on server."""
@@ -1295,6 +1325,12 @@ class Member(BaseMember):
     timed_out_until: datetime | None = field(repr=True, kw_only=True)
     """The timestamp this member is timed out until."""
 
+    can_publish: bool = field(repr=True, kw_only=True)
+    """Whether the member can send voice data."""
+
+    can_receive: bool = field(repr=True, kw_only=True)
+    """Whether the member can receive voice data."""
+
     def _update(self, data: PartialMember) -> None:
         if data.nick is not UNDEFINED:
             self.nick = data.nick
@@ -1302,8 +1338,10 @@ class Member(BaseMember):
             self.internal_server_avatar = data.internal_server_avatar
         if data.roles is not UNDEFINED:
             self.roles = data.roles or []
-        if data.timed_out_until is not UNDEFINED:
-            self.timed_out_until = data.timed_out_until
+        if data.can_publish is not UNDEFINED:
+            self.can_publish = True if data.can_publish is None else data.can_publish
+        if data.can_receive is not UNDEFINED:
+            self.can_receive = True if data.can_receive is None else data.can_receive
 
     @property
     def server_avatar(self) -> Asset | None:

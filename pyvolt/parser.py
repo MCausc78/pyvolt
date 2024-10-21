@@ -51,10 +51,12 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    ChannelVoiceMetadata,
     ServerTextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
+    ChannelVoiceStateContainer,
 )
 from .core import UNDEFINED
 from .embed import (
@@ -137,6 +139,9 @@ from .events import (
     SessionDeleteAllEvent,
     LogoutEvent,
     AuthenticatedEvent,
+    VoiceChannelJoinEvent,
+    VoiceChannelLeaveEvent,
+    UserVoiceStateUpdateEvent,
 )
 from .flags import (
     BotFlags,
@@ -212,6 +217,8 @@ from .user import (
     BotUserInfo,
     User,
     OwnUser,
+    UserVoiceState,
+    PartialUserVoiceState,
 )
 from .webhook import PartialWebhook, Webhook
 
@@ -221,9 +228,6 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 _L = logging.getLogger(__name__)
-
-
-_EMPTY_DICT: dict[typing.Any, typing.Any] = {}
 
 _new_bot_flags = BotFlags.__new__
 _new_message_flags = MessageFlags.__new__
@@ -235,6 +239,14 @@ _parse_dt = datetime.fromisoformat
 
 
 class Parser:
+    """An factory that produces wrapper objects from raw data.
+
+    Attributes
+    ----------
+    state: :class:`State`
+        The state the parser is attached to.
+    """
+
     __slots__ = (
         'state',
         '_channel_parsers',
@@ -247,7 +259,7 @@ class Parser:
     )
 
     def __init__(self, *, state: State) -> None:
-        self.state = state
+        self.state: State = state
         self._channel_parsers = {
             'SavedMessages': self.parse_saved_messages_channel,
             'DirectMessage': self.parse_direct_message_channel,
@@ -550,6 +562,24 @@ class Parser:
             after=None,
         )
 
+    def parse_channel_voice_state(self, payload: raw.ChannelVoiceState, /) -> ChannelVoiceStateContainer:
+        """Parses a channel voice state container object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel voice state container payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelVoiceStateContainer`
+            The parsed channel voice state container object.
+        """
+        return ChannelVoiceStateContainer(
+            channel_id=payload['id'],
+            participants={s.user_id: s for s in map(self.parse_user_voice_state, payload['participants'])},
+        )
+
     @typing.overload
     def parse_channel(self, payload: raw.SavedMessagesChannel, /) -> SavedMessagesChannel: ...
 
@@ -566,6 +596,19 @@ class Parser:
     def parse_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel: ...
 
     def parse_channel(self, payload: raw.Channel, /) -> Channel:
+        """Parses a channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel payload to parse.
+
+        Returns
+        -------
+        :class:`Channel`
+            The parsed channel object.
+        """
+
         return self._channel_parsers[payload['channel_type']](payload)
 
     def parse_detached_emoji(self, payload: raw.DetachedEmoji, /) -> DetachedEmoji:
@@ -582,6 +625,19 @@ class Parser:
         return AccountDisabled(user_id=payload['user_id'])
 
     def parse_direct_message_channel(self, payload: raw.DirectMessageChannel, /) -> DMChannel:
+        """Parses a DM channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The DM channel payload to parse.
+
+        Returns
+        -------
+        :class:`DMChannel`
+            The parsed DM channel object.
+        """
+
         recipient_ids = payload['recipients']
 
         return DMChannel(
@@ -729,6 +785,21 @@ class Parser:
         recipients: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]]),
         /,
     ) -> GroupChannel:
+        """Parses a group channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The group channel payload to parse.
+        recipients: Union[Tuple[Literal[True], List[:class:`str`]], Tuple[Literal[False], List[:class:`User`]]]
+            The group's recipients.
+
+        Returns
+        -------
+        :class:`GroupChannel`
+            The parsed group channel object.
+        """
+
         icon = payload.get('icon')
         permissions = payload.get('permissions')
 
@@ -851,32 +922,49 @@ class Parser:
 
     def parse_member(
         self,
-        d: raw.Member,
+        payload: raw.Member,
         user: User | None = None,
-        users: dict[str, User] | None = None,
+        users: dict[str, User] = {},
         /,
     ) -> Member:
-        if user and users:
-            raise ValueError('Cannot specify both user and users')
+        """Parses a member object.
 
-        id = d['_id']
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The member payload to parse.
+        user: Optional[:class:`User`]
+            The user.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for trying populating :attr:`Member.user`.
+
+        Returns
+        -------
+        :class:`Member`
+            The parsed member object.
+        """
+        assert not (user and users)
+
+        id = payload['_id']
         user_id = id['user']
 
         # if user:
         #    assert user.id == user_id, 'IDs do not match'
 
-        avatar = d.get('avatar')
-        timeout = d.get('timeout')
+        avatar = payload.get('avatar')
+        timeout = payload.get('timeout')
 
         return Member(
             state=self.state,
-            _user=user or (users or _EMPTY_DICT).get(user_id) or user_id,
+            _user=user or users.get(user_id, user_id),
             server_id=id['server'],
-            joined_at=_parse_dt(d['joined_at']),
-            nick=d.get('nickname'),
+            joined_at=_parse_dt(payload['joined_at']),
+            nick=payload.get('nickname'),
             internal_server_avatar=self.parse_asset(avatar) if avatar else None,
-            roles=d.get('roles', []),
+            roles=payload.get('roles', []),
             timed_out_until=_parse_dt(timeout) if timeout else None,
+            can_publish=payload.get('can_publish', True),
+            can_receive=payload.get('can_receive', True),
         )
 
     def parse_member_list(self, payload: raw.AllMemberResponse, /) -> MemberList:
@@ -1360,14 +1448,22 @@ class Parser:
         return self._public_invite_parsers.get(payload['type'], self.parse_unknown_public_invite)(payload)
 
     def parse_ready_event(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> ReadyEvent:
-        users = list(map(self.parse_user, payload.get('users', ())))
-        servers = [self.parse_server(s, (True, s['channels'])) for s in payload.get('servers', ())]
-        channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
-        members = list(map(self.parse_member, payload.get('members', ())))
-        emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
-        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
-        read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
+        """Parses a Ready event.
 
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ReadyEvent`
+            The parsed ready event object.
+        """
+
+        users = list(map(self.parse_user, payload.get('users', ())))
         me = users[-1]
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
             for user in users:
@@ -1376,6 +1472,14 @@ class Parser:
 
         if me.__class__ is not OwnUser or not isinstance(me, OwnUser):
             raise TypeError('Unable to find own user')
+
+        servers = [self.parse_server(s, (True, s['channels'])) for s in payload.get('servers', ())]
+        channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
+        members = list(map(self.parse_member, payload.get('members', ())))
+        emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
+        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
+        read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
+        voice_states = list(map(self.parse_channel_voice_state, payload.get('voice_states', ())))
 
         return ReadyEvent(
             shard=shard,
@@ -1387,6 +1491,7 @@ class Parser:
             me=me,  # type: ignore
             user_settings=user_settings,
             read_states=read_states,
+            voice_states=voice_states,
         )
 
     def parse_relationship(self, payload: raw.Relationship, /) -> Relationship:
@@ -1454,6 +1559,18 @@ class Parser:
         )
 
     def parse_saved_messages_channel(self, payload: raw.SavedMessagesChannel, /) -> SavedMessagesChannel:
+        """Parses a saved messages channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The saved messages channel payload to parse.
+
+        Returns
+        -------
+        :class:`SavedMessagesChannel`
+            The parsed saved messages channel object.
+        """
         return SavedMessagesChannel(
             state=self.state,
             id=payload['_id'],
@@ -1556,6 +1673,20 @@ class Parser:
     def parse_server_member_join_event(
         self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, joined_at: datetime, /
     ) -> ServerMemberJoinEvent:
+        """Parses a server member join event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerMemberJoinEvent`
+            The parsed server member join event object.
+        """
         return ServerMemberJoinEvent(
             shard=shard,
             member=Member(
@@ -1567,6 +1698,8 @@ class Parser:
                 internal_server_avatar=None,
                 roles=[],
                 timed_out_until=None,
+                can_publish=True,
+                can_receive=True,
             ),
         )
 
@@ -1584,6 +1717,20 @@ class Parser:
     def parse_server_member_update_event(
         self, shard: Shard, payload: raw.ClientServerMemberUpdateEvent, /
     ) -> ServerMemberUpdateEvent:
+        """Parses a server member update event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerMemberUpdateEvent`
+            The parsed server member update event object.
+        """
         id = payload['id']
         data = payload['data']
         clear = payload['clear']
@@ -1602,6 +1749,8 @@ class Parser:
                 internal_server_avatar=None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED,
                 roles=[] if 'Roles' in clear else roles if roles is not None else UNDEFINED,
                 timed_out_until=(None if 'Timeout' in clear else _parse_dt(timeout) if timeout else UNDEFINED),
+                can_publish=data.get('can_publish', UNDEFINED),
+                can_receive=data.get('can_receive', UNDEFINED),
             ),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
@@ -1748,6 +1897,19 @@ class Parser:
         )
 
     def parse_text_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel:
+        """Parses a text channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The text channel payload to parse.
+
+        Returns
+        -------
+        :class:`ServerTextChannel`
+            The parsed text channel object.
+        """
+
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
         role_permissions = payload.get('role_permissions', {})
@@ -1756,6 +1918,8 @@ class Parser:
             last_message_id = payload['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
         except KeyError:
             last_message_id = None
+
+        voice = payload.get('voice')
 
         return ServerTextChannel(
             state=self.state,
@@ -1770,6 +1934,7 @@ class Parser:
             ),
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
             nsfw=payload.get('nsfw', False),
+            voice=self.parse_voice_information(voice) if voice else None,
         )
 
     def parse_text_embed(self, payload: raw.TextEmbed, /) -> StatelessTextEmbed:
@@ -1933,6 +2098,60 @@ class Parser:
             after=None,  # filled on dispatch
         )
 
+    def parse_user_voice_state(self, payload: raw.UserVoiceState, /) -> UserVoiceState:
+        """Parses a user voice state object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user voice state payload to parse.
+
+        Returns
+        -------
+        :class:`UserVoiceState`
+            The parsed user voice state object.
+        """
+        return UserVoiceState(
+            user_id=payload['id'],
+            can_publish=payload['can_publish'],
+            can_receive=payload['can_receive'],
+            screensharing=payload['screensharing'],
+            camera=payload['camera'],
+        )
+
+    def parse_user_voice_state_update_event(
+        self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /
+    ) -> UserVoiceStateUpdateEvent:
+        """Parses a user voice state update event.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserVoiceStateUpdateEvent`
+            The parsed user voice state update object.
+        """
+
+        data = payload['data']
+
+        return UserVoiceStateUpdateEvent(
+            shard=shard,
+            channel_id=payload['channel_id'],
+            container=None,
+            state=PartialUserVoiceState(
+                user_id=payload['id'],
+                can_publish=data.get('can_publish', UNDEFINED),
+                can_receive=data.get('can_receive', UNDEFINED),
+                screensharing=data.get('screensharing', UNDEFINED),
+                camera=data.get('camera', UNDEFINED),
+            ),
+            before=None,
+            after=None,
+        )
+
     def parse_video_embed(self, payload: raw.Video, /) -> VideoEmbed:
         return VideoEmbed(
             url=payload['url'],
@@ -1941,6 +2160,23 @@ class Parser:
         )
 
     def parse_voice_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel:
+        """Parses a voice channel object.
+
+        .. deprecated:: 0.7.0
+            The method was deprecated in favour of :meth:`.parse_text_channel` and
+            using :attr:`ServerTextChannel.voice` instead.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The voice channel payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannel`
+            The parsed voice channel object.
+        """
+
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
         role_permissions = payload.get('role_permissions', {})
@@ -1958,6 +2194,71 @@ class Parser:
             role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
             nsfw=payload.get('nsfw', False),
         )
+
+    def parse_voice_channel_join_event(
+        self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /
+    ) -> VoiceChannelJoinEvent:
+        """Parses a voice channel join event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannelJoinEvent`
+            The parsed voice channel join event object.
+        """
+
+        return VoiceChannelJoinEvent(
+            shard=shard,
+            channel_id=payload['id'],
+            state=self.parse_user_voice_state(payload['state']),
+        )
+
+    def parse_voice_channel_leave_event(
+        self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /
+    ) -> VoiceChannelLeaveEvent:
+        """Parses a voice channel leave event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannelLeaveEvent`
+            The parsed voice channel leave event object.
+        """
+
+        return VoiceChannelLeaveEvent(
+            shard=shard,
+            channel_id=payload['id'],
+            user_id=payload['user'],
+            container=None,
+            state=None,
+        )
+
+    def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:
+        """Parses a channel voice metadata object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The channel voice metadata payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelVoiceMetadata`
+            The parsed channel voice metadata object.
+        """
+        return ChannelVoiceMetadata(max_users=payload.get('max_users') or 0)
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
         avatar = payload.get('avatar')
