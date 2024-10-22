@@ -720,6 +720,11 @@ class HTTPClient:
 
         Retrieves the instance information.
 
+        Raises
+        ------
+        InternalServerError
+            The internal configuration is invalid.
+
         Returns
         -------
         :class:`Instance`
@@ -732,7 +737,7 @@ class HTTPClient:
     async def create_bot(self, name: str) -> Bot:
         """|coro|
 
-        Create a new Revolt bot.
+        Creates a new Revolt bot.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -740,7 +745,25 @@ class HTTPClient:
         Parameters
         ----------
         name: :class:`str`
-            The bot name.
+            The bot name. Must be between 2 and 32 characters and not contain whitespace characters.
+
+        Raises
+        ------
+        HTTPException
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
+            | ``IsBot``                                 | The provided token was not user token.                  |                             |
+            | ``ReachedMaximumBots``                    | The current user too many bots.                         |                             |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
 
         Returns
         -------
@@ -767,6 +790,21 @@ class HTTPClient:
         ----------
         bot: :class:`ULIDOr`[:class:`BaseBot`]
             The bot to delete.
+
+        Raises
+        ------
+        NotFound
+            +--------------------------------------+--------------------------------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                                       |
+            +--------------------------------------+--------------------------------------------------------------+
+            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
+            +--------------------------------------+--------------------------------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
         """
         await self.request(routes.BOTS_DELETE.compile(bot_id=resolve_id(bot)))
 
