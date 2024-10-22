@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class BaseBot(Base):
-    """Base representation of a bot on Revolt."""
+    """Represents a base bot on Revolt."""
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseBot) and self.id == other.id
@@ -46,6 +46,21 @@ class BaseBot(Base):
         """|coro|
 
         Deletes the bot.
+
+        Raises
+        ------
+        NotFound
+            +--------------------------------------+--------------------------------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                                       |
+            +--------------------------------------+--------------------------------------------------------------+
+            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
+            +--------------------------------------+--------------------------------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
         """
         return await self.state.http.delete_bot(self.id)
 
@@ -74,7 +89,7 @@ class BaseBot(Base):
 
 @define(slots=True)
 class Bot(BaseBot):
-    """Partial representation of a bot on Revolt."""
+    """Represents a bot on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
     """The user ID of the bot owner."""
@@ -109,7 +124,7 @@ class Bot(BaseBot):
 
 @define(slots=True)
 class PublicBot(BaseBot):
-    """Representation of a public bot on Revolt."""
+    """Represents public bot on Revolt."""
 
     username: str = field(repr=True, kw_only=True)
     """The bot username."""
