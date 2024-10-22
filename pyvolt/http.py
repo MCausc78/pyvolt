@@ -755,9 +755,15 @@ class HTTPClient:
             +-------------------------------------------+---------------------------------------------------------+-----------------------------+
             | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
             | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            | ``IsBot``                                 | The provided token was not user token.                  |                             |
-            | ``ReachedMaximumBots``                    | The current user too many bots.                         |                             |
+            | ``IsBot``                                 | The current token belongs to bot account.               |                             |
+            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |                             |
             +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         InternalServerError
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
             | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
@@ -793,6 +799,12 @@ class HTTPClient:
 
         Raises
         ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         NotFound
             +--------------------------------------+--------------------------------------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                                                       |
@@ -827,7 +839,7 @@ class HTTPClient:
         bot: :class:`ULIDOr`[:class:`BaseBot`]
             The bot to edit.
         name: :class:`UndefinedOr`[:class:`str`]
-            The new bot name.
+            The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
         public: :class:`UndefinedOr`[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
         analytics: :class:`UndefinedOr`[:class:`bool`]
@@ -836,6 +848,34 @@ class HTTPClient:
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
+
+        Raises
+        ------
+        HTTPException
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        NotFound
+            +--------------------------------------+--------------------------------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                                       |
+            +--------------------------------------+--------------------------------------------------------------+
+            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
+            +--------------------------------------+--------------------------------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
 
         Returns
         -------
@@ -888,6 +928,27 @@ class HTTPClient:
         bot: :class:`ULIDOr`[:class:`BaseBot`]
             The ID of the bot.
 
+        Raises
+        ------
+        HTTPException
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.               |
+            +-------------------------------------------+---------------------------------------------------------+
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        NotFound
+            +--------------------------------------+--------------------------------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                                       |
+            +--------------------------------------+--------------------------------------------------------------+
+            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
+            +--------------------------------------+--------------------------------------------------------------+
+
         Returns
         -------
         :class:`Bot`
@@ -903,6 +964,21 @@ class HTTPClient:
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
 
         Returns
         -------
@@ -924,6 +1000,27 @@ class HTTPClient:
         ----------
         bot: :class:`ULIDOr`[:class:`BaseBot`]
             The ID of the bot.
+
+        Raises
+        ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        NotFound
+            +--------------------------------------+--------------------------------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                                       |
+            +--------------------------------------+--------------------------------------------------------------+
+            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
+            +--------------------------------------+--------------------------------------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
 
         Returns
         -------
@@ -1368,10 +1465,10 @@ class HTTPClient:
         Raises
         ------
         Unauthorized
-            +---------------------------------------+--------------------------------------------+
+            +------------------------------------------+-----------------------------------------+
             | Possible :attr:`Unauthorized.type` value | Reason                                  |
             +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The provided bot/user token is invalid. |
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
             +---------------------------------------+---------------------------------------------------------------------+------------------------------+
@@ -3625,7 +3722,11 @@ class HTTPClient:
         Raises
         ------
         Unauthorized
-            Invalid token.
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
 
         Returns
         -------
