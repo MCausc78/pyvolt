@@ -410,7 +410,7 @@ class Permissions(BaseFlags, support_kwargs=True):
     def manage_channels(cls) -> int:
         """:class:`bool`: Whether the user can edit, delete, or create channels in the server.
 
-        This also corresponsd to the "Manage Channel" channel-specific override.
+        This also corresponds to the "Manage Channel" channel-specific override.
         """
         return 1 << 0
 

@@ -24,34 +24,95 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
 import typing
 
-Response = aiohttp.ClientResponse
+if typing.TYPE_CHECKING:
+    from aiohttp import ClientResponse as Response
+
+
+# Thanks Rapptz/discord.py for docs
 
 
 class PyvoltError(Exception):
+    """Base exception class for pyvolt
+
+    Ideally speaking, this could be caught to handle any exceptions raised from this library.
+    """
+
     __slots__ = ()
 
 
 class HTTPException(PyvoltError):
-    response: Response
-    type: str
-    retry_after: float | None
-    error: str | None
-    max: int | None
-    permission: str | None
-    operation: str | None
-    collection: str | None
-    location: str | None
-    with_: str | None
+    """Exception that's raised when an HTTP request operation fails.
+
+    Attributes
+    ------------
+    response: :class:`aiohttp.ClientResponse`
+        The response of the failed HTTP request. This is an
+        instance of :class:`aiohttp.ClientResponse`.
+
+    data: Union[Dict[:class:`str`, Any], Any]
+        The data of the error. Could be an empty string.
+    status: :class:`int`
+        The status code of the HTTP request.
+    type: :class:`str`
+        The Revolt specific error code for the failure.
+    retry_after: Optional[:class:`float`]
+        The duration in seconds to wait until ratelimit expires.
+    error: Optional[:class:`str`]
+        The validation error details.
+        Only applicable when :attr:`~.type` is ``'FaliedValidation'``.
+    max: Optional[:class:`int`]
+        The maximum count of entities.
+        Only applicable when :attr:`~.type` one of following values:
+        - ``'FileTooLarge'``
+        - ``'GroupTooLarge'``
+        - ``'TooManyAttachments'``
+        - ``'TooManyChannels'``
+        - ``'TooManyEmbeds'``
+        - ``'TooManyEmoji'``
+        - ``'TooManyPendingFriendRequests'``
+        - ``'TooManyReplies'``
+        - ``'TooManyRoles'``
+        - ``'TooManyServers'``
+    permission: Optional[:class:`str`]
+        The permission required to perform request.
+        Only applicable when :attr:`~.type` one of following values:
+        - ``'MissingPermission'``
+        - ``'MissingUserPermission'``
+    operation: Optional[:class:`str`]
+        The database operation that failed.
+        Only applicable when :attr:`~.type` is ``'DatabaseError'``.
+    collection: Optional[:class:`str`]
+        The collection's name the operation was on.
+        Not always available when :attr:`~.type` is ``'DatabaseError'``.
+    location: Optional[:class:`str`]
+        The path to Rust location where error occured.
+    with_: Optional[:class:`str`]
+        The collection's name the operation was on.
+        Only applicable when :attr:`~.type` one of following values:
+        - ``'IncorrectData'``
+
+        Not always available when :attr:`~.type` is ``'DatabaseError'``.
+    """
+
+    # response: Response
+    # type: str
+    # retry_after: float | None
+    # error: str | None
+    # max: int | None
+    # permission: str | None
+    # operation: str | None
+    # collection: str | None
+    # location: str | None
+    # with_: str | None
 
     __slots__ = (
         'response',
         'data',
         'type',
         'retry_after',
-        'err',
+        'error',
         'max',
         'permission',
         'operation',
@@ -65,28 +126,27 @@ class HTTPException(PyvoltError):
         response: Response,
         data: dict[str, typing.Any] | str,
         /,
-        *,
-        message: str | None = None,
     ) -> None:
-        self.response = response
-        self.data = data
+        self.response: Response = response
+        self.data: dict[str, typing.Any] | str = data
+        self.status: int = response.status
+
         errors = []
-        if message is not None:
-            errors.append(message)
+
         if isinstance(data, str):
-            self.type = 'NonJSON'
-            self.retry_after = None
-            self.err = data
+            self.type: str = 'NonJSON'
+            self.retry_after: float | None = None
+            self.error: str | None = data
             errors.append(data)
-            self.max = None
-            self.permission = None
-            self.operation = None
-            self.collection = None
-            self.location = None
-            self.with_ = None
+            self.max: int | None = None
+            self.permission: str | None = None
+            self.operation: str | None = None
+            self.collection: str | None = None
+            self.location: str | None = None
+            self.with_: str | None = None
         else:
             self.type = data.get('type', 'Unknown')
-            self.retry_after = data.get('retry_after')
+            self.retry_after = data.get('retry_after', 0)
             if self.retry_after is not None:
                 errors.append(f'retry_after={self.retry_after}')
             self.error = data.get('error')
@@ -110,7 +170,9 @@ class HTTPException(PyvoltError):
             self.with_ = data.get('with')
             if self.with_ is not None:
                 errors.append(f'with={self.with_}')
-        super().__init__(self.type if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n")
+        super().__init__(
+            f'{self.type} (raw={data})' if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n"
+        )
 
 
 class Unauthorized(HTTPException):
@@ -122,6 +184,10 @@ class Forbidden(HTTPException):
 
 
 class NotFound(HTTPException):
+    __slots__ = ()
+
+
+class Conflict(HTTPException):
     __slots__ = ()
 
 
@@ -162,18 +228,17 @@ class DiscoverError(PyvoltError):
 
     def __init__(
         self,
-        response: aiohttp.ClientResponse,
+        response: Response,
         status: int,
         data: str,
         /,
     ) -> None:
-        self.response: aiohttp.ClientResponse = response
+        self.response: Response = response
         self.status: int = status
         self.data: str = data
         super().__init__(status, data)
 
 
-# Thanks Danny for docs
 class InvalidData(PyvoltError):
     """Exception that's raised when the library encounters unknown
     or invalid data from Revolt.
@@ -201,6 +266,7 @@ __all__ = (
     'Unauthorized',
     'Forbidden',
     'NotFound',
+    'Conflict',
     'Ratelimited',
     'InternalServerError',
     'BadGateway',

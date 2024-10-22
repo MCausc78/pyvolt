@@ -70,6 +70,7 @@ from .errors import (
     Unauthorized,
     Forbidden,
     NotFound,
+    Conflict,
     Ratelimited,
     InternalServerError,
     BadGateway,
@@ -132,6 +133,7 @@ _STATUS_TO_ERRORS = {
     401: Unauthorized,
     403: Forbidden,
     404: NotFound,
+    409: Conflict,
     429: Ratelimited,
     500: InternalServerError,
 }
@@ -1062,6 +1064,8 @@ class HTTPClient:
         Invites a bot to a server or group.
         **Specifying both ``server`` and ``group`` parameters (or no parameters at all) will lead to an exception.**
 
+        If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.invite_others` is required.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1077,51 +1081,45 @@ class HTTPClient:
         Raises
         ------
         Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
+            +------------------------------------------+----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                 |
+            +------------------------------------------+----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid. |
+            +------------------------------------------+----------------------------------------+
         HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidOperation``                      | The target channel was not actually a group channel.    |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``IsBot``                                 | The current token belongs to bot account.               |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                               |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``InvalidOperation``                      | The target channel was not actually a group channel. |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.            |
+            +-------------------------------------------+------------------------------------------------------+
         Forbidden
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                              | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``Banned``                            | The bot was banned in target server.                                |                              |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``BotIsPrivate``                      | You do not own the bot to add it.                                   |                              |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.                     | :attr:`Forbidden.max`        |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                              | Populated attributes         |
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            | ``Banned``                            | The bot was banned in target server.                |                              |
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            | ``BotIsPrivate``                      | You do not own the bot to add it.                   |                              |
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.     | :attr:`Forbidden.max`        |
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to add bots. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-----------------------------------------------------+------------------------------+
         NotFound
-            +--------------------------------------+------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                 |
-            +--------------------------------------+------------------------+
-            | ``NotFound``                         | The bot was not found. |
-            +--------------------------------------+------------------------+
-        ConflictError
-            +-------------------------------------------+-------------------------------+
-            | Possible :attr:`ConflictError.type` value | Reason                        |
-            +-------------------------------------------+-------------------------------+
-            | ``AlreadyInGroup``                        | The bot is already in group.  |
-            +-------------------------------------------+-------------------------------+
-            | ``AlreadyInServer``                       | The bot is already in server. |
-            +-------------------------------------------+-------------------------------+
+            +--------------------------------------+-------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                              |
+            +--------------------------------------+-------------------------------------+
+            | ``NotFound``                         | The bot/group/server was not found. |
+            +--------------------------------------+-------------------------------------+
+        Conflict
+            +--------------------------------------+-------------------------------+
+            | Possible :attr:`Conflict.type` value | Reason                        |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInGroup``                   | The bot is already in group.  |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInServer``                  | The bot is already in server. |
+            +--------------------------------------+-------------------------------+
         InternalServerError
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
             | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
@@ -1153,6 +1151,8 @@ class HTTPClient:
 
         Marks this message as read.
 
+        You must have :attr:`~Permissions.view_channel` to do this.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1165,10 +1165,30 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to see that message.
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         HTTPException
-            Acking message failed.
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.               |
+            +-------------------------------------------+---------------------------------------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the message. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+----------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                     |
+            +--------------------------------------+----------------------------+
+            | ``NotFound``                         | The channel was not found. |
+            +--------------------------------------+----------------------------+
         """
         await self.request(
             routes.CHANNELS_CHANNEL_ACK.compile(
@@ -1182,6 +1202,8 @@ class HTTPClient:
 
         Deletes a server channel, leaves a group or closes a group.
 
+        You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
+
         Parameters
         ----------
         channel: :class:`ULIDOr`[:class:`BaseChannel`]
@@ -1191,14 +1213,36 @@ class HTTPClient:
 
         Raises
         ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         Forbidden
-            You do not have permissions to close the channel.
-        HTTPException
-            Closing the channel failed.
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                                    | Populated attributes         |
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+----------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                     |
+            +--------------------------------------+----------------------------+
+            | ``NotFound``                         | The channel was not found. |
+            +--------------------------------------+----------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
         """
         p: raw.OptionsChannelDelete = {}
         if silent is not None:
             p['leave_silently'] = utils._bool(silent)
+
+        # this endpoint can return NoEffect and its 200 OK for some reason
         await self.request(
             routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
             params=p,
