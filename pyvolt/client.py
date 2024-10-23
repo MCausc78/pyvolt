@@ -1042,12 +1042,35 @@ class Client:
     async def fetch_channel(self, channel_id: str, /) -> Channel:
         """|coro|
 
-        Retrieves a channel from API. This is shortcut to :meth:`HTTPClient.get_channel`.
+        Fetch a :class:`Channel` with the specified ID from the API. This is shortcut to :meth:`HTTPClient.get_channel`.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
 
         Parameters
         ----------
-        channel_id: :class:`str`
-            The channel ID.
+        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+            The channel to fetch.
+
+        Raises
+        ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                          |
+            +--------------------------------------+---------------------------------+
+            | ``NotFound``                         | The channel was not found.      |
+            +--------------------------------------+---------------------------------+
 
         Returns
         -------

@@ -106,17 +106,39 @@ class BaseChannel(Base, abc.ABC):
 
         Deletes a server channel, leaves a group or closes a group.
 
+        You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
+
         Parameters
         ----------
         silent: Optional[:class:`bool`]
-            Whether to not send message when leaving group.
+            Whether to not send message when leaving.
 
         Raises
         ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         Forbidden
-            You do not have permissions to close the channel.
-        HTTPException
-            Closing the channel failed.
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                                    | Populated attributes         |
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+----------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                     |
+            +--------------------------------------+----------------------------+
+            | ``NotFound``                         | The channel was not found. |
+            +--------------------------------------+----------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
         """
         return await self.state.http.close_channel(self.id, silent=silent)
 
@@ -134,6 +156,8 @@ class BaseChannel(Base, abc.ABC):
         """|coro|
 
         Edits the channel.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
 
         Parameters
         ----------
@@ -154,10 +178,42 @@ class BaseChannel(Base, abc.ABC):
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to edit the channel.
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         HTTPException
-            Editing the channel failed.
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | ``InvalidOperation``                      | The target channel was not group/text/voice channel.    |                             |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. | :attr:`Forbidden.permission` |
+            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            | ``NotOwner``                          | You do not own the group.                                   |                              |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                          |
+            +--------------------------------------+---------------------------------+
+            | ``NotFound``                         | The channel was not found.      |
+            +--------------------------------------+---------------------------------+
+            | ``NotInGroup``                       | The new owner was not in group. |
+            +--------------------------------------+---------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -825,15 +881,39 @@ class GroupChannel(TextChannel):
 
         Leaves a group.
 
+        You must have :attr:`~Permissions.view_channel` to do this.
+
         Parameters
         ----------
-        silent: :class:`bool`
+        silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
         Raises
         ------
-        HTTPException
-            Leaving the group failed.
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+----------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                     |
+            +--------------------------------------+----------------------------+
+            | ``NotFound``                         | The channel was not found. |
+            +--------------------------------------+----------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
         """
         return await self.close(silent=silent)
 
@@ -992,14 +1072,41 @@ class BaseServerChannel(BaseChannel):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes the server channel.
+        Deletes the channel.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Parameters
+        ----------
+        silent: Optional[:class:`bool`]
+            Whether to not send message when leaving.
 
         Raises
         ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         Forbidden
-            You do not have permissions to delete the channel.
-        HTTPException
-            Deleting the channel failed.
+            +---------------------------------------+---------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                        | Populated attributes         |
+            +---------------------------------------+---------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to delete the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+---------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+----------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                     |
+            +--------------------------------------+----------------------------+
+            | ``NotFound``                         | The channel was not found. |
+            +--------------------------------------+----------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
         """
         return await self.close()
 

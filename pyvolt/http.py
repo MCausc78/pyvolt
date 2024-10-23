@@ -1264,6 +1264,8 @@ class HTTPClient:
 
         Edits the channel.
 
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
         Parameters
         ----------
         channel: :class:`ULIDOr`[:class:`BaseChannel`]
@@ -1285,10 +1287,42 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to edit the channel.
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
         HTTPException
-            Editing the channel failed.
+            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                               | Populated attributes        |
+            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+            | ``FailedValidation``                      | Invalid data was passed.                             | :attr:`HTTPException.error` |
+            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |                             |
+            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``NotOwner``                          | You do not own the group.                                   |                              |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                          |
+            +--------------------------------------+---------------------------------+
+            | ``NotFound``                         | The channel was not found.      |
+            +--------------------------------------+---------------------------------+
+            | ``NotInGroup``                       | The new owner was not in group. |
+            +--------------------------------------+---------------------------------+
+        InternalServerError
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -1328,19 +1362,35 @@ class HTTPClient:
     async def get_channel(self, channel: ULIDOr[BaseChannel]) -> Channel:
         """|coro|
 
-        Retrieves a :class:`Channel` with the specified ID.
+        Fetch a :class:`Channel` with the specified ID.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
 
         Parameters
         ----------
         channel: :class:`ULIDOr`[:class:`BaseChannel`]
-            The ID of the channel.
+            The channel to fetch.
 
         Raises
         ------
+        Unauthorized
+            +------------------------------------------+-----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        Forbidden
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
+            +---------------------------------------+-------------------------------------------------------------+------------------------------+
         NotFound
-            The channel does not exist.
-        HTTPException
-            Getting the channel failed.
+            +--------------------------------------+---------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                          |
+            +--------------------------------------+---------------------------------+
+            | ``NotFound``                         | The channel was not found.      |
+            +--------------------------------------+---------------------------------+
 
         Returns
         -------
