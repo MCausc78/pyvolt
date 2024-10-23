@@ -151,6 +151,11 @@ class RateLimit(ABC):
         ...
 
     @abstractmethod
+    def is_expired(self) -> bool:
+        """:class:`bool`: Whether the ratelimit is expired."""
+        ...
+
+    @abstractmethod
     def on_response(self, route: routes.CompiledRoute, response: aiohttp.ClientResponse, /) -> None:
         """Called when any response from Revolt API is received.
 
@@ -247,12 +252,12 @@ class DefaultRateLimit(RateLimit):
             else:
                 _L.debug('Bucket %s expired.', self.bucket)
                 # Nothing to do here ┬─┬ノ( º _ ºノ)
-                # bucket expired. No 429 :)
+                # The ratelimit expired. No 429 :)
 
-                # I was dumb. Ignore this.
-                # # getting here means someone fucking up ratelimit info.
-                # # 429 is unavoidable in this case.
-                # # _L.warning('Bucket %s has 0 remaining requests, expect 429!', self.bucket)
+    @utils.copy_doc(RateLimit.is_expired)
+    def is_expired(self) -> bool:
+        """:class:`bool`: Whether the ratelimit is expired."""
+        return (self._expires_at - utils.utcnow()).total_seconds() <= 0
 
     @utils.copy_doc(RateLimit.on_response)
     def on_response(self, route: routes.CompiledRoute, response: aiohttp.ClientResponse, /) -> None:
@@ -299,14 +304,21 @@ class _NoopRateLimitBlocker(RateLimitBlocker):
 class DefaultRateLimiter(RateLimiter):
     __slots__ = (
         '_no_concurrent_block',
+        '_no_expired_ratelimit_remove',
         '_noop_blocker',
         '_pending_requests',
         '_ratelimits',
         '_routes_to_bucket',
     )
 
-    def __init__(self, *, no_concurrent_block: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        no_concurrent_block: bool = False,
+        no_expired_ratelimit_remove: bool = False,
+    ) -> None:
         self._no_concurrent_block: bool = no_concurrent_block
+        self._no_expired_ratelimit_remove: bool = no_expired_ratelimit_remove
         self._noop_blocker: RateLimitBlocker = _NoopRateLimitBlocker()
         self._pending_requests: dict[str, RateLimitBlocker] = {}
         self._ratelimits: dict[str, RateLimit] = {}
@@ -331,6 +343,9 @@ class DefaultRateLimiter(RateLimiter):
 
     @utils.copy_doc(RateLimiter.fetch_ratelimit_for)
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+        if not self._no_expired_ratelimit_remove:
+            self.try_remove_expired_ratelimits()
+
         key = self.get_ratelimit_key_for(route)
         try:
             bucket = self._routes_to_bucket[key]
@@ -368,8 +383,8 @@ class DefaultRateLimiter(RateLimiter):
         try:
             ratelimit = self._ratelimits[bucket]
         except KeyError:
-            if _L.isEnabledFor(logging.DEBUG):
-                _L.debug('%s %s found initial bucket key: %s.', route.route.method, path, bucket)
+            _L.debug('%s %s found initial bucket key: %s.', route.route.method, path, bucket)
+
             ratelimit = DefaultRateLimit(
                 self,
                 bucket,
@@ -387,6 +402,28 @@ class DefaultRateLimiter(RateLimiter):
     ) -> None:
         self._ratelimits[new_bucket] = self._ratelimits.pop(old_bucket)
         self._routes_to_bucket[self.get_ratelimit_key_for(route)] = new_bucket
+
+    def try_remove_expired_ratelimits(self) -> None:
+        """Tries to remove expired ratelimits."""
+        if not len(self._ratelimits) or not len(self._routes_to_bucket):
+            return
+
+        buckets = []
+
+        ratelimits = self._ratelimits
+        for s in ratelimits.values():
+            if s.is_expired():
+                buckets.append(s.bucket)
+
+        if not buckets:
+            return
+
+        for bucket in buckets:
+            ratelimits.pop(bucket, None)
+
+        keys = [k for k, v in self._routes_to_bucket if v in buckets or v not in ratelimits]
+        for key in keys:
+            del self._routes_to_bucket[key]
 
 
 class HTTPClient:
