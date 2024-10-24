@@ -157,10 +157,10 @@ def is_docker() -> bool:
     return os.path.exists('/.dockerenv') or (os.path.isfile(path) and any('docker' in line for line in open(path)))
 
 
-def stream_supports_colour(stream: typing.Any) -> bool:
+def stream_supports_color(stream: typing.Any, /) -> bool:
     is_a_tty = hasattr(stream, 'isatty') and stream.isatty()
 
-    # Pycharm and VSCode support colour in their inbuilt editors
+    # Pycharm and VSCode support colou in their inbuilt editors
     if 'PYCHARM_HOSTED' in os.environ or os.environ.get('TERM_PROGRAM') == 'vscode':
         return is_a_tty
 
@@ -173,17 +173,17 @@ def stream_supports_colour(stream: typing.Any) -> bool:
     return is_a_tty and ('ANSICON' in os.environ or 'WT_SESSION' in os.environ)
 
 
-class _ColourFormatter(logging.Formatter):
+class _ColorFormatter(logging.Formatter):
     # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
     # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
-    # The important ones here relate to colour.
+    # The important ones here relate to color.
     # 30-37 are black, red, green, yellow, blue, magenta, cyan and white in that order
     # 40-47 are the same except for the background
     # 90-97 are the same but "bright" foreground
     # 100-107 are the same as the bright ones but for the background.
     # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
-    LEVEL_COLOURS = [
+    LEVEL_COLORS = [
         (logging.DEBUG, '\x1b[40;1m'),
         (logging.INFO, '\x1b[34;1m'),
         (logging.WARNING, '\x1b[33;1m'),
@@ -193,10 +193,10 @@ class _ColourFormatter(logging.Formatter):
 
     FORMATS = {
         level: logging.Formatter(
-            f'\x1b[30;1m%(asctime)s\x1b[0m {colour}%(levelname)-8s\x1b[0m \x1b[35m%(name)s\x1b[0m %(message)s',
+            f'\x1b[30;1m%(asctime)s\x1b[0m {color}%(levelname)-8s\x1b[0m \x1b[35m%(name)s\x1b[0m %(message)s',
             '%Y-%m-%d %H:%M:%S',
         )
-        for level, colour in LEVEL_COLOURS
+        for level, color in LEVEL_COLORS
     }
 
     def format(self, record):
@@ -232,8 +232,8 @@ def new_formatter(handler: logging.Handler) -> logging.Formatter:
     :class:`logging.Formatter`
         The formatter.
     """
-    if isinstance(handler, logging.StreamHandler) and stream_supports_colour(handler.stream):
-        formatter = _ColourFormatter()
+    if isinstance(handler, logging.StreamHandler) and stream_supports_color(handler.stream):
+        formatter = _ColorFormatter()
     else:
         dt_fmt = '%Y-%m-%d %H:%M:%S'
         formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
@@ -250,8 +250,8 @@ def setup_logging(
     """A helper function to setup logging.
 
     This is superficially similar to :func:`logging.basicConfig` but
-    uses different defaults and a colour formatter if the stream can
-    display colour.
+    uses different defaults and a color formatter if the stream can
+    display color.
 
     This is used by the :class:`~pyvolt.Client` to set up logging
     if ``log_handler`` is not ``None``.
@@ -264,7 +264,7 @@ def setup_logging(
         The default log handler if not provided is :class:`logging.StreamHandler`.
     formatter: :class:`logging.Formatter`
         The formatter to use with the given log handler. If not provided then it
-        defaults to a colour based logging formatter (if available). If colour
+        defaults to a color based logging formatter (if available). If color
         is not available then a simple logging formatter is provided.
     level: :class:`int`
         The default log level for the library's logger. Defaults to ``logging.INFO``.
@@ -303,7 +303,7 @@ __all__ = (
     '_json_or_text',
     'utcnow',
     'is_docker',
-    'stream_supports_colour',
+    'stream_supports_color',
     'new_formatter',
     'setup_logging',
 )

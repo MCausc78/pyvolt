@@ -194,7 +194,7 @@ class BaseRole(Base):
         self,
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        colour: UndefinedOr[str | None] = UNDEFINED,
+        color: UndefinedOr[str | None] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
         rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
@@ -206,8 +206,8 @@ class BaseRole(Base):
         ----------
         name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`UndefinedOr`[Optional[:class:`str`]]
-            New role colour. This should be valid CSS colour.
+        color: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New role color. Must be valid CSS color.
         hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
         rank: :class:`UndefinedOr`[:class:`int`]
@@ -229,7 +229,7 @@ class BaseRole(Base):
             self.server_id,
             self.id,
             name=name,
-            colour=colour,
+            color=color,
             hoist=hoist,
             rank=rank,
         )
@@ -272,16 +272,16 @@ class PartialRole(BaseRole):
     """The new role's name."""
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
-    """The permissions available to this role."""
+    """The new role's permissions."""
 
     color: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """New color used for this. This can be any valid CSS colour."""
+    """The new role's color. This can be any valid CSS color."""
 
     hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether this role should be shown separately on the member sidebar."""
 
     rank: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """New ranking of this role."""
+    """The new role's rank."""
 
     def into_full(self) -> Role | None:
         """Optional[:class:`Role`]: Tries transform this partial role into full object. This is useful when caching role."""

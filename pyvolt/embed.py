@@ -211,8 +211,8 @@ class WebsiteEmbed(_BaseEmbed):
     icon_url: str | None = field(repr=True, kw_only=True, eq=True)
     """The URL to site icon."""
 
-    colour: str | None = field(repr=True, kw_only=True, eq=True)
-    """The CSS colour of this embed."""
+    color: str | None = field(repr=True, kw_only=True, eq=True)
+    """The embed's CSS color."""
 
     def _stateful(self, state: State, /) -> Embed:
         return self
@@ -229,16 +229,16 @@ class StatelessTextEmbed(_BaseEmbed):
     """The direct URL to web page."""
 
     title: str | None = field(repr=True, kw_only=True, eq=True)
-    """The title of text embed."""
+    """The embed's title."""
 
     description: str | None = field(repr=True, kw_only=True, eq=True)
-    """The description of text embed."""
+    """The embed's description."""
 
     internal_media: StatelessAsset | None = field(repr=True, kw_only=True, eq=True)
     """The stateless embed media."""
 
-    colour: str | None = field(repr=True, kw_only=True, eq=True)
-    """The CSS colour of this embed."""
+    color: str | None = field(repr=True, kw_only=True, eq=True)
+    """The embed's CSS color."""
 
     def _stateful(self, state: State, /) -> Embed:
         return TextEmbed(
@@ -247,7 +247,7 @@ class StatelessTextEmbed(_BaseEmbed):
             title=self.title,
             description=self.description,
             internal_media=self.internal_media,
-            colour=self.colour,
+            color=self.color,
             state=state,
         )
 

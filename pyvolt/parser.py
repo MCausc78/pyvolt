@@ -1137,7 +1137,7 @@ class Parser:
         )
 
     def parse_message_masquerade(self, payload: raw.Masquerade, /) -> Masquerade:
-        return Masquerade(name=payload.get('name'), avatar=payload.get('avatar'), colour=payload.get('colour'))
+        return Masquerade(name=payload.get('name'), avatar=payload.get('avatar'), color=payload.get('colour'))
 
     def parse_message_message_pinned_system_event(
         self,
@@ -1591,7 +1591,6 @@ class Parser:
     ) -> Server:
         server_id = d['_id']
 
-        categories = d.get('categories', [])
         system_messages = d.get('system_messages')
 
         roles = {}
@@ -1612,7 +1611,7 @@ class Parser:
             name=d['name'],
             description=d.get('description'),
             internal_channels=channels,
-            categories=[self.parse_category(e) for e in categories],
+            categories=list(map(self.parse_category, d.get('categories', ()))),
             system_messages=(self.parse_system_message_channels(system_messages) if system_messages else None),
             roles=roles,
             default_permissions=Permissions(d['default_permissions']),
@@ -1952,7 +1951,7 @@ class Parser:
             title=payload.get('title'),
             description=payload.get('description'),
             internal_media=self.parse_asset(media) if media else None,
-            colour=payload.get('colour'),
+            color=payload.get('colour'),
         )
 
     def parse_twitch_embed_special(self, payload: raw.TwitchSpecial, /) -> TwitchEmbedSpecial:
@@ -2334,7 +2333,7 @@ class Parser:
             video=self.parse_video_embed(video) if video else None,
             site_name=payload.get('site_name'),
             icon_url=payload.get('icon_url'),
-            colour=payload.get('colour'),
+            color=payload.get('colour'),
         )
 
     def parse_youtube_embed_special(self, payload: raw.YouTubeSpecial) -> YouTubeEmbedSpecial:

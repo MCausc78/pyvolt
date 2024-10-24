@@ -3269,7 +3269,7 @@ class HTTPClient:
         /,
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        colour: UndefinedOr[str | None] = UNDEFINED,
+        color: UndefinedOr[str | None] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
         rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
@@ -3285,8 +3285,8 @@ class HTTPClient:
             The role to edit.
         name: :class:`UndefinedOr`[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        colour: :class:`UndefinedOr`[Optional[:class:`str`]]
-            New role colour. This should be valid CSS colour.
+        color: :class:`UndefinedOr`[Optional[:class:`str`]]
+            New role color. This should be valid CSS color.
         hoist: :class:`UndefinedOr`[:class:`bool`]
             Whether this role should be displayed separately.
         rank: :class:`UndefinedOr`[:class:`int`]
@@ -3308,9 +3308,9 @@ class HTTPClient:
         remove: list[raw.FieldsRole] = []
         if name is not UNDEFINED:
             payload['name'] = name
-        if colour is not UNDEFINED:
-            if colour is not None:
-                payload['colour'] = colour
+        if color is not UNDEFINED:
+            if color is not None:
+                payload['colour'] = color
             else:
                 remove.append('Colour')
         if hoist is not UNDEFINED:

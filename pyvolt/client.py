@@ -1271,7 +1271,7 @@ class Client:
             The default log handler if not provided is :class:`logging.StreamHandler`.
         log_formatter: :class:`logging.Formatter`
             The formatter to use with the given log handler. If not provided then it
-            defaults to a colour based logging formatter (if available).
+            defaults to a color based logging formatter (if available).
         log_level: :class:`int`
             The default log level for the library's logger. This is only applied if the
             ``log_handler`` parameter is not ``None``. Defaults to ``logging.INFO``.

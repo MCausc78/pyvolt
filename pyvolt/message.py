@@ -110,23 +110,24 @@ class Masquerade:
         Replace the display name shown on this message.
     avatar: Optional[:class:`str`]
         Replace the avatar shown on this message (URL to image file).
-    colour: Optional[:class:`str`]
-        Replace the display role colour shown on this message. Can be any valid CSS colour.
-        Must have `ManageRole` permission to use.
+    color: Optional[:class:`str`]
+        Replace the display role color shown on this message. Can be any valid CSS color.
+
+        You must have :attr:`~Permissions.manage_roles` permission to use.
     """
 
-    __slots__ = ('name', 'avatar', 'colour')
+    __slots__ = ('name', 'avatar', 'color')
 
     def __init__(
         self,
         name: str | None = None,
         avatar: str | None = None,
         *,
-        colour: str | None = None,
+        color: str | None = None,
     ) -> None:
-        self.name = name
-        self.avatar = avatar
-        self.colour = colour
+        self.name: str | None = name
+        self.avatar: str | None = avatar
+        self.color: str | None = color
 
     def build(self) -> raw.Masquerade:
         payload: raw.Masquerade = {}
@@ -134,8 +135,8 @@ class Masquerade:
             payload['name'] = self.name
         if self.avatar is not None:
             payload['avatar'] = self.avatar
-        if self.colour is not None:
-            payload['colour'] = self.colour
+        if self.color is not None:
+            payload['colour'] = self.color
         return payload
 
 
@@ -154,11 +155,11 @@ class SendableEmbed:
         The description of the embed.
     media: Optional[:class:`ResolvableResource`]
         The file inside the embed.
-    colour: Optional[:class:`str`]
+    color: Optional[:class:`str`]
         The embed color. This can be any valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
     """
 
-    __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'colour')
+    __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'color')
 
     def __init__(
         self,
@@ -168,14 +169,14 @@ class SendableEmbed:
         icon_url: str | None = None,
         url: str | None = None,
         media: ResolvableResource | None = None,
-        colour: str | None = None,
+        color: str | None = None,
     ) -> None:
-        self.icon_url = icon_url
-        self.url = url
-        self.title = title
-        self.description = description
-        self.media = media
-        self.colour = colour
+        self.icon_url: str | None = icon_url
+        self.url: str | None = url
+        self.title: str | None = title
+        self.description: str | None = description
+        self.media: ResolvableResource | None = media
+        self.color: str | None = color
 
     async def build(self, state: State, /) -> raw.SendableEmbed:
         payload: raw.SendableEmbed = {}
@@ -189,8 +190,8 @@ class SendableEmbed:
             payload['description'] = self.description
         if self.media is not None:
             payload['media'] = await resolve_resource(state, self.media, tag='attachments')
-        if self.colour is not None:
-            payload['colour'] = self.colour
+        if self.color is not None:
+            payload['colour'] = self.color
         return payload
 
 
@@ -199,10 +200,10 @@ class MessageWebhook:
     """Information about the webhook bundled with Message."""
 
     name: str = field(repr=True, kw_only=True)
-    """The name of the webhook - 1 to 32 chars."""
+    """The webhook's name (from 1 to 32 characters).."""
 
     avatar: str | None = field(repr=True, kw_only=True)
-    """The ID of the avatar of the webhook, if it has one."""
+    """The webhook avatar's ID, if any."""
 
 
 @define(slots=True)
