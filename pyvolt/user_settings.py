@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+from copy import copy
 from datetime import datetime
 import typing
 
@@ -348,9 +349,9 @@ class AndroidUserSettings:
         """
 
         if initial_payload is not UNDEFINED:
-            payload = initial_payload | {}
+            payload = copy(initial_payload)
         else:
-            payload = self._payload | {}
+            payload = copy(self._payload)
 
         if theme is not UNDEFINED:
             if theme is None:
@@ -652,7 +653,7 @@ class ReviteUserSettings:
         self.transparent: bool | None = appearance.get('appearance:transparency')
 
     def _on_theme(self, theme: raw.ReviteThemeSettings, /) -> None:
-        self._theme_payload: raw.ReviteThemeSettings | None = None
+        self._theme_payload: raw.ReviteThemeSettings | None = theme
 
         self.ligatures: bool | None = theme.get('appearance:ligatures')
 
@@ -939,7 +940,7 @@ class ReviteUserSettings:
         if emoji_pack is not UNDEFINED or seasonal is not UNDEFINED or transparent is not UNDEFINED:
             if initial_appearance_payload is UNDEFINED:
                 if self._appearance_payload is not None:
-                    appearance_payload: raw.ReviteAppearanceSettings = self._appearance_payload
+                    appearance_payload: raw.ReviteAppearanceSettings = copy(self._appearance_payload)
                 else:
                     appearance_payload = {}
             else:
@@ -972,11 +973,11 @@ class ReviteUserSettings:
         ):
             if initial_theme_payload is UNDEFINED:
                 if self._theme_payload is not None:
-                    theme_payload: raw.ReviteThemeSettings = self._theme_payload
+                    theme_payload: raw.ReviteThemeSettings = copy(self._theme_payload)
                 else:
                     theme_payload = {}
             else:
-                theme_payload = initial_theme_payload
+                theme_payload = copy(initial_theme_payload)
 
             if ligatures is None:
                 theme_payload.pop('appearance:ligatures', None)
