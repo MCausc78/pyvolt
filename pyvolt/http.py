@@ -421,7 +421,7 @@ class DefaultRateLimiter(RateLimiter):
         for bucket in buckets:
             ratelimits.pop(bucket, None)
 
-        keys = [k for k, v in self._routes_to_bucket if v in buckets or v not in ratelimits]
+        keys = [k for k, v in self._routes_to_bucket.items() if v in buckets or v not in ratelimits]
         for key in keys:
             del self._routes_to_bucket[key]
 
