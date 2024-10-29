@@ -498,11 +498,11 @@ class TemporarySubscription(typing.Generic[EventT]):
 _DEFAULT_HANDLERS = ({}, {})
 
 
-def _private_channel_sort_old(channel: DMChannel | GroupChannel) -> str:
+def _private_channel_sort_old(channel: DMChannel | GroupChannel, /) -> str:
     return channel.last_message_id or '0'
 
 
-def _private_channel_sort_new(channel: DMChannel | GroupChannel) -> str:
+def _private_channel_sort_new(channel: DMChannel | GroupChannel, /) -> str:
     return channel.last_message_id or channel.id
 
 
