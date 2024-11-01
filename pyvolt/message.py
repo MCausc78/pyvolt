@@ -43,7 +43,7 @@ from .core import (
 from .emoji import ResolvableEmoji
 from .enums import AssetMetadataType, ContentReportReason, RelationshipStatus
 from .errors import NoData
-from .flags import MessageFlags, UserBadges, UserFlags
+from .flags import MessageFlags
 from .server import Member
 from .user import BaseUser, User
 
@@ -51,6 +51,8 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .embed import StatelessEmbed, Embed
     from .state import State
+
+_new_message_flags = MessageFlags.__new__
 
 
 class Reply:
@@ -459,30 +461,28 @@ class BaseMessage(Base):
 
 @define(slots=True)
 class PartialMessage(BaseMessage):
-    """Partial representation of message in channel on Revolt."""
+    """Represents partial message in channel on Revolt."""
 
     content: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """New message content."""
+    """The new message's content."""
 
     edited_at: UndefinedOr[datetime] = field(repr=True, kw_only=True)
-    """When message was edited."""
+    """When the message was edited."""
 
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
-    """New message embeds."""
+    """The new message's embeds."""
 
     pinned: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """Whether the message was just pinned."""
 
     reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, kw_only=True)
-    """New message reactions."""
+    """The new message's reactions."""
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
         """:class:`UndefinedOr`[List[:class:`Embed`]]: New message embeds."""
         return (
-            [e._stateful(self.state) for e in self.internal_embeds]
-            if self.internal_embeds is not UNDEFINED
-            else UNDEFINED
+            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
         )
 
 
@@ -497,16 +497,14 @@ class MessageAppendData(BaseMessage):
     def embeds(self) -> UndefinedOr[list[Embed]]:
         """:class:`UndefinedOr`[List[:class:`Embed`]]: Appended embeds."""
         return (
-            [e._stateful(self.state) for e in self.internal_embeds]
-            if self.internal_embeds is not UNDEFINED
-            else UNDEFINED
+            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
         )
 
 
 class BaseSystemEvent:
-    __slots__ = ()
-
     """Represents system event within message."""
+
+    __slots__ = ()
 
 
 @define(slots=True, eq=True)
@@ -1577,8 +1575,8 @@ class Message(BaseMessage):
     pinned: bool = field(repr=True, kw_only=True)
     """Whether the message is pinned."""
 
-    flags: MessageFlags = field(repr=True, kw_only=True)
-    """The message's flags."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The message's flags raw value."""
 
     def locally_append(self, data: MessageAppendData, /) -> None:
         if data.internal_embeds is not UNDEFINED:
@@ -1663,9 +1661,9 @@ class Message(BaseMessage):
                 if webhook.avatar
                 else None,
                 display_name=None,
-                badges=UserBadges.none(),
+                raw_badges=0,
                 status=None,
-                flags=UserFlags.none(),
+                raw_flags=0,
                 privileged=False,
                 bot=None,
                 relationship=RelationshipStatus.none,
@@ -1716,6 +1714,13 @@ class Message(BaseMessage):
     def embeds(self) -> list[Embed]:
         """List[:class:`Embed`]: The attached embeds to this message."""
         return [e._stateful(self.state) for e in self.internal_embeds]
+
+    @property
+    def flags(self) -> MessageFlags:
+        """The message's flags."""
+        ret = _new_message_flags(MessageFlags)
+        ret.value = self.raw_flags
+        return ret
 
     @property
     def system_content(self) -> str:

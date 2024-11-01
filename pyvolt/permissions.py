@@ -24,11 +24,14 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from .flags import Permissions
 import typing
+
+from .flags import Permissions
 
 if typing.TYPE_CHECKING:
     from . import raw
+
+_new_permissions = Permissions.__new__
 
 
 class PermissionOverride:
@@ -42,19 +45,44 @@ class PermissionOverride:
         The permissions to deny.
     """
 
-    __slots__ = ('allow', 'deny')
+    __slots__ = (
+        'raw_allow',
+        'raw_deny',
+    )
 
     def __init__(
         self,
         *,
-        allow: Permissions = Permissions.NONE,
-        deny: Permissions = Permissions.NONE,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
     ) -> None:
-        self.allow = allow
-        self.deny = deny
+        self.raw_allow: int = allow.value
+        self.raw_deny: int = deny.value
+
+    @property
+    def allow(self) -> Permissions:
+        """:class:`Permissions`: The permissions to allow."""
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_allow
+        return ret
+
+    @allow.setter
+    def allow(self, allow: Permissions, /) -> None:
+        self.raw_allow = allow.value
+
+    @property
+    def deny(self) -> Permissions:
+        """:class:`Permissions`: The permissions to deny."""
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_deny
+        return ret
+
+    @deny.setter
+    def deny(self, deny: Permissions, /) -> None:
+        self.raw_deny = deny.value
 
     def build(self) -> raw.Override:
-        return {'allow': self.allow.value, 'deny': self.deny.value}
+        return {'allow': self.raw_allow, 'deny': self.raw_deny}
 
     def __repr__(self) -> str:
         return f'<PermissionOverride allow={self.allow!r} deny={self.deny!r}>'

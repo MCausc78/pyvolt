@@ -100,9 +100,6 @@ from .server import (
 )
 
 
-_L = logging.getLogger(__name__)
-
-
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 

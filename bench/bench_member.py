@@ -62,9 +62,9 @@ async def bench_members():
     def using_voltage():
         return voltage.Member(data=payload, server=vpy_server, cache=vpy_cache)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=10000)
-    time_revoltpy = timeit.timeit(using_revoltpy, number=10000)
-    time_voltage = timeit.timeit(using_voltage,   number=10000)
+    time_pyvolt = timeit.timeit(using_pyvolt,     number=100000)
+    time_revoltpy = timeit.timeit(using_revoltpy, number=100000)
+    time_voltage = timeit.timeit(using_voltage,   number=100000)
 
     print(f"[Member] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
     print(f"[Member] Time using revolt.py -: {time_revoltpy:.6f} seconds")

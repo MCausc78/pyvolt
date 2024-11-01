@@ -143,14 +143,6 @@ from .events import (
     VoiceChannelLeaveEvent,
     UserVoiceStateUpdateEvent,
 )
-from .flags import (
-    BotFlags,
-    MessageFlags,
-    Permissions,
-    ServerFlags,
-    UserBadges,
-    UserFlags,
-)
 from .instance import (
     InstanceCaptchaFeature,
     InstanceGenericFeature,
@@ -190,7 +182,7 @@ from .message import (
     StatelessSystemEvent,
     Message,
 )
-from .permissions import Permissions, PermissionOverride
+from .permissions import PermissionOverride
 from .read_state import ReadState
 from .server import (
     Category,
@@ -229,12 +221,12 @@ if typing.TYPE_CHECKING:
 
 _L = logging.getLogger(__name__)
 
-_new_bot_flags = BotFlags.__new__
-_new_message_flags = MessageFlags.__new__
-_new_permissions = Permissions.__new__
-_new_server_flags = ServerFlags.__new__
-_new_user_badges = UserBadges.__new__
-_new_user_flags = UserFlags.__new__
+# _new_message_flags = MessageFlags.__new__
+_new_permission_override = PermissionOverride.__new__
+# _new_permissions = Permissions.__new__
+# _new_server_flags = ServerFlags.__new__
+# _new_user_badges = UserBadges.__new__
+# _new_user_flags = UserFlags.__new__
 _parse_dt = datetime.fromisoformat
 
 
@@ -400,9 +392,6 @@ class Parser:
         return [self.parse_ban(e, banned_users) for e in payload['bans']]
 
     def _parse_bot(self, payload: raw.Bot, user: User, /) -> Bot:
-        flags = _new_bot_flags(BotFlags)
-        flags.value = payload.get('flags', 0)
-
         return Bot(
             state=self.state,
             id=payload['_id'],
@@ -414,7 +403,7 @@ class Parser:
             interactions_url=payload.get('interactions_url'),
             terms_of_service_url=payload.get('terms_of_service_url'),
             privacy_policy_url=payload.get('privacy_policy_url'),
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             user=user,
         )
 
@@ -529,7 +518,6 @@ class Parser:
 
         owner = data.get('owner')
         icon = data.get('icon')
-        permissions = data.get('permissions')
         role_permissions = data.get('role_permissions')
         default_permissions = data.get('default_permissions')
         last_message_id = data.get('last_message_id')
@@ -545,7 +533,7 @@ class Parser:
                 internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
                 nsfw=data.get('nsfw', UNDEFINED),
                 active=data.get('active', UNDEFINED),
-                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
+                raw_permissions=data.get('permissions', UNDEFINED),
                 role_permissions=(
                     {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
                     if role_permissions is not None
@@ -693,7 +681,7 @@ class Parser:
             description=payload.get('description'),
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=ServerFlags(payload.get('flags') or 0),
+            raw_flags=payload.get('flags') or 0,
             tags=payload['tags'],
             member_count=payload['members'],
             activity=ServerActivity(payload['activity']),
@@ -807,7 +795,7 @@ class Parser:
         """
 
         icon = payload.get('icon')
-        permissions = payload.get('permissions')
+        raw_permissions = payload.get('permissions')
 
         return GroupChannel(
             state=self.state,
@@ -818,7 +806,7 @@ class Parser:
             internal_recipients=recipients,
             internal_icon=self.parse_asset(icon) if icon else None,
             last_message_id=payload.get('last_message_id'),
-            permissions=None if permissions is None else Permissions(permissions),
+            raw_permissions=raw_permissions,
             nsfw=payload.get('nsfw', False),
         )
 
@@ -1033,8 +1021,7 @@ class Parser:
         else:
             author = members.get(author_id) or users.get(author_id) or author_id
 
-        flags = _new_message_flags(MessageFlags)
-        flags.value = payload.get('flags', 0)
+        reactions = payload.get('reactions')
 
         return cls(
             state=self.state,
@@ -1050,11 +1037,11 @@ class Parser:
             internal_embeds=[self.parse_embed(e) for e in payload.get('embeds', ())],
             mention_ids=payload.get('mentions', []),
             replies=payload.get('replies', []),
-            reactions={k: tuple(v) for k, v in (payload.get('reactions') or {}).items()},
+            reactions={} if reactions is None else {k: tuple(v) for k, v in reactions.items()},
             interactions=(self.parse_message_interactions(interactions) if interactions else None),
             masquerade=(self.parse_message_masquerade(masquerade) if masquerade else None),
             pinned=payload.get('pinned', False),
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
         )
 
     def parse_message_append_event(self, shard: Shard, payload: raw.ClientMessageAppendEvent, /) -> MessageAppendEvent:
@@ -1376,12 +1363,6 @@ class Parser:
         # profile = payload.get("profile")
         privileged = payload.get('privileged', False)
 
-        badges = _new_user_badges(UserBadges)
-        badges.value = payload.get('badges', 0)
-
-        flags = _new_user_flags(UserFlags)
-        flags.value = payload.get('flags', 0)
-
         bot = payload.get('bot')
 
         relations = list(map(self.parse_relationship, payload.get('relations', ())))
@@ -1394,10 +1375,10 @@ class Parser:
             display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             relations={relation.id: relation for relation in relations},
-            badges=badges,
+            raw_badges=payload.get('badges', 0),
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             privileged=privileged or False,
             bot=self.parse_bot_user_info(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
@@ -1424,28 +1405,22 @@ class Parser:
         )
 
     def parse_permission_override(self, payload: raw.Override, /) -> PermissionOverride:
-        allow = _new_permissions(Permissions)
-        allow.value = payload['allow']
-
-        deny = _new_permissions(Permissions)
-        deny.value = payload['deny']
-
-        return PermissionOverride(allow=allow, deny=deny)
+        ret = _new_permission_override(PermissionOverride)
+        ret.raw_allow = payload['allow']
+        ret.raw_deny = payload['deny']
+        return ret
 
     def parse_permission_override_field(self, payload: raw.OverrideField, /) -> PermissionOverride:
-        allow = _new_permissions(Permissions)
-        allow.value = payload['a']
-
-        deny = _new_permissions(Permissions)
-        deny.value = payload['d']
-
-        return PermissionOverride(allow=allow, deny=deny)
+        ret = _new_permission_override(PermissionOverride)
+        ret.raw_allow = payload['a']
+        ret.raw_deny = payload['d']
+        return ret
 
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
         return PublicBot(
             state=self.state,
             id=payload['_id'],
-            username=payload['username'],
+            name=payload['username'],
             internal_avatar_id=payload.get('avatar'),
             description=payload.get('description', ''),
         )
@@ -1519,8 +1494,6 @@ class Parser:
     def parse_response_webhook(self, payload: raw.ResponseWebhook, /) -> Webhook:
         id = payload['id']
         avatar = payload.get('avatar')
-        permissions = _new_permissions(Permissions)
-        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
@@ -1548,7 +1521,7 @@ class Parser:
                 else None
             ),
             channel_id=payload['channel_id'],
-            permissions=permissions,
+            raw_permissions=payload['permissions'],
             token=None,
         )
 
@@ -1601,9 +1574,6 @@ class Parser:
         icon = d.get('icon')
         banner = d.get('banner')
 
-        flags = _new_server_flags(ServerFlags)
-        flags.value = d.get('flags', 0)
-
         return Server(
             state=self.state,
             id=server_id,
@@ -1614,10 +1584,10 @@ class Parser:
             categories=list(map(self.parse_category, d.get('categories', ()))),
             system_messages=(self.parse_system_message_channels(system_messages) if system_messages else None),
             roles=roles,
-            default_permissions=Permissions(d['default_permissions']),
+            raw_default_permissions=d['default_permissions'],
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=flags,
+            raw_flags=d.get('flags', 0),
             nsfw=d.get('nsfw', False),
             analytics=d.get('analytics', False),
             discoverable=d.get('discoverable', False),
@@ -1764,8 +1734,6 @@ class Parser:
     def parse_server_public_invite(self, payload: raw.ServerInviteResponse, /) -> ServerPublicInvite:
         server_icon = payload.get('server_icon')
         server_banner = payload.get('server_banner')
-        server_flags = _new_server_flags(ServerFlags)
-        server_flags.value = payload.get('server_flags', 0)
 
         user_avatar = payload.get('user_avatar')
 
@@ -1776,7 +1744,7 @@ class Parser:
             server_name=payload['server_name'],
             internal_server_icon=self.parse_asset(server_icon) if server_icon else None,
             internal_server_banner=(self.parse_asset(server_banner) if server_banner else None),
-            flags=server_flags,
+            raw_server_flags=payload.get('server_flags', 0),
             channel_id=payload['channel_id'],
             channel_name=payload['channel_name'],
             channel_description=payload.get('channel_description'),
@@ -1828,10 +1796,8 @@ class Parser:
         description = data.get('description')
         categories = data.get('categories')
         system_messages = data.get('system_messages')
-        default_permissions = data.get('default_permissions')
         icon = data.get('icon')
         banner = data.get('banner')
-        flags = data.get('flags')
 
         return ServerUpdateEvent(
             shard=shard,
@@ -1856,12 +1822,10 @@ class Parser:
                         else UNDEFINED
                     )
                 ),
-                default_permissions=(
-                    Permissions(default_permissions) if default_permissions is not None else UNDEFINED
-                ),
+                raw_default_permissions=data.get('default_permissions', UNDEFINED),
                 internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
                 internal_banner=(None if 'Banner' in clear else self.parse_asset(banner) if banner else UNDEFINED),
-                flags=(ServerFlags(flags) if flags is not None else UNDEFINED),
+                raw_flags=data.get('flags', UNDEFINED),
                 discoverable=data.get('discoverable', UNDEFINED),
                 analytics=data.get('analytics', UNDEFINED),
             ),
@@ -1970,12 +1934,6 @@ class Parser:
         avatar = payload.get('avatar')
         status = payload.get('status')
 
-        badges = _new_user_badges(UserBadges)
-        badges.value = payload.get('badges', 0)
-
-        flags = _new_user_flags(UserFlags)
-        flags.value = payload.get('flags', 0)
-
         bot = payload.get('bot')
 
         return User(
@@ -1985,10 +1943,10 @@ class Parser:
             discriminator=payload['discriminator'],
             display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            badges=badges,
+            raw_badges=payload.get('badges', 0),
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             privileged=payload.get('privileged', False),
             bot=self.parse_bot_user_info(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
@@ -2001,7 +1959,7 @@ class Parser:
         return UserPlatformWipeEvent(
             shard=shard,
             user_id=payload['user_id'],
-            flags=UserFlags(payload['flags']),
+            raw_flags=payload['flags'],
             before=None,
             after=None,
         )
@@ -2077,10 +2035,7 @@ class Parser:
         clear = payload['clear']
 
         avatar = data.get('avatar')
-        badges = data.get('badges')
         status = data.get('status')
-        profile = data.get('profile')
-        flags = data.get('flags')
 
         return UserUpdateEvent(
             shard=shard,
@@ -2091,12 +2046,12 @@ class Parser:
                 discriminator=data.get('discriminator', UNDEFINED),
                 display_name=(None if 'DisplayName' in clear else data.get('display_name') or UNDEFINED),
                 internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED),
-                badges=UserBadges(badges) if badges is not None else UNDEFINED,
+                raw_badges=data.get('badges', UNDEFINED),
                 status=(self.parse_user_status_edit(status, clear) if status is not None else UNDEFINED),
-                internal_profile=(
-                    self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
-                ),
-                flags=UserFlags(flags) if flags is not None else UNDEFINED,
+                # internal_profile=(
+                #     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
+                # ),
+                raw_flags=data.get('flags', UNDEFINED),
                 online=data.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
@@ -2267,8 +2222,6 @@ class Parser:
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
         avatar = payload.get('avatar')
-        permissions = _new_permissions(Permissions)
-        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
@@ -2276,7 +2229,7 @@ class Parser:
             name=payload['name'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             channel_id=payload['channel_id'],
-            permissions=permissions,
+            raw_permissions=payload['permissions'],
             token=payload.get('token'),
         )
 
@@ -2291,7 +2244,6 @@ class Parser:
         remove = payload['remove']
 
         avatar = data.get('avatar')
-        permissions = data.get('permissions')
 
         return WebhookUpdateEvent(
             shard=shard,
@@ -2300,7 +2252,7 @@ class Parser:
                 id=payload['id'],
                 name=data.get('name', UNDEFINED),
                 internal_avatar=(None if 'Avatar' in remove else self.parse_asset(avatar) if avatar else UNDEFINED),
-                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
+                raw_permissions=data.get('permissions', UNDEFINED),
             ),
         )
 

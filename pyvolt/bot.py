@@ -29,10 +29,12 @@ import typing
 
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
+from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
-    from .flags import BotFlags
     from .user import User
+
+_new_bot_flags = BotFlags.__new__
 
 
 @define(slots=True)
@@ -134,10 +136,10 @@ class Bot(BaseBot):
     """Represents a bot on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """The user ID of the bot owner."""
+    """The user's ID who owns this bot."""
 
     token: str = field(repr=False)
-    """Token used to authenticate requests for this bot."""
+    """The bot's token used to authenticate requests."""
 
     public: bool = field(repr=True, kw_only=True)
     """Whether the bot is public (may be invited by anyone)."""
@@ -146,36 +148,47 @@ class Bot(BaseBot):
     """Whether to enable analytics."""
 
     discoverable: bool = field(repr=True, kw_only=True)
-    """Whether this bot should be publicly discoverable."""
+    """Whether the bot is publicly discoverable."""
 
     interactions_url: str | None = field(repr=True, kw_only=True)
-    """Reserved; URL for handling interactions."""
+    """The URL to send interactions to.
+    
+    .. note::
+        This attribute is reserved.
+    """
 
     terms_of_service_url: str | None = field(repr=True, kw_only=True)
-    """URL for terms of service."""
+    """The Terms of Service's URL."""
 
     privacy_policy_url: str | None = field(repr=True, kw_only=True)
-    """URL for privacy policy."""
+    """The privacy policy URL."""
 
-    flags: BotFlags = field(repr=True, kw_only=True)
-    """Enum of bot flags."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The bot's flags raw value."""
 
     user: User = field(repr=True, kw_only=True)
     """The user associated with this bot."""
+
+    @property
+    def flags(self) -> BotFlags:
+        """:class:`BotFlags`: The bot's flags."""
+        ret = _new_bot_flags(BotFlags)
+        ret.value = self.raw_flags
+        return ret
 
 
 @define(slots=True)
 class PublicBot(BaseBot):
     """Represents public bot on Revolt."""
 
-    username: str = field(repr=True, kw_only=True)
-    """The bot username."""
+    name: str = field(repr=True, kw_only=True)
+    """The bot's name."""
 
     internal_avatar_id: str | None = field(repr=True, kw_only=True)
-    """The bot avatar ID."""
+    """The bot's avatar ID."""
 
     description: str = field(repr=True, kw_only=True)
-    """The bot description."""
+    """The bot's description."""
 
 
 __all__ = ('BaseBot', 'Bot', 'PublicBot')

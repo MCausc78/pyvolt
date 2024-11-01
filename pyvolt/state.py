@@ -29,7 +29,7 @@ import typing
 from .core import ZID
 from .parser import Parser
 from .user_settings import UserSettings
-from .user import UserBadges, UserFlags, RelationshipStatus, User
+from .user import RelationshipStatus, User
 
 if typing.TYPE_CHECKING:
     from .cache import ProvideCacheContextIn, Cache
@@ -92,9 +92,9 @@ class State:
             discriminator='0000',
             internal_avatar=None,
             display_name=None,
-            badges=UserBadges.NONE,
+            raw_badges=0,
             status=None,
-            flags=UserFlags.NONE,
+            raw_flags=0,
             privileged=True,
             bot=None,
             relationship=RelationshipStatus.none,
