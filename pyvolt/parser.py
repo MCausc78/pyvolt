@@ -219,14 +219,7 @@ if typing.TYPE_CHECKING:
     from .shard import Shard
     from .state import State
 
-_L = logging.getLogger(__name__)
-
-# _new_message_flags = MessageFlags.__new__
 _new_permission_override = PermissionOverride.__new__
-# _new_permissions = Permissions.__new__
-# _new_server_flags = ServerFlags.__new__
-# _new_user_badges = UserBadges.__new__
-# _new_user_flags = UserFlags.__new__
 _parse_dt = datetime.fromisoformat
 
 
