@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime
-import logging
 import typing
 
 from . import discovery
@@ -143,14 +142,6 @@ from .events import (
     VoiceChannelLeaveEvent,
     UserVoiceStateUpdateEvent,
 )
-from .flags import (
-    BotFlags,
-    MessageFlags,
-    Permissions,
-    ServerFlags,
-    UserBadges,
-    UserFlags,
-)
 from .instance import (
     InstanceCaptchaFeature,
     InstanceGenericFeature,
@@ -190,7 +181,7 @@ from .message import (
     StatelessSystemEvent,
     Message,
 )
-from .permissions import Permissions, PermissionOverride
+from .permissions import PermissionOverride
 from .read_state import ReadState
 from .server import (
     Category,
@@ -227,14 +218,8 @@ if typing.TYPE_CHECKING:
     from .shard import Shard
     from .state import State
 
-_L = logging.getLogger(__name__)
-
-_new_bot_flags = BotFlags.__new__
-_new_message_flags = MessageFlags.__new__
-_new_permissions = Permissions.__new__
-_new_server_flags = ServerFlags.__new__
-_new_user_badges = UserBadges.__new__
-_new_user_flags = UserFlags.__new__
+_new_category = Category.__new__
+_new_permission_override = PermissionOverride.__new__
 _parse_dt = datetime.fromisoformat
 
 
@@ -400,9 +385,20 @@ class Parser:
         return [self.parse_ban(e, banned_users) for e in payload['bans']]
 
     def _parse_bot(self, payload: raw.Bot, user: User, /) -> Bot:
-        flags = _new_bot_flags(BotFlags)
-        flags.value = payload.get('flags', 0)
+        """Parses a bot object.
 
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The bot payload to parse.
+        user: :class:`User`
+            The user associated with the bot.
+
+        Returns
+        -------
+        :class:`Bot`
+            The parsed bot object.
+        """
         return Bot(
             state=self.state,
             id=payload['_id'],
@@ -414,11 +410,25 @@ class Parser:
             interactions_url=payload.get('interactions_url'),
             terms_of_service_url=payload.get('terms_of_service_url'),
             privacy_policy_url=payload.get('privacy_policy_url'),
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             user=user,
         )
 
     def parse_bot(self, payload: raw.Bot, user: raw.User, /) -> Bot:
+        """Parses a bot object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The bot payload to parse.
+        user: raw.User
+            The user associated with the bot.
+
+        Returns
+        -------
+        :class:`Bot`
+            The parsed bot object.
+        """
         return self._parse_bot(payload, self.parse_user(user))
 
     def parse_bot_user_info(self, payload: raw.BotInformation, /) -> BotUserInfo:
@@ -443,11 +453,11 @@ class Parser:
         )
 
     def parse_category(self, payload: raw.Category, /) -> Category:
-        return Category(
-            id=payload['id'],
-            title=payload['title'],
-            channels=payload['channels'],  # type: ignore
-        )
+        ret = _new_category(Category)
+        ret.id = payload['id']
+        ret.title = payload['title']
+        ret.channels = payload['channels']
+        return ret
 
     def parse_channel_ack_event(self, shard: Shard, payload: raw.ClientChannelAckEvent, /) -> MessageAckEvent:
         return MessageAckEvent(
@@ -524,15 +534,27 @@ class Parser:
         )
 
     def parse_channel_update_event(self, shard: Shard, payload: raw.ClientChannelUpdateEvent, /) -> ChannelUpdateEvent:
+        """Parses a ChannelUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelUpdateEvent`
+            The parsed channel update event object.
+        """
+
         clear = payload['clear']
         data = payload['data']
 
-        owner = data.get('owner')
         icon = data.get('icon')
-        permissions = data.get('permissions')
         role_permissions = data.get('role_permissions')
         default_permissions = data.get('default_permissions')
-        last_message_id = data.get('last_message_id')
 
         return ChannelUpdateEvent(
             shard=shard,
@@ -540,23 +562,23 @@ class Parser:
                 state=self.state,
                 id=payload['id'],
                 name=data.get('name', UNDEFINED),
-                owner_id=owner if owner else UNDEFINED,
+                owner_id=data.get('owner', UNDEFINED),
                 description=(None if 'Description' in clear else data.get('description', UNDEFINED)),
                 internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
                 nsfw=data.get('nsfw', UNDEFINED),
                 active=data.get('active', UNDEFINED),
-                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
+                raw_permissions=data.get('permissions', UNDEFINED),
                 role_permissions=(
-                    {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
-                    if role_permissions is not None
-                    else UNDEFINED
+                    UNDEFINED
+                    if role_permissions is None
+                    else {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
                 ),
                 default_permissions=(
-                    self.parse_permission_override_field(default_permissions)
-                    if default_permissions is not None
-                    else UNDEFINED
+                    UNDEFINED
+                    if default_permissions is None
+                    else self.parse_permission_override_field(default_permissions)
                 ),
-                last_message_id=last_message_id or UNDEFINED,
+                last_message_id=data.get('last_message_id', UNDEFINED),
             ),
             before=None,
             after=None,
@@ -683,6 +705,18 @@ class Parser:
         )
 
     def parse_discoverable_server(self, payload: raw.DiscoverableServer, /) -> discovery.DiscoverableServer:
+        """Parses a discoverable server object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The discoverable server payload to parse.
+
+        Returns
+        -------
+        :class:`discovery.DiscoverableServer`
+            The parsed server object.
+        """
         icon = payload.get('icon')
         banner = payload.get('banner')
 
@@ -693,7 +727,7 @@ class Parser:
             description=payload.get('description'),
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=ServerFlags(payload.get('flags') or 0),
+            raw_flags=payload.get('flags') or 0,
             tags=payload['tags'],
             member_count=payload['members'],
             activity=ServerActivity(payload['activity']),
@@ -807,7 +841,7 @@ class Parser:
         """
 
         icon = payload.get('icon')
-        permissions = payload.get('permissions')
+        raw_permissions = payload.get('permissions')
 
         return GroupChannel(
             state=self.state,
@@ -818,7 +852,7 @@ class Parser:
             internal_recipients=recipients,
             internal_icon=self.parse_asset(icon) if icon else None,
             last_message_id=payload.get('last_message_id'),
-            permissions=None if permissions is None else Permissions(permissions),
+            raw_permissions=raw_permissions,
             nsfw=payload.get('nsfw', False),
         )
 
@@ -1033,8 +1067,7 @@ class Parser:
         else:
             author = members.get(author_id) or users.get(author_id) or author_id
 
-        flags = _new_message_flags(MessageFlags)
-        flags.value = payload.get('flags', 0)
+        reactions = payload.get('reactions')
 
         return cls(
             state=self.state,
@@ -1050,11 +1083,11 @@ class Parser:
             internal_embeds=[self.parse_embed(e) for e in payload.get('embeds', ())],
             mention_ids=payload.get('mentions', []),
             replies=payload.get('replies', []),
-            reactions={k: tuple(v) for k, v in (payload.get('reactions') or {}).items()},
+            reactions={} if reactions is None else {k: tuple(v) for k, v in reactions.items()},
             interactions=(self.parse_message_interactions(interactions) if interactions else None),
             masquerade=(self.parse_message_masquerade(masquerade) if masquerade else None),
             pinned=payload.get('pinned', False),
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
         )
 
     def parse_message_append_event(self, shard: Shard, payload: raw.ClientMessageAppendEvent, /) -> MessageAppendEvent:
@@ -1371,16 +1404,23 @@ class Parser:
         return _NONE_EMBED_SPECIAL
 
     def parse_own_user(self, payload: raw.User, /) -> OwnUser:
+        """Parses a own user object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The own user payload to parse.
+
+        Returns
+        -------
+        :class:`OwnUser`
+            The parsed user object.
+        """
+
         avatar = payload.get('avatar')
         status = payload.get('status')
         # profile = payload.get("profile")
         privileged = payload.get('privileged', False)
-
-        badges = _new_user_badges(UserBadges)
-        badges.value = payload.get('badges', 0)
-
-        flags = _new_user_flags(UserFlags)
-        flags.value = payload.get('flags', 0)
 
         bot = payload.get('bot')
 
@@ -1394,10 +1434,10 @@ class Parser:
             display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             relations={relation.id: relation for relation in relations},
-            badges=badges,
+            raw_badges=payload.get('badges', 0),
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             privileged=privileged or False,
             bot=self.parse_bot_user_info(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
@@ -1424,28 +1464,59 @@ class Parser:
         )
 
     def parse_permission_override(self, payload: raw.Override, /) -> PermissionOverride:
-        allow = _new_permissions(Permissions)
-        allow.value = payload['allow']
+        """Parses a permission override object.
 
-        deny = _new_permissions(Permissions)
-        deny.value = payload['deny']
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The permission override payload to parse.
 
-        return PermissionOverride(allow=allow, deny=deny)
+        Returns
+        -------
+        :class:`PermissionOverride`
+            The parsed permission override object.
+        """
+        ret = _new_permission_override(PermissionOverride)
+        ret.raw_allow = payload['allow']
+        ret.raw_deny = payload['deny']
+        return ret
 
     def parse_permission_override_field(self, payload: raw.OverrideField, /) -> PermissionOverride:
-        allow = _new_permissions(Permissions)
-        allow.value = payload['a']
+        """Parses a permission override field object.
 
-        deny = _new_permissions(Permissions)
-        deny.value = payload['d']
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The permission override field payload to parse.
 
-        return PermissionOverride(allow=allow, deny=deny)
+        Returns
+        -------
+        :class:`PermissionOverride`
+            The parsed permission override object.
+        """
+        ret = _new_permission_override(PermissionOverride)
+        ret.raw_allow = payload['a']
+        ret.raw_deny = payload['d']
+        return ret
 
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
+        """Parses a public bot object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The public bot payload to parse.
+
+        Returns
+        -------
+        :class:`PublicBot`
+            The parsed public bot object.
+        """
+
         return PublicBot(
             state=self.state,
             id=payload['_id'],
-            username=payload['username'],
+            name=payload['username'],
             internal_avatar_id=payload.get('avatar'),
             description=payload.get('description', ''),
         )
@@ -1517,10 +1588,20 @@ class Parser:
             raise NotImplementedError(payload)
 
     def parse_response_webhook(self, payload: raw.ResponseWebhook, /) -> Webhook:
+        """Parses a "webhook as response" object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The webhook payload to parse.
+
+        Returns
+        -------
+        :class:`Webhook`
+            The parsed webhook object.
+        """
         id = payload['id']
         avatar = payload.get('avatar')
-        permissions = _new_permissions(Permissions)
-        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
@@ -1548,7 +1629,7 @@ class Parser:
                 else None
             ),
             channel_id=payload['channel_id'],
-            permissions=permissions,
+            raw_permissions=payload['permissions'],
             token=None,
         )
 
@@ -1585,58 +1666,79 @@ class Parser:
 
     def _parse_server(
         self,
-        d: raw.Server,
+        payload: raw.Server,
         channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]),
         /,
     ) -> Server:
-        server_id = d['_id']
+        """Parses a server object.
 
-        system_messages = d.get('system_messages')
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The server payload to parse.
+        channels: Union[Tuple[Literal[True], List[:class:`str`]], Tuple[Literal[False], List[:class:`ServerChannel`]]]
+            The server's channels.
+
+        Returns
+        -------
+        :class:`Server`
+            The parsed server object.
+        """
+        server_id = payload['_id']
+
+        system_messages = payload.get('system_messages')
 
         roles = {}
-        for id, role_data in d.get('roles', {}).items():
+        for id, role_data in payload.get('roles', {}).items():
             role_id = id
             roles[role_id] = self.parse_role(role_data, role_id, server_id)
 
-        icon = d.get('icon')
-        banner = d.get('banner')
-
-        flags = _new_server_flags(ServerFlags)
-        flags.value = d.get('flags', 0)
+        icon = payload.get('icon')
+        banner = payload.get('banner')
 
         return Server(
             state=self.state,
             id=server_id,
-            owner_id=d['owner'],
-            name=d['name'],
-            description=d.get('description'),
+            owner_id=payload['owner'],
+            name=payload['name'],
+            description=payload.get('description'),
             internal_channels=channels,
-            categories=list(map(self.parse_category, d.get('categories', ()))),
+            categories=list(map(self.parse_category, payload.get('categories', ()))),
             system_messages=(self.parse_system_message_channels(system_messages) if system_messages else None),
             roles=roles,
-            default_permissions=Permissions(d['default_permissions']),
+            raw_default_permissions=payload['default_permissions'],
             internal_icon=self.parse_asset(icon) if icon else None,
             internal_banner=self.parse_asset(banner) if banner else None,
-            flags=flags,
-            nsfw=d.get('nsfw', False),
-            analytics=d.get('analytics', False),
-            discoverable=d.get('discoverable', False),
+            raw_flags=payload.get('flags', 0),
+            nsfw=payload.get('nsfw', False),
+            analytics=payload.get('analytics', False),
+            discoverable=payload.get('discoverable', False),
         )
 
     def parse_server(
         self,
-        d: raw.Server,
+        payload: raw.Server,
         channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[raw.ServerChannel]]),
         /,
     ) -> Server:
+        """Parses a server object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The server payload to parse.
+        channels: Union[Tuple[Literal[True], List[:class:`str`]], Tuple[Literal[False], List[raw.ServerChannel]]]
+            The server's channels.
+
+        Returns
+        -------
+        :class:`Server`
+            The parsed server object.
+        """
         internal_channels: (
             tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]
-        ) = (
-            (True, [str(i) for i in channels[1]])
-            if channels[0]
-            else (False, [self.parse_channel(c) for c in channels[1]])  # type: ignore
-        )
-        return self._parse_server(d, internal_channels)
+        ) = channels if channels[0] else (False, list(map(self.parse_channel, channels[1])))  # type: ignore
+        return self._parse_server(payload, internal_channels)
 
     def parse_server_create_event(
         self, shard: Shard, d: raw.ClientServerCreateEvent, joined_at: datetime, /
@@ -1667,6 +1769,19 @@ class Parser:
         )
 
     def parse_server_invite(self, payload: raw.ServerInvite, /) -> ServerInvite:
+        """Parses a server private invite object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The server private invite payload to parse.
+
+        Returns
+        -------
+        :class:`ServerPrivateInvite`
+            The parsed server private invite object.
+        """
+
         return ServerInvite(
             state=self.state,
             code=payload['_id'],
@@ -1762,10 +1877,21 @@ class Parser:
         )
 
     def parse_server_public_invite(self, payload: raw.ServerInviteResponse, /) -> ServerPublicInvite:
+        """Parses a server public invite object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The server public invite payload to parse.
+
+        Returns
+        -------
+        :class:`ServerPublicInvite`
+            The parsed server public invite object.
+        """
+
         server_icon = payload.get('server_icon')
         server_banner = payload.get('server_banner')
-        server_flags = _new_server_flags(ServerFlags)
-        server_flags.value = payload.get('server_flags', 0)
 
         user_avatar = payload.get('user_avatar')
 
@@ -1776,7 +1902,7 @@ class Parser:
             server_name=payload['server_name'],
             internal_server_icon=self.parse_asset(server_icon) if server_icon else None,
             internal_server_banner=(self.parse_asset(server_banner) if server_banner else None),
-            flags=server_flags,
+            raw_server_flags=payload.get('server_flags', 0),
             channel_id=payload['channel_id'],
             channel_name=payload['channel_name'],
             channel_description=payload.get('channel_description'),
@@ -1822,16 +1948,28 @@ class Parser:
         )
 
     def parse_server_update_event(self, shard: Shard, payload: raw.ClientServerUpdateEvent, /) -> ServerUpdateEvent:
+        """Parses a ServerUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerUpdateEvent`
+            The parsed server update event object.
+        """
         data = payload['data']
         clear = payload['clear']
 
         description = data.get('description')
         categories = data.get('categories')
         system_messages = data.get('system_messages')
-        default_permissions = data.get('default_permissions')
         icon = data.get('icon')
         banner = data.get('banner')
-        flags = data.get('flags')
 
         return ServerUpdateEvent(
             shard=shard,
@@ -1845,7 +1983,9 @@ class Parser:
                 categories=(
                     []
                     if 'Categories' in clear
-                    else ([self.parse_category(c) for c in categories] if categories is not None else UNDEFINED)
+                    else UNDEFINED
+                    if categories is None
+                    else list(map(self.parse_category, categories))
                 ),
                 system_messages=(
                     None
@@ -1856,12 +1996,10 @@ class Parser:
                         else UNDEFINED
                     )
                 ),
-                default_permissions=(
-                    Permissions(default_permissions) if default_permissions is not None else UNDEFINED
-                ),
+                raw_default_permissions=data.get('default_permissions', UNDEFINED),
                 internal_icon=(None if 'Icon' in clear else self.parse_asset(icon) if icon else UNDEFINED),
                 internal_banner=(None if 'Banner' in clear else self.parse_asset(banner) if banner else UNDEFINED),
-                flags=(ServerFlags(flags) if flags is not None else UNDEFINED),
+                raw_flags=data.get('flags', UNDEFINED),
                 discoverable=data.get('discoverable', UNDEFINED),
                 analytics=data.get('analytics', UNDEFINED),
             ),
@@ -1964,17 +2102,24 @@ class Parser:
         return UnknownPublicInvite(state=self.state, code=payload['code'], payload=payload)
 
     def parse_user(self, payload: raw.User, /) -> User | OwnUser:
+        """Parses a user object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user payload to parse.
+
+        Returns
+        -------
+        Union[:class:`User`, :class:`OwnUser`]
+            The parsed user object.
+        """
+
         if payload['relationship'] == 'User':
             return self.parse_own_user(payload)
 
         avatar = payload.get('avatar')
         status = payload.get('status')
-
-        badges = _new_user_badges(UserBadges)
-        badges.value = payload.get('badges', 0)
-
-        flags = _new_user_flags(UserFlags)
-        flags.value = payload.get('flags', 0)
 
         bot = payload.get('bot')
 
@@ -1985,10 +2130,10 @@ class Parser:
             discriminator=payload['discriminator'],
             display_name=payload.get('display_name'),
             internal_avatar=self.parse_asset(avatar) if avatar else None,
-            badges=badges,
+            raw_badges=payload.get('badges', 0),
             status=self.parse_user_status(status) if status else None,
             # internal_profile=self.parse_user_profile(profile) if profile else None,
-            flags=flags,
+            raw_flags=payload.get('flags', 0),
             privileged=payload.get('privileged', False),
             bot=self.parse_bot_user_info(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
@@ -1998,10 +2143,25 @@ class Parser:
     def parse_user_platform_wipe_event(
         self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /
     ) -> UserPlatformWipeEvent:
+        """Parses a UserPlatformWipe event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserPlatformWipeEvent`
+            The parsed user platform wipe event object.
+        """
+
         return UserPlatformWipeEvent(
             shard=shard,
             user_id=payload['user_id'],
-            flags=UserFlags(payload['flags']),
+            raw_flags=payload['flags'],
             before=None,
             after=None,
         )
@@ -2072,15 +2232,26 @@ class Parser:
         )
 
     def parse_user_update_event(self, shard: Shard, payload: raw.ClientUserUpdateEvent, /) -> UserUpdateEvent:
+        """Parses a UserUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserUpdateEvent`
+            The parsed user update event object.
+        """
         user_id = payload['id']
         data = payload['data']
         clear = payload['clear']
 
         avatar = data.get('avatar')
-        badges = data.get('badges')
         status = data.get('status')
-        profile = data.get('profile')
-        flags = data.get('flags')
 
         return UserUpdateEvent(
             shard=shard,
@@ -2091,12 +2262,12 @@ class Parser:
                 discriminator=data.get('discriminator', UNDEFINED),
                 display_name=(None if 'DisplayName' in clear else data.get('display_name') or UNDEFINED),
                 internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED),
-                badges=UserBadges(badges) if badges is not None else UNDEFINED,
+                raw_badges=data.get('badges', UNDEFINED),
                 status=(self.parse_user_status_edit(status, clear) if status is not None else UNDEFINED),
-                internal_profile=(
-                    self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
-                ),
-                flags=UserFlags(flags) if flags is not None else UNDEFINED,
+                # internal_profile=(
+                #     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
+                # ),
+                raw_flags=data.get('flags', UNDEFINED),
                 online=data.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
@@ -2267,8 +2438,6 @@ class Parser:
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
         avatar = payload.get('avatar')
-        permissions = _new_permissions(Permissions)
-        permissions.value = payload['permissions']
 
         return Webhook(
             state=self.state,
@@ -2276,22 +2445,49 @@ class Parser:
             name=payload['name'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
             channel_id=payload['channel_id'],
-            permissions=permissions,
+            raw_permissions=payload['permissions'],
             token=payload.get('token'),
         )
 
     def parse_webhook_create_event(self, shard: Shard, payload: raw.ClientWebhookCreateEvent, /) -> WebhookCreateEvent:
+        """Parses a WebhookCreate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`WebhookCreateEvent`
+            The parsed webhook create event object.
+        """
         return WebhookCreateEvent(
             shard=shard,
             webhook=self.parse_webhook(payload),
         )
 
     def parse_webhook_update_event(self, shard: Shard, payload: raw.ClientWebhookUpdateEvent, /) -> WebhookUpdateEvent:
+        """Parses a WebhookUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`WebhookUpdateEvent`
+            The parsed webhook update event object.
+        """
         data = payload['data']
         remove = payload['remove']
 
         avatar = data.get('avatar')
-        permissions = data.get('permissions')
 
         return WebhookUpdateEvent(
             shard=shard,
@@ -2300,11 +2496,25 @@ class Parser:
                 id=payload['id'],
                 name=data.get('name', UNDEFINED),
                 internal_avatar=(None if 'Avatar' in remove else self.parse_asset(avatar) if avatar else UNDEFINED),
-                permissions=(Permissions(permissions) if permissions is not None else UNDEFINED),
+                raw_permissions=data.get('permissions', UNDEFINED),
             ),
         )
 
     def parse_webhook_delete_event(self, shard: Shard, payload: raw.ClientWebhookDeleteEvent, /) -> WebhookDeleteEvent:
+        """Parses a WebhookDelete event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`WebhookDeleteEvent`
+            The parsed webhook delete event object.
+        """
         return WebhookDeleteEvent(
             shard=shard,
             webhook=None,

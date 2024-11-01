@@ -43,6 +43,8 @@ from .message import (
 )
 from .permissions import Permissions
 
+_new_permissions = Permissions.__new__
+
 
 @define(slots=True)
 class BaseWebhook(Base):
@@ -158,37 +160,53 @@ class BaseWebhook(Base):
 
 @define(slots=True)
 class PartialWebhook(BaseWebhook):
+    """Represents a partial webhook on Revolt.
+
+    Unmodified fields will have ``UNDEFINED`` value.
+    """
+
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new name of the webhook."""
+    """The new webhook's name."""
 
     internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new stateless avatar of the webhook."""
+    """The new webhook's stateless avatar."""
 
-    permissions: UndefinedOr[Permissions] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new permissions for the webhook."""
+    raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The new webhook's permissions raw value."""
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
         """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
+    @property
+    def permissions(self) -> UndefinedOr[Permissions]:
+        """:class:`UndefinedOr`[:clsas:`Permissions`]: The new webhook's permissions."""
+        if self.raw_permissions is UNDEFINED:
+            return self.raw_permissions
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_permissions
+        return ret
+
 
 @define(slots=True)
 class Webhook(BaseWebhook):
+    """Represents a webhook on Revolt."""
+
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The name of the webhook."""
+    """The webhook's name."""
 
     internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The stateless avatar of the webhook."""
+    """The webhook's stateless avatar."""
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The channel this webhook belongs to."""
+    """The channel the webhook belongs to."""
 
-    permissions: Permissions = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The permissions for the webhook."""
+    raw_permissions: int = field(repr=True, hash=True, kw_only=True, eq=True)
+    """The webhook's permissions raw value."""
 
     token: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The private token for the webhook."""
+    """The webhook's private token."""
 
     def locally_update(self, data: PartialWebhook, /) -> None:
         """Locally updates webhook with provided data.
@@ -205,13 +223,20 @@ class Webhook(BaseWebhook):
             self.name = data.name
         if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if data.permissions is not UNDEFINED:
-            self.permissions = data.permissions
+        if data.raw_permissions is not UNDEFINED:
+            self.raw_permissions = data.raw_permissions
 
     @property
     def avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The avatar of the webhook."""
+        """Optional[:class:`Asset`]: The webhook's avatar."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+
+    @property
+    def permissions(self) -> Permissions:
+        """:class:`Permissions`: The webhook's permissions."""
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_permissions
+        return ret
 
 
 __all__ = (

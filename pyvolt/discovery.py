@@ -45,8 +45,9 @@ if typing.TYPE_CHECKING:
     from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
-
 DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'
+
+_new_server_flags = ServerFlags.__new__
 
 
 @define(slots=True)
@@ -65,8 +66,8 @@ class DiscoverableServer(BaseServer):
     internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
     """The stateless server banner."""
 
-    flags: ServerFlags = field(repr=True, kw_only=True)
-    """The server's flags."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The server's flags raw value."""
 
     tags: list[str] = field(repr=True, kw_only=True)
     """The server's tags."""
@@ -76,6 +77,13 @@ class DiscoverableServer(BaseServer):
 
     activity: ServerActivity = field(repr=True, kw_only=True)
     """The server's activity."""
+
+    @property
+    def flags(self) -> ServerFlags:
+        """The server's flags."""
+        ret = _new_server_flags(ServerFlags)
+        ret.value = self.raw_flags
+        return ret
 
     @property
     def icon(self) -> Asset | None:

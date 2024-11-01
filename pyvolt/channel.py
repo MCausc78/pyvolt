@@ -69,12 +69,18 @@ if typing.TYPE_CHECKING:
     from .shard import Shard
     from .user import BaseUser, User, UserVoiceState
 
+_new_permissions = Permissions.__new__
+
 
 class Typing(contextlib.AbstractAsyncContextManager):
+    __slots__ = (
+        'shard',
+        'channel_id',
+    )
     shard: Shard
     channel_id: str
 
-    def __init__(self, shard: Shard, channel_id: str) -> None:
+    def __init__(self, shard: Shard, channel_id: str, /) -> None:
         self.shard = shard
         self.channel_id = channel_id
 
@@ -95,7 +101,7 @@ class BaseChannel(Base, abc.ABC):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseChannel) and self.id == other.id
 
-    def message(self, message: ULIDOr[BaseMessage]) -> BaseMessage:
+    def message(self, message: ULIDOr[BaseMessage], /) -> BaseMessage:
         """:class:`BaseMessage`: Returns a partial message with specified ID."""
         from .message import BaseMessage
 
@@ -268,28 +274,53 @@ class BaseChannel(Base, abc.ABC):
 
 @define(slots=True)
 class PartialChannel(BaseChannel):
-    """Partial representation of a channel on Revolt."""
+    """Represents a partial channel on Revolt."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
-    """The new channel name, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+    """The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
-    """The ID of new group owner, if applicable. (only for :class:`GroupChannel`)"""
+    """The ID of new group owner, if applicable. Only for :class:`GroupChannel`."""
 
     description: UndefinedOr[str | None] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's description, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+    """The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's stateless icon, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+    """The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
-    """Whether the channel have been marked as NSFW, if applicable. (only for :class:`GroupChannel`s and :class:`BaseServerChannel`'s)"""
+    """Whether the channel have been marked as NSFW, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     active: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
-    permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True, eq=True)
+    """Whether the DM channel is active now, if applicable. Only for :class:`DMChannel`'s."""
+
+    raw_permissions: UndefinedOr[int] = field(repr=True, kw_only=True, eq=True)
+    """The new channel's permissions raw value, if applicable. Only for :class:`GroupChannel`'s."""
+
     role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
+    """The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
+
     default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, kw_only=True, eq=True)
+    """The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
+
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    """The last message ID sent in the channel."""
+
+    @property
+    def icon(self) -> UndefinedOr[Asset | None]:
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+        if self.internal_icon in (None, UNDEFINED):
+            return self.internal_icon
+        return self.internal_icon._stateful(self.state, 'icons')
+
+    @property
+    def permissions(self) -> UndefinedOr[Permissions]:
+        """:class:`UndefinedOr`[:class:`Permissions`]: The new channel's permissions, if applicable. Only for :class:`GroupChannel`'s."""
+        if self.raw_permissions is UNDEFINED:
+            return self.raw_permissions
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_permissions
+        return ret
 
 
 def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str, /) -> Permissions:
@@ -629,16 +660,16 @@ class SavedMessagesChannel(TextChannel):
 
 @define(slots=True)
 class DMChannel(TextChannel):
-    """The PM channel between two users."""
+    """Represents a private channel between two users."""
 
     active: bool = field(repr=True, kw_only=True)
-    """Whether this DM channel is currently open on both sides."""
+    """Whether the DM channel is currently open on both sides."""
 
     recipient_ids: tuple[str, str] = field(repr=True, kw_only=True)
     """The tuple of user IDs participating in DM."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The ID of the last message sent in this channel."""
+    """The last message ID sent in the channel."""
 
     @property
     def initiator_id(self) -> str:
@@ -735,10 +766,14 @@ class GroupChannel(TextChannel):
     """The stateless group icon."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The ID of the last message sent in this channel."""
+    """The last message ID sent in the channel."""
 
-    permissions: Permissions | None = field(repr=True, kw_only=True)
-    """The permissions assigned to members of this group. (does not apply to the owner of the group)"""
+    raw_permissions: int | None = field(repr=True, kw_only=True)
+    """The permissions assigned to members of this group.
+    
+    .. note::
+        This attribute does not apply to the owner of the group.
+    """
 
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
@@ -764,8 +799,8 @@ class GroupChannel(TextChannel):
             self.internal_icon = data.internal_icon
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
-        if data.permissions is not UNDEFINED:
-            self.permissions = data.permissions
+        if data.raw_permissions is not UNDEFINED:
+            self.raw_permissions = data.raw_permissions
         if data.nsfw is not UNDEFINED:
             self.nsfw = data.nsfw
 
@@ -792,6 +827,19 @@ class GroupChannel(TextChannel):
     def icon(self) -> Asset | None:
         """Optional[:class:`Asset`]: The group icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+
+    @property
+    def permissions(self) -> Permissions | None:
+        """:class:`Permissions`: The permissions assigned to members of this group.
+
+        .. note::
+            This attribute does not apply to the owner of the group.
+        """
+        if self.raw_permissions is None:
+            return None
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_permissions
+        return ret
 
     @property
     def recipient_ids(self) -> list[str]:
@@ -1239,7 +1287,7 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
     """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The last's message ID sent in the channel."""
+    """The last message ID sent in the channel."""
 
     voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
     """The voice's metadata in the channel."""

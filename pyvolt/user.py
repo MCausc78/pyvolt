@@ -45,6 +45,9 @@ if typing.TYPE_CHECKING:
     from .message import BaseMessage
     from .state import State
 
+_new_user_badges = UserBadges.__new__
+_new_user_flags = UserFlags.__new__
+
 
 @define(slots=True)
 class UserStatus:
@@ -438,39 +441,59 @@ class BaseUser(Base):
 
 @define(slots=True)
 class PartialUser(BaseUser):
-    """Partially represents a user on Revolt."""
+    """Represents a partial user on Revolt."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """New username of the user."""
+    """The new user's name."""
 
     discriminator: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """New discriminator of the user."""
+    """The new user's discriminator."""
 
     display_name: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """New display name of the user."""
+    """The new user's display name."""
 
     internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
-    """New stateless avatar of the user."""
+    """The new user's stateless avatar."""
 
-    badges: UndefinedOr[UserBadges] = field(repr=True, kw_only=True)
-    """New user badges."""
+    raw_badges: UndefinedOr[int] = field(repr=True, kw_only=True)
+    """The new user's badges raw value."""
 
     status: UndefinedOr[UserStatusEdit] = field(repr=True, kw_only=True)
-    """New user's status."""
+    """The new user's status."""
 
-    internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
-    """New user's profile page."""
+    # internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
+    # """The new user's profile page."""
 
-    flags: UndefinedOr[UserFlags] = field(repr=True, kw_only=True)
-    """The user flags."""
+    raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
+    """The user's flags raw value."""
 
     online: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether this user came online."""
+    """Whether the user came online."""
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new user's avatar."""
+        if self.internal_avatar in (None, UNDEFINED):
+            return self.internal_avatar
+        return self.internal_avatar._stateful(self.state, 'avatars')
+
+    @property
+    def badges(self) -> UndefinedOr[UserBadges]:
+        """:class:`UndefinedOr`[:class:`UserBadges`]: The new user's badges."""
+        if self.raw_badges is UNDEFINED:
+            return self.raw_badges
+        ret = _new_user_badges(UserBadges)
+        ret.value = self.raw_badges
+        return ret
+
+    @property
+    def flags(self) -> UndefinedOr[UserFlags]:
+        """:class:`UndefinedOr`[:class:`UserFlags`]: The user's flags."""
+        if self.raw_flags is UNDEFINED:
+            return self.raw_flags
+        ret = _new_user_flags(UserFlags)
+        ret.value = self.raw_flags
+        return ret
 
 
 @define(slots=True)
@@ -579,19 +602,19 @@ class User(DisplayUser):
     """Represents a user on Revolt."""
 
     display_name: str | None = field(repr=True, kw_only=True)
-    """The user display name."""
+    """The user's display name."""
 
-    badges: UserBadges = field(repr=True, kw_only=True)
-    """The user badges."""
+    raw_badges: int = field(repr=True, kw_only=True)
+    """The user's badges raw value."""
 
     status: UserStatus | None = field(repr=True, kw_only=True)
     """The current user's status."""
 
-    flags: UserFlags = field(repr=True, kw_only=True)
-    """The user flags."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The user's flags raw value."""
 
     privileged: bool = field(repr=True, kw_only=True)
-    """Whether this user is privileged."""
+    """Whether the user is privileged."""
 
     bot: BotUserInfo | None = field(repr=True, kw_only=True)
     """The information about the bot."""
@@ -600,7 +623,7 @@ class User(DisplayUser):
     """The current session user's relationship with this user."""
 
     online: bool = field(repr=True, kw_only=True)
-    """Whether this user is currently online."""
+    """Whether the user is currently online."""
 
     def locally_update(self, data: PartialUser, /) -> None:
         """Locally updates user with provided data.
@@ -616,8 +639,8 @@ class User(DisplayUser):
             self.display_name = data.display_name
         if data.internal_avatar is not UNDEFINED:
             self.internal_avatar = data.internal_avatar
-        if data.badges is not UNDEFINED:
-            self.badges = data.badges
+        if data.raw_badges is not UNDEFINED:
+            self.raw_badges = data.raw_badges
         if data.status is not UNDEFINED:
             status = data.status
             if status.text is not UNDEFINED and status.presence is not UNDEFINED:
@@ -627,10 +650,24 @@ class User(DisplayUser):
                 )
             elif self.status:
                 self.status.locally_update(status)
-        if data.flags is not UNDEFINED:
-            self.flags = data.flags
+        if data.raw_flags is not UNDEFINED:
+            self.raw_flags = data.raw_flags
         if data.online is not UNDEFINED:
             self.online = data.online
+
+    @property
+    def badges(self) -> UserBadges:
+        """The user's badges."""
+        ret = _new_user_badges(UserBadges)
+        ret.value = self.raw_badges
+        return ret
+
+    @property
+    def flags(self) -> UserFlags:
+        """The user's badges."""
+        ret = _new_user_flags(UserFlags)
+        ret.value = self.raw_flags
+        return ret
 
     # flags
     def is_suspended(self) -> bool:

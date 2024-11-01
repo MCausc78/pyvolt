@@ -42,6 +42,7 @@ from .channel import (
 )
 from .emoji import ServerEmoji, DetachedEmoji
 from .enums import MemberRemovalIntention, RelationshipStatus
+from .flags import UserFlags
 from .read_state import ReadState
 from .server import (
     PartialRole,
@@ -70,6 +71,8 @@ if typing.TYPE_CHECKING:
     from .shard import Shard
     from .user_settings import UserSettings
     from .user import UserVoiceState, PartialUserVoiceState
+
+_new_user_flags = UserFlags.__new__
 
 
 @define(slots=True)
@@ -1209,14 +1212,21 @@ class UserPlatformWipeEvent(BaseEvent):
     user_id: str = field(repr=True, kw_only=True)
     """The wiped user's ID."""
 
-    flags: UserFlags = field(repr=True, kw_only=True)
-    """The user's flags, explaining reason of the wipe."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The user's flags raw value, explaining reason of the wipe."""
 
     before: User | None = field(repr=True, kw_only=True)
     """The user as it would exist before, if available."""
 
     after: User | None = field(repr=True, kw_only=True)
     """The wiped user, if available."""
+
+    @property
+    def flags(self) -> UserFlags:
+        """The user's flags, explaining reason of the wipe."""
+        ret = _new_user_flags(UserFlags)
+        ret.value = self.raw_flags
+        return ret
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1231,7 +1241,7 @@ class UserPlatformWipeEvent(BaseEvent):
             after.name = 'Removed User'
             after.display_name = None
             after.internal_avatar = None
-            after.flags = self.flags
+            after.raw_flags = self.raw_flags
             after.relationship = RelationshipStatus.none
             after.online = False
             self.after = after

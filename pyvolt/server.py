@@ -69,6 +69,9 @@ if typing.TYPE_CHECKING:
     )
     from .state import State
 
+_new_permissions = Permissions.__new__
+_new_server_flags = ServerFlags.__new__
+
 
 class Category:
     """Represents a category containing channels in Revolt server.
@@ -737,23 +740,60 @@ class BaseServer(Base):
 
 @define(slots=True)
 class PartialServer(BaseServer):
-    """Represents a server on Revolt.
+    """Represents a partial server on Revolt.
 
     Unmodified fields will have ``UNDEFINED`` value.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    """The new server's name."""
+
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    """The new user's ID who owns this server."""
+
     description: UndefinedOr[str | None] = field(repr=True, kw_only=True)
+    """The new server's description."""
+
     channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    """The server's channels now."""
+
     categories: UndefinedOr[list[Category] | None] = field(repr=True, kw_only=True)
+    """The server's categories now."""
+
     system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, kw_only=True)
-    default_permissions: UndefinedOr[Permissions] = field(repr=True, kw_only=True)
+    """The new server's system message assignments."""
+
+    raw_default_permissions: UndefinedOr[int] = field(repr=True, kw_only=True)
+    """The raw value of new default permissions for everyone."""
+
     internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
     internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
-    flags: UndefinedOr[ServerFlags] = field(repr=True, kw_only=True)
+    raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
+    """The new server's flags raw value."""
+
     discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    """Whether the server is publicly discoverable."""
+
     analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    """Whether the server activity is being analyzed in real-time."""
+
+    @property
+    def default_permissions(self) -> UndefinedOr[Permissions]:
+        """:class:`UndefinedOr`[:class:`Permissions`]: The new default permissions for everyone."""
+        if self.raw_default_permissions is UNDEFINED:
+            return self.raw_default_permissions
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_default_permissions
+        return ret
+
+    @property
+    def flags(self) -> UndefinedOr[ServerFlags]:
+        """:class:`UndefinedOr`[:class:`ServerFlags`]: The new server's flags."""
+        if self.raw_flags is UNDEFINED:
+            return self.raw_flags
+        ret = _new_server_flags(ServerFlags)
+        ret.value = self.raw_flags
+        return ret
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
@@ -864,47 +904,47 @@ class Server(BaseServer):
     """Represents a server on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """The user ID of the owner."""
+    """The user's ID who owns this server."""
 
     name: str = field(repr=True, kw_only=True)
-    """The name of the server."""
+    """The server's name."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The description for the server."""
+    """The server's description."""
 
     internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
         field(repr=True, kw_only=True)
     )
 
     categories: list[Category] | None = field(repr=True, kw_only=True)
-    """The categories for this server."""
+    """The server's categories."""
 
     system_messages: SystemMessageChannels | None = field(repr=True, kw_only=True)
     """The configuration for sending system event messages."""
 
     roles: dict[str, Role] = field(repr=True, kw_only=True)
-    """The roles for this server."""
+    """The server's roles."""
 
-    default_permissions: Permissions = field(repr=True, kw_only=True)
-    """The default set of server and channel permissions."""
+    raw_default_permissions: int = field(repr=True, kw_only=True)
+    """The raw value of default permissions for everyone."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server icon."""
+    """The stateless server's icon."""
 
     internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server banner."""
+    """The stateless server's banner."""
 
-    flags: ServerFlags = field(repr=True, kw_only=True)
-    """The server flags."""
+    raw_flags: int = field(repr=True, kw_only=True)
+    """The server's flags raw value."""
 
     nsfw: bool = field(repr=True, kw_only=True)
-    """Whether this server is flagged as not safe for work."""
+    """Whether the server is flagged as not safe for work."""
 
     analytics: bool = field(repr=True, kw_only=True)
-    """Whether to enable analytics."""
+    """Whether the server activity is being analyzed in real-time."""
 
     discoverable: bool = field(repr=True, kw_only=True)
-    """Whether this server should be publicly discoverable."""
+    """Whether the server is publicly discoverable."""
 
     def get_channel(self, channel_id: str, /) -> ServerChannel | None:
         """Retrieves a server channel from cache.
@@ -978,6 +1018,20 @@ class Server(BaseServer):
                 channels.append(channel)
         return channels
 
+    @property
+    def default_permissions(self) -> Permissions:
+        """:class:`Permissions`: The default permissions for everyone."""
+        ret = _new_permissions(Permissions)
+        ret.value = self.raw_default_permissions
+        return ret
+
+    @property
+    def flags(self) -> ServerFlags:
+        """:class:`ServerFlags`: The server's flags."""
+        ret = _new_server_flags(ServerFlags)
+        ret.value = self.raw_flags
+        return ret
+
     def is_verified(self) -> bool:
         """:class:`bool`: Whether the server is verified."""
         return self.flags.verified
@@ -1005,14 +1059,14 @@ class Server(BaseServer):
             self.categories = data.categories or []
         if data.system_messages is not UNDEFINED:
             self.system_messages = data.system_messages
-        if data.default_permissions is not UNDEFINED:
-            self.default_permissions = data.default_permissions
+        if data.raw_default_permissions is not UNDEFINED:
+            self.raw_default_permissions = data.raw_default_permissions
         if data.internal_icon is not UNDEFINED:
             self.internal_icon = data.internal_icon
         if data.internal_banner is not UNDEFINED:
             self.internal_banner = data.internal_banner
-        if data.flags is not UNDEFINED:
-            self.flags = data.flags
+        if data.raw_flags is not UNDEFINED:
+            self.raw_flags = data.raw_flags
         if data.discoverable is not UNDEFINED:
             self.discoverable = data.discoverable
         if data.analytics is not UNDEFINED:
