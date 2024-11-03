@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
 
 
-def _create_value_cls(name: str, comparable: bool):
+def _create_value_cls(name: str, comparable: bool, /):
     # All the type ignores here are due to the type checker being unable to recognise
     # Runtime type creation without exploding.
     cls = namedtuple('_EnumValue_' + name, 'name value')
@@ -47,7 +47,7 @@ def _create_value_cls(name: str, comparable: bool):
     return cls
 
 
-def _is_descriptor(obj) -> bool:
+def _is_descriptor(obj: typing.Any, /) -> bool:
     return hasattr(obj, '__get__') or hasattr(obj, '__set__') or hasattr(obj, '__delete__')
 
 
@@ -63,6 +63,7 @@ class EnumMeta(type):
         name: str,
         bases: tuple[type, ...],
         attrs: dict[str, typing.Any],
+        /,
         *,
         comparable: bool = False,
     ) -> EnumMeta:
@@ -119,22 +120,22 @@ class EnumMeta(type):
     def __members__(cls) -> Mapping[str, typing.Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
-    def __call__(cls, value: str) -> typing.Any:
-        try:
-            return cls._enum_value_map_[value]
-        except (KeyError, TypeError):
-            raise ValueError(f'{value!r} is not a valid {cls.__name__}')
+    def __call__(cls, value: str, /) -> typing.Any:
+        # try:
+        return cls._enum_value_map_[value]
+        # except (KeyError, TypeError):
+        # raise ValueError(f'{value!r} is not a valid {cls.__name__}')
 
-    def __getitem__(cls, key: str) -> typing.Any:
+    def __getitem__(cls, key: str, /) -> typing.Any:
         return cls._enum_member_map_[key]
 
-    def __setattr__(cls, name: str, value: typing.Any) -> None:
+    def __setattr__(cls, name: str, value: typing.Any, /) -> None:
         raise TypeError('Enums are immutable.')
 
-    def __delattr__(cls, attr: str) -> None:
-        raise TypeError('Enums are immutable')
+    def __delattr__(cls, attr: str, /) -> None:
+        raise TypeError('Enums are immutable.')
 
-    def __instancecheck__(self, instance: typing.Any) -> bool:
+    def __instancecheck__(self, instance: typing.Any, /) -> bool:
         # isinstance(x, Y)
         # -> __instancecheck__(Y, x)
         try:
