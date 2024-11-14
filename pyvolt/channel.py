@@ -30,7 +30,7 @@ import typing
 
 from . import cache as caching
 
-from .abc import Messageable
+from .abc import Messageable, Connectable
 from .base import Base
 from .core import (
     UNDEFINED,
@@ -1085,7 +1085,7 @@ class ChannelVoiceMetadata:
 
 
 @define(slots=True)
-class TextChannel(BaseServerChannel, Messageable):
+class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
@@ -1132,12 +1132,15 @@ class TextChannel(BaseServerChannel, Messageable):
 
 
 @define(slots=True)
-class VoiceChannel(BaseServerChannel):
+class VoiceChannel(BaseServerChannel, Connectable):
     """Represents a voice channel that belongs to a server on Revolt.
 
     .. deprecated:: 0.7.0
         The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
     """
+
+    def get_channel_id(self) -> str:
+        return self.id
 
     @property
     def type(self) -> typing.Literal[ChannelType.voice]:
