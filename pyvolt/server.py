@@ -60,12 +60,13 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .channel import (
-        TextChannel,
         DMChannel,
         GroupChannel,
-        ServerTextChannel,
+        TextChannel,
         VoiceChannel,
         ServerChannel,
+        TextableChannel,
+        PartialMessageable,
     )
     from .state import State
 
@@ -132,10 +133,10 @@ class SystemMessageChannels:
     def __init__(
         self,
         *,
-        user_joined: ULIDOr[TextChannel] | None = None,
-        user_left: ULIDOr[TextChannel] | None = None,
-        user_kicked: ULIDOr[TextChannel] | None = None,
-        user_banned: ULIDOr[TextChannel] | None = None,
+        user_joined: ULIDOr[TextableChannel | PartialMessageable] | None = None,
+        user_left: ULIDOr[TextableChannel | PartialMessageable] | None = None,
+        user_kicked: ULIDOr[TextableChannel | PartialMessageable] | None = None,
+        user_banned: ULIDOr[TextableChannel | PartialMessageable] | None = None,
     ) -> None:
         self.user_joined: str | None = None if user_joined is None else resolve_id(user_joined)
         self.user_left: str | None = None if user_left is None else resolve_id(user_left)
@@ -444,7 +445,7 @@ class BaseServer(Base):
         name: str,
         description: str | None = ...,
         nsfw: bool | None = ...,
-    ) -> ServerTextChannel: ...
+    ) -> TextChannel: ...
 
     @typing.overload
     async def create_channel(
@@ -454,7 +455,7 @@ class BaseServer(Base):
         name: str,
         description: str | None = ...,
         nsfw: bool | None = ...,
-    ) -> ServerTextChannel: ...
+    ) -> TextChannel: ...
 
     @typing.overload
     async def create_channel(
@@ -491,7 +492,7 @@ class BaseServer(Base):
 
     async def create_text_channel(
         self, name: str, *, description: str | None = None, nsfw: bool | None = None
-    ) -> ServerTextChannel:
+    ) -> TextChannel:
         """|coro|
 
         Create a new text channel within this server.
@@ -1002,7 +1003,7 @@ class Server(BaseServer):
         cache = self.state.cache
         if not cache:
             return []
-        from .channel import ServerTextChannel, VoiceChannel
+        from .channel import TextChannel, VoiceChannel
 
         channels = []
         for channel_id in self.internal_channels[1]:
@@ -1011,9 +1012,9 @@ class Server(BaseServer):
 
             if channel:
                 if channel.__class__ not in (
-                    ServerTextChannel,
+                    TextChannel,
                     VoiceChannel,
-                ) or not isinstance(channel, (ServerTextChannel, VoiceChannel)):
+                ) or not isinstance(channel, (TextChannel, VoiceChannel)):
                     raise TypeError(f'Cache have given us incorrect channel type: {channel.__class__!r}')
                 channels.append(channel)
         return channels
@@ -1307,7 +1308,7 @@ class BaseMember:
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
         can_publish: UndefinedOr[bool | None] = UNDEFINED,
         can_receive: UndefinedOr[bool | None] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | ServerTextChannel | VoiceChannel]] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | TextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -1328,7 +1329,7 @@ class BaseMember:
             Whether the member should send voice data.
         can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`ServerTextChannel`, :class:`VoiceChannel`]]]
+        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns

@@ -51,7 +51,7 @@ from .channel import (
     DMChannel,
     GroupChannel,
     ChannelVoiceMetadata,
-    ServerTextChannel,
+    TextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
@@ -612,7 +612,7 @@ class Parser:
     def parse_channel(self, payload: raw.GroupChannel, /) -> GroupChannel: ...
 
     @typing.overload
-    def parse_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel: ...
+    def parse_channel(self, payload: raw.TextChannel, /) -> TextChannel: ...
 
     @typing.overload
     def parse_channel(self, payload: raw.VoiceChannel, /) -> VoiceChannel: ...
@@ -2039,7 +2039,7 @@ class Parser:
             user_banned=payload.get('user_banned'),
         )
 
-    def parse_text_channel(self, payload: raw.TextChannel, /) -> ServerTextChannel:
+    def parse_text_channel(self, payload: raw.TextChannel, /) -> TextChannel:
         """Parses a text channel object.
 
         Parameters
@@ -2049,7 +2049,7 @@ class Parser:
 
         Returns
         -------
-        :class:`ServerTextChannel`
+        :class:`TextChannel`
             The parsed text channel object.
         """
 
@@ -2064,7 +2064,7 @@ class Parser:
 
         voice = payload.get('voice')
 
-        return ServerTextChannel(
+        return TextChannel(
             state=self.state,
             id=payload['_id'],
             server_id=payload['server'],
@@ -2340,7 +2340,7 @@ class Parser:
 
         .. deprecated:: 0.7.0
             The method was deprecated in favour of :meth:`.parse_text_channel` and
-            using :attr:`ServerTextChannel.voice` instead.
+            using :attr:`TextChannel.voice` instead.
 
         Parameters
         ----------

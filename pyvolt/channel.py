@@ -26,11 +26,11 @@ from __future__ import annotations
 
 import abc
 from attrs import define, field
-import contextlib
 import typing
 
 from . import cache as caching
 
+from .abc import Messageable
 from .base import Base
 from .core import (
     UNDEFINED,
@@ -50,49 +50,16 @@ from .flags import (
 )
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from .bot import BaseBot
-    from .cdn import StatelessAsset, Asset, ResolvableResource
-    from .enums import MessageSort
+    from .cdn import StatelessAsset, Asset
     from .invite import Invite
+    from .message import BaseMessage
     from .permissions import PermissionOverride
-    from .message import (
-        Reply,
-        Interactions,
-        Masquerade,
-        SendableEmbed,
-        BaseMessage,
-        Message,
-    )
     from .server import BaseRole, Role, Server, Member
-    from .shard import Shard
+    from .state import State
     from .user import BaseUser, User, UserVoiceState
 
 _new_permissions = Permissions.__new__
-
-
-class Typing(contextlib.AbstractAsyncContextManager):
-    __slots__ = (
-        'shard',
-        'channel_id',
-    )
-    shard: Shard
-    channel_id: str
-
-    def __init__(self, shard: Shard, channel_id: str, /) -> None:
-        self.shard = shard
-        self.channel_id = channel_id
-
-    async def __aenter__(self) -> None:
-        await self.shard.begin_typing(self.channel_id)
-
-    async def __aexit__(self, exc_type, exc_value, tb) -> None:
-        del exc_type
-        del exc_value
-        del tb
-        await self.shard.end_typing(self.channel_id)
-        return
 
 
 class BaseChannel(Base, abc.ABC):
@@ -442,185 +409,14 @@ def calculate_server_channel_permissions(
 
 
 @define(slots=True)
-class TextChannel(BaseChannel):
-    """A channel that can have messages."""
-
-    def get_message(self, message_id: str, /) -> Message | None:
-        """Retrieves a channel message from cache.
-
-        Parameters
-        ----------
-        message_id: :class:`str`
-            The message ID.
-
-        Returns
-        -------
-        Optional[:class:`Message`]
-            The message or ``None`` if not found.
-        """
-        cache = self.state.cache
-        if not cache:
-            return
-        return cache.get_message(self.id, message_id, caching._USER_REQUEST)
-
-    def locally_update(self, data: PartialChannel, /) -> None:
-        """Locally updates channel with provided data.
-
-        .. warn::
-            This is called by library internally to keep cache up to date.
-
-        Parameters
-        ----------
-        data: :class:`PartialChannel`
-            The data to update channel with.
-        """
-        pass
-
-    @property
-    def messages(self) -> Mapping[str, Message]:
-        """Mapping[:class:`str`, :class:`Message`]: Returns all messages in this channel."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_messages_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
-
-    async def begin_typing(self) -> None:
-        """Begins typing in channel, until `end_typing` is called."""
-        return await self.state.shard.begin_typing(self.id)
-
-    async def end_typing(self) -> None:
-        """Ends typing in channel."""
-        await self.state.shard.end_typing(self.id)
-
-    async def search(
-        self,
-        query: str | None = None,
-        *,
-        pinned: bool | None = None,
-        limit: int | None = None,
-        before: ULIDOr[BaseMessage] | None = None,
-        after: ULIDOr[BaseMessage] | None = None,
-        sort: MessageSort | None = None,
-        populate_users: bool | None = None,
-    ) -> list[Message]:
-        """|coro|
-
-        Searches for messages.
-
-        .. note::
-            This can only be used by non-bot accounts.
-
-        Parameters
-        ----------
-        query: Optional[:class:`str`]
-            Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
-        pinned: Optional[:class:`bool`]
-            Whether to search for (un-)pinned messages or not.
-        limit: Optional[:class:`int`]
-            Maximum number of messages to fetch.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
-            The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
-            The message after which messages should be fetched.
-        sort: Optional[:class:`MessageSort`]
-            Sort used for retrieving.
-        populate_users: Optional[:class:`bool`]
-            Whether to populate user (and member, if server channel) objects.
-
-        Raises
-        ------
-        Forbidden
-            You do not have permissions to search
-        HTTPException
-            Searching messages failed.
-
-        Returns
-        -------
-        List[:class:`Message`]
-            The messages matched.
-        """
-        return await self.state.http.search_for_messages(
-            self.id,
-            query=query,
-            pinned=pinned,
-            limit=limit,
-            before=before,
-            after=after,
-            sort=sort,
-            populate_users=populate_users,
-        )
-
-    async def send(
-        self,
-        content: str | None = None,
-        *,
-        nonce: str | None = None,
-        attachments: list[ResolvableResource] | None = None,
-        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
-        embeds: list[SendableEmbed] | None = None,
-        masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
-        silent: bool | None = None,
-    ) -> Message:
-        """|coro|
-
-        Sends a message to the given channel.
-        You must have `SendMessages` permission.
-
-        Parameters
-        ----------
-        content: Optional[:class:`str`]
-            The message content.
-        nonce: Optional[:class:`str`]
-            The message nonce.
-        attachments: Optional[List[:class:`ResolvableResource`]]
-            The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
-            The message replies.
-        embeds: Optional[List[:class:`SendableEmbed`]]
-            The message embeds.
-        masquearde: Optional[:class:`Masquerade`]
-            The message masquerade.
-        interactions: Optional[:class:`Interactions`]
-            The message interactions.
-        silent: Optional[:class:`bool`]
-            Whether to suppress notifications or not.
-
-        Raises
-        ------
-        Forbidden
-            You do not have permissions to send
-        HTTPException
-            Sending the message failed.
-
-        Returns
-        -------
-        :class:`Message`
-            The message that was sent.
-        """
-        return await self.state.http.send_message(
-            self.id,
-            content,
-            nonce=nonce,
-            attachments=attachments,
-            replies=replies,
-            embeds=embeds,
-            masquerade=masquerade,
-            interactions=interactions,
-            silent=silent,
-        )
-
-    def typing(self) -> Typing:
-        """:class:`Typing`: Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
-        return Typing(self.state.shard, self.id)
-
-
-@define(slots=True)
-class SavedMessagesChannel(TextChannel):
+class SavedMessagesChannel(BaseChannel, Messageable):
     """Represents a personal "Saved Notes" channel which allows users to save messages."""
 
     user_id: str = field(repr=True, kw_only=True)
     """The ID of the user this channel belongs to."""
+
+    def get_channel_id(self) -> str:
+        return self.id
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -659,7 +455,7 @@ class SavedMessagesChannel(TextChannel):
 
 
 @define(slots=True)
-class DMChannel(TextChannel):
+class DMChannel(BaseChannel, Messageable):
     """Represents a private channel between two users."""
 
     active: bool = field(repr=True, kw_only=True)
@@ -670,6 +466,9 @@ class DMChannel(TextChannel):
 
     last_message_id: str | None = field(repr=True, kw_only=True)
     """The last message ID sent in the channel."""
+
+    def get_channel_id(self) -> str:
+        return self.id
 
     @property
     def initiator_id(self) -> str:
@@ -746,7 +545,7 @@ class DMChannel(TextChannel):
 
 
 @define(slots=True)
-class GroupChannel(TextChannel):
+class GroupChannel(BaseChannel, Messageable):
     """Represesnts Revolt group channel between 1 or more participants."""
 
     name: str = field(repr=True, kw_only=True)
@@ -777,6 +576,9 @@ class GroupChannel(TextChannel):
 
     nsfw: bool = field(repr=True, kw_only=True)
     """Whether this group is marked as not safe for work."""
+
+    def get_channel_id(self) -> str:
+        return self.id
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -1283,7 +1085,7 @@ class ChannelVoiceMetadata:
 
 
 @define(slots=True)
-class ServerTextChannel(BaseServerChannel, TextChannel):
+class TextChannel(BaseServerChannel, Messageable):
     """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
@@ -1291,6 +1093,9 @@ class ServerTextChannel(BaseServerChannel, TextChannel):
 
     voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
     """The voice's metadata in the channel."""
+
+    def get_channel_id(self) -> str:
+        return self.id
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -1331,7 +1136,7 @@ class VoiceChannel(BaseServerChannel):
     """Represents a voice channel that belongs to a server on Revolt.
 
     .. deprecated:: 0.7.0
-        The voice channel type was deprecated in favour of :attr:`ServerTextChannel.voice`.
+        The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
     """
 
     @property
@@ -1353,9 +1158,9 @@ class VoiceChannel(BaseServerChannel):
         return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
 
 
-ServerChannel = ServerTextChannel | VoiceChannel
-
-Channel = SavedMessagesChannel | DMChannel | GroupChannel | ServerTextChannel | VoiceChannel
+ServerChannel = TextChannel | VoiceChannel
+TextableChannel = SavedMessagesChannel | DMChannel | GroupChannel | TextChannel | VoiceChannel
+Channel = SavedMessagesChannel | DMChannel | GroupChannel | TextChannel | VoiceChannel
 
 
 @define(slots=True)
@@ -1394,24 +1199,38 @@ class ChannelVoiceStateContainer:
         return self.participants.pop(user_id, None)
 
 
+@define(slots=True)
+class PartialMessageable(Messageable):
+    """Represents a partial messageable to aid with working messageable channels when only a channel ID is present."""
+
+    state: State = field(repr=False, kw_only=True)
+    """The state."""
+
+    id: str = field(repr=True, kw_only=True)
+    """The channel's ID."""
+
+    def get_channel_id(self) -> str:
+        return self.id
+
+
 __all__ = (
     'BaseChannel',
     'PartialChannel',
-    'Typing',
     'calculate_saved_messages_channel_permissions',
     'calculate_dm_channel_permissions',
     'calculate_group_channel_permissions',
     'calculate_server_channel_permissions',
-    'TextChannel',
     'SavedMessagesChannel',
     'DMChannel',
     'GroupChannel',
     'PrivateChannel',
     'BaseServerChannel',
     'ChannelVoiceMetadata',
-    'ServerTextChannel',
+    'TextChannel',
     'VoiceChannel',
     'ServerChannel',
+    'TextableChannel',
     'Channel',
     'ChannelVoiceStateContainer',
+    'PartialMessageable',
 )
