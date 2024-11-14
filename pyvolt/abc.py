@@ -30,6 +30,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping
+    from livekit.rtc import Room  # type: ignore
 
     from . import cache as caching
     from .cdn import ResolvableResource
@@ -252,4 +253,46 @@ class Messageable:
         )
 
 
-__all__ = ('Messageable',)
+class Connectable:
+    __slots__ = ()
+
+    state: State
+
+    async def fetch_channel_id(self) -> str:
+        """:class:`str`: Retrieves the channel's ID."""
+        return self.get_channel_id()
+
+    def get_channel_id(self) -> str:
+        """:class:`str`: Retrieves the channel's ID, if possible."""
+        return ''
+
+    async def connect(self) -> Room:
+        """:class:`Room`: Connects to a voice channel."""
+
+        try:
+            from livekit.rtc import Room  # type: ignore
+        except ImportError:
+            raise TypeError('Livekit is unavailable') from None
+        else:
+            channel_id = await self.fetch_channel_id()
+
+            state = self.state
+
+            room = Room()
+
+            url = state.voice_url
+            if not url:
+                instance = await state.http.query_node()
+                url = instance.features.voice.url
+                state.voice_url = url
+
+            token = await state.http.join_call(channel_id)
+
+            await room.connect(url, token)
+            return room
+
+
+__all__ = (
+    'Messageable',
+    'Connectable',
+)
