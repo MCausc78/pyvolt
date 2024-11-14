@@ -36,7 +36,7 @@ from .channel import (
     DMChannel,
     GroupChannel,
     PrivateChannel,
-    ServerTextChannel,
+    TextChannel,
     ServerChannel,
     Channel,
 )
@@ -483,7 +483,7 @@ class MessageCreateEvent(BaseEvent):
         channel = cache.get_channel(self.message.channel_id, caching._MESSAGE_CREATE)
         if channel and isinstance(
             channel,
-            (DMChannel, GroupChannel, ServerTextChannel),
+            (DMChannel, GroupChannel, TextChannel),
         ):
             channel.last_message_id = self.message.id
 

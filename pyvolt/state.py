@@ -51,6 +51,8 @@ class State:
         The parser.
     system: :class:`User`
         The Revolt#0000 sentinel user.
+    voice_url: :class:`str`
+        The URL to voice server.
     """
 
     __slots__ = (
@@ -64,6 +66,7 @@ class State:
         '_saved_notes',
         '_settings',
         'system',
+        'voice_url',
     )
 
     def __init__(
@@ -100,6 +103,7 @@ class State:
             relationship=RelationshipStatus.none,
             online=True,
         )
+        self.voice_url: str = ''
 
     def setup(
         self,

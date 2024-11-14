@@ -31,7 +31,7 @@ import typing
 
 from . import cache as caching
 from .base import Base
-from .channel import TextChannel, ServerChannel
+from .channel import TextableChannel, ServerChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
@@ -227,17 +227,19 @@ class BaseMessage(Base):
         )
 
     @property
-    def channel(self) -> TextChannel:
-        """:class:`TextChannel`: The channel this message was sent in."""
+    def channel(self) -> TextableChannel | PartialMessageable:
+        """:class:`TextableChannel`: The channel this message was sent in."""
 
         cache = self.state.cache
         if not cache:
-            return TextChannel(state=self.state, id=self.channel_id)
+            return PartialMessageable(state=self.state, id=self.channel_id)
+
         channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
         if channel:
-            assert isinstance(channel, TextChannel), 'Cache returned non textable channel'
+            assert isinstance(channel, TextableChannel), 'Cache returned non textable channel'
             return channel
-        return TextChannel(state=self.state, id=self.channel_id)
+
+        return PartialMessageable(state=self.state, id=self.channel_id)
 
     async def acknowledge(self) -> None:
         """|coro|

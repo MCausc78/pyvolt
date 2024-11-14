@@ -51,7 +51,7 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
-    ServerTextChannel,
+    TextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
@@ -2764,7 +2764,7 @@ class HTTPClient:
         name: str,
         description: str | None = ...,
         nsfw: bool | None = ...,
-    ) -> ServerTextChannel: ...
+    ) -> TextChannel: ...
 
     @typing.overload
     async def create_server_channel(
@@ -2776,7 +2776,7 @@ class HTTPClient:
         name: str,
         description: str | None = ...,
         nsfw: bool | None = ...,
-    ) -> ServerTextChannel: ...
+    ) -> TextChannel: ...
 
     @typing.overload
     async def create_server_channel(
@@ -2910,7 +2910,7 @@ class HTTPClient:
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
         can_publish: UndefinedOr[bool | None] = UNDEFINED,
         can_receive: UndefinedOr[bool | None] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | ServerTextChannel | VoiceChannel]] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | TextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -2935,7 +2935,7 @@ class HTTPClient:
             Whether the member should send voice data.
         can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`ServerTextChannel`, :class:`VoiceChannel`]]]
+        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns

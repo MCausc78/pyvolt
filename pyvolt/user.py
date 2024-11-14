@@ -28,6 +28,7 @@ from attrs import define, field
 import typing
 
 from . import routes
+from .abc import Messageable, Connectable
 from .base import Base
 from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
@@ -230,8 +231,19 @@ class Mutuals:
     """Array of mutual server IDs that both users are in."""
 
 
-class BaseUser(Base):
+class BaseUser(Base, Connectable, Messageable):
     """Represents a user on Revolt."""
+
+    async def fetch_channel_id(self) -> str:
+        channel_id = self.dm_channel_id
+        if channel_id:
+            return channel_id
+
+        channel = await self.open_dm()
+        return channel.id
+
+    def get_channel_id(self) -> str:
+        return self.dm_channel_id or ''
 
     def is_sentinel(self) -> bool:
         """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""

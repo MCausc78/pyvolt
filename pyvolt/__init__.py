@@ -9,6 +9,7 @@ A basic wrapper for the Revolt API.
 
 """
 
+from . import abc as abc
 from .authentication import *
 from .base import *
 from .bot import *
