@@ -28,7 +28,7 @@ from attrs import define, field
 import typing
 
 from . import routes
-from .abc import Messageable
+from .abc import Messageable, Connectable
 from .base import Base
 from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
@@ -231,7 +231,7 @@ class Mutuals:
     """Array of mutual server IDs that both users are in."""
 
 
-class BaseUser(Base, Messageable):
+class BaseUser(Base, Connectable, Messageable):
     """Represents a user on Revolt."""
 
     async def fetch_channel_id(self) -> str:
