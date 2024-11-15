@@ -303,7 +303,7 @@ def flatten_literal_params(parameters: Iterable[typing.Any], /) -> tuple[typing.
     literal_cls = type(typing.Literal[0])
     for p in parameters:
         if isinstance(p, literal_cls):
-            params.extend(p.__args__)
+            params.extend(typing.get_args(p))
         else:
             params.append(p)
     return tuple(params)
@@ -391,7 +391,7 @@ def resolve_annotation(
     globalns: dict[str, typing.Any],
     localns: dict[str, typing.Any] | None,
     cache: dict[str, typing.Any] | None,
-) -> Any:
+) -> typing.Any:
     if annotation is None:
         return type(None)
     if isinstance(annotation, str):

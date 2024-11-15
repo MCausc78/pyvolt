@@ -32,10 +32,14 @@ if typing.TYPE_CHECKING:
 
 
 class Bot(Client):
-    __slots__ = ()
+    __slots__ = (
+        'command_prefix',
+        'skip_check',
+    )
 
     def __init__(
         self,
+        command_prefix: Callable[[Message], list[str]] | str | list[str],
         **options,
     ) -> None:
         self_bot = options.pop('self_bot', False)
@@ -49,7 +53,9 @@ class Bot(Client):
         elif user_bot:
             skip_check = self.user_bot_check
 
+        self.command_prefix: Callable[[Message], list[str]] | str | list[str] = command_prefix
         self.skip_check: Callable[[Message], bool] = skip_check
+
         super().__init__(**options)
 
     def self_bot_check(self, message: Message, /) -> bool:
