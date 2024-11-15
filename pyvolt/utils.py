@@ -37,6 +37,7 @@ import json
 import logging
 import os
 import sys
+import types
 import typing
 
 try:
@@ -47,7 +48,7 @@ else:
     HAS_ORJSON = True
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+    from collections.abc import Awaitable, Callable, Iterable
 
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
@@ -293,6 +294,130 @@ def setup_logging(
     logger.addHandler(handler)
 
 
+PY_310 = sys.version_info >= (3, 10)
+PY_312 = sys.version_info >= (3, 12)
+
+
+def flatten_literal_params(parameters: Iterable[typing.Any], /) -> tuple[typing.Any, ...]:
+    params = []
+    literal_cls = type(typing.Literal[0])
+    for p in parameters:
+        if isinstance(p, literal_cls):
+            params.extend(p.__args__)
+        else:
+            params.append(p)
+    return tuple(params)
+
+
+def normalise_optional_params(parameters: Iterable[typing.Any], /) -> tuple[typing.Any, ...]:
+    none_cls = type(None)
+    return tuple(p for p in parameters if p is not none_cls) + (none_cls,)
+
+
+def evaluate_annotation(
+    tp: typing.Any,
+    globals: dict[str, typing.Any],
+    locals: dict[str, typing.Any],
+    cache: dict[str, typing.Any],
+    *,
+    implicit_str: bool = True,
+) -> typing.Any:
+    if isinstance(tp, typing.ForwardRef):
+        tp = tp.__forward_arg__
+        # ForwardRefs always evaluate their internals
+        implicit_str = True
+
+    if implicit_str and isinstance(tp, str):
+        if tp in cache:
+            return cache[tp]
+        evaluated = evaluate_annotation(eval(tp, globals, locals), globals, locals, cache)
+        cache[tp] = evaluated
+        return evaluated
+
+    if PY_312 and getattr(tp.__repr__, '__objclass__', None) is typing.TypeAliasType:  # type: ignore
+        temp_locals = dict(**locals, **{t.__name__: t for t in tp.__type_params__})
+        annotation = evaluate_annotation(tp.__value__, globals, temp_locals, cache.copy())
+        if hasattr(tp, '__args__'):
+            annotation = annotation[tp.__args__]
+        return annotation
+
+    if hasattr(tp, '__supertype__'):
+        return evaluate_annotation(tp.__supertype__, globals, locals, cache)
+
+    if hasattr(tp, '__metadata__'):
+        # Annotated[X, Y] can access Y via __metadata__
+        metadata = tp.__metadata__[0]
+        return evaluate_annotation(metadata, globals, locals, cache)
+
+    if hasattr(tp, '__args__'):
+        implicit_str = True
+        is_literal = False
+        args = tp.__args__
+        if not hasattr(tp, '__origin__'):
+            if PY_310 and tp.__class__ is types.UnionType:  # type: ignore
+                converted = Union[args]  # type: ignore
+                return evaluate_annotation(converted, globals, locals, cache)
+
+            return tp
+        if tp.__origin__ is typing.Union:
+            try:
+                if args.index(type(None)) != len(args) - 1:
+                    args = normalise_optional_params(tp.__args__)
+            except ValueError:
+                pass
+        if tp.__origin__ is typing.Literal:
+            if not PY_310:
+                args = flatten_literal_params(tp.__args__)
+            implicit_str = False
+            is_literal = True
+
+        evaluated_args = tuple(
+            evaluate_annotation(arg, globals, locals, cache, implicit_str=implicit_str) for arg in args
+        )
+
+        if is_literal and not all(isinstance(x, (str, int, bool, type(None))) for x in evaluated_args):
+            raise TypeError('Literal arguments must be of type str, int, bool, or NoneType.')
+
+        try:
+            return tp.copy_with(evaluated_args)
+        except AttributeError:
+            return tp.__origin__[evaluated_args]
+
+    return tp
+
+
+def resolve_annotation(
+    annotation: typing.Any,
+    globalns: dict[str, typing.Any],
+    localns: dict[str, typing.Any] | None,
+    cache: dict[str, typing.Any] | None,
+) -> Any:
+    if annotation is None:
+        return type(None)
+    if isinstance(annotation, str):
+        annotation = typing.ForwardRef(annotation)
+
+    locals = globalns if localns is None else localns
+    if cache is None:
+        cache = {}
+    return evaluate_annotation(annotation, globalns, locals, cache)
+
+
+def is_inside_class(func: Callable[..., typing.Any]) -> bool:
+    # For methods defined in a class, the qualname has a dotted path
+    # denoting which class it belongs to. So, e.g. for A.foo the qualname
+    # would be A.foo while a global foo() would just be foo.
+    #
+    # Unfortunately, for nested functions this breaks. So inside an outer
+    # function named outer, those two would end up having a qualname with
+    # outer.<locals>.A.foo and outer.<locals>.foo
+
+    if func.__qualname__ == func.__name__:
+        return False
+    (remaining, _, _) = func.__qualname__.rpartition('.')
+    return not remaining.endswith('<locals>')
+
+
 __all__ = (
     'to_json',
     'from_json',
@@ -306,4 +431,11 @@ __all__ = (
     'stream_supports_color',
     'new_formatter',
     'setup_logging',
+    'PY_310',
+    'PY_312',
+    'flatten_literal_params',
+    'normalise_optional_params',
+    'evaluate_annotation',
+    'resolve_annotation',
+    'is_inside_class',
 )
