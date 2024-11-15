@@ -495,7 +495,7 @@ class HTTPClient:
         """:class:`str`: The base URL used for API requests."""
         return self._base
 
-    def url_for(self, route: routes.CompiledRoute) -> str:
+    def url_for(self, route: routes.CompiledRoute, /) -> str:
         """Returns a URL for route.
 
         Parameters
@@ -518,20 +518,69 @@ class HTTPClient:
         token: :class:`str`
             The authentication token.
         bot: :class:`bool`
-            Whether the token belongs to bot account or not.
+            Whether the token belongs to bot account or not. Defaults to ``True``.
         """
         self.token = token
         self.bot = bot
+
+    def add_headers(
+        self,
+        headers: multidict.CIMultiDict[typing.Any],
+        route: routes.CompiledRoute,
+        /,
+        *,
+        accept_json: bool = True,
+        bot: UndefinedOr[bool] = UNDEFINED,
+        cookie: UndefinedOr[str | None] = UNDEFINED,
+        json_body: bool = False,
+        mfa_ticket: str | None = None,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str | None] = UNDEFINED,
+    ) -> None:
+        if accept_json:
+            headers['Accept'] = 'application/json'
+
+        if json_body:
+            headers['Content-type'] = 'application/json'
+
+        # Allow users to set cookie if Revolt is under attack mode
+        if cookie is UNDEFINED:
+            if self.cookie:
+                headers['Cookie'] = self.cookie
+        elif cookie is not None:
+            headers['Cookie'] = cookie
+
+        if bot is UNDEFINED:
+            bot = self.bot
+
+        th = 'X-Bot-Token' if bot else 'X-Session-Token'
+
+        if token is UNDEFINED:
+            token = self.token
+
+        if token:
+            headers[th] = token
+
+        if user_agent is UNDEFINED:
+            user_agent = self.user_agent
+
+        if user_agent is not None:
+            headers['User-Agent'] = user_agent
+
+        if mfa_ticket is not None:
+            headers['X-MFA-Ticket'] = mfa_ticket
 
     async def raw_request(
         self,
         route: routes.CompiledRoute,
         *,
-        authenticated: bool = True,
         accept_json: bool = True,
-        user_agent: str = '',
-        mfa_ticket: str | None = None,
+        bot: UndefinedOr[bool] = UNDEFINED,
+        cookie: UndefinedOr[str | None] = UNDEFINED,
         json: UndefinedOr[typing.Any] = UNDEFINED,
+        mfa_ticket: str | None = None,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> aiohttp.ClientResponse:
         """|coro|
@@ -542,16 +591,20 @@ class HTTPClient:
         ----------
         route: :class:`~routes.CompiledRoute`
             The route.
-        authenticated: :class:`bool`
-            Whether this route should have provided authentication or not. Defaults to ``True``.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        user_agent: :class:`str`
-            The user agent to use for HTTP request. This is reserved field.
-        mfa_ticket: Optional[:class:`str`]
-            The MFA ticket to pass in headers.
+        bot: :class:`UndefinedOr`[:class:`bool`]
+            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        cookie: :class:`UndefinedOr`[:class:`str`]
+            The cookies to use when performing a request.
         json: :class:`UndefinedOr`[typing.Any]
             The JSON payload to pass in.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+        token: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The token to use when requesting the route.
+        user_agent: :class:`UndefinedOr`[:class:`str`]
+            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
         ------
@@ -565,23 +618,22 @@ class HTTPClient:
         """
         headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
 
-        # Allow users to set cookie if Revolt is under attack mode
-        cookie = kwargs.pop('cookie', self.cookie)
-        if cookie:
-            headers['cookie'] = cookie
+        if json is not UNDEFINED:
+            kwargs['data'] = utils.to_json(json)
 
-        if self.token is not None and authenticated:
-            headers['x-bot-token' if self.bot else 'x-session-token'] = self.token
-        if accept_json:
-            headers['accept'] = 'application/json'
-        headers['user-agent'] = user_agent or self.user_agent
-        if mfa_ticket is not None:
-            headers['x-mfa-ticket'] = mfa_ticket
         retries = 0
 
-        if json is not UNDEFINED:
-            headers['content-type'] = 'application/json'
-            kwargs['data'] = utils.to_json(json)
+        self.add_headers(
+            headers,
+            route,
+            accept_json=accept_json,
+            bot=bot,
+            cookie=cookie,
+            json_body=json is not UNDEFINED,
+            mfa_ticket=mfa_ticket,
+            token=token,
+            user_agent=user_agent,
+        )
 
         method = route.route.method
         path = route.build()
@@ -649,7 +701,8 @@ class HTTPClient:
                         data = await utils._json_or_text(response)
                         raise BadGateway(response, data)
                     continue
-                if response.status == 429:
+
+                elif response.status == 429:
                     if retries < self.max_retries:
                         data = await utils._json_or_text(response)
                         if isinstance(data, dict):
@@ -664,6 +717,7 @@ class HTTPClient:
                         )
                         await asyncio.sleep(retry_after)
                         continue
+
                 data = await utils._json_or_text(response)
                 if isinstance(data, dict) and isinstance(data.get('error'), dict):
                     error = data['error']
@@ -672,6 +726,7 @@ class HTTPClient:
                     description = error.get('description')
                     data['type'] = 'RocketError'
                     data['err'] = f'{code} {reason}: {description}'
+
                 raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
             return response
 
@@ -679,12 +734,13 @@ class HTTPClient:
         self,
         route: routes.CompiledRoute,
         *,
-        authenticated: bool = True,
         accept_json: bool = True,
-        user_agent: str = '',
+        bot: UndefinedOr[bool] = UNDEFINED,
         mfa_ticket: str | None = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> typing.Any:
         """|coro|
@@ -695,18 +751,21 @@ class HTTPClient:
         ----------
         route: :class:`~routes.CompiledRoute`
             The route.
-        authenticated: :class:`bool`
-            Whether this route should have provided authentication or not. Defaults to ``True``.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        user_agent: :class:`str`
-            The user agent to use for HTTP request. This is reserved field.
-        mfa_ticket: Optional[:class:`str`]
-            The MFA ticket to pass in headers.
+        bot: :class:`UndefinedOr`[:class:`bool`]
+            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         json: :class:`UndefinedOr`[typing.Any]
             The JSON payload to pass in.
         log: :class:`bool`
-            Whether to log successful response or not. This option is intended to avoid catastrophic spam.
+            Whether to log successful response or not. This option is intended to avoid console spam caused
+            by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+        token: :class:`UndefinedOr`[Optional[:class:`str`]]
+            The token to use when requesting the route.
+        user_agent: :class:`UndefinedOr`[:class:`str`]
+            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
         ------
@@ -720,11 +779,12 @@ class HTTPClient:
         """
         response = await self.raw_request(
             route,
-            authenticated=authenticated,
             accept_json=accept_json,
-            user_agent=user_agent,
-            mfa_ticket=mfa_ticket,
+            bot=bot,
             json=json,
+            mfa_ticket=mfa_ticket,
+            token=token,
+            user_agent=user_agent,
             **kwargs,
         )
         result = await utils._json_or_text(response)
@@ -766,7 +826,7 @@ class HTTPClient:
         :class:`Instance`
             The instance.
         """
-        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), authenticated=False)
+        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), token=None)
         return self.state.parser.parse_instance(resp)
 
     # Bots control
@@ -2477,7 +2537,7 @@ class HTTPClient:
         invite_code = code.code if isinstance(code, BaseInvite) else code
         resp: raw.InviteResponse = await self.request(
             routes.INVITES_INVITE_FETCH.compile(invite_code=invite_code),
-            authenticated=False,
+            token=None,
         )
         return self.state.parser.parse_public_invite(resp)
 
@@ -3979,7 +4039,7 @@ class HTTPClient:
         """
         response = await self.raw_request(
             routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user)[-1]),
-            authenticated=False,
+            token=None,
             accept_json=False,
         )
         avatar = await response.read()
@@ -4109,7 +4169,7 @@ class HTTPClient:
         else:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
-                authenticated=False,
+                token=None,
             )
 
     async def edit_webhook(
@@ -4174,7 +4234,7 @@ class HTTPClient:
             resp = await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                 json=payload,
-                authenticated=False,
+                token=None,
             )
         return self.state.parser.parse_webhook(resp)
 
@@ -4260,7 +4320,7 @@ class HTTPClient:
             routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
             json=payload,
             headers=headers,
-            authenticated=False,
+            token=None,
         )
         return self.state.parser.parse_message(resp)
 
@@ -4306,7 +4366,7 @@ class HTTPClient:
         else:
             r2: raw.Webhook = await self.request(
                 routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
-                authenticated=False,
+                token=None,
             )
             return self.state.parser.parse_webhook(r2)
 
@@ -4401,7 +4461,7 @@ class HTTPClient:
         payload: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
             routes.AUTH_ACCOUNT_CONFIRM_DELETION.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4442,7 +4502,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CREATE_ACCOUNT.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4538,7 +4598,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_PASSWORD_RESET.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4567,7 +4627,7 @@ class HTTPClient:
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4591,7 +4651,7 @@ class HTTPClient:
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4610,7 +4670,7 @@ class HTTPClient:
         HTTPException
             Verifying the email address failed.
         """
-        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), authenticated=False)
+        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
         if response is not None and isinstance(response, dict) and 'ticket' in response:
             return self.state.parser.parse_mfa_ticket(response['ticket'])
         else:
@@ -4763,9 +4823,7 @@ class HTTPClient:
             'password': password,
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=payload
-        )
+        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
         return self.state.parser.parse_response_login(resp, friendly_name)
 
     async def login_with_mfa(
@@ -4799,9 +4857,7 @@ class HTTPClient:
             'mfa_response': by.build() if by else None,
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=payload
-        )
+        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
         ret = self.state.parser.parse_response_login(resp, friendly_name)
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret
