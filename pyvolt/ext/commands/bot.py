@@ -24,14 +24,22 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from pyvolt import Client, Message
+from pyvolt import Client
+import sys
 import typing
 
 if typing.TYPE_CHECKING:
     from collections.abc import Callable
 
+    from .context import Context
 
-class Bot(Client):
+if sys.version_info >= (3, 13):
+    C = typing.TypeVar('C', bound='Context', default='Context')
+else:
+    C = typing.TypeVar('C', bound='Context')
+
+
+class Bot(Client, typing.Generic[C]):
     __slots__ = (
         'command_prefix',
         'skip_check',
@@ -39,7 +47,7 @@ class Bot(Client):
 
     def __init__(
         self,
-        command_prefix: Callable[[Message], list[str]] | str | list[str],
+        command_prefix: Callable[[C], list[str]] | str | list[str],
         **options,
     ) -> None:
         self_bot = options.pop('self_bot', False)
@@ -53,25 +61,23 @@ class Bot(Client):
         elif user_bot:
             skip_check = self.user_bot_check
 
-        self.command_prefix: Callable[[Message], list[str]] | str | list[str] = command_prefix
-        self.skip_check: Callable[[Message], bool] = skip_check
+        self.command_prefix: Callable[[C], list[str]] | str | list[str] = command_prefix
+        self.skip_check: Callable[[C], bool] = skip_check
 
         super().__init__(**options)
 
-    def self_bot_check(self, message: Message, /) -> bool:
-        if message.author.bot is not None or message.webhook is not None:
+    def self_bot_check(self, ctx: C, /) -> bool:
+        if ctx.author.bot is not None or ctx.message.webhook is not None:
             return False
-        me = self.me
-        return me is not None and message.author_id == me.id
+        return ctx.author_id == ctx.me.id
 
-    def traditional_bot_check(self, message: Message, /) -> bool:
-        if message.author.bot is not None or message.webhook is not None:
+    def traditional_bot_check(self, ctx: C, /) -> bool:
+        if ctx.author.bot is not None or ctx.message.webhook is not None:
             return False
-        me = self.me
-        return me is not None and message.author_id != me.id
+        return ctx.author_id != ctx.me.id
 
-    def user_bot_check(self, message: Message, /) -> bool:
-        return message.author.bot is not None or message.webhook is not None
+    def user_bot_check(self, ctx: C, /) -> bool:
+        return ctx.author.bot is not None or ctx.message.webhook is not None
 
 
 __all__ = ('Bot',)
