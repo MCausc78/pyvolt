@@ -380,8 +380,9 @@ class Shard:
             _L.debug('Received %s', k)
         return k
 
-    def _headers(self) -> dict[str, str]:
-        return {'user-agent': self.user_agent}
+    def get_headers(self) -> dict[str, str]:
+        """Dict[:class:`str`, :class:`str`]: The headers to use when connecting to WebSocket."""
+        return {'User-Agent': self.user_agent}
 
     async def _heartbeat(self) -> None:
         while True:
@@ -413,7 +414,7 @@ class Shard:
         i = 0
         _L.debug('Connecting to %s, format=%s', self.base, self.format)
 
-        headers = self._headers()
+        headers = self.get_headers()
         while True:
             if i >= self.retries:
                 break
