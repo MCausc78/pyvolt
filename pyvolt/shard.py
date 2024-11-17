@@ -392,6 +392,15 @@ class Shard:
     async def connect(self) -> None:
         await self._connect()
 
+    async def ws_connect(
+        self, session: aiohttp.ClientSession, url: str, /, *, headers: dict[str, str], params: dict[str, str]
+    ) -> aiohttp.ClientWebSocketResponse:
+        return await session.ws_connect(
+            url,
+            headers=headers,
+            params=params,
+        )
+
     async def _socket_connect(self) -> aiohttp.ClientWebSocketResponse:
         session = self._session
         if callable(session):
@@ -419,7 +428,8 @@ class Shard:
             if i >= self.retries:
                 break
             try:
-                return await session.ws_connect(
+                return await self.ws_connect(
+                    session,
                     self.base,
                     headers=headers,
                     params=params,  # type: ignore # Not true

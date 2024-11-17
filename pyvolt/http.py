@@ -570,6 +570,23 @@ class HTTPClient:
         if mfa_ticket is not None:
             headers['X-MFA-Ticket'] = mfa_ticket
 
+    async def send_request(
+        self,
+        session: aiohttp.ClientSession,
+        /,
+        *,
+        method: str,
+        url: str,
+        headers: multidict.CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> aiohttp.ClientResponse:
+        return await session.request(
+            method,
+            url,
+            headers=headers,
+            **kwargs,
+        )
+
     async def raw_request(
         self,
         route: routes.CompiledRoute,
@@ -618,9 +635,6 @@ class HTTPClient:
         """
         headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
 
-        if json is not UNDEFINED:
-            kwargs['data'] = utils.to_json(json)
-
         retries = 0
 
         self.add_headers(
@@ -638,6 +652,9 @@ class HTTPClient:
         method = route.route.method
         path = route.build()
         url = self._base + path
+
+        if json is not UNDEFINED:
+            kwargs['data'] = utils.to_json(json)
 
         rate_limiter = self.rate_limiter
 
@@ -669,9 +686,10 @@ class HTTPClient:
                 self._session = session
 
             try:
-                response = await session.request(
-                    method,
-                    url,
+                response = await self.send_request(
+                    session,
+                    method=method,
+                    url=url,
                     headers=headers,
                     **kwargs,
                 )
