@@ -28,6 +28,7 @@ from abc import ABC, abstractmethod
 import aiohttp
 import asyncio
 from datetime import datetime, timedelta
+from inspect import isawaitable
 import logging
 import multidict
 import typing
@@ -536,7 +537,7 @@ class HTTPClient:
         mfa_ticket: str | None = None,
         token: UndefinedOr[str | None] = UNDEFINED,
         user_agent: UndefinedOr[str | None] = UNDEFINED,
-    ) -> None:
+    ) -> utils.MaybeAwaitable[None]:
         if accept_json:
             headers['Accept'] = 'application/json'
 
@@ -637,7 +638,7 @@ class HTTPClient:
 
         retries = 0
 
-        self.add_headers(
+        tmp = self.add_headers(
             headers,
             route,
             accept_json=accept_json,
@@ -648,6 +649,8 @@ class HTTPClient:
             token=token,
             user_agent=user_agent,
         )
+        if isawaitable(tmp):
+            await tmp
 
         method = route.route.method
         path = route.build()

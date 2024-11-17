@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import aiohttp
 from attrs import define, field
+from inspect import isawaitable
 import logging
 import re
 import typing
@@ -37,6 +38,8 @@ from .errors import DiscoverError, InvalidData
 from .server import ServerFlags, BaseServer
 
 if typing.TYPE_CHECKING:
+    import multidict
+
     from . import raw
     from .cdn import StatelessAsset, Asset
     from .enums import ServerActivity, BotUsage, ReviteBaseTheme
@@ -290,12 +293,21 @@ class DiscoveryClient:
         '_base',
         'session',
         'state',
+        'user_agent',
     )
 
-    def __init__(self, *, base: str | None = None, session: aiohttp.ClientSession, state: State) -> None:
+    def __init__(
+        self,
+        *,
+        base: str | None = None,
+        session: aiohttp.ClientSession,
+        state: State,
+        user_agent: str = '',
+    ) -> None:
         self._base: str = f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base is None else base.rstrip('/')
         self.session: aiohttp.ClientSession = session
         self.state: State = state
+        self.user_agent: str = user_agent or DEFAULT_DISCOVERY_USER_AGENT
 
     def with_base(self, base: str, /) -> None:
         self._base = base.rstrip('/')
@@ -332,11 +344,43 @@ class DiscoveryClient:
                 )
             return match[0]
 
-    async def _request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
+    def add_headers(
+        self,
+        headers: multidict.CIMultiDict[typing.Any],
+        method: str,
+        path: str,
+        /,
+    ) -> utils.MaybeAwaitable[None]:
+        headers['User-Agent'] = self.user_agent
+
+    async def send_request(
+        self,
+        session: aiohttp.ClientSession,
+        method: str,
+        url: str,
+        /,
+        *,
+        headers: multidict.CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> aiohttp.ClientResponse:
+        return await session.request(
+            method,
+            url,
+            headers=headers,
+            **kwargs,
+        )
+
+    async def raw_request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
-        headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
-        headers.update(kwargs.pop('headers', {}))
-        response = await self.session.request(method, self._base + path, headers=headers, **kwargs)
+
+        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
+        tmp = self.add_headers(headers, method, path)
+        if isawaitable(tmp):
+            await tmp
+
+        url = self._base + path
+
+        response = await self.send_request(self.session, method, url, headers=headers, **kwargs)
         if response.status >= 400:
             data = await utils._json_or_text(response)
             raise DiscoverError(response, response.status, data)
@@ -359,7 +403,7 @@ class DiscoveryClient:
         return build_id
 
     async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
-        response = await self._request(method, path, **kwargs)
+        response = await self.raw_request(method, path, **kwargs)
         result = await utils._json_or_text(response)
         _L.debug('received from %s %s: %s', method, path, result)
         response.close()
