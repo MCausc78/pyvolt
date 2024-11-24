@@ -34,7 +34,7 @@ import typing
 from . import utils
 from .core import ULIDOr, resolve_id, __version__ as version
 from .enums import ShardFormat
-from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
+from .errors import PyvoltException, ShardError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
@@ -445,7 +445,7 @@ class Shard:
 
     async def _connect(self) -> None:
         if self._socket:
-            raise PyvoltError('The connection is already open.')
+            raise PyvoltException('The connection is already open.')
         while not self._closed:
             if self.handler:
                 r = self.handler.before_connect(self)

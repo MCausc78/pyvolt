@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
 # Thanks Rapptz/discord.py for docs
 
 
-class PyvoltError(Exception):
+class PyvoltException(Exception):
     """Base exception class for pyvolt
 
     Ideally speaking, this could be caught to handle any exceptions raised from this library.
@@ -42,7 +42,7 @@ class PyvoltError(Exception):
     __slots__ = ()
 
 
-class HTTPException(PyvoltError):
+class HTTPException(PyvoltException):
     """Exception that's raised when an HTTP request operation fails.
 
     Attributes
@@ -203,7 +203,7 @@ class BadGateway(HTTPException):
     __slots__ = ()
 
 
-class ShardError(PyvoltError):
+class ShardError(PyvoltException):
     __slots__ = ()
 
 
@@ -223,7 +223,7 @@ class ConnectError(ShardError):
         super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
 
 
-class DiscoverError(PyvoltError):
+class DiscoverError(PyvoltException):
     __slots__ = ('response', 'status', 'data')
 
     def __init__(
@@ -239,7 +239,7 @@ class DiscoverError(PyvoltError):
         super().__init__(status, data)
 
 
-class InvalidData(PyvoltError):
+class InvalidData(PyvoltException):
     """Exception that's raised when the library encounters unknown
     or invalid data from Revolt.
     """
@@ -251,7 +251,7 @@ class InvalidData(PyvoltError):
         super().__init__(reason)
 
 
-class NoData(PyvoltError):
+class NoData(PyvoltException):
     __slots__ = ('what', 'type')
 
     def __init__(self, what: str, type: str) -> None:
@@ -261,7 +261,7 @@ class NoData(PyvoltError):
 
 
 __all__ = (
-    'PyvoltError',
+    'PyvoltException',
     'HTTPException',
     'Unauthorized',
     'Forbidden',
