@@ -79,9 +79,7 @@ class UnexpectedQuoteError(ArgumentParsingError):
         The quote mark that was found inside the non-quoted string.
     """
 
-    __slots__ = (
-        'quote',
-    )
+    __slots__ = ('quote',)
 
     def __init__(self, *, quote: str) -> None:
         self.quote: str = quote
@@ -100,9 +98,7 @@ class InvalidEndOfQuotedStringError(ArgumentParsingError):
         The character found instead of the expected string.
     """
 
-    __slots__ = (
-        'received',
-    )
+    __slots__ = ('received',)
 
     def __init__(self, *, received: str) -> None:
         self.received: str = received
@@ -120,9 +116,7 @@ class ExpectedClosingQuoteError(ArgumentParsingError):
         The quote character expected.
     """
 
-    __slots__ = (
-        'close_quote',
-    )
+    __slots__ = ('close_quote',)
 
     def __init__(self, *, close_quote: str) -> None:
         self.close_quote: str = close_quote
