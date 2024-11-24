@@ -39,11 +39,9 @@ class CommandError(PyvoltException):
     from :class:`.Bot`\, :func:`.on_command_error`.
     """
 
-    def __init__(self, message: Optional[str] = None, *args: Any) -> None:
+    def __init__(self, message: str | None = None, /, *args: typing.Any) -> None:
         if message is not None:
-            # clean-up @everyone and @here mentions
-            m = message.replace('@everyone', '@\u200beveryone').replace('@here', '@\u200bhere')
-            super().__init__(m, *args)
+            super().__init__(message, *args)
         else:
             super().__init__(*args)
 
@@ -55,7 +53,7 @@ class UserInputError(CommandError):
     This inherits from :exc:`CommandError`.
     """
 
-    pass
+    __slots__ = ()
 
 
 class ArgumentParsingError(UserInputError):
@@ -67,7 +65,7 @@ class ArgumentParsingError(UserInputError):
     i18n purposes.
     """
 
-    pass
+    __slots__ = ()
 
 
 class UnexpectedQuoteError(ArgumentParsingError):
@@ -81,7 +79,11 @@ class UnexpectedQuoteError(ArgumentParsingError):
         The quote mark that was found inside the non-quoted string.
     """
 
-    def __init__(self, quote: str) -> None:
+    __slots__ = (
+        'quote',
+    )
+
+    def __init__(self, *, quote: str) -> None:
         self.quote: str = quote
         super().__init__(f'Unexpected quote mark, {quote!r}, in non-quoted string')
 
@@ -94,13 +96,17 @@ class InvalidEndOfQuotedStringError(ArgumentParsingError):
 
     Attributes
     -----------
-    char: :class:`str`
+    received: :class:`str`
         The character found instead of the expected string.
     """
 
-    def __init__(self, char: str) -> None:
-        self.char: str = char
-        super().__init__(f'Expected space after closing quotation but received {char!r}')
+    __slots__ = (
+        'received',
+    )
+
+    def __init__(self, *, received: str) -> None:
+        self.received: str = received
+        super().__init__(f'Expected space after closing quotation but received {received!r}')
 
 
 class ExpectedClosingQuoteError(ArgumentParsingError):
@@ -114,7 +120,11 @@ class ExpectedClosingQuoteError(ArgumentParsingError):
         The quote character expected.
     """
 
-    def __init__(self, close_quote: str) -> None:
+    __slots__ = (
+        'close_quote',
+    )
+
+    def __init__(self, *, close_quote: str) -> None:
         self.close_quote: str = close_quote
         super().__init__(f'Expected closing {close_quote}.')
 

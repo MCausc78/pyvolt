@@ -24,12 +24,10 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from .errors import UnexpectedQuoteError, InvalidEndOfQuotedStringError, ExpectedClosingQuoteError
 
 # map from opening quotes to closing quotes
-_quotes = {
+_quotes: dict[str, str] = {
     '"': '"',
     '‘': '’',
     '‚': '‛',
@@ -48,18 +46,25 @@ _quotes = {
     '《': '》',
     '〈': '〉',
 }
-_all_quotes = set(_quotes.keys()) | set(_quotes.values())
+_all_quotes: set[str] = set(_quotes.keys()) | set(_quotes.values())
 
 
 class StringView:
-    def __init__(self, buffer: str) -> None:
+    __slots__ = (
+        'index',
+        'buffer',
+        'end',
+        'previous',
+    )
+
+    def __init__(self, buffer: str, /) -> None:
         self.index: int = 0
         self.buffer: str = buffer
         self.end: int = len(buffer)
-        self.previous = 0
+        self.previous: int = 0
 
     @property
-    def current(self) -> Optional[str]:
+    def current(self) -> str | None:
         return None if self.eof else self.buffer[self.index]
 
     @property
@@ -84,7 +89,7 @@ class StringView:
         self.index += pos
         return self.previous != self.index
 
-    def skip_string(self, string: str) -> bool:
+    def skip_string(self, string: str, /) -> bool:
         strlen = len(string)
         if self.buffer[self.index : self.index + strlen] == string:
             self.previous = self.index
@@ -98,13 +103,13 @@ class StringView:
         self.index = self.end
         return result
 
-    def read(self, n: int) -> str:
+    def read(self, n: int, /) -> str:
         result = self.buffer[self.index : self.index + n]
         self.previous = self.index
         self.index += n
         return result
 
-    def get(self) -> Optional[str]:
+    def get(self) -> str | None:
         try:
             result = self.buffer[self.index + 1]
         except IndexError:
@@ -129,7 +134,7 @@ class StringView:
         self.index += pos
         return result
 
-    def get_quoted_word(self) -> Optional[str]:
+    def get_quoted_word(self) -> str | None:
         current = self.current
         if current is None:
             return None
@@ -148,7 +153,7 @@ class StringView:
             if not current:
                 if is_quoted:
                     # unexpected EOF
-                    raise ExpectedClosingQuoteError(close_quote)
+                    raise ExpectedClosingQuoteError(close_quote=close_quote)
                 return ''.join(result)
 
             # currently we accept strings in the format of "hello world"
@@ -159,7 +164,7 @@ class StringView:
                     # string ends with \ and no character after it
                     if is_quoted:
                         # if we're quoted then we're expecting a closing quote
-                        raise ExpectedClosingQuoteError(close_quote)
+                        raise ExpectedClosingQuoteError(close_quote=close_quote)
                     # if we aren't then we just let it through
                     return ''.join(result)
 
@@ -174,14 +179,14 @@ class StringView:
 
             if not is_quoted and current in _all_quotes:
                 # we aren't quoted
-                raise UnexpectedQuoteError(current)
+                raise UnexpectedQuoteError(quote=current)
 
             # closing quote
             if is_quoted and current == close_quote:
                 next_char = self.get()
                 valid_eof = not next_char or next_char.isspace()
                 if not valid_eof:
-                    raise InvalidEndOfQuotedStringError(next_char)  # type: ignore # this will always be a string
+                    raise InvalidEndOfQuotedStringError(received=next_char)  # type: ignore # this will always be a string
 
                 # we're quoted so it's okay
                 return ''.join(result)
@@ -193,7 +198,7 @@ class StringView:
             result.append(current)
 
     def __repr__(self) -> str:
-        return f'<StringView pos: {self.index} prev: {self.previous} end: {self.end} eof: {self.eof}>'
+        return f'<StringView pos={self.index} prev={self.previous} end={self.end} eof={self.eof}>'
 
 
 __all__ = ('StringView',)
