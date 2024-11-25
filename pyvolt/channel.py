@@ -74,6 +74,12 @@ class BaseChannel(Base, abc.ABC):
 
         return BaseMessage(state=self.state, id=resolve_id(message), channel_id=self.id)
 
+    @property
+    def mention(self) -> str:
+        """:class:`str`: Returns the channel's mention."""
+
+        return f'<#{self.id}>'
+
     async def close(self, *, silent: bool | None = None) -> None:
         """|coro|
 

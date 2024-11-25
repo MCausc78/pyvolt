@@ -65,6 +65,7 @@ class StringView:
 
     @property
     def current(self) -> str | None:
+        """Optional[:class:`str`]: Returns the character at current position."""
         return None if self.eof else self.buffer[self.index]
 
     @property
@@ -75,6 +76,13 @@ class StringView:
         self.index = self.previous
 
     def skip_ws(self) -> bool:
+        """Skips whitespace.
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the buffer had whitespace and was skipped.
+        """
         pos = 0
         while not self.eof:
             try:
@@ -90,6 +98,18 @@ class StringView:
         return self.previous != self.index
 
     def skip_string(self, string: str, /) -> bool:
+        """Skips a substring.
+
+        Parameters
+        ----------
+        string: :class:`str`
+            The string to skip.
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the buffer had substring and was skipped.
+        """
         strlen = len(string)
         if self.buffer[self.index : self.index + strlen] == string:
             self.previous = self.index
@@ -98,18 +118,23 @@ class StringView:
         return False
 
     def read_rest(self) -> str:
+        """:class:`str`: Read the rest of buffer."""
+
         result = self.buffer[self.index :]
         self.previous = self.index
         self.index = self.end
         return result
 
     def read(self, n: int, /) -> str:
+        """:class:`str`: Read N chars from buffer."""
+
         result = self.buffer[self.index : self.index + n]
         self.previous = self.index
         self.index += n
         return result
 
     def get(self) -> str | None:
+        """Optional[:class:`str`]: Read 1 char from buffer."""
         try:
             result = self.buffer[self.index + 1]
         except IndexError:
@@ -120,6 +145,8 @@ class StringView:
         return result
 
     def get_word(self) -> str:
+        """:class:`str`: Reads a word until whitespace is reached."""
+
         pos = 0
         while not self.eof:
             try:
@@ -135,6 +162,7 @@ class StringView:
         return result
 
     def get_quoted_word(self) -> str | None:
+        """Optional[:class:`str`]:"""
         current = self.current
         if current is None:
             return None

@@ -14,6 +14,7 @@ class Parameter:
         'type',
         'name',
         'description',
+        'displayed_name',
     )
 
     def __init__(
@@ -22,10 +23,12 @@ class Parameter:
         type: type,
         name: str,
         description: str | None = None,
+        displayed_name: str | None = None,
     ) -> None:
         self.type: type = type
         self.name: str = name
         self.description: str | None = description
+        self.displayed_name: str | None = displayed_name
 
 
 class Command:
@@ -37,7 +40,7 @@ class Command:
         'children',
         'description',
         'example',
-        'extension',
+        'gear',
         'hidden',
         'name',
         'parameters',
@@ -46,23 +49,22 @@ class Command:
     def __init__(
         self,
         *,
-        aliases: list[str],
-        args: str,
+        aliases: list[str] | None = None,
+        args: str,  # TODO
         callback: Callable[[Context], pyvolt.utils.MaybeAwaitable[typing.Any]],
         # checks: list[Check],
-        description: str | None,
+        description: str | None = None,
         name: str,
         # children: list[SubCommand],
-        alias_to_child: dict[str, str],
-        example: str,
-        hidden: bool,
+        example: str = '',
+        hidden: bool = False,
     ) -> None:
         self.aliases: list[str] = aliases
         self.args: str = args
         # self.callback: Callable[[E, Context], pyvolt.utils.MaybeAwaitable[typing.Any]] = callback
         # self.checks: list[Check] = checks
         self.description: str | None = description
-        self.extension: E = None  # type: ignore # set up later
+        self.gear: Gear = None  # type: ignore # set up later
         self.name: str = name
         # self.children: list[SubCommand] = children
         self.example: str = example
