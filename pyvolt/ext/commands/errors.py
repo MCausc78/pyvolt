@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
 
     from pyvolt import ServerChannel
 
-    from ._types import BotT
+    from .bot import Bot
     from .context import Context
     from .core import Parameter
 
@@ -152,8 +152,8 @@ class CheckAnyFailure(CheckFailure):
         'errors',
     )
 
-    def __init__(self, checks: list[Callable[[Context[BotT]], bool]], errors: list[CheckFailure]) -> None:
-        self.checks: list[Callable[[Context[BotT]], bool]] = checks
+    def __init__(self, checks: list[Callable[[Context[Bot]], bool]], errors: list[CheckFailure]) -> None:
+        self.checks: list[Callable[[Context[Bot]], bool]] = checks
         self.errors: list[CheckFailure] = errors
         super().__init__('You do not have permission to run this command.')
 

@@ -32,9 +32,9 @@ if typing.TYPE_CHECKING:
     from .context import Context
 
 if sys.version_info >= (3, 13):
-    BotT = typing.TypeVar('BotT', bound='Bot', default='Bot')
+    BotT = typing.TypeVar('BotT', bound='Bot', default='Bot', covariant=True)
 else:
-    BotT = typing.TypeVar('BotT', bound='Bot')
+    BotT = typing.TypeVar('BotT', bound='Bot', covariant=True)
 
 if sys.version_info >= (3, 13):
     ContextT = typing.TypeVar('ContextT', bound='Context[typing.Any]', default='Context[typing.Any]')

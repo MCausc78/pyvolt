@@ -163,7 +163,7 @@ class Bot(Client):
         if tmp:
             return
 
-        # TODO
+        await self.invoke(ctx)
 
     async def on_message_create(self, event: MessageCreateEvent, /) -> None:
         await self.process_commands(event.message, event.shard)

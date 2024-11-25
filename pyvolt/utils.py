@@ -415,6 +415,18 @@ def is_inside_class(func: Callable[..., typing.Any], /) -> bool:
     return func.__qualname__ != func.__name__ and not func.__qualname__.rpartition('.')[0].endswith('<locals>')
 
 
+class _MissingSentinel:
+    __slots__ = ()
+
+    def __bool__(self) -> typing.Literal[False]:
+        return False
+
+    def __repr__(self) -> typing.Literal['...']:
+        return '...'
+
+
+MISSING: typing.Any = _MissingSentinel()
+
 __all__ = (
     'to_json',
     'from_json',
@@ -435,4 +447,6 @@ __all__ = (
     'evaluate_annotation',
     'resolve_annotation',
     'is_inside_class',
+    '_MissingSentinel',
+    'MISSING',
 )
