@@ -48,6 +48,9 @@ test = [
     "typing-extensions>=4.3,<5",
     "tzdata; sys_platform == 'win32'",
 ]
+docs = [
+    "mkdocs"
+]
 
 [tool.pyright]
 typeCheckingMode = "standard"

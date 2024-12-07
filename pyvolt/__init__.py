@@ -1,11 +1,9 @@
 """
-Revolt API Wrapper
-~~~~~~~~~~~~~~~~~~~
+# PyVolt
 
-A basic wrapper for the Revolt API.
+A sane Python framework for writing modern Revolt bots.
 
-:copyright: (c) 2024-present MCausc78
-:license: MIT, see LICENSE for more details.
+To get started, you will want to initialize an instance of [`pyvolt.client.Client`][].
 
 """
 
