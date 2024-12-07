@@ -42,6 +42,11 @@ class ClientBulkEvent(typing.TypedDict):
     v: list[ClientEvent]
 
 
+class ClientErrorEvent(typing.TypedDict):
+    type: typing.Literal['Error']
+    data: dict[str, typing.Any]
+
+
 class ClientAuthenticatedEvent(typing.TypedDict):
     type: typing.Literal['Authenticated']
 
@@ -216,8 +221,8 @@ class ClientEmojiDeleteEvent(typing.TypedDict):
 
 
 # This event is weird...
-# I would expect it to be dispatched to privileged users, but no.
-# It ISN'T dispatched in WebSocket, never.
+# I would expect it to be dispatched to privileged users, but no
+# It ISN'T dispatched in WebSocket, never
 class ClientReportCreateEvent(CreatedReport):
     type: typing.Literal['ReportCreate']
 
@@ -346,6 +351,7 @@ class ClientUserVoiceStateUpdateEvent(typing.TypedDict):
 
 ClientEvent = (
     ClientBulkEvent
+    | ClientErrorEvent
     | ClientAuthenticatedEvent
     | ClientLogoutEvent
     | ClientReadyEvent
@@ -372,7 +378,7 @@ ClientEvent = (
     | ClientUserPlatformWipeEvent
     | ClientEmojiCreateEvent
     | ClientEmojiDeleteEvent
-    # | ClientReportCreateEvent
+    | ClientReportCreateEvent
     | ClientChannelCreateEvent
     | ClientChannelUpdateEvent
     | ClientChannelDeleteEvent

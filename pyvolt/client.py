@@ -156,6 +156,7 @@ class ClientEventHandler(EventHandler):
             'UserPlatformWipe': self.handle_user_platform_wipe,
             'EmojiCreate': self.handle_emoji_create,
             'EmojiDelete': self.handle_emoji_delete,
+            'ReportCreate': self.handle_report_create,
             'ChannelCreate': self.handle_channel_create,
             'ChannelUpdate': self.handle_channel_update,
             'ChannelDelete': self.handle_channel_delete,
@@ -278,6 +279,10 @@ class ClientEventHandler(EventHandler):
 
     def handle_emoji_delete(self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /) -> None:
         event = self._state.parser.parse_emoji_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_report_create(self, shard: Shard, payload: raw.ClientReportCreateEvent, /) -> None:
+        event = self._state.parser.parse_report_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_create(self, shard: Shard, payload: raw.ClientChannelCreateEvent, /) -> None:
@@ -485,13 +490,127 @@ class TemporarySubscription(typing.Generic[EventT]):
         except Exception as exc:
             try:
                 self.future.set_exception(exc)
-            except Exception:
-                _L.exception('Checker function (task: %s) raised an exception', name)
+            except asyncio.InvalidStateError:
+                pass
+            _L.exception('Checker function (task: %s) raised an exception', name)
             return True
 
     def cancel(self) -> None:
         """Cancels the subscription."""
         self.future.cancel()
+        self.client._handlers[self.event][1].pop(self.id, None)
+
+
+class TemporarySubscriptionListIterator(typing.Generic[EventT]):
+    __slots__ = ('subscription',)
+
+    def __init__(self, *, subscription: TemporarySubscriptionList[EventT]) -> None:
+        self.subscription: TemporarySubscriptionList[EventT] = subscription
+
+    async def __anext__(self) -> EventT:
+        subscription = self.subscription
+
+        if subscription.exception is not None:
+            raise subscription.exception
+
+        if subscription.done.is_set() and subscription.queue.empty():
+            raise StopAsyncIteration
+
+        while True:
+            index = await subscription.queue.get()
+
+            if subscription.exception is not None:
+                raise subscription.exception
+
+            if index >= 0:
+                break
+
+        return subscription.result[index]
+
+
+class TemporarySubscriptionList(typing.Generic[EventT]):
+    """Represents a temporary subscription on multiple events."""
+
+    __slots__ = (
+        'client',
+        'id',
+        'event',
+        'done',
+        'check',
+        'result',
+        'exception',
+        'expected',
+        'queue',
+    )
+
+    def __init__(
+        self,
+        *,
+        client: Client,
+        expected: int,
+        id: int,
+        event: type[EventT],
+        check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+    ) -> None:
+        self.client: Client = client
+        self.id: int = id
+        self.event: type[EventT] = event
+        self.done: asyncio.Event = asyncio.Event()
+        self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
+        self.result: list[EventT] = []
+        self.exception: Exception | None = None
+        self.expected: int = expected
+
+        self.queue: asyncio.Queue[int] = asyncio.Queue(expected)
+
+    async def wait(self) -> list[EventT]:
+        if len(self.result) < self.expected:
+            await self.done.wait()
+
+            if self.exception is not None:
+                raise self.exception
+
+            if len(self.result) < self.expected:
+                raise asyncio.TimeoutError('Timed out waiting.')
+
+        return self.result
+
+    def __await__(self) -> Generator[typing.Any, typing.Any, list[EventT]]:
+        return self.wait().__await__()
+
+    def __aiter__(self) -> TemporarySubscriptionListIterator[EventT]:
+        return TemporarySubscriptionListIterator(subscription=self)
+
+    async def _handle(self, arg: EventT, name: str, /) -> bool:
+        if self.exception is not None:
+            pass
+
+        try:
+            can = self.check(arg)
+            if isawaitable(can):
+                can = await can
+
+            if can:
+                if len(self.result) >= self.expected:
+                    self.done.set()
+                else:
+                    self.result.append(arg)
+                    if len(self.result) >= self.expected:
+                        self.done.set()
+                    self.queue.put_nowait(len(self.result) - 1)
+
+            return self.done.is_set()
+        except Exception as exc:
+            _L.exception('Checker function (task: %s) raised an exception', name)
+            self.exception = exc
+            self.done.set()
+            self.queue.put_nowait(len(self.result) - 1)
+            return True
+
+    def cancel(self) -> None:
+        """Cancels the subscription."""
+
+        self.done.set()
         self.client._handlers[self.event][1].pop(self.id, None)
 
 
@@ -568,7 +687,7 @@ class Client:
             type[BaseEvent],
             tuple[
                 dict[int, EventSubscription[BaseEvent]],
-                dict[int, TemporarySubscription[BaseEvent]],
+                dict[int, TemporarySubscription[BaseEvent] | TemporarySubscriptionList[BaseEvent]],
             ],
         ] = {}
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
@@ -755,7 +874,7 @@ class Client:
             except Exception:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
-    def dispatch(self, event: BaseEvent) -> asyncio.Task[None]:
+    def dispatch(self, event: BaseEvent, /) -> asyncio.Task[None]:
         """Dispatches a event.
 
         Parameters
@@ -781,6 +900,7 @@ class Client:
     def subscribe(
         self,
         event: type[EventT],
+        /,
         callback: utils.MaybeAwaitableFunc[[EventT], None],
     ) -> EventSubscription[EventT]:
         """Subscribes to event.
@@ -807,7 +927,7 @@ class Client:
         return sub
 
     def on(
-        self, event: type[EventT]
+        self, event: type[EventT], /
     ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
         EventSubscription[EventT],
@@ -819,14 +939,48 @@ class Client:
 
         return decorator
 
+    @typing.overload
+    def wait_for(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: typing.Literal[1] = 1,
+        timeout: float | None = None,
+    ) -> TemporarySubscription[EventT]: ...
+
+    @typing.overload
+    def wait_for(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: typing.Literal[0] = ...,
+        timeout: float | None = None,
+    ) -> typing.NoReturn: ...
+
+    @typing.overload
     def wait_for(
         self,
         event: type[EventT],
         /,
         *,
         check: Callable[[EventT], bool] | None = None,
+        count: int = 1,
         timeout: float | None = None,
-    ) -> TemporarySubscription[EventT]:
+    ) -> TemporarySubscriptionList[EventT]: ...
+
+    def wait_for(
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: int = 1,
+        timeout: float | None = None,
+    ) -> TemporarySubscription[EventT] | TemporarySubscriptionList[EventT]:
         """|coro|
 
         Waits for a WebSocket event to be dispatched.
@@ -891,17 +1045,37 @@ class Client:
 
         Raises
         -------
+        TypeError
+            If ``count`` parameter was negative or zero.
         asyncio.TimeoutError
             If a timeout is provided and it was reached.
 
         Returns
         --------
-        :class:`TemporarySubscription`[EventT]
+        Union[:class:`TemporarySubscription`[EventT], :class:`TemporarySubscriptionList`[EventT]]
             The subscription. This can be ``await``'ed.
         """
 
-        if not check:
-            check = lambda _: True
+        if count <= 0:
+            raise TypeError('Cannot wait for zero events')
+
+        if check is None:
+            check = lambda _, /: True
+
+        if count > 1:
+            sub = TemporarySubscriptionList(
+                client=self,
+                expected=count,
+                id=self._get_i(),
+                event=event,
+                check=check,
+            )
+
+            try:
+                self._handlers[event][1][sub.id] = sub  # type: ignore
+            except KeyError:
+                self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
+            return sub
 
         future = asyncio.get_running_loop().create_future()
 
@@ -1003,8 +1177,7 @@ class Client:
 
     @property
     def private_channels(self) -> Mapping[str, DMChannel | GroupChannel]:
-        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels.
-        Useful when developing Revolt client."""
+        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels."""
         cache = self._state.cache
         if not cache:
             return {}
@@ -1012,14 +1185,12 @@ class Client:
 
     @property
     def ordered_private_channels_old(self) -> list[DMChannel | GroupChannel]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order.
-        Useful when developing Revolt client."""
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
 
     @property
     def ordered_private_channels(self) -> list[DMChannel | GroupChannel]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order.
-        Useful when developing Revolt client."""
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
     def get_channel(self, channel_id: str, /) -> Channel | None:

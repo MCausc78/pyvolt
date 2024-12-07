@@ -867,17 +867,17 @@ class HTTPClient:
         Raises
         ------
         HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``IsBot``                                 | The current token belongs to bot account.               |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.               |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |
+            +-------------------------------------------+---------------------------------------------------------+
         Unauthorized
             +------------------------------------------+-----------------------------------------+
             | Possible :attr:`Unauthorized.type` value | Reason                                  |
@@ -972,13 +972,13 @@ class HTTPClient:
         Raises
         ------
         HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. +
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |
+            +-------------------------------------------+---------------------------------------------------------+
         Unauthorized
             +------------------------------------------+-----------------------------------------+
             | Possible :attr:`Unauthorized.type` value | Reason                                  |
@@ -1210,17 +1210,17 @@ class HTTPClient:
             | ``IsBot``                                 | The current token belongs to bot account.            |
             +-------------------------------------------+------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                              | Populated attributes         |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``Banned``                            | The bot was banned in target server.                |                              |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``BotIsPrivate``                      | You do not own the bot to add it.                   |                              |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.     | :attr:`Forbidden.max`        |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to add bots. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            +---------------------------------------+-----------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                              |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``Banned``                            | The bot was banned in target server.                |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``BotIsPrivate``                      | You do not own the bot to add it.                   |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.     |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to add bots. |
+            +---------------------------------------+-----------------------------------------------------+
         NotFound
             +--------------------------------------+-------------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                              |
@@ -1241,7 +1241,6 @@ class HTTPClient:
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
             | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-
         TypeError
             You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
@@ -1293,11 +1292,11 @@ class HTTPClient:
             | ``IsBot``                                 | The current token belongs to bot account.               |
             +-------------------------------------------+---------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the message. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the message. |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+----------------------------+
             | Possible :attr:`NotFound.type` value | Reason                     |
@@ -1335,11 +1334,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                                    | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            +---------------------------------------+---------------------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                                    |
+            +---------------------------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. |
+            +---------------------------------------+---------------------------------------------------------------------------+
         NotFound
             +--------------------------------------+----------------------------+
             | Possible :attr:`NotFound.type` value | Reason                     |
@@ -1409,21 +1408,21 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         HTTPException
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                               | Populated attributes        |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | Invalid data was passed.                             | :attr:`HTTPException.error` |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |                             |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                               |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``FailedValidation``                      | The payload was invalid.                             |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |
+            +-------------------------------------------+------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``NotOwner``                          | You do not own the group.                                   |                              |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``NotOwner``                          | You do not own the group.                                   |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                          |
@@ -1495,11 +1494,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                          |
@@ -1737,11 +1736,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                              | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+            +---------------------------------------+---------------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                              |
+            +---------------------------------------+---------------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. |
+            +---------------------------------------+---------------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                                |
@@ -2080,39 +2079,119 @@ class HTTPClient:
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
         silent: bool | None = None,
+        mention_everyone: bool | None = None,
+        mention_online: bool | None = None,
     ) -> Message:
         """|coro|
 
         Sends a message to the given channel.
+
         You must have :attr:`~Permissions.send_messages` to do this.
+
+        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do this.
+        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do this.
 
         Parameters
         ----------
         channel: :class:`ULIDOr`[:class:`TextChannel`]
-            The channel.
+            The destination channel.
         content: Optional[:class:`str`]
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`ResolvableResource`]]
-            The message attachments.
+            The attachments to send the message with.
+
+            You must have :attr:`~Permissions.upload_files` to provide this.
         replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
-            The message embeds.
+            The embeds to send the message with.
+
+            You must have :attr:`~Permissions.send_embeds` to provide non-null or non-empty value.
         masquearde: Optional[:class:`Masquerade`]
             The message masquerade.
+
+            You must have :attr:`~Permissions.use_masquerade` to provide this.
+
+            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`Interactions`]
             The message interactions.
+
+            If :attr:`.Interactions.reactions` is provided, :attr:`~Permissions.react` is required.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel.
+
+            User accounts cannot set this to ``True``.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel.
+
+            User accounts cannot set this to ``True``.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to send
+        Unauthorized
+            +------------------------------------------+----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                 |
+            +------------------------------------------+----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid. |
+            +------------------------------------------+----------------------------------------+
         HTTPException
-            Sending the message failed.
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                                                               |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``                          | The message was empty.                                                                               |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``                      | The payload was invalid.                                                                             |
+            +-------------------------------------------+------------------------------------------------------------- ----------------------------------------+
+            | ``InvalidFlagValue``                      | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                      |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``                      | The passed nonce was already used. One of :attr:`.Interactions.reactions` elements was invalid.      |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``                       | :attr:`.Interactions.restrict_reactions` was ``True`` and :attr:`.Interactions.reactions` was empty. |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.                                                            |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``                              | The current token belongs to user account.                                                           |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``                       | The message was too large.                                                                           |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments``                    | You provided more attachments than allowed on this instance.                                         |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``                         | You provided more embeds than allowed on this instance.                                              |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``                        | You was replying to more messages than was allowed on this instance.                                 |
+            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+        Forbidden
+            +---------------------------------------+----------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                   |
+            +---------------------------------------+----------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to send messages. |
+            +---------------------------------------+----------------------------------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                |
+            +--------------------------------------+---------------------------------------+
+            | ``NotFound``                         | The channel/file/reply was not found. |
+            +--------------------------------------+---------------------------------------+
+        Conflict
+            +--------------------------------------+-------------------------------+
+            | Possible :attr:`Conflict.type` value | Reason                        |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInGroup``                   | The bot is already in group.  |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInServer``                  | The bot is already in server. |
+            +--------------------------------------+-------------------------------+
+        InternalServerError
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                                | Populated attributes                                                          |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database.        | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``InternalError``                               | Somehow something went wrong during message creation. |                                                                               |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -2139,10 +2218,27 @@ class HTTPClient:
             payload['interactions'] = interactions.build()
 
         flags = None
+
         if silent is not None:
-            flags = 0
+            if flags is None:
+                flags = 0
+
             if silent:
                 flags |= MessageFlags.suppress_notifications.value
+
+        if mention_everyone is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_everyone:
+                flags |= MessageFlags.mention_everyone.value
+
+        if mention_online is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_online:
+                flags |= MessageFlags.mention_online.value
 
         if flags is not None:
             payload['flags'] = flags
@@ -2150,6 +2246,7 @@ class HTTPClient:
         headers = {}
         if nonce is not None:
             headers['Idempotency-Key'] = nonce
+
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
             json=payload,
@@ -4273,6 +4370,8 @@ class HTTPClient:
         masquerade: Masquerade | None = None,
         interactions: Interactions | None = None,
         silent: bool | None = None,
+        mention_everyone: bool | None = None,
+        mention_online: bool | None = None,
     ) -> Message:
         """|coro|
 
@@ -4300,6 +4399,10 @@ class HTTPClient:
             The message interactions.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel.
 
         Returns
         -------
@@ -4326,10 +4429,27 @@ class HTTPClient:
             payload['interactions'] = interactions.build()
 
         flags = None
+
         if silent is not None:
-            flags = 0
+            if flags is None:
+                flags = 0
+
             if silent:
                 flags |= MessageFlags.suppress_notifications.value
+
+        if mention_everyone is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_everyone:
+                flags |= MessageFlags.mention_everyone.value
+
+        if mention_online is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_online:
+                flags |= MessageFlags.mention_online.value
 
         if flags is not None:
             payload['flags'] = flags

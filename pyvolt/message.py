@@ -1562,6 +1562,9 @@ class Message(BaseMessage):
     mention_ids: list[str] = field(repr=True, kw_only=True)
     """The user's IDs mentioned in this message."""
 
+    role_mention_ids: list[str] = field(repr=True, kw_only=True)
+    """The role's IDs mentioned in this message."""
+
     replies: list[str] = field(repr=True, kw_only=True)
     """The message's IDs this message is replying to."""
 

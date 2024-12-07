@@ -24,10 +24,11 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from attrs import define, field
 from copy import copy
 from datetime import datetime
 import typing
+
+from attrs import define, field
 
 from . import cache as caching, utils
 from .channel import (
@@ -36,6 +37,7 @@ from .channel import (
     DMChannel,
     GroupChannel,
     PrivateChannel,
+    BaseServerChannel,
     TextChannel,
     ServerChannel,
     Channel,
@@ -67,17 +69,18 @@ if typing.TYPE_CHECKING:
     from .client import Client
     from .flags import UserFlags
     from .message import PartialMessage, MessageAppendData, Message
-    from .webhook import Webhook, PartialWebhook
+    from .safety_reports import CreatedReport
     from .shard import Shard
-    from .user_settings import UserSettings
     from .user import UserVoiceState, PartialUserVoiceState
+    from .user_settings import UserSettings
+    from .webhook import Webhook, PartialWebhook
 
 _new_user_flags = UserFlags.__new__
 
 
 @define(slots=True)
 class BaseEvent:
-    shard: Shard = field(repr=True, kw_only=True)
+    # shard: Shard = field(repr=True, kw_only=True)
     is_cancelled: bool = field(default=False, repr=True, kw_only=True)
 
     def set_cancelled(self, value: bool, /) -> bool:
@@ -109,7 +112,12 @@ class BaseEvent:
 
 
 @define(slots=True)
-class ReadyEvent(BaseEvent):
+class ShardEvent(BaseEvent):
+    shard: Shard = field(repr=True, kw_only=True)
+
+
+@define(slots=True)
+class ReadyEvent(ShardEvent):
     """Dispatched when initial state is available.
 
     .. warning::
@@ -197,7 +205,7 @@ class ReadyEvent(BaseEvent):
 
 
 @define(slots=True)
-class BaseChannelCreateEvent(BaseEvent):
+class BaseChannelCreateEvent(ShardEvent):
     event_name: typing.ClassVar[str] = 'channel_create'
 
 
@@ -246,7 +254,7 @@ ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
 
 
 @define(slots=True)
-class ChannelUpdateEvent(BaseEvent):
+class ChannelUpdateEvent(ShardEvent):
     """Dispatched when the channel is updated."""
 
     event_name: typing.ClassVar[typing.Literal['channel_update']] = 'channel_update'
@@ -282,7 +290,7 @@ class ChannelUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ChannelDeleteEvent(BaseEvent):
+class ChannelDeleteEvent(ShardEvent):
     """Dispatched when the server channel or group is deleted or became hidden for the connected user."""
 
     event_name: typing.ClassVar[typing.Literal['channel_delete']] = 'channel_delete'
@@ -306,7 +314,7 @@ class ChannelDeleteEvent(BaseEvent):
 
         cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
         # TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
-        if isinstance(self.channel, ServerChannel):
+        if isinstance(self.channel, BaseServerChannel):
             server = cache.get_server(self.channel.server_id, caching._CHANNEL_DELETE)
             if server:
                 try:
@@ -322,7 +330,7 @@ class ChannelDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class GroupRecipientAddEvent(BaseEvent):
+class GroupRecipientAddEvent(ShardEvent):
     """Dispatched when recipient is added to the group."""
 
     event_name: typing.ClassVar[typing.Literal['recipient_add']] = 'recipient_add'
@@ -360,7 +368,7 @@ class GroupRecipientAddEvent(BaseEvent):
 
 
 @define(slots=True)
-class GroupRecipientRemoveEvent(BaseEvent):
+class GroupRecipientRemoveEvent(ShardEvent):
     """Dispatched when recipient is removed from the group."""
 
     event_name: typing.ClassVar[typing.Literal['recipient_remove']] = 'recipient_remove'
@@ -398,7 +406,7 @@ class GroupRecipientRemoveEvent(BaseEvent):
 
 
 @define(slots=True)
-class ChannelStartTypingEvent(BaseEvent):
+class ChannelStartTypingEvent(ShardEvent):
     """Dispatched when someone starts typing in a channel."""
 
     event_name: typing.ClassVar[typing.Literal['channel_start_typing']] = 'channel_start_typing'
@@ -411,7 +419,7 @@ class ChannelStartTypingEvent(BaseEvent):
 
 
 @define(slots=True)
-class ChannelStopTypingEvent(BaseEvent):
+class ChannelStopTypingEvent(ShardEvent):
     """Dispatched when someone stopped typing in a channel."""
 
     event_name: typing.ClassVar[typing.Literal['channel_stop_typing']] = 'channel_stop_typing'
@@ -424,7 +432,7 @@ class ChannelStopTypingEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageAckEvent(BaseEvent):
+class MessageAckEvent(ShardEvent):
     """Dispatched when the connected user acknowledges the message in a channel (probably from remote device)."""
 
     event_name: typing.ClassVar[typing.Literal['message_ack']] = 'message_ack'
@@ -453,7 +461,7 @@ class MessageAckEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageCreateEvent(BaseEvent):
+class MessageCreateEvent(ShardEvent):
     """Dispatched when someone sends message in a channel."""
 
     event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
@@ -474,9 +482,28 @@ class MessageCreateEvent(BaseEvent):
         elif isinstance(author, User):
             cache.store_user(author, caching._MESSAGE_CREATE)
 
+        channel = cache.get_channel(self.message.channel_id, caching._MESSAGE_CREATE)
+        if channel and isinstance(
+            channel,
+            (DMChannel, GroupChannel, TextChannel),
+        ):
+            channel.last_message_id = self.message.id
+
         read_state = cache.get_read_state(self.message.channel_id, caching._MESSAGE_CREATE)
         if read_state:
-            if read_state.user_id in self.message.mention_ids and self.message.id not in read_state.mentioned_in:
+            flags = self.message.flags
+
+            # TODO: Maybe ignore @everyone and @online pings in DM and groups?
+            mentioned = read_state.user_id in self.message.mention_ids or flags.mention_everyone or flags.mention_online
+
+            role_mention_ids = self.message.role_mention_ids
+            if not mentioned and role_mention_ids and isinstance(channel, BaseServerChannel):
+                server_id = channel.server_id
+                me = cache.get_server_member(server_id, read_state.user_id, caching._MESSAGE_CREATE)
+                if me is not None:
+                    mentioned = any(role_id in role_mention_ids for role_id in me.roles)
+
+            if mentioned and self.message.id not in read_state.mentioned_in:
                 read_state.mentioned_in.append(self.message.id)
                 cache.store_read_state(read_state, caching._MESSAGE_CREATE)
 
@@ -497,7 +524,7 @@ class MessageCreateEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageUpdateEvent(BaseEvent):
+class MessageUpdateEvent(ShardEvent):
     """Dispatched when the message is updated."""
 
     event_name: typing.ClassVar[typing.Literal['message_update']] = 'message_update'
@@ -534,7 +561,7 @@ class MessageUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageAppendEvent(BaseEvent):
+class MessageAppendEvent(ShardEvent):
     """Dispatched when embeds are appended to the message."""
 
     event_name: typing.ClassVar[typing.Literal['message_append']] = 'message_append'
@@ -564,7 +591,7 @@ class MessageAppendEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageDeleteEvent(BaseEvent):
+class MessageDeleteEvent(ShardEvent):
     """Dispatched when the message is deleted in channel."""
 
     event_name: typing.ClassVar[typing.Literal['message_delete']] = 'message_delete'
@@ -595,7 +622,7 @@ class MessageDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageReactEvent(BaseEvent):
+class MessageReactEvent(ShardEvent):
     """Dispatched when someone reacts to message."""
 
     event_name: typing.ClassVar[typing.Literal['message_react']] = 'message_react'
@@ -633,7 +660,7 @@ class MessageReactEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageUnreactEvent(BaseEvent):
+class MessageUnreactEvent(ShardEvent):
     """Dispatched when someone removes their reaction from message."""
 
     event_name: typing.ClassVar[typing.Literal['message_unreact']] = 'message_unreact'
@@ -671,7 +698,7 @@ class MessageUnreactEvent(BaseEvent):
 
 
 @define(slots=True)
-class MessageClearReactionEvent(BaseEvent):
+class MessageClearReactionEvent(ShardEvent):
     """Dispatched when reactions for specific emoji are removed from message."""
 
     event_name: typing.ClassVar[typing.Literal['message_clear_reaction']] = 'message_clear_reaction'
@@ -706,7 +733,7 @@ class MessageClearReactionEvent(BaseEvent):
 
 
 @define(slots=True)
-class BulkMessageDeleteEvent(BaseEvent):
+class BulkMessageDeleteEvent(ShardEvent):
     """Dispatched when multiple messages are deleted from channel."""
 
     event_name: typing.ClassVar[typing.Literal['bulk_message_delete']] = 'bulk_message_delete'
@@ -745,7 +772,7 @@ class BulkMessageDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerCreateEvent(BaseEvent):
+class ServerCreateEvent(ShardEvent):
     """Dispatched when the server is created, or client joined server."""
 
     event_name: typing.ClassVar[typing.Literal['server_create']] = 'server_create'
@@ -793,7 +820,7 @@ class ServerCreateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerEmojiCreateEvent(BaseEvent):
+class ServerEmojiCreateEvent(ShardEvent):
     """Dispatched when emoji is created in server."""
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_create']] = 'server_emoji_create'
@@ -810,7 +837,7 @@ class ServerEmojiCreateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerEmojiDeleteEvent(BaseEvent):
+class ServerEmojiDeleteEvent(ShardEvent):
     """Dispatched when emoji is deleted from the server."""
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
@@ -841,7 +868,7 @@ class ServerEmojiDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerUpdateEvent(BaseEvent):
+class ServerUpdateEvent(ShardEvent):
     """Dispatched when the server details are updated."""
 
     event_name: typing.ClassVar[typing.Literal['server_update']] = 'server_update'
@@ -877,7 +904,7 @@ class ServerUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerDeleteEvent(BaseEvent):
+class ServerDeleteEvent(ShardEvent):
     """Dispatched when the server is deleted."""
 
     event_name: typing.ClassVar[typing.Literal['server_delete']] = 'server_delete'
@@ -905,7 +932,7 @@ class ServerDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerMemberJoinEvent(BaseEvent):
+class ServerMemberJoinEvent(ShardEvent):
     """Dispatched when the user got added to the server."""
 
     event_name: typing.ClassVar[typing.Literal['server_member_join']] = 'server_member_join'
@@ -922,7 +949,7 @@ class ServerMemberJoinEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerMemberUpdateEvent(BaseEvent):
+class ServerMemberUpdateEvent(ShardEvent):
     """Dispatched when the member details are updated."""
 
     event_name: typing.ClassVar[typing.Literal['server_member_update']] = 'server_member_update'
@@ -958,7 +985,7 @@ class ServerMemberUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerMemberRemoveEvent(BaseEvent):
+class ServerMemberRemoveEvent(ShardEvent):
     """Dispatched when the member (or client user) got removed from server."""
 
     event_name: typing.ClassVar[typing.Literal['server_member_remove']] = 'server_member_remove'
@@ -999,7 +1026,7 @@ class ServerMemberRemoveEvent(BaseEvent):
 
 
 @define(slots=True)
-class RawServerRoleUpdateEvent(BaseEvent):
+class RawServerRoleUpdateEvent(ShardEvent):
     """Dispatched when the role got created or updated in server."""
 
     event_name: typing.ClassVar[typing.Literal['raw_server_role_update']] = 'raw_server_role_update'
@@ -1037,7 +1064,7 @@ class RawServerRoleUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class ServerRoleDeleteEvent(BaseEvent):
+class ServerRoleDeleteEvent(ShardEvent):
     """Dispatched when the role got deleted from server."""
 
     event_name: typing.ClassVar[typing.Literal['server_role_delete']] = 'server_role_delete'
@@ -1074,7 +1101,17 @@ class ServerRoleDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class UserUpdateEvent(BaseEvent):
+class ReportCreateEvent(ShardEvent):
+    """Dispatched when the report was created."""
+
+    event_name: typing.ClassVar[typing.Literal['report_create']] = 'report_create'
+
+    report: CreatedReport = field(repr=True, kw_only=True)
+    """The created report."""
+
+
+@define(slots=True)
+class UserUpdateEvent(ShardEvent):
     """Dispatched when the user details are updated."""
 
     event_name: typing.ClassVar[typing.Literal['user_update']] = 'user_update'
@@ -1110,7 +1147,7 @@ class UserUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class UserRelationshipUpdateEvent(BaseEvent):
+class UserRelationshipUpdateEvent(ShardEvent):
     """Dispatched when the relationship with user was updated."""
 
     event_name: typing.ClassVar[typing.Literal['user_relationship_update']] = 'user_relationship_update'
@@ -1165,7 +1202,7 @@ class UserRelationshipUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class UserSettingsUpdateEvent(BaseEvent):
+class UserSettingsUpdateEvent(ShardEvent):
     """Dispatched when the user settings are changed, likely from remote device."""
 
     event_name: typing.ClassVar[typing.Literal['user_settings_update']] = 'user_settings_update'
@@ -1195,7 +1232,7 @@ class UserSettingsUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class UserPlatformWipeEvent(BaseEvent):
+class UserPlatformWipeEvent(ShardEvent):
     """Dispatched when the user has been platform banned or deleted their account.
 
     Clients should remove the following associated data:
@@ -1255,7 +1292,7 @@ class UserPlatformWipeEvent(BaseEvent):
 
 
 @define(slots=True)
-class WebhookCreateEvent(BaseEvent):
+class WebhookCreateEvent(ShardEvent):
     """Dispatched when the webhook is created in a channel."""
 
     event_name: typing.ClassVar[typing.Literal['webhook_create']] = 'webhook_create'
@@ -1265,7 +1302,7 @@ class WebhookCreateEvent(BaseEvent):
 
 
 @define(slots=True)
-class WebhookUpdateEvent(BaseEvent):
+class WebhookUpdateEvent(ShardEvent):
     """Dispatched when the webhook details are updated."""
 
     event_name: typing.ClassVar[typing.Literal['webhook_update']] = 'webhook_update'
@@ -1275,7 +1312,7 @@ class WebhookUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class WebhookDeleteEvent(BaseEvent):
+class WebhookDeleteEvent(ShardEvent):
     """Dispatched when the webhook is deleted."""
 
     event_name: typing.ClassVar[typing.Literal['webhook_delete']] = 'webhook_delete'
@@ -1288,7 +1325,7 @@ class WebhookDeleteEvent(BaseEvent):
 
 
 @define(slots=True)
-class AuthifierEvent(BaseEvent):
+class AuthifierEvent(ShardEvent):
     """Dispatched when Authifier-related event happens."""
 
     event_name: typing.ClassVar[str] = 'authifier'
@@ -1331,14 +1368,14 @@ class SessionDeleteAllEvent(AuthifierEvent):
 
 
 @define(slots=True)
-class LogoutEvent(BaseEvent):
+class LogoutEvent(ShardEvent):
     """Dispatched when the connected user got logged out."""
 
     event_name: typing.ClassVar[str] = 'logout'
 
 
 @define(slots=True)
-class VoiceChannelJoinEvent(BaseEvent):
+class VoiceChannelJoinEvent(ShardEvent):
     """Dispatched when a user joins a voice channel."""
 
     event_name: typing.ClassVar[str] = 'voice_channel_join'
@@ -1367,7 +1404,7 @@ class VoiceChannelJoinEvent(BaseEvent):
 
 
 @define(slots=True)
-class VoiceChannelLeaveEvent(BaseEvent):
+class VoiceChannelLeaveEvent(ShardEvent):
     """Dispatched when a user left voice channel."""
 
     event_name: typing.ClassVar[str] = 'voice_channel_leave'
@@ -1407,7 +1444,7 @@ class VoiceChannelLeaveEvent(BaseEvent):
 
 
 @define(slots=True)
-class UserVoiceStateUpdateEvent(BaseEvent):
+class UserVoiceStateUpdateEvent(ShardEvent):
     """Dispatched when a user's voice state is updated."""
 
     event_name: typing.ClassVar[str] = 'user_voice_state_update'
@@ -1458,21 +1495,21 @@ class UserVoiceStateUpdateEvent(BaseEvent):
 
 
 @define(slots=True)
-class AuthenticatedEvent(BaseEvent):
+class AuthenticatedEvent(ShardEvent):
     """Dispatched when the WebSocket was successfully authenticated."""
 
     event_name: typing.ClassVar[str] = 'authenticated'
 
 
 @define(slots=True)
-class BeforeConnectEvent(BaseEvent):
+class BeforeConnectEvent(ShardEvent):
     """Dispatched before connection to Revolt WebSocket is made."""
 
     event_name: typing.ClassVar[str] = 'before_connect'
 
 
 @define(slots=True)
-class AfterConnectEvent(BaseEvent):
+class AfterConnectEvent(ShardEvent):
     """Dispatched after connection to Revolt WebSocket is made."""
 
     event_name: typing.ClassVar[str] = 'after_connect'
@@ -1483,6 +1520,7 @@ class AfterConnectEvent(BaseEvent):
 
 __all__ = (
     'BaseEvent',
+    'ShardEvent',
     'ReadyEvent',
     'BaseChannelCreateEvent',
     'PrivateChannelCreateEvent',
@@ -1513,6 +1551,7 @@ __all__ = (
     'ServerMemberRemoveEvent',
     'RawServerRoleUpdateEvent',
     'ServerRoleDeleteEvent',
+    'ReportCreateEvent',
     'UserUpdateEvent',
     'UserRelationshipUpdateEvent',
     'UserSettingsUpdateEvent',

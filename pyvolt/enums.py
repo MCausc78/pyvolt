@@ -518,6 +518,18 @@ class RelationshipStatus(Enum):
     """Blocked by this user."""
 
 
+class ReportStatus(Enum):
+    created = 'Created'
+    rejected = 'Rejected'
+    resolved = 'Resolved'
+
+
+class ReportedContentType(Enum):
+    message = 'Message'
+    server = 'Server'
+    user = 'User'
+
+
 __all__ = (
     'EnumMeta',
     'Enum',
@@ -547,4 +559,6 @@ __all__ = (
     'ReviteMonoFont',
     'Presence',
     'RelationshipStatus',
+    'ReportStatus',
+    'ReportedContentType',
 )

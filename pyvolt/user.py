@@ -533,8 +533,8 @@ class DisplayUser(BaseUser):
     def tag(self) -> str:
         """:class:`str`: The tag of the user.
 
-        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``,
-        example output would be ``'vlf#3510'``.
+        Assuming that :attr:`User.name` is ``'kotlin.Unit'`` and :attr:`User.discriminator` is ``'3510'``,
+        example output would be ``'kotlin.Unit#3510'``.
         """
         return f'{self.name}#{self.discriminator}'
 

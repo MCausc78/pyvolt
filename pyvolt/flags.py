@@ -63,7 +63,7 @@ class flag(typing.Generic[BF]):
         else:
             return instance._get(self)
 
-    def __set__(self, instance: BF, value: bool) -> None:
+    def __set__(self, instance: BF, value: bool, /) -> None:
         instance._set(self, value)
 
     def __and__(self, other: BF | flag[BF] | int, /) -> BF:
@@ -77,6 +77,9 @@ class flag(typing.Generic[BF]):
 
     def __xor__(self, other: BF | flag[BF] | int, /) -> BF:
         return self._parent(self.value) ^ other
+
+    def __int__(self) -> int:
+        return self.value
 
 
 class BaseFlags:
@@ -248,19 +251,19 @@ class BaseFlags:
         else:
             raise TypeError(f'cannot get {other.__class__.__name__} value')
 
-    def is_subset(self, other: Self | flag[Self] | int) -> bool:
+    def is_subset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or fewer flags as other."""
         return (self.value & self._value_of(other)) == self.value
 
-    def is_superset(self, other: Self | flag[Self] | int) -> bool:
+    def is_superset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or more flags as other."""
         return (self.value | self._value_of(other)) == self.value
 
-    def is_strict_subset(self, other: Self | flag[Self] | int) -> bool:
+    def is_strict_subset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict subset of those on self."""
         return self.is_subset(other) and self != other
 
-    def is_strict_superset(self, other: Self | flag[Self] | int) -> bool:
+    def is_strict_superset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict superset of those on self."""
         return self.is_superset(other) and self != other
 
@@ -302,7 +305,7 @@ class BaseFlags:
         self.value ^= self._value_of(other)
         return self
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other: object, /) -> bool:
         return not self.__eq__(other)
 
     def __or__(self, other: Self | flag[Self] | int, /) -> Self:
@@ -399,6 +402,20 @@ class MessageFlags(BaseFlags, support_kwargs=False):
     def suppress_notifications(cls) -> int:
         """:class:`bool`: Whether the message will not send push/desktop notifications."""
         return 1 << 0
+
+    @flag()
+    def mention_everyone(cls) -> int:
+        """:class:`bool`: Whether the message will mention all users who can see the channel."""
+        return 1 << 1
+
+    @flag()
+    def mention_online(cls) -> int:
+        """:class:`bool`: Whether the message will mention all users who are online and can see the channel.
+
+        .. note::
+            If this is ``True``, then :attr:`.mention_everyone` cannot be ``True`` either.
+        """
+        return 1 << 2
 
 
 @doc_flags('Wraps up a Permission flag value.')
@@ -542,10 +559,20 @@ class Permissions(BaseFlags, support_kwargs=True):
         """:class:`bool`: Whether the user can react to messages with emojis."""
         return 1 << 29
 
+    @flag()
+    def mention_everyone(cls) -> int:
+        """:class:`bool`: Whether the user can mention everyone and online members."""
+        return 1 << 37
+
+    @flag()
+    def mention_roles(cls) -> int:
+        """:class:`bool`: Whether the user can mention roles."""
+        return 1 << 38
+
     @classmethod
     def channel(cls) -> Self:
         """:class:`Permissions`: Returns channel-related permissions."""
-        return cls(0b00000000_00000000_00000000_00000000_00111111_11110000_00000000_00000000)
+        return cls(0b00000000_00000000_00000000_00110000_00111111_11110000_00000000_00000000)
 
     # * Voice permissions
 

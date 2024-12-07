@@ -25,6 +25,7 @@ class Message(typing.TypedDict):
     edited: typing_extensions.NotRequired[str]
     embeds: typing_extensions.NotRequired[list[Embed]]
     mentions: typing_extensions.NotRequired[list[str]]
+    role_mentions: typing_extensions.NotRequired[list[str]]
     replies: typing_extensions.NotRequired[list[str]]
     reactions: typing_extensions.NotRequired[dict[str, list[str]]]
     interactions: typing_extensions.NotRequired[Interactions]

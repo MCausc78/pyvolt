@@ -24,12 +24,15 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
-from attrs import define, field
 from inspect import isawaitable
 import logging
 import re
 import typing
+
+import aiohttp
+from attrs import define, field
+
+from multidict import CIMultiDict
 
 from . import utils
 from .bot import BaseBot
@@ -38,8 +41,6 @@ from .errors import DiscoverError, InvalidData
 from .server import ServerFlags, BaseServer
 
 if typing.TYPE_CHECKING:
-    import multidict
-
     from . import raw
     from .cdn import StatelessAsset, Asset
     from .enums import ServerActivity, BotUsage, ReviteBaseTheme
@@ -346,7 +347,7 @@ class DiscoveryClient:
 
     def add_headers(
         self,
-        headers: multidict.CIMultiDict[typing.Any],
+        headers: CIMultiDict[typing.Any],
         method: str,
         path: str,
         /,
@@ -360,7 +361,7 @@ class DiscoveryClient:
         url: str,
         /,
         *,
-        headers: multidict.CIMultiDict[typing.Any],
+        headers: CIMultiDict[typing.Any],
         **kwargs,
     ) -> aiohttp.ClientResponse:
         return await session.request(
@@ -373,7 +374,7 @@ class DiscoveryClient:
     async def raw_request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
 
-        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
+        headers: CIMultiDict[typing.Any] = CIMultiDict(kwargs.pop('headers', {}))
         tmp = self.add_headers(headers, method, path)
         if isawaitable(tmp):
             await tmp
