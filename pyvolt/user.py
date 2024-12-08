@@ -63,7 +63,7 @@ class UserStatus:
     def locally_update(self, data: UserStatusEdit, /) -> None:
         """Locally updates user status with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
         if data.text is not UNDEFINED:
@@ -77,9 +77,9 @@ class UserStatusEdit:
 
     Attributes
     ----------
-    text: :class:`UndefinedOr`[Optional[:class:`str`]]
+    text: UndefinedOr[Optional[:class:`str`]]
         The new custom status text.
-    presence: :class:`UndefinedOr`[Optional[:class:`Presence`]]
+    presence: UndefinedOr[Optional[:class:`Presence`]]
         The presence to use.
     """
 
@@ -159,7 +159,7 @@ class PartialUserProfile:
 
     @property
     def background(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The background visible on user's profile."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The background visible on user's profile."""
         return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
 
 
@@ -168,9 +168,9 @@ class UserProfileEdit:
 
     Attributes
     ----------
-    content: :class:`UndefinedOr`[Optional[:class:`str`]]
+    content: UndefinedOr[Optional[:class:`str`]]
         The text to use in user profile description.
-    background: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+    background: UndefinedOr[Optional[:class:`ResolvableResource`]]
         The background to use on user's profile.
     """
 
@@ -320,17 +320,17 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -397,7 +397,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class`UserProfile`
+        :class:`UserProfile`
             The user's profile page.
         """
         return await self.state.http.get_user_profile(self.id)
@@ -484,14 +484,14 @@ class PartialUser(BaseUser):
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new user's avatar."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new user's avatar."""
         if self.internal_avatar in (None, UNDEFINED):
             return self.internal_avatar
         return self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def badges(self) -> UndefinedOr[UserBadges]:
-        """:class:`UndefinedOr`[:class:`UserBadges`]: The new user's badges."""
+        """UndefinedOr[:class:`UserBadges`]: The new user's badges."""
         if self.raw_badges is UNDEFINED:
             return self.raw_badges
         ret = _new_user_badges(UserBadges)
@@ -500,7 +500,7 @@ class PartialUser(BaseUser):
 
     @property
     def flags(self) -> UndefinedOr[UserFlags]:
-        """:class:`UndefinedOr`[:class:`UserFlags`]: The user's flags."""
+        """UndefinedOr[:class:`UserFlags`]: The user's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_user_flags(UserFlags)
@@ -640,7 +640,7 @@ class User(DisplayUser):
     def locally_update(self, data: PartialUser, /) -> None:
         """Locally updates user with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
         if data.name is not UNDEFINED:
@@ -767,17 +767,17 @@ class OwnUser(User):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -822,7 +822,7 @@ class UserVoiceState:
     def locally_update(self, data: PartialUserVoiceState, /) -> None:
         """Locally updates voice state with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
 

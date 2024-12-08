@@ -134,19 +134,19 @@ class BaseChannel(Base, abc.ABC):
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        owner: :class:`UndefinedOr`[:clsas:`ULIDOr`[:class:`BaseUser`]]
+        owner: UndefinedOr[:class:`ULIDOr`[:class:`BaseUser`]]
             The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        nsfw: :class:`UndefinedOr`[:class:`bool`]
+        nsfw: UndefinedOr[:class:`bool`]
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        archived: :class:`UndefinedOr`[:class:`bool`]
+        archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        default_permissions: :class:`UndefinedOr`[None]
+        default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
@@ -275,14 +275,14 @@ class PartialChannel(BaseChannel):
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon
         return self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        """:class:`UndefinedOr`[:class:`Permissions`]: The new channel's permissions, if applicable. Only for :class:`GroupChannel`'s."""
+        """UndefinedOr[:class:`Permissions`]: The new channel's permissions, if applicable. Only for :class:`GroupChannel`'s."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -421,7 +421,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
@@ -491,12 +491,12 @@ class DMChannel(BaseChannel, Messageable):
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
         ----------
-        data: :class:`PartialChannel`
+        data: :class:`.PartialChannel`
             The data to update channel with.
         """
         if data.active is not UNDEFINED:
@@ -505,16 +505,16 @@ class DMChannel(BaseChannel, Messageable):
             self.last_message_id = data.last_message_id
 
     @property
-    def type(self) -> typing.Literal[ChannelType.dm]:
-        """Literal[:attr:`ChannelType.dm`]: The channel's type."""
-        return ChannelType.dm
+    def type(self) -> typing.Literal[ChannelType.private]:
+        """Literal[:attr:`.ChannelType.private`]: The channel's type."""
+        return ChannelType.private
 
     def permissions_for(self, target: User | Member, /) -> Permissions:
         """Calculate permissions for given user.
 
         Parameters
         ----------
-        target: Union[:class:`User`, :class:`Member`]
+        target: Union[:class:`.User`, :class:`.Member`]
             The member or user to calculate permissions for.
 
         Returns
@@ -583,12 +583,12 @@ class GroupChannel(BaseChannel, Messageable):
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
         ----------
-        data: :class:`PartialChannel`
+        data: :class:`.PartialChannel`
             The data to update channel with.
         """
         if data.name is not UNDEFINED:
@@ -627,12 +627,12 @@ class GroupChannel(BaseChannel, Messageable):
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The group icon."""
+        """Optional[:class:`.Asset`]: The group icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def permissions(self) -> Permissions | None:
-        """:class:`Permissions`: The permissions assigned to members of this group.
+        """:class:`.Permissions`: The permissions assigned to members of this group.
 
         .. note::
             This attribute does not apply to the owner of the group.
@@ -653,7 +653,7 @@ class GroupChannel(BaseChannel, Messageable):
 
     @property
     def recipients(self) -> list[User]:
-        """List[:class:`User`]: The users participating in channel."""
+        """List[:class:`.User`]: The users participating in channel."""
         if self._recipients[0]:
             cache = self.state.cache
             if not cache:
@@ -670,7 +670,7 @@ class GroupChannel(BaseChannel, Messageable):
 
     @property
     def type(self) -> typing.Literal[ChannelType.group]:
-        """Literal[:attr:`ChannelType.group`]: The channel's type."""
+        """Literal[:attr:`.ChannelType.group`]: The channel's type."""
         return ChannelType.group
 
     async def add(
@@ -683,7 +683,7 @@ class GroupChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to add.
 
         Raises
@@ -774,8 +774,8 @@ class GroupChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        permissions: :class:`Permissions`
-            The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
+        permissions: :class:`.Permissions`
+            The new permissions.
 
         Raises
         ------
@@ -798,12 +798,12 @@ class GroupChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`User`, :class:`Member`]
+        target: Union[:class:`.User`, :class:`.Member`]
             The member or user to calculate permissions for.
 
         Returns
         -------
-        :class:`Permissions`
+        :class:`.Permissions`
             The calculated permissions.
         """
         me = self.state.me
@@ -857,12 +857,12 @@ class BaseServerChannel(BaseChannel):
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
         ----------
-        data: :class:`PartialChannel`
+        data: :class:`.PartialChannel`
             The data to update channel with.
         """
         if data.name is not UNDEFINED:
@@ -914,7 +914,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`Invite`
+        :class:`.Invite`
             The invite that was created.
         """
         return await self.state.http.create_invite(self.id)
@@ -964,8 +964,8 @@ class BaseServerChannel(BaseChannel):
         self,
         role: ULIDOr[BaseRole],
         *,
-        allow: Permissions = Permissions.NONE,
-        deny: Permissions = Permissions.NONE,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
         """|coro|
 
@@ -974,7 +974,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`.BaseRole`]
             The role.
 
         Raises
@@ -994,7 +994,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        permissions: :class:`PermissionOverride`
+        permissions: :class:`.PermissionOverride`
             The new permissions.
 
         Raises
@@ -1006,7 +1006,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`ServerChannel`
+        :class:`.ServerChannel`
             The updated server channel with new permissions.
         """
         result = await self.state.http.set_default_channel_permissions(self.id, permissions)
@@ -1019,7 +1019,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        target: Union[:class:`User`, :class:`Member`]
+        target: Union[:class:`.User`, :class:`.Member`]
             The member or user to calculate permissions for.
         safe: :class:`bool`
             Whether to raise exception or not if role is missing in cache.
@@ -1035,7 +1035,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`Permissions`
+        :class:`.Permissions`
             The calculated permissions.
         """
         server = self.get_server()
@@ -1100,12 +1100,12 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
         ----------
-        data: :class:`PartialChannel`
+        data: :class:`.PartialChannel`
             The data to update channel with.
         """
         BaseServerChannel.locally_update(self, data)
@@ -1114,12 +1114,12 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
     @property
     def type(self) -> typing.Literal[ChannelType.text]:
-        """Literal[:attr:`ChannelType.text`]: The channel's type."""
+        """Literal[:attr:`.ChannelType.text`]: The channel's type."""
         return ChannelType.text
 
     @property
     def voice_states(self) -> ChannelVoiceStateContainer:
-        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
         cache = self.state.cache
         if cache:
             res = cache.get_channel_voice_state(
@@ -1144,12 +1144,12 @@ class VoiceChannel(BaseServerChannel, Connectable):
 
     @property
     def type(self) -> typing.Literal[ChannelType.voice]:
-        """Literal[:attr:`ChannelType.voice`]: The channel's type."""
+        """Literal[:attr:`.ChannelType.voice`]: The channel's type."""
         return ChannelType.voice
 
     @property
     def voice_states(self) -> ChannelVoiceStateContainer:
-        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
         cache = self.state.cache
         if cache:
             res = cache.get_channel_voice_state(
@@ -1181,7 +1181,7 @@ class ChannelVoiceStateContainer:
 
         Parameters
         ----------
-        state: :class:`UserVoiceState`
+        state: :class:`.UserVoiceState`
             The state to add.
         """
         self.participants[state.user_id] = state
@@ -1196,7 +1196,7 @@ class ChannelVoiceStateContainer:
 
         Returns
         -------
-        Optional[:class:`UserVoiceState`]
+        Optional[:class:`.UserVoiceState`]
             The removed user's voice state.
         """
         return self.participants.pop(user_id, None)

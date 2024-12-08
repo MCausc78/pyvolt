@@ -880,12 +880,12 @@ class Client:
 
         Parameters
         ----------
-        event: :class:`BaseEvent`
+        event: :class:`.BaseEvent`
             The event to dispatch.
 
         Returns
         -------
-        :class:`asyncio.Task`[None]
+        :class:`asyncio.Task`
             The asyncio task.
         """
 
@@ -1053,7 +1053,7 @@ class Client:
 
         Returns
         --------
-        Union[:class:`TemporarySubscription`[EventT], :class:`TemporarySubscriptionList`[EventT]]
+        Union[:class:`TemporarySubscription`, :class:`TemporarySubscriptionList`]
             The subscription. This can be ``await``'ed.
         """
 
@@ -1220,7 +1220,7 @@ class Client:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to fetch.
 
         Raises
@@ -1569,7 +1569,7 @@ class Client:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
             The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
@@ -1611,6 +1611,7 @@ class Client:
 __all__ = (
     'EventSubscription',
     'TemporarySubscription',
+    'TemporarySubscriptionList',
     'ClientEventHandler',
     '_private_channel_sort_old',
     '_private_channel_sort_new',

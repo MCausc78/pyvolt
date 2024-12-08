@@ -24,9 +24,9 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import contextlib
 import typing
 
+from .context_managers import Typing
 
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping
@@ -37,38 +37,7 @@ if typing.TYPE_CHECKING:
     from .core import ULIDOr
     from .enums import MessageSort
     from .message import Reply, Interactions, Masquerade, SendableEmbed, BaseMessage, Message
-    from .shard import Shard
     from .state import State
-
-
-class Typing(contextlib.AbstractAsyncContextManager):
-    __slots__ = (
-        'channel_id',
-        'destination',
-        'shard',
-    )
-
-    def __init__(self, *, destination: Messageable, shard: Shard) -> None:
-        self.channel_id: str = ''
-        self.destination: Messageable = destination
-        self.shard: Shard = shard
-
-    async def __aenter__(self) -> None:
-        if not self.channel_id:
-            self.channel_id = await self.destination.fetch_channel_id()
-
-        await self.shard.begin_typing(self.channel_id)
-
-    async def __aexit__(self, exc_type, exc_value, tb, /) -> None:
-        del exc_type
-        del exc_value
-        del tb
-
-        if not self.channel_id:
-            self.channel_id = await self.destination.fetch_channel_id()
-
-        await self.shard.end_typing(self.channel_id)
-        return
 
 
 class Messageable:
@@ -146,9 +115,9 @@ class Messageable:
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             Sort used for retrieving.
@@ -206,7 +175,7 @@ class Messageable:
             The message nonce.
         attachments: Optional[List[:class:`ResolvableResource`]]
             The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.

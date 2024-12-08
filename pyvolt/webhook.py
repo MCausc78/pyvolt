@@ -91,11 +91,11 @@ class BaseWebhook(Base):
         ----------
         token: Optional[:class:`str`]
             The webhook token.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New webhook avatar.
-        permissions: :class:`UndefinedOr`[:class:`Permissions`]
+        permissions: UndefinedOr[:class:`Permissions`]
             New webhook permissions.
 
         Raises
@@ -176,12 +176,12 @@ class PartialWebhook(BaseWebhook):
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new avatar of the webhook."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        """:class:`UndefinedOr`[:clsas:`Permissions`]: The new webhook's permissions."""
+        """UndefinedOr[:class:`Permissions`]: The new webhook's permissions."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -211,7 +211,7 @@ class Webhook(BaseWebhook):
     def locally_update(self, data: PartialWebhook, /) -> None:
         """Locally updates webhook with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters

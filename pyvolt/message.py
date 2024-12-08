@@ -296,9 +296,9 @@ class BaseMessage(Base):
 
         Parameters
         ----------
-        content: :class:`UndefinedOr`[:class:`str`]
+        content: UndefinedOr[:class:`str`]
             The new content to replace the message with.
-        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
         Raises
@@ -444,7 +444,7 @@ class BaseMessage(Base):
         ----------
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
+        user: Optional[ULIDOr[:class:`BaseUser`]]
             Remove reactions from this user. Requires `ManageMessages` permission if provided.
         remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. Requires `ManageMessages` permission if provided.
@@ -482,7 +482,7 @@ class PartialMessage(BaseMessage):
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """:class:`UndefinedOr`[List[:class:`Embed`]]: New message embeds."""
+        """UndefinedOr[List[:class:`Embed`]]: New message embeds."""
         return (
             UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
         )
@@ -497,7 +497,7 @@ class MessageAppendData(BaseMessage):
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """:class:`UndefinedOr`[List[:class:`Embed`]]: Appended embeds."""
+        """UndefinedOr[List[:class:`Embed`]]: Appended embeds."""
         return (
             UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
         )
@@ -1609,7 +1609,7 @@ class Message(BaseMessage):
     def locally_update(self, data: PartialMessage, /) -> None:
         """Locally updates message with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters

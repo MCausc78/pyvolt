@@ -17,6 +17,7 @@ from .cache import *
 from .cdn import *
 from .channel import *
 from .client import *
+from .context_managers import *
 from .core import *
 from .discovery import *
 from .emoji import *

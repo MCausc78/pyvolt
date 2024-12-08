@@ -15,3 +15,13 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
+
+Manuals
+---------
+
+These pages go into great detail about everything the API can do.
+
+.. toctree::
+  :maxdepth: 1
+
+  api

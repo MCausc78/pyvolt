@@ -165,31 +165,18 @@ class MFAMethod(Enum):
 
 class AssetMetadataType(Enum):
     file = 'File'
-    """File is just a generic uncategorised file."""
-
     text = 'Text'
-    """File contains textual data and should be displayed as such."""
-
     image = 'Image'
-    """File is an image with specific dimensions."""
-
     video = 'Video'
-    """File is a video with specific dimensions."""
-
     audio = 'Audio'
-    """File is audio."""
 
 
 class ChannelType(Enum):
     saved_messages = 'SavedMessages'
-    dm = 'DirectMessage'
+    private = 'DirectMessage'
     group = 'Group'
-
     text = 'Text'
-    """Text channel."""
-
     voice = 'Voice'
-    """Voice channel."""
 
 
 class ServerActivity(Enum):

@@ -611,17 +611,17 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        bot: :class:`UndefinedOr`[:class:`bool`]
+        bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
-        cookie: :class:`UndefinedOr`[:class:`str`]
+        cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json: :class:`UndefinedOr`[typing.Any]
+        json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
-        token: :class:`UndefinedOr`[Optional[:class:`str`]]
+        token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
-        user_agent: :class:`UndefinedOr`[:class:`str`]
+        user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
@@ -774,18 +774,18 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        bot: :class:`UndefinedOr`[:class:`bool`]
+        bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
-        json: :class:`UndefinedOr`[typing.Any]
+        json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         log: :class:`bool`
             Whether to log successful response or not. This option is intended to avoid console spam caused
             by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
-        token: :class:`UndefinedOr`[Optional[:class:`str`]]
+        token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
-        user_agent: :class:`UndefinedOr`[:class:`str`]
+        user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
@@ -914,7 +914,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to delete.
 
         Raises
@@ -956,15 +956,15 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        public: :class:`UndefinedOr`[:class:`bool`]
+        public: UndefinedOr[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether to allow Revolt collect analytics about the bot.
-        interactions_url: :class:`UndefinedOr`[Optional[:class:`str`]]
+        interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
@@ -1046,7 +1046,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The ID of the bot.
 
         Raises
@@ -1119,7 +1119,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The ID of the bot.
 
         Raises
@@ -1186,11 +1186,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[Union[:class:`BaseBot`, :class:`BaseUser`]]
+        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
             The bot.
-        server: Optional[:class:`ULIDOr`[:class:`BaseServer`]]
+        server: Optional[ULIDOr[:class:`BaseServer`]]
             The destination server.
-        group: Optional[:class:`ULIDOr`[:class:`GroupChannel`]]
+        group: Optional[ULIDOr[:class:`GroupChannel`]]
             The destination group.
 
         Raises
@@ -1272,9 +1272,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1320,7 +1320,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
@@ -1382,21 +1382,21 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        owner: :class:`UndefinedOr`[:clsas:`ULIDOr`[:class:`BaseUser`]]
+        owner: UndefinedOr[ULIDOr[:class:`BaseUser`]]
             The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        nsfw: :class:`UndefinedOr`[:class:`bool`]
+        nsfw: UndefinedOr[:class:`bool`]
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        archived: :class:`UndefinedOr`[:class:`bool`]
+        archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        default_permissions: :class:`UndefinedOr`[None]
+        default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
@@ -1482,7 +1482,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to fetch.
 
         Raises
@@ -1528,9 +1528,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to add.
 
         Raises
@@ -1565,7 +1565,7 @@ class HTTPClient:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
             The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
@@ -1607,7 +1607,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
         user: :class:`ULID`[:class:`BaseUser`]
             The user to remove.
@@ -1636,7 +1636,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The invite destination channel.
 
         Raises
@@ -1664,7 +1664,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group channel.
 
         Raises
@@ -1695,9 +1695,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        messages: Sequence[:class:`ULIDOr`[:class:`BaseMessage`]]
+        messages: Sequence[ULIDOr[:class:`BaseMessage`]]
             The messages to delete.
 
         Raises
@@ -1722,9 +1722,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1769,9 +1769,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1802,13 +1802,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        content: :class:`UndefinedOr`[:class:`str`]
+        content: UndefinedOr[:class:`str`]
             The new content to replace the message with.
-        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
         Raises
@@ -1844,9 +1844,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1886,17 +1886,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
         limit: Optional[:class:`int`]
             Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             The message sort direction.
-        nearby: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        nearby: Optional[ULIDOr[:class:`BaseMessage`]]
             The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
@@ -1946,9 +1946,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
             The emoji to react with.
@@ -1989,7 +1989,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to search in.
         query: Optional[:class:`str`]
             Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
@@ -1997,9 +1997,9 @@ class HTTPClient:
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             Sort used for retrieving.
@@ -2048,9 +2048,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -2093,7 +2093,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The destination channel.
         content: Optional[:class:`str`]
             The message content.
@@ -2103,7 +2103,7 @@ class HTTPClient:
             The attachments to send the message with.
 
             You must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The embeds to send the message with.
@@ -2262,9 +2262,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -2298,13 +2298,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
+        user: Optional[ULIDOr[:class:`BaseUser`]]
             Remove reactions from this user. You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. You must have :attr:`~Permissions.manage_messages` to provide this.
@@ -2345,9 +2345,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`ServerChannel`]
+        channel: ULIDOr[:class:`ServerChannel`]
             The channel.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
 
         Raises
@@ -2402,7 +2402,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The channel.
         permissions: Union[:class:`Permissions`, :class:`PermissionOverride`]
             The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
@@ -2436,7 +2436,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
+        channel: ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
             The channel.
 
         Raises
@@ -2468,7 +2468,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`TextChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`TextChannel`]]
             The channel to create webhook in.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
@@ -2537,7 +2537,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         data: :class:`ResolvableResource`
             The emoji data.
@@ -2579,7 +2579,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: :class:`ULIDOr`[:class:`ServerEmoji`]
+        emoji: ULIDOr[:class:`ServerEmoji`]
             The emoji to delete.
 
         Raises
@@ -2598,7 +2598,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: :class:`ULIDOr`[:class:`BaseEmoji`]
+        emoji: ULIDOr[:class:`BaseEmoji`]
             The emoji.
 
         Raises
@@ -2867,7 +2867,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to ban from the server.
@@ -2898,7 +2898,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Returns
@@ -2916,9 +2916,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unban from the server.
 
         Raises
@@ -3032,11 +3032,11 @@ class HTTPClient:
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
-        Retrieves all custom :class:`ServerEmoji`s from the server.
+        Retrieves all custom :class:`ServerEmoji`'s from the server.
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Returns
@@ -3056,7 +3056,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Raises
@@ -3100,20 +3100,20 @@ class HTTPClient:
             The server.
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member.
-        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+        nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
-        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+        roles: UndefinedOr[Optional[List[:class:`BaseRole`]]]
             The member's new list of roles. This *replaces* the roles.
-        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+        timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
-        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
-        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns
@@ -3178,7 +3178,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         query: :class:`str`
             The query to search members for.
@@ -3209,7 +3209,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The ID of the user.
@@ -3234,7 +3234,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -3263,7 +3263,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -3290,7 +3290,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         member: :class:`Union`[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member to kick.
@@ -3321,9 +3321,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
         allow: :class:`Permissions`
             New allow flags.
@@ -3362,7 +3362,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         permissions: :class:`Permissions`
             New default permissions.
@@ -3423,9 +3423,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to delete.
 
         Raises
@@ -3454,17 +3454,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        color: :class:`UndefinedOr`[Optional[:class:`str`]]
+        color: UndefinedOr[Optional[:class:`str`]]
             New role color. This should be valid CSS color.
-        hoist: :class:`UndefinedOr`[:class:`bool`]
+        hoist: UndefinedOr[:class:`bool`]
             Whether this role should be displayed separately.
-        rank: :class:`UndefinedOr`[:class:`int`]
+        rank: UndefinedOr[:class:`int`]
             The new ranking position. Smaller values take priority.
 
         Raises
@@ -3520,9 +3520,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The ID of the role to retrieve.
 
         Raises
@@ -3557,7 +3557,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to mark as read.
         """
         await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
@@ -3600,7 +3600,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to delete.
         """
         await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
@@ -3612,7 +3612,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to leave from.
         silent: Optional[:class:`bool`]
             Whether to not send a leave message.
@@ -3646,25 +3646,25 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server icon.
-        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server banner.
-        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
+        system_messsages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
-        flags: :class:`UndefinedOr`[:class:`ServerFlags`]
+        flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. Can be passed only if you're privileged user.
-        discoverable: :class:`UndefinedOr`[:class:`bool`]
+        discoverable: UndefinedOr[:class:`bool`]
             Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_. Can be passed only if you're privileged user.
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
 
         Raises
@@ -3739,7 +3739,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The ID of the server.
         populate_channels: :class:`bool`
             Whether to populate channels.
@@ -3835,7 +3835,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to friend with.
 
         Returns
@@ -3856,7 +3856,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to block.
 
         Returns
@@ -3948,17 +3948,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -4000,19 +4000,19 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to edit.
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableULID`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -4060,7 +4060,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user.
 
         Raises
@@ -4106,7 +4106,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user.
 
         Raises
@@ -4256,7 +4256,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unblock.
         """
         resp: raw.User = await self.request(routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user)))
@@ -4270,7 +4270,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to delete.
         token: Optional[:class:`str`]
             The webhook token.
@@ -4306,15 +4306,15 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to edit.
         token: Optional[:class:`str`]
             The webhook token.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New webhook avatar.
-        permissions: :class:`UndefinedOr`[:class:`Permissions`]
+        permissions: UndefinedOr[:class:`Permissions`]
             New webhook permissions.
 
         Raises
@@ -4379,7 +4379,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The ID of the webhook.
         token: :class:`str`
             The webhook token.
@@ -4389,7 +4389,7 @@ class HTTPClient:
             The message nonce.
         attachments: Optional[List[:class:`ResolvableResource`]]
             The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.
@@ -4481,7 +4481,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The ID of the webhook.
         token: Optional[:class:`str`]
             The webhook token.
@@ -4915,7 +4915,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        session: :class:`ULIDOr`[:class:`PartialSession`]
+        session: ULIDOr[:class:`PartialSession`]
             The session to edit.
         friendly_name: :class:`str`
             The new device name. Because of Authifier limitation, this is not :class:`UndefinedOr`.

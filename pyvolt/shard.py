@@ -270,7 +270,7 @@ class Shard:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to begin typing in.
         """
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
@@ -283,7 +283,7 @@ class Shard:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to end typing in.
         """
         payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
@@ -296,7 +296,7 @@ class Shard:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to subscribe to.
         """
         payload: raw.ServerSubscribeEvent = {'type': 'Subscribe', 'server_id': resolve_id(server)}

@@ -208,13 +208,13 @@ class BaseRole(Base):
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        color: :class:`UndefinedOr`[Optional[:class:`str`]]
+        color: UndefinedOr[Optional[:class:`str`]]
             New role color. Must be valid CSS color.
-        hoist: :class:`UndefinedOr`[:class:`bool`]
+        hoist: UndefinedOr[:class:`bool`]
             Whether this role should be displayed separately.
-        rank: :class:`UndefinedOr`[:class:`int`]
+        rank: UndefinedOr[:class:`int`]
             The new ranking position. Smaller values take priority.
 
         Raises
@@ -330,7 +330,7 @@ class Role(BaseRole):
     def locally_update(self, data: PartialRole, /) -> None:
         """Locally updates role with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
         if data.name is not UNDEFINED:
@@ -571,23 +571,23 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server icon.
-        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server banner.
-        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
+        system_messsages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
-        flags: :class:`UndefinedOr`[:class:`ServerFlags`]
+        flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. Can be passed only if you're privileged user.
-        discoverable: :class:`UndefinedOr`[:class:`bool`]
+        discoverable: UndefinedOr[:class:`bool`]
             Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_. Can be passed only if you're privileged user.
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
 
         Raises
@@ -726,7 +726,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unban from the server.
 
         Raises
@@ -780,7 +780,7 @@ class PartialServer(BaseServer):
 
     @property
     def default_permissions(self) -> UndefinedOr[Permissions]:
-        """:class:`UndefinedOr`[:class:`Permissions`]: The new default permissions for everyone."""
+        """UndefinedOr[:class:`Permissions`]: The new default permissions for everyone."""
         if self.raw_default_permissions is UNDEFINED:
             return self.raw_default_permissions
         ret = _new_permissions(Permissions)
@@ -789,7 +789,7 @@ class PartialServer(BaseServer):
 
     @property
     def flags(self) -> UndefinedOr[ServerFlags]:
-        """:class:`UndefinedOr`[:class:`ServerFlags`]: The new server's flags."""
+        """UndefinedOr[:class:`ServerFlags`]: The new server's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_server_flags(ServerFlags)
@@ -798,12 +798,12 @@ class PartialServer(BaseServer):
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server icon."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def banner(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The stateful server banner."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
@@ -1044,9 +1044,9 @@ class Server(BaseServer):
     def locally_update(self, data: PartialServer, /) -> None:
         """Locally updates server with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
-            You likely want to use :meth:`.edit` instead.
+            You likely want to use :meth:`BaseServer.edit` method instead.
         """
         if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
@@ -1128,9 +1128,9 @@ class Server(BaseServer):
     def upsert_role(self, data: PartialRole | Role, /) -> None:
         """Locally upserts role into :attr:`Server.roles` mapping.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
-            You likely want to use :meth:`.create_role` or :meth:`BaseRole.edit` instead.
+            You likely want to use :meth:`BaseServer.create_role` or :meth:`BaseRole.edit` instead.
 
         Parameters
         ----------
@@ -1316,20 +1316,20 @@ class BaseMember:
 
         Parameters
         ----------
-        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+        nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
-        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+        roles: UndefinedOr[Optional[List[:class:`BaseRole`]]]
             The member's new list of roles. This *replaces* the roles.
-        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+        timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
-        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
-        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns
@@ -1378,8 +1378,9 @@ class PartialMember(BaseMember):
     can_publish: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
     can_receive: UndefinedOr[bool | None] = field(repr=True, kw_only=True)
 
+    @property
     def server_avatar(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The member's avatar on server."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
 
 
@@ -1411,7 +1412,7 @@ class Member(BaseMember):
     def locally_update(self, data: PartialMember) -> None:
         """Locally updates member with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters

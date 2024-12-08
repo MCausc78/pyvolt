@@ -81,13 +81,13 @@ class BaseBot(Base):
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        public: :class:`UndefinedOr`[:class:`bool`]
+        public: UndefinedOr[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether to allow Revolt collect analytics about the bot.
-        interactions_url: :class:`UndefinedOr`[Optional[:class:`str`]]
+        interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
