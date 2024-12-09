@@ -36,7 +36,10 @@ extensions = [
 ]
 
 autodoc_member_order = 'bysource'
-autodoc_typehints = 'none'
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+
+
 # maybe consider this?
 # napoleon_attr_annotations = False
 
@@ -69,3 +72,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 html_theme = 'furo'
 html_static_path = ['_static']
+
+def setup(app):
+    app.add_css_file('style.css')

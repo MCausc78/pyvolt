@@ -26,8 +26,11 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from collections import namedtuple
+from datetime import datetime
 import types
 import typing
+
+from .utils import _UTC
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
@@ -407,15 +410,57 @@ class AndroidMessageReplyStyle(Enum):
     double_tap_to_reply = 'DoubleTap'
 
 
+_CHANGELOG_ENTRIES: dict[int, tuple[datetime, str]] = {
+    1: (
+        datetime(
+            year=2022,
+            month=6,
+            day=12,
+            hour=20,
+            minute=39,
+            second=16,
+            microsecond=674000,
+            tzinfo=_UTC,
+        ),
+        'Secure your account with 2FA',
+    ),
+    2: (
+        datetime(
+            year=2023,
+            month=2,
+            day=23,
+            hour=20,
+            minute=0,
+            tzinfo=_UTC,
+        ),
+        'In-App Reporting Is Here',
+    ),
+    3: (
+        datetime(
+            year=2023,
+            month=6,
+            day=11,
+            hour=15,
+            minute=0,
+            tzinfo=_UTC,
+        ),
+        'Usernames are Changing',
+    ),
+}
+
+
 class ReviteChangelogEntry(Enum):
     mfa_feature = 1
-    """Title: Secure your account with 2FA."""
-
     iar_reporting_feature = 2
-    """Title: In-App Reporting Is Here"""
-
     discriminators_feature = 3
-    """Title: Usernames are Changing"""
+
+    @property
+    def created_at(self) -> datetime:
+        return _CHANGELOG_ENTRIES[self.value][0]
+
+    @property
+    def title(self) -> str:
+        return _CHANGELOG_ENTRIES[self.value][1]
 
 
 class ReviteNotificationState(Enum):

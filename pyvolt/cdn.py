@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
+from abc import ABC, abstractmethod
 import aiohttp
 from attrs import define, field
 import io
@@ -165,16 +165,24 @@ class Asset(StatelessAsset):
         )
 
 
-class Resource(abc.ABC):
-    @abc.abstractmethod
+class Resource(ABC):
+    @abstractmethod
     async def upload(self, cdn_client: CDNClient, tag: Tag, /) -> str:
-        """Uploads the resource to CDN, then returns ID."""
+        """:class:`str`: Uploads the resource to CDN, then returns ID.
+
+        Parameters
+        ----------
+        cdn_client: :class:`.CDNClient`
+            The CDN client to use.
+        tag: :class:`.Tag`
+            The tag to upload resource to.
+        """
         ...
 
 
 _cdn_session: aiohttp.ClientSession | None = None
 
-DEFAULT_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_CDN_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
 
 
 def _get_session() -> aiohttp.ClientSession:
@@ -188,7 +196,7 @@ def _get_session() -> aiohttp.ClientSession:
 Content = bytes | str | bytearray | io.IOBase
 
 
-def resolve_content(content: Content) -> bytes | io.IOBase:
+def resolve_content(content: Content, /) -> bytes | io.IOBase:
     if isinstance(content, bytearray):
         return bytes(content)
     elif isinstance(content, str):
@@ -204,44 +212,132 @@ class Upload(Resource):
     ----------
     content: Union[:class:`bytes`, :class:`~io.IOBase`]
         The file contents.
-    tag: Optional[Tag]
+    tag: Optional[:class:`Tag`]
         The attachment tag. If none, this is determined automatically.
     filename: :class:`str`
         The file name.
     """
 
-    __slots__ = ('tag', 'content', 'filename')
+    __slots__ = (
+        'tag',
+        'filename',
+        'content',
+    )
 
     def __init__(self, content: Content, *, tag: Tag | None = None, filename: str) -> None:
-        self.content = resolve_content(content)
-        # Pyright sucks massive balls here.
         self.tag: Tag | None = tag
-        self.filename = filename
+        self.filename: str = filename
+        self.content: Content = resolve_content(content)
 
     @classmethod
     def attachment(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'attachments'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='attachments', filename=filename)
 
     @classmethod
     def avatar(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'avatars'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='avatars', filename=filename)
 
     @classmethod
     def background(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'backgrounds'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='backgrounds', filename=filename)
 
     @classmethod
     def banner(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'banners'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='banners', filename=filename)
 
     @classmethod
     def emoji(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'emojis'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='emojis', filename=filename)
 
     @classmethod
     def icon(cls, content: Content, *, filename: str) -> Self:
+        """Creates an upload with ``'icons'`` tag.
+
+        Parameters
+        ----------
+        content: Union[:class:`bytes`, :class:`~io.IOBase`]
+            The content to upload.
+        filename: :class:`str`
+            The filename.
+
+        Returns
+        -------
+        :class:`.Upload`
+            The constructed upload.
+        """
         return cls(content, tag='icons', filename=filename)
 
+    @utils.copy_doc(Resource.upload)
     async def upload(self, cdn_client: CDNClient, tag: Tag, /) -> str:
         form = aiohttp.FormData()
         form.add_field('file', self.content, filename=self.filename)
@@ -252,7 +348,21 @@ class Upload(Resource):
 ResolvableResource = Resource | str | bytes | tuple[str, Content]
 
 
-async def resolve_resource(state: State, resolvable: ResolvableResource, *, tag: Tag) -> str:
+async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, tag: Tag) -> str:
+    """Resolve a resource.
+
+    Parameters
+    ----------
+    state: :class:`.State`
+        The state.
+    resolvable: :class:`ResolvableResource`
+        The object that should be resolved.
+
+    Returns
+    -------
+    :class:`str`
+        The uploaded file ID.
+    """
     if isinstance(resolvable, Resource):
         return await resolvable.upload(state.cdn_client, tag)
     elif isinstance(resolvable, str):
@@ -289,13 +399,13 @@ class CDNClient:
         self._base = base.rstrip('/')
         self._session: utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
         self.state: State = state
-        self.user_agent: str = user_agent or DEFAULT_USER_AGENT
+        self.user_agent: str = user_agent or DEFAULT_CDN_USER_AGENT
 
     @property
     def base(self) -> str:
         return self._base
 
-    async def request(self, method: str, route: str, **kwargs) -> aiohttp.ClientResponse:
+    async def request(self, method: str, route: str, /, **kwargs) -> aiohttp.ClientResponse:
         headers: dict[str, typing.Any] = kwargs.pop('headers', {})
         if not kwargs.pop('manual_accept', False):
             headers['accept'] = 'application/json'
@@ -321,18 +431,18 @@ class CDNClient:
             **kwargs,
         )
         if response.status >= 400:
-            j = await utils._json_or_text(response)
-            if isinstance(j, dict) and isinstance(j.get('error'), dict):
-                error = j['error']
+            data = await utils._json_or_text(response)
+            if isinstance(data, dict) and isinstance(data.get('error'), dict):
+                error = data['error']
                 code = error.get('code')
                 reason = error.get('reason')
                 description = error.get('description')
-                j['type'] = 'Rocket error'
-                j['err'] = f'{code} {reason}: {description}'
+                data['type'] = 'Rocket error'
+                data['err'] = f'{code} {reason}: {description}'
 
             from .http import _STATUS_TO_ERRORS
 
-            raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, j)
+            raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
         return response
 
     def url_for(
@@ -345,9 +455,25 @@ class CDNClient:
         height: int | None = None,
         max_side: int | None = None,
     ) -> str:
-        """:class:`str`: Generates asset URL."""
+        """:class:`str`: Generates asset URL.
 
-        url = f'{self._base}/{tag}/{quote(id)}'
+        Parameters
+        ----------
+        id: :class:`str`
+            The asset's ID.
+        tag: :class:`Tag`
+            The asset's tag.
+        size: Optional[:class:`int`]
+            The asset's size.
+        width: Optional[:class:`int`]
+            The asset's width.
+        height: Optional[:class:`int`]
+            The asset's height.
+        max_side: Optional[:class:`int`]
+            The asset's maximum side.
+        """
+
+        url = f'{self._base}/{quote(tag)}/{quote(id)}'
 
         params = []
 
@@ -392,7 +518,7 @@ class CDNClient:
         if max_side is not None:
             params['max_side'] = max_side
 
-        response = await self.request('GET', f'/{tag}/{quote(id)}', params=params)
+        response = await self.request('GET', f'/{quote(tag)}/{quote(id)}', params=params)
         data = await response.read()
         response.close()
         return data
@@ -400,12 +526,12 @@ class CDNClient:
     async def upload(
         self,
         tag: Tag,
-        data: typing.Any,
+        data: aiohttp.FormData,
     ) -> str:
-        response = await self.request('POST', f'/{tag}', data=data)
-        data = await response.json(loads=utils.from_json)
+        response = await self.request('POST', f'/{quote(tag)}', data=data)
+        rd = await response.json(loads=utils.from_json)
         response.close()
-        return data['id']
+        return rd['id']
 
 
 __all__ = (
@@ -415,7 +541,7 @@ __all__ = (
     'Tag',
     'Resource',
     '_cdn_session',
-    'DEFAULT_USER_AGENT',
+    'DEFAULT_CDN_USER_AGENT',
     '_get_session',
     'Content',
     'resolve_content',

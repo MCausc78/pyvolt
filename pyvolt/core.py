@@ -25,9 +25,9 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from enum import Enum
 import typing
 
-from .enums import Enum
 from .ulid import _ulid_timestamp
 
 

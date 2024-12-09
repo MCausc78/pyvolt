@@ -42,7 +42,7 @@ from .channel import (
     ServerChannel,
     Channel,
 )
-from .emoji import ServerEmoji, DetachedEmoji
+from .emoji import ServerEmoji
 from .enums import MemberRemovalIntention, RelationshipStatus
 from .flags import UserFlags
 from .read_state import ReadState
@@ -70,9 +70,9 @@ if typing.TYPE_CHECKING:
     from .flags import UserFlags
     from .message import PartialMessage, MessageAppendData, Message
     from .safety_reports import CreatedReport
+    from .settings import UserSettings
     from .shard import Shard
     from .user import UserVoiceState, PartialUserVoiceState
-    from .user_settings import UserSettings
     from .webhook import Webhook, PartialWebhook
 
 _new_user_flags = UserFlags.__new__
@@ -206,6 +206,8 @@ class ReadyEvent(ShardEvent):
 
 @define(slots=True)
 class BaseChannelCreateEvent(ShardEvent):
+    """Base class for events when a channel is created."""
+
     event_name: typing.ClassVar[str] = 'channel_create'
 
 
@@ -348,7 +350,7 @@ class GroupRecipientAddEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        group = cache.get_channel(self.channel_id, caching._CHANNEL_GROUP_JOIN)
+        group = cache.get_channel(self.channel_id, caching._GROUP_RECIPIENT_ADD)
         if not isinstance(group, GroupChannel):
             return
         self.group = group
@@ -362,7 +364,7 @@ class GroupRecipientAddEvent(ShardEvent):
             return False
 
         self.group._join(self.user_id)
-        cache.store_channel(self.group, caching._CHANNEL_GROUP_JOIN)
+        cache.store_channel(self.group, caching._GROUP_RECIPIENT_ADD)
 
         return True
 
@@ -386,7 +388,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        group = cache.get_channel(self.channel_id, caching._CHANNEL_GROUP_LEAVE)
+        group = cache.get_channel(self.channel_id, caching._GROUP_RECIPIENT_REMOVE)
         if not isinstance(group, GroupChannel):
             return
         self.group = group
@@ -400,7 +402,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
             return False
 
         self.group._leave(self.user_id)
-        cache.store_channel(self.group, caching._CHANNEL_GROUP_LEAVE)
+        cache.store_channel(self.group, caching._GROUP_RECIPIENT_REMOVE)
 
         return True
 
@@ -720,7 +722,7 @@ class MessageClearReactionEvent(ShardEvent):
 
         if not cache:
             return
-        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_REACT)
+        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_CLEAR_REACTION)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -728,12 +730,12 @@ class MessageClearReactionEvent(ShardEvent):
         if not cache or not self.message:
             return False
         self.message.locally_clear_reactions(self.emoji)
-        cache.store_message(self.message, caching._MESSAGE_REACT)
+        cache.store_message(self.message, caching._MESSAGE_CLEAR_REACTION)
         return True
 
 
 @define(slots=True)
-class BulkMessageDeleteEvent(ShardEvent):
+class MessageDeleteBulkEvent(ShardEvent):
     """Dispatched when multiple messages are deleted from channel."""
 
     event_name: typing.ClassVar[typing.Literal['bulk_message_delete']] = 'bulk_message_delete'
@@ -745,8 +747,11 @@ class BulkMessageDeleteEvent(ShardEvent):
     """The list of message's IDs that got deleted."""
 
     messages: list[Message] = field(repr=True, kw_only=True)
-    """The list of messages, potentially retrieved from cache. Unlike :attr:`.message_ids`, some messages are
-    not guaranteed to be here."""
+    """The list of deleted messages, potentially retrieved from cache.
+    
+    Unlike :attr:`.message_ids`, some messages are
+    not guaranteed to be here.
+    """
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -755,7 +760,7 @@ class BulkMessageDeleteEvent(ShardEvent):
             return
 
         for message_id in self.message_ids:
-            message = cache.get_message(self.channel_id, message_id, caching._MESSAGE_BULK_DELETE)
+            message = cache.get_message(self.channel_id, message_id, caching._MESSAGE_DELETE_BULK)
             if message:
                 self.messages.append(message)
 
@@ -766,7 +771,7 @@ class BulkMessageDeleteEvent(ShardEvent):
             return False
 
         for message_id in self.message_ids:
-            cache.delete_message(self.channel_id, message_id, caching._MESSAGE_BULK_DELETE)
+            cache.delete_message(self.channel_id, message_id, caching._MESSAGE_DELETE_BULK)
 
         return True
 
@@ -832,7 +837,7 @@ class ServerEmojiCreateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
-        cache.store_emoji(self.emoji, caching._EMOJI_CREATE)
+        cache.store_emoji(self.emoji, caching._SERVER_EMOJI_CREATE)
         return True
 
 
@@ -855,15 +860,17 @@ class ServerEmojiDeleteEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        emoji = cache.get_emoji(self.emoji_id, caching._EMOJI_DELETE)
-        if not isinstance(emoji, DetachedEmoji):
+
+        emoji = cache.get_emoji(self.emoji_id, caching._SERVER_EMOJI_DELETE)
+        if isinstance(emoji, ServerEmoji):
             self.emoji = emoji
+            self.server_id = emoji.server_id
 
     def process(self) -> bool:
         cache = self.shard.state.cache
         if not cache:
             return False
-        cache.delete_emoji(self.emoji_id, self.server_id, caching._EMOJI_DELETE)
+        cache.delete_emoji(self.emoji_id, self.server_id, caching._SERVER_EMOJI_DELETE)
         return True
 
 
@@ -925,9 +932,17 @@ class ServerDeleteEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
+
         cache.delete_server_emojis_of(self.server_id, caching._SERVER_DELETE)
         cache.delete_server_members_of(self.server_id, caching._SERVER_DELETE)
         cache.delete_server(self.server_id, caching._SERVER_DELETE)
+
+        if self.server is not None:
+            for channel_id in self.server.internal_channels[1]:
+                assert isinstance(channel_id, str)
+                cache.delete_read_state(channel_id, caching._SERVER_DELETE)
+                cache.delete_channel_voice_state(channel_id, caching._SERVER_DELETE)
+
         return True
 
 
@@ -944,7 +959,7 @@ class ServerMemberJoinEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
-        cache.store_server_member(self.member, caching._SERVER_MEMBER_CREATE)
+        cache.store_server_member(self.member, caching._SERVER_MEMBER_ADD)
         return True
 
 
@@ -1006,7 +1021,7 @@ class ServerMemberRemoveEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        self.member = cache.get_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE)
+        self.member = cache.get_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_REMOVE)
 
     def process(self) -> bool:
         state = self.shard.state
@@ -1017,11 +1032,11 @@ class ServerMemberRemoveEvent(ShardEvent):
         me = state.me
         is_me = me.id == self.user_id if me else False
 
-        cache.delete_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_DELETE)
+        cache.delete_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_REMOVE)
         if is_me:
-            cache.delete_server_emojis_of(self.server_id, caching._SERVER_MEMBER_DELETE)
-            cache.delete_server_members_of(self.server_id, caching._SERVER_MEMBER_DELETE)
-            cache.delete_server(self.server_id, caching._SERVER_MEMBER_DELETE)
+            cache.delete_server_emojis_of(self.server_id, caching._SERVER_MEMBER_REMOVE)
+            cache.delete_server_members_of(self.server_id, caching._SERVER_MEMBER_REMOVE)
+            cache.delete_server(self.server_id, caching._SERVER_MEMBER_REMOVE)
         return True
 
 
@@ -1102,7 +1117,11 @@ class ServerRoleDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class ReportCreateEvent(ShardEvent):
-    """Dispatched when the report was created."""
+    """Dispatched when the report was created.
+
+    .. warning::
+        This event is not dispatched over WebSocket.
+    """
 
     event_name: typing.ClassVar[typing.Literal['report_create']] = 'report_create'
 
@@ -1166,7 +1185,7 @@ class UserRelationshipUpdateEvent(ShardEvent):
 
     @property
     def after(self) -> RelationshipStatus:
-        """The new relationship with the user."""
+        """:class:`.RelationshipStatus`: The new relationship with the user."""
         return self.new_user.relationship
 
     def before_dispatch(self) -> None:
@@ -1540,7 +1559,7 @@ __all__ = (
     'MessageReactEvent',
     'MessageUnreactEvent',
     'MessageClearReactionEvent',
-    'BulkMessageDeleteEvent',
+    'MessageDeleteBulkEvent',
     'ServerCreateEvent',
     'ServerEmojiCreateEvent',
     'ServerEmojiDeleteEvent',

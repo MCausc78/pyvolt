@@ -54,6 +54,6 @@ async def test_events():
     await client.dispatch(AddEvent(a=0xBEEF, b=12))
     await client.dispatch(AddEvent(a=0xBEEF, b=13))
 
-    numbers = [(print('insane', event.b), event.b)[1] async for event in subscription]
+    numbers = [event.b async for event in subscription]
 
     assert sum(numbers) == 36

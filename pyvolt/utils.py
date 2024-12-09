@@ -40,7 +40,7 @@ import sys
 import typing
 
 try:
-    import orjson
+    import orjson  # type: ignore
 except ModuleNotFoundError:
     HAS_ORJSON = False
 else:
@@ -293,6 +293,8 @@ def setup_logging(
     logger.addHandler(handler)
 
 
+_UTC: datetime.timezone = datetime.timezone.utc
+
 __all__ = (
     'to_json',
     'from_json',
@@ -306,4 +308,5 @@ __all__ = (
     'stream_supports_color',
     'new_formatter',
     'setup_logging',
+    '_UTC',
 )

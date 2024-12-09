@@ -37,9 +37,9 @@ from .read_state import *
 from . import routes as routes
 from .safety_reports import *
 from .server import *
+from .settings import *
 from .shard import *
 from .state import *
-from .user_settings import *
 from .user import *
 from .utils import *
 from .webhook import *

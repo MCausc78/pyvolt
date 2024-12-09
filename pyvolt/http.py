@@ -109,8 +109,8 @@ if typing.TYPE_CHECKING:
     from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
     from .instance import Instance
     from .read_state import ReadState
+    from .settings import UserSettings
     from .state import State
-    from .user_settings import UserSettings
     from .user import (
         UserStatusEdit,
         UserProfile,
@@ -1709,7 +1709,7 @@ class HTTPClient:
         """
         payload: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
         await self.request(
-            routes.CHANNELS_MESSAGE_BULK_DELETE.compile(channel_id=resolve_id(channel)),
+            routes.CHANNELS_MESSAGE_DELETE_BULK.compile(channel_id=resolve_id(channel)),
             json=payload,
         )
 

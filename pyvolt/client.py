@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
         AuthifierEvent,
         BaseChannelCreateEvent,
         BaseEvent,
-        BulkMessageDeleteEvent,
+        MessageDeleteBulkEvent,
         ChannelDeleteEvent,
         ChannelStartTypingEvent,
         ChannelStopTypingEvent,
@@ -109,7 +109,7 @@ if typing.TYPE_CHECKING:
     )
     from .message import Message
     from .read_state import ReadState
-    from .user_settings import UserSettings
+    from .settings import UserSettings
 
 
 _L = logging.getLogger(__name__)
@@ -1501,7 +1501,7 @@ class Client:
         def on_authenticated(self, arg: AuthenticatedEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_authifier(self, arg: AuthifierEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_create(self, arg: BaseChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
-        def on_bulk_message_delete(self, arg: BulkMessageDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_delete_bulk(self, arg: MessageDeleteBulkEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_delete(self, arg: ChannelDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_start_typing(self, arg: ChannelStartTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_stop_typing(self, arg: ChannelStopTypingEvent, /) -> utils.MaybeAwaitable[None]: ...

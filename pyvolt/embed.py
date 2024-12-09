@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
+from abc import ABC, abstractmethod
 from attrs import define, field
 import typing
 
@@ -36,10 +36,10 @@ if typing.TYPE_CHECKING:
 
 
 @define(slots=True)
-class _BaseEmbed(abc.ABC):
+class _BaseEmbed(ABC):
     """The message embed."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def _stateful(self, state: State, /) -> Embed: ...
 
 

@@ -44,9 +44,9 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .cdn import StatelessAsset, Asset
     from .enums import ServerActivity, BotUsage, ReviteBaseTheme
+    from .settings import ReviteThemeVariable
     from .state import State
     from .user import StatelessUserProfile, UserProfile
-    from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
 DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'

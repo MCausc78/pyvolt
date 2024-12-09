@@ -116,7 +116,7 @@ from .events import (
     MessageReactEvent,
     MessageUnreactEvent,
     MessageClearReactionEvent,
-    BulkMessageDeleteEvent,
+    MessageDeleteBulkEvent,
     ServerCreateEvent,
     ServerEmojiCreateEvent,
     ServerEmojiDeleteEvent,
@@ -209,7 +209,7 @@ from .server import (
     Member,
     MemberList,
 )
-from .user_settings import UserSettings
+from .settings import UserSettings
 from .user import (
     UserStatus,
     UserStatusEdit,
@@ -470,8 +470,8 @@ class Parser:
 
     def parse_bulk_message_delete_event(
         self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /
-    ) -> BulkMessageDeleteEvent:
-        return BulkMessageDeleteEvent(
+    ) -> MessageDeleteBulkEvent:
+        return MessageDeleteBulkEvent(
             shard=shard,
             channel_id=payload['channel'],
             message_ids=payload['ids'],

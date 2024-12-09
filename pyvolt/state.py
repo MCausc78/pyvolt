@@ -28,7 +28,7 @@ import typing
 
 from .core import ZID
 from .parser import Parser
-from .user_settings import UserSettings
+from .settings import UserSettings
 from .user import RelationshipStatus, User
 
 if typing.TYPE_CHECKING:

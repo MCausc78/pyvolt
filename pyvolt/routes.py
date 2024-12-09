@@ -136,7 +136,7 @@ CHANNELS_GROUP_CREATE: typing.Final[Route] = Route(POST, '/channels/create', rat
 CHANNELS_GROUP_REMOVE_MEMBER: typing.Final[Route] = Route(DELETE, '/channels/{channel_id}/recipients/{user_id}')
 CHANNELS_INVITE_CREATE: typing.Final[Route] = Route(POST, '/channels/{channel_id}/invites')
 CHANNELS_MEMBERS_FETCH: typing.Final[Route] = Route(GET, '/channels/{channel_id}/members')
-CHANNELS_MESSAGE_BULK_DELETE: typing.Final[Route] = Route(DELETE, '/channels/{channel_id}/messages/bulk')
+CHANNELS_MESSAGE_DELETE_BULK: typing.Final[Route] = Route(DELETE, '/channels/{channel_id}/messages/bulk')
 CHANNELS_MESSAGE_CLEAR_REACTIONS: typing.Final[Route] = Route(
     DELETE, '/channels/{channel_id}/messages/{message_id}/reactions'
 )
@@ -300,7 +300,7 @@ __all__ = (
     'CHANNELS_GROUP_REMOVE_MEMBER',
     'CHANNELS_INVITE_CREATE',
     'CHANNELS_MEMBERS_FETCH',
-    'CHANNELS_MESSAGE_BULK_DELETE',
+    'CHANNELS_MESSAGE_DELETE_BULK',
     'CHANNELS_MESSAGE_CLEAR_REACTIONS',
     'CHANNELS_MESSAGE_DELETE',
     'CHANNELS_MESSAGE_EDIT',

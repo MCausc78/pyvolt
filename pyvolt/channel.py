@@ -1132,7 +1132,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
 
 @define(slots=True)
-class VoiceChannel(BaseServerChannel, Connectable):
+class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a voice channel that belongs to a server on Revolt.
 
     .. deprecated:: 0.7.0
