@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 try:
-    import msgpack
+    import msgpack  # type: ignore
 except ImportError:
     _HAS_MSGPACK = False
 else:

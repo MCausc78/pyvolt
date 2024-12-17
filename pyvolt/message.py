@@ -1506,6 +1506,7 @@ StatelessSystemEvent = (
     | StatelessUserLeftSystemEvent
     | StatelessUserKickedSystemEvent
     | StatelessUserBannedSystemEvent
+    | StatelessChannelRenamedSystemEvent
     | StatelessChannelDescriptionChangedSystemEvent
     | StatelessChannelIconChangedSystemEvent
     | StatelessChannelOwnershipChangedSystemEvent
@@ -1521,6 +1522,7 @@ SystemEvent = (
     | UserLeftSystemEvent
     | UserKickedSystemEvent
     | UserBannedSystemEvent
+    | ChannelRenamedSystemEvent
     | ChannelDescriptionChangedSystemEvent
     | ChannelIconChangedSystemEvent
     | ChannelOwnershipChangedSystemEvent
@@ -1683,14 +1685,14 @@ class Message(BaseMessage):
         if not isinstance(channel, ServerChannel):
             return cache.get_user(
                 self._author,
-                caching.MessageContext(type=caching.CacheContextType.message, message=self)
+                caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
                 if 'Message.get_author' in state.provide_cache_context_in
                 else caching._UNDEFINED,
             )
         return cache.get_server_member(
             channel.server_id,
             self._author,
-            caching.MessageContext(type=caching.CacheContextType.message, message=self)
+            caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
             if 'Message.get_author' in state.provide_cache_context_in
             else caching._UNDEFINED,
         )
