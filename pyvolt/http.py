@@ -473,7 +473,7 @@ class HTTPClient:
         user_agent: str | None = None,
     ) -> None:
         if base is None:
-            base = 'https://api.revolt.chat/8.0'
+            base = 'https://api.revolt.chat/0.8'
         self._base: str = base.rstrip('/')
         self.bot: bool = bot
         self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session

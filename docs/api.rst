@@ -1136,12 +1136,13 @@ Discover
     This applies to all users on Revolt Android.
 
     .. attribute:: sharp
+    
         Use sharp rounding grade for profile pictures.
-    
     .. attribute:: rounded
+
         Use rounded grade for profile pictures.
-    
     .. attribute:: circular
+
         Use circular rounding grade for profile pictures.
 
 .. class:: AndroidMessageReplyStyle
@@ -1149,12 +1150,13 @@ Discover
     Specifies a way to quickly reply on Revolt Android.
 
     .. attribute:: long_press_to_reply
+
         Long press message to reply.
-    
     .. attribute:: swipe_to_reply
+
         Swipe from message end to reply.
-    
     .. attribute:: double_tap_to_reply
+
         Tap twice a message to reply.
 
 .. class:: ReviteChangelogEntry
@@ -1370,6 +1372,104 @@ Discover
 
         The content being reported is user.
 
+.. _revolt-api-flags:
+
+Flag Classes
+------------
+
+BaseFlags
+~~~~~~~~~
+
+.. attributetable:: BaseFlags
+
+.. autoclass:: BaseFlags
+    :members:
+
+.. autofunction:: flag
+
+.. autofunction:: doc_flag
+
+BotFlags
+~~~~~~~~
+
+.. attributetable:: BotFlags
+
+.. autoclass:: BotFlags
+    :members:
+    :inherited-members:
+
+MessageFlags
+~~~~~~~~~~~~
+
+.. attributetable:: MessageFlags
+
+.. autoclass:: MessageFlags
+    :members:
+    :inherited-members:
+
+Permissions
+~~~~~~~~~~~
+
+.. attributetable:: Permissions
+
+.. autoclass:: Permissions
+    :members:
+    :inherited-members:
+
+.. data:: ALLOW_PERMISSIONS_IN_TIMEOUT
+
+    The permissions that are only allowed when user is timed out.
+.. data:: VIEW_ONLY_PERMISSIONS
+
+    The permissions that are allowed when user can view channel.
+.. data:: DEFAULT_PERMISSIONS
+
+    The default permissions.
+.. data:: DEFAULT_SAVED_MESSAGES_PERMISSIONS
+
+    The default permissions in :class:`.SavedMessagesChannel`.
+.. data:: DEFAULT_DM_PERMISSIONS
+
+    The default permissions in :class:`.DMChannel`.
+.. data:: DEFAULT_SERVER_PERMISSIONS
+
+    The default permissions in :class:`.Server`.
+
+UserPermissions
+~~~~~~~~~~~~~~~
+
+.. attributetable:: UserPermissions
+
+.. autoclass:: UserPermissions
+    :members:
+    :inherited-members:
+
+ServerFlags
+~~~~~~~~~~~
+
+.. attributetable:: ServerFlags
+
+.. autoclass:: ServerFlags
+    :members:
+    :inherited-members:
+
+UserBadges
+~~~~~~~~~~
+
+.. attributetable:: UserBadges
+
+.. autoclass:: UserBadges
+    :members:
+    :inherited-members:
+
+UserFlags
+~~~~~~~~~
+
+.. attributetable:: UserFlags
+
+.. autoclass:: UserFlags
+    :members:
+    :inherited-members:
 
 Abstract Base Classes
 ---------------------
