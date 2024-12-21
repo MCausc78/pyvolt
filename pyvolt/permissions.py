@@ -39,9 +39,9 @@ class PermissionOverride:
 
     Attributes
     ----------
-    allow: :class:`Permissions`
+    allow: :class:`.Permissions`
         The permissions to allow.
-    deny: :class:`Permissions`
+    deny: :class:`.Permissions`
         The permissions to deny.
     """
 

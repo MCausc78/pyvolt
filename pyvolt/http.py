@@ -80,7 +80,7 @@ from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
 from .invite import BaseInvite, ServerInvite, Invite
 from .message import (
     Reply,
-    Interactions,
+    MessageInteractions,
     Masquerade,
     SendableEmbed,
     BaseMessage,
@@ -2077,7 +2077,7 @@ class HTTPClient:
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
         mention_everyone: bool | None = None,
         mention_online: bool | None = None,
@@ -2115,10 +2115,10 @@ class HTTPClient:
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
-        interactions: Optional[:class:`Interactions`]
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
 
-            If :attr:`.Interactions.reactions` is provided, :attr:`~Permissions.react` is required.
+            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
         mention_everyone: Optional[:class:`bool`]
@@ -2139,31 +2139,31 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid. |
             +------------------------------------------+----------------------------------------+
         HTTPException
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                                                               |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``EmptyMessage``                          | The message was empty.                                                                               |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``FailedValidation``                      | The payload was invalid.                                                                             |
-            +-------------------------------------------+------------------------------------------------------------- ----------------------------------------+
-            | ``InvalidFlagValue``                      | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                      |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``                      | The passed nonce was already used. One of :attr:`.Interactions.reactions` elements was invalid.      |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``                       | :attr:`.Interactions.restrict_reactions` was ``True`` and :attr:`.Interactions.reactions` was empty. |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``IsBot``                                 | The current token belongs to bot account.                                                            |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``IsNotBot``                              | The current token belongs to user account.                                                           |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``PayloadTooLarge``                       | The message was too large.                                                                           |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``TooManyAttachments``                    | You provided more attachments than allowed on this instance.                                         |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``TooManyEmbeds``                         | You provided more embeds than allowed on this instance.                                              |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``                        | You was replying to more messages than was allowed on this instance.                                 |
-            +-------------------------------------------+------------------------------------------------------------------------------------------------------+
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                                                                             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``                          | The message was empty.                                                                                             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``                      | The payload was invalid.                                                                                           |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``                      | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``                      | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``                       | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.                                                                         |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``                              | The current token belongs to user account.                                                                        |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``                       | The message was too large.                                                                                        |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments``                    | You provided more attachments than allowed on this instance.                                                      |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``                         | You provided more embeds than allowed on this instance.                                                           |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``                        | You was replying to more messages than was allowed on this instance.                                              |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
         Forbidden
             +---------------------------------------+----------------------------------------------------------+
             | Possible :attr:`Forbidden.type` value | Reason                                                   |
@@ -4368,7 +4368,7 @@ class HTTPClient:
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
         mention_everyone: bool | None = None,
         mention_online: bool | None = None,
@@ -4379,7 +4379,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`.BaseWebhook`]
             The ID of the webhook.
         token: :class:`str`
             The webhook token.
@@ -4387,15 +4387,15 @@ class HTTPClient:
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`ResolvableResource`]]
+        attachments: Optional[List[:class:`.ResolvableResource`]]
             The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.
-        masquearde: Optional[:class:`Masquerade`]
+        masquearde: Optional[:class:`.Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`Interactions`]
+        interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.

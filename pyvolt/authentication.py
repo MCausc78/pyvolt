@@ -39,10 +39,10 @@ if typing.TYPE_CHECKING:
 @define(slots=True, eq=True)
 class PartialAccount:
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The unique account ID."""
+    """:class:`str`: The unique account ID."""
 
     email: str = field(repr=True, kw_only=True)
-    """The email associated with this account."""
+    """:class:`str`: The email associated with this account."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -53,22 +53,22 @@ class MFATicket:
     """The Multi-factor authentication ticket."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The unique ticket ID."""
+    """:class:`str`: The unique ticket ID."""
 
     account_id: str = field(repr=True, kw_only=True)
-    """The associated account ID."""
+    """:class:`str`: The associated account ID."""
 
     token: str = field(repr=True, kw_only=True)
-    """The unique token."""
+    """:class:`str`: The unique token."""
 
     validated: bool = field(repr=True, kw_only=True)
-    """Whether this ticket has been validated (can be used for account actions)."""
+    """:class:`bool`: Whether this ticket has been validated (can be used for account actions)."""
 
     authorised: bool = field(repr=True, kw_only=True)
-    """Whether this ticket is authorised (can be used to log a user in)."""
+    """:class:`bool`: Whether this ticket is authorised (can be used to log a user in)."""
 
     last_totp_code: str | None = field(repr=True, kw_only=True)
-    """The TOTP code at time of ticket creation."""
+    """Optional[:class:`str`]: The TOTP code at time of ticket creation."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -76,7 +76,7 @@ class MFATicket:
 
 @define(slots=True)
 class WebPushSubscription:
-    """The Web Push subscription object."""
+    """Represents WebPush subscription."""
 
     endpoint: str = field(repr=True, kw_only=True)
     p256dh: str = field(repr=True, kw_only=True)
@@ -85,10 +85,10 @@ class WebPushSubscription:
 
 @define(slots=True)
 class PartialSession(Base):
-    """Partially represents Revolt auth session."""
+    """Represents partial Revolt auth session."""
 
     name: str = field(repr=True, kw_only=True)
-    """The session friendly name."""
+    """:class:`str`: The session friendly name."""
 
     async def edit(self, *, friendly_name: UndefinedOr[str]) -> PartialSession:
         """|coro|
@@ -113,13 +113,13 @@ class Session(PartialSession):
     """The session information."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The ID of associated user."""
+    """:class:`str`: The ID of associated user."""
 
     token: str = field(repr=True, kw_only=True)
-    """The session token."""
+    """:class:`str`: The session token."""
 
     subscription: WebPushSubscription | None = field(repr=True, kw_only=True)
-    """The Web Push subscription."""
+    """Optional[:class:`.WebPushSubscription`]: The Web Push subscription associated with this session."""
 
 
 @define(slots=True)
@@ -127,10 +127,10 @@ class MFARequired:
     """The password is valid, but MFA is required."""
 
     ticket: str = field(repr=True, kw_only=True)
-    """The MFA ticket."""
+    """:class:`str`: The MFA ticket."""
 
     allowed_methods: list[MFAMethod] = field(repr=True, kw_only=True)
-    """The allowed methods."""
+    """List[:class:`.MFAMethod`]: The allowed methods."""
 
     # internals
     state: State = field(repr=True, kw_only=True)
@@ -160,16 +160,16 @@ class AccountDisabled:
     """The password/MFA are valid, but account is disabled."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The ID of the disabled user account."""
+    """:class:`str`: The ID of the disabled user account."""
 
 
 @define(slots=True, eq=True)
 class MFAStatus:
     totp_mfa: bool = field(repr=True, kw_only=True, eq=True)
-    """Whether the account has MFA TOTP enabled."""
+    """:class:`bool`: Whether the account has MFA TOTP enabled."""
 
     recovery_active: bool = field(repr=True, kw_only=True, eq=True)
-    """Whether the account has recovery codes."""
+    """:class:`bool`: Whether the account has recovery codes."""
 
 
 class BaseMFAResponse:

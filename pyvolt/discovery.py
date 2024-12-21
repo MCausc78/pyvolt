@@ -59,39 +59,39 @@ class DiscoverableServer(BaseServer):
     """Represents a server on Revolt Discovery. The ID is a invite code."""
 
     name: str = field(repr=True, kw_only=True)
-    """The server's name."""
+    """:class:`str`: The server's name."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The server's description."""
+    """Optional[:class:`str`]: The server's description."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server icon."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server icon."""
 
     internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server banner."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The server's flags raw value."""
+    """:class:`int`: The server's flags raw value."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The server's tags."""
+    """List[:class:`str`]: The server's tags."""
 
     member_count: int = field(repr=True, kw_only=True)
-    """The server's member count."""
+    """:class:`int`: The server's member count."""
 
     activity: ServerActivity = field(repr=True, kw_only=True)
-    """The server's activity."""
+    """:class:`.ServerActivity`: The server's activity."""
 
     @property
     def flags(self) -> ServerFlags:
-        """The server's flags."""
+        """:class:`.ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server's icon."""
+        """Optional[:class:`.Asset`]: The server's icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
@@ -101,42 +101,42 @@ class DiscoverableServer(BaseServer):
 
     @property
     def banner(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server's banner."""
+        """Optional[:class:`.Asset`]: The server's banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
 @define(slots=True)
 class DiscoverableServersPage:
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """The listed servers, up to 200 servers."""
+    """List[:class:`.DiscoverableServer`]: The listed servers, up to 200 servers."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """Popular tags used in discovery servers."""
+    """List[:class:`str`]: Popular tags used in discovery servers."""
 
 
 @define(slots=True)
 class DiscoverableBot(BaseBot):
     name: str = field(repr=True, kw_only=True)
-    """The bot's name."""
+    """:class:`str`: The bot's name."""
 
     internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless bot's avatar."""
+    """Optional[:class:`.StatelessAsset`]: The stateless bot's avatar."""
 
     internal_profile: StatelessUserProfile = field(repr=True, kw_only=True)
-    """The stateless bot's profile."""
+    """Optional[:class:`.StatelessUserProfile`]: The stateless bot's profile."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The bot's tags."""
+    """List[:class:`int`]: The bot's tags."""
 
     server_count: int = field(repr=True, kw_only=True)
-    """The bot's servers count."""
+    """:class:`int`: The bot's servers count."""
 
     usage: BotUsage = field(repr=True, kw_only=True)
-    """How frequently is bot being used."""
+    """:class:`.BotUsage`: How frequently is bot being used."""
 
     @property
     def avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The bot's avatar."""
+        """Optional[:class:`.Asset`]: The bot's avatar."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
@@ -146,47 +146,47 @@ class DiscoverableBot(BaseBot):
 
     @property
     def profile(self) -> UserProfile:
-        """:class:`UserProfile`: The bot's profile."""
+        """:class:`.UserProfile`: The bot's profile."""
         return self.internal_profile._stateful(self.state, self.id)
 
 
 @define(slots=True)
 class DiscoverableBotsPage:
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """The listed bots, up to 200 bots."""
+    """List[:class:`.DiscoverableBot`]: The listed bots, up to 200 bots."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """Popular tags used in discovery bots."""
+    """List[:class:`str`]: Popular tags used in discovery bots."""
 
 
 @define(slots=True)
 class DiscoverableTheme:
     state: State = field(repr=False)
-    """State that controls this theme."""
+    """:class:`.State`: State that controls this theme."""
 
     name: str = field(repr=True, kw_only=True)
-    """The theme name."""
+    """:class:`str`: The theme name."""
 
     description: str = field(repr=True, kw_only=True)
-    """The theme description."""
+    """:class:`str`: The theme description."""
 
     creator: str = field(repr=True, kw_only=True)
-    """The theme creator."""
+    """:class:`str`: The theme creator."""
 
     slug: str = field(repr=True, kw_only=True)
-    """The theme slug."""
+    """:class:`str`: The theme slug."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The theme tags."""
+    """List[:class:`str`]: The theme tags."""
 
     overrides: dict[ReviteThemeVariable, str] = field(repr=True, kw_only=True)
-    """The theme overrides in format `{css_class: css_color}`."""
+    """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides in format `{css_class: css_color}`."""
 
     version: str = field(repr=True, kw_only=True)
-    """The theme version."""
+    """:class:`str`: The theme version."""
 
     custom_css: str | None = field(repr=True, kw_only=True)
-    """The theme CSS string."""
+    """Optional[:class:`str`]: The theme CSS string."""
 
     def __hash__(self) -> int:
         return hash((self.name, self.creator))
@@ -203,6 +203,11 @@ class DiscoverableTheme:
         """|coro|
 
         Applies the theme to current user account.
+
+        Parameters
+        ----------
+        base_theme: UndefinedOr[:class:`.ReviteBaseTheme`]
+            The base theme to use, when applying theme.
         """
         await self.state.settings.revite.edit(
             overrides=self.overrides,
@@ -213,14 +218,11 @@ class DiscoverableTheme:
 
 @define(slots=True)
 class DiscoverableThemesPage:
-    themes: list[DiscoverableTheme] = field(
-        repr=True,
-        kw_only=True,
-    )
-    """The listed themes, up to 200 themes."""
+    themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
+    """List[:class:`.DiscoverableTheme`]: The listed themes, up to 200 themes."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """The popular tags used in discoverable themes."""
+    """List[:class:`str`]: The popular tags used in discoverable themes."""
 
 
 # 'relatedTags' contains deduplicated tags, calculated with:
@@ -238,16 +240,16 @@ class ServerSearchResult:
     """The server search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The servers count."""
+    """:class:`int`: The servers count."""
 
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """The listed servers."""
+    """List[:class:`.DiscoverableServer`]: The listed servers."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed servers have."""
+    """List[:class:`str`]: All of tags that listed servers have."""
 
 
 @define(slots=True)
@@ -255,16 +257,16 @@ class BotSearchResult:
     """The bot search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The bots count."""
+    """:class:`int`: The bots count."""
 
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """The listed bots."""
+    """List[:class:`.DiscoverableBot`]: The listed bots."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed bots have."""
+    """List[:class:`str`]: All of tags that listed bots have."""
 
 
 @define(slots=True)
@@ -272,16 +274,16 @@ class ThemeSearchResult:
     """The theme search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The themes count."""
+    """:class:`int`: The themes count."""
 
     themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
-    """The listed themes."""
+    """List[:class:`.DiscoverableTheme`]: The listed themes."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed themes have."""
+    """List[:class:`str`]: All of tags that listed themes have."""
 
 
 DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'

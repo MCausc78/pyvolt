@@ -33,10 +33,10 @@ class InstanceCaptchaFeature:
     """Configuration for hCaptcha on Revolt instance."""
 
     enabled: bool = field(repr=True, kw_only=True)
-    """Whether the CAPTCHA is enabled on current instance."""
+    """:class:`bool`: Whether the CAPTCHA is enabled on current instance."""
 
     key: str = field(repr=True, kw_only=True)
-    """The client key used for solving captcha."""
+    """:class:`str`: The client key used for solving CAPTCHA."""
 
 
 @define(slots=True)
@@ -44,10 +44,10 @@ class InstanceGenericFeature:
     """Represents how one of Revolt instance services is configured."""
 
     enabled: bool = field(repr=True, kw_only=True)
-    """Whether the service is enabled on current instance."""
+    """:class:`bool`: Whether the service is enabled on current instance."""
 
     url: str = field(repr=True, kw_only=True)
-    """The URL pointing to the service."""
+    """:class:`str`: The URL pointing to the service."""
 
 
 @define(slots=True)
@@ -55,13 +55,13 @@ class InstanceVoiceFeature:
     """Represents how voice server is configured on Revolt instance."""
 
     enabled: bool = field(repr=True, kw_only=True)
-    """Whether the voice server is enabled on current instance."""
+    """:class:`bool`: Whether the voice server is enabled on current instance."""
 
     url: str = field(repr=True, kw_only=True)
-    """The URL pointing to the voice HTTP server."""
+    """:class:`str`: The URL pointing to the voice HTTP server."""
 
     websocket_url: str = field(repr=True, kw_only=True)
-    """The URL pointing to the voice WebSocket server."""
+    """:class:`str`: The URL pointing to the voice WebSocket server."""
 
 
 @define(slots=True)
@@ -69,22 +69,22 @@ class InstanceFeaturesConfig:
     """Represents how features are configured on this Revolt instance."""
 
     captcha: InstanceCaptchaFeature = field(repr=True, kw_only=True)
-    """The CAPTCHA configuration."""
+    """:class:`.InstanceCaptchaFeature`: The CAPTCHA configuration."""
 
     email_verification: bool = field(repr=True, kw_only=True)
-    """Whether is E-Mail verification required."""
+    """:class:`bool`: Whether is E-Mail verification required."""
 
     invite_only: bool = field(repr=True, kw_only=True)
-    """Whether this server is invite only."""
+    """:class:`bool`: Whether this server is invite only."""
 
     autumn: InstanceGenericFeature = field(repr=True, kw_only=True)
-    """The configuration for Autumn (file server service)."""
+    """:class:`.InstanceGenericFeature`: The configuration for Autumn (file server service)."""
 
     january: InstanceGenericFeature = field(repr=True, kw_only=True)
-    """The configuration for January (embed server service)."""
+    """:class:`.InstanceGenericFeature`: The configuration for January (embed server service)."""
 
     voice: InstanceVoiceFeature = field(repr=True, kw_only=True)
-    """The configuration for Vortex or Livekit (voice server service)."""
+    """:class:`.InstanceVoiceFeature`: The configuration for Vortex or Livekit (voice server service)."""
 
 
 # Sample build object (own instance):
@@ -107,19 +107,19 @@ class InstanceBuild:
     """
 
     commit_as_sha: str = field(repr=True, kw_only=True)
-    """The commit hash. For example: ``'a52d610e6c152e7acc23cd017a7c67af46eace4c'``."""
+    """:class:`str`: The commit hash. For example: ``'a52d610e6c152e7acc23cd017a7c67af46eace4c'``."""
 
     committed_at: datetime | None = field(repr=True, kw_only=True)
-    """When last commit was at."""
+    """Optional[:class:`~datetime.datetime`]: When last commit was at."""
 
     semver: str = field(repr=True, kw_only=True)
-    """The build tag. Example: ``'20240710-1-157-ga52d610'``."""
+    """:class:`str`: The build tag. Example: ``'20240710-1-157-ga52d610'``."""
 
     origin_url: str = field(repr=True, kw_only=True)
-    """The origin URL. Example: ``'https://github.com/revoltchat/backend'``."""
+    """:class:`str`: The origin URL. Example: ``'https://github.com/revoltchat/backend'``."""
 
     built_at: datetime | None = field(repr=True, kw_only=True)
-    """When the instance executables were built at. This is different from :attr:`.committed_at`."""
+    """Optional[:class:`~datetime.datetime`]: When the instance executables were built at. This is different from :attr:`.committed_at`."""
 
 
 @define(slots=True)
@@ -127,22 +127,22 @@ class Instance:
     """Represents a Revolt instance."""
 
     version: str = field(repr=True, kw_only=True)
-    """The API version."""
+    """:class:`str`: The API version."""
 
     features: InstanceFeaturesConfig = field(repr=True, kw_only=True)
-    """The configuration of features enabled on this Revolt node."""
+    """:class:`.InstanceFeaturesConfig`: The configuration of features enabled on this Revolt node."""
 
     websocket_url: str = field(repr=True, kw_only=True)
-    """The WebSocket URL."""
+    """:class:`str`: The WebSocket URL."""
 
     app_url: str = field(repr=True, kw_only=True)
-    """The web application URL."""
+    """:class:`str`: The web application URL."""
 
     vapid_public_key: str = field(repr=True, kw_only=True)
-    """The VAPID public key, used for WebPush."""
+    """:class:`str`: The VAPID public key, used for WebPush."""
 
     build: InstanceBuild = field(repr=True, kw_only=True)
-    """The information of build of this instance."""
+    """:class:`.InstanceBuild`: The information of build of this instance."""
 
 
 __all__ = (

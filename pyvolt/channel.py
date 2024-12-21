@@ -135,19 +135,19 @@ class BaseChannel(Base, abc.ABC):
         Parameters
         ----------
         name: UndefinedOr[:class:`str`]
-            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
-            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        owner: UndefinedOr[:class:`ULIDOr`[:class:`BaseUser`]]
-            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
-        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            The new channel description. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+        owner: UndefinedOr[ULIDOr[:class:`.BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`.GroupChannel`.
+        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         nsfw: UndefinedOr[:class:`bool`]
-            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
         default_permissions: UndefinedOr[None]
-            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
         Raises
         ------
@@ -209,15 +209,15 @@ class BaseChannel(Base, abc.ABC):
 
         Asks the voice server for a token to join the call.
 
-        Returns
-        -------
-        :class:`str`
-            Token for authenticating with the voice server.
-
         Raises
         ------
         HTTPException
             Asking the token failed.
+
+        Returns
+        -------
+        :class:`str`
+            Token for authenticating with the voice server.
         """
         return await self.state.http.join_call(self.id)
 
@@ -228,7 +228,7 @@ class BaseChannel(Base, abc.ABC):
 
         Parameters
         ----------
-        target: Union[:class:`User`, :class:`Member`]
+        target: Union[:class:`.User`, :class:`.Member`]
             The member or user to calculate permissions for.
 
         Returns
@@ -244,45 +244,45 @@ class PartialChannel(BaseChannel):
     """Represents a partial channel on Revolt."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
-    """The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+    """UndefinedOr[:class:`str`]: The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
-    """The ID of new group owner, if applicable. Only for :class:`GroupChannel`."""
+    """UndefinedOr[:class:`str`]: The ID of new group owner, if applicable. Only for :class:`GroupChannel`."""
 
     description: UndefinedOr[str | None] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Optional[:class:`str`]]: The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
-    """Whether the channel have been marked as NSFW, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+    """UndefinedOr[:class:`bool`]: Whether the channel have been marked as NSFW, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     active: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
-    """Whether the DM channel is active now, if applicable. Only for :class:`DMChannel`'s."""
+    """UndefinedOr[:class:`bool`]: Whether the DM channel is active now, if applicable. Only for :class:`DMChannel`'s."""
 
     raw_permissions: UndefinedOr[int] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's permissions raw value, if applicable. Only for :class:`GroupChannel`'s."""
+    """UndefinedOr[:class:`int`]: The new channel's permissions raw value, if applicable. Only for :class:`GroupChannel`'s."""
 
     role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Dict[:class:`str`, :class:`.PermissionOverride`]]: The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
 
     default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, kw_only=True, eq=True)
-    """The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Optional[:class:`.PermissionOverride`]]: The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
 
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
-    """The last message ID sent in the channel."""
+    """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
-        """UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+        r"""UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon
         return self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        """UndefinedOr[:class:`Permissions`]: The new channel's permissions, if applicable. Only for :class:`GroupChannel`'s."""
+        r"""UndefinedOr[:class:`.Permissions`]: The new channel's permissions, if applicable. Only for :class:`.GroupChannel`\'s."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -291,18 +291,18 @@ class PartialChannel(BaseChannel):
 
 
 def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str, /) -> Permissions:
-    """Calculates the permissions in :class:`SavedMessagesChannel` scope.
+    """Calculates the permissions in :class:`.SavedMessagesChannel` scope.
 
     Parameters
     ----------
     perspective_id: :class:`str`
         The ID of perspective user.
     user_id: :class:`str`
-        The ID of channel owner (:attr:`SavedMessagesChannel.owner_id`).
+        The ID of channel owner (:attr:`.SavedMessagesChannel.owner_id`).
 
     Returns
     -------
-    :class:`Permissions`
+    :class:`.Permissions`
         The calculated permissions.
     """
     if perspective_id == user_id:
@@ -314,16 +314,16 @@ def calculate_dm_channel_permissions(
     permissions: UserPermissions,
     /,
 ) -> Permissions:
-    """Calculates the permissions in :class:`DMChannel` scope.
+    """Calculates the permissions in :class:`.DMChannel` scope.
 
     Parameters
     ----------
-    permissions: :class:`UserPermissions`
+    permissions: :class:`.UserPermissions`
         The user permissions.
 
     Returns
     -------
-    :class:`Permissions`
+    :class:`.Permissions`
         The calculated permissions.
     """
     if permissions.send_messages:
@@ -339,22 +339,22 @@ def calculate_group_channel_permissions(
     group_permissions: Permissions | None,
     group_recipients: list[str],
 ) -> Permissions:
-    """Calculates the permissions in :class:`GroupChannel` scope.
+    """Calculates the permissions in :class:`.GroupChannel` scope.
 
     Parameters
     ----------
     perspective_id: :class:`str`
         The ID of perspective user.
     group_owner_id: :class:`str`
-        The ID of group owner (:attr:`GroupChannel.owner_id`).
+        The ID of group owner (:attr:`.GroupChannel.owner_id`).
     group_permissions: Optional[:class:`Permissions`]
-        The default group permissions (:attr:`GroupChannel.permissions`).
+        The default group permissions (:attr:`.GroupChannel.permissions`).
     group_recipients: List[:class:`str`]
-        The IDs of group recipients (:attr:`GroupChannel.recipient_ids`).
+        The IDs of group recipients (:attr:`.GroupChannel.recipient_ids`).
 
     Returns
     -------
-    :class:`Permissions`
+    :class:`.Permissions`
         The calculated permissions.
     """
     if perspective_id == group_owner_id:
@@ -374,23 +374,23 @@ def calculate_server_channel_permissions(
     default_permissions: PermissionOverride | None,
     role_permissions: dict[str, PermissionOverride],
 ) -> Permissions:
-    """Calculates the permissions in :class:`BaseServerChannel` scope.
+    """Calculates the permissions in :class:`.BaseServerChannel` scope.
 
     Parameters
     ----------
     initial_permissions: :class:`str`
         The initial permissions to use. Should be ``server.permissions_for(member)`` for members
         and :attr:`Server.default_permissions` for users.
-    roles: List[:class:`Role`]
-        The member's roles. Should be empty list if calculating for :class:`User`.
+    roles: List[:class:`.Role`]
+        The member's roles. Should be empty list if calculating for :class:`.User`.
     default_permissions: :class:`str`
-        The default channel permissions (:attr:`BaseServerChannel.default_permissions`).
+        The default channel permissions (:attr:`.BaseServerChannel.default_permissions`).
     role_permissions: Dict[:class:`str`, :class:`Permissions`]
-        The permissions overrides for roles in the channel (:attr:`BaseServerChannel.role_permissions`).
+        The permissions overrides for roles in the channel (:attr:`.BaseServerChannel.role_permissions`).
 
     Returns
     -------
-    :class:`Permissions`
+    :class:`.Permissions`
         The calculated permissions.
     """
     result = initial_permissions.value
@@ -413,7 +413,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
     """Represents a personal "Saved Notes" channel which allows users to save messages."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The ID of the user this channel belongs to."""
+    """:class:`str`: The ID of the user this channel belongs to."""
 
     def get_channel_id(self) -> str:
         return self.id
@@ -426,7 +426,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        data: :class:`PartialChannel`
+        data: :class:`.PartialChannel`
             The data to update channel with.
         """
         # PartialChannel has no fields that are related to SavedMessages yet
@@ -442,7 +442,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`User`, :class:`Member`]
+        target: Union[:class:`.User`, :class:`.Member`]
             The user to calculate permissions for.
 
         Returns
@@ -459,13 +459,13 @@ class DMChannel(BaseChannel, Messageable):
     """Represents a private channel between two users."""
 
     active: bool = field(repr=True, kw_only=True)
-    """Whether the DM channel is currently open on both sides."""
+    """:class:`bool`: Whether the DM channel is currently open on both sides."""
 
     recipient_ids: tuple[str, str] = field(repr=True, kw_only=True)
-    """The tuple of user IDs participating in DM."""
+    """Tuple[:class:`str`, :class:`str`]: The tuple of user IDs participating in DM."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The last message ID sent in the channel."""
+    """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     def get_channel_id(self) -> str:
         return self.id
@@ -519,7 +519,7 @@ class DMChannel(BaseChannel, Messageable):
 
         Returns
         -------
-        :class:`Permissions`
+        :class:`.Permissions`
             The calculated permissions.
         """
         me = self.state.me
@@ -549,33 +549,33 @@ class GroupChannel(BaseChannel, Messageable):
     """Represesnts Revolt group channel between 1 or more participants."""
 
     name: str = field(repr=True, kw_only=True)
-    """The group's name."""
+    """:class:`str`: The group's name."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """The user's ID who owns this group."""
+    """:class:`str`: The user's ID who owns this group."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The group description."""
+    """Optional[:class:`str`]: The group description."""
 
     _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
         repr=True, kw_only=True, alias='internal_recipients'
     )
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless group icon."""
+    """Optional[:class:`.StatelessAsset`]: The stateless group icon."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The last message ID sent in the channel."""
+    """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     raw_permissions: int | None = field(repr=True, kw_only=True)
-    """The permissions assigned to members of this group.
+    """Optional[:class:`int`]: The permissions assigned to members of this group.
     
     .. note::
         This attribute does not apply to the owner of the group.
     """
 
     nsfw: bool = field(repr=True, kw_only=True)
-    """Whether this group is marked as not safe for work."""
+    """:class:`bool`: Whether this group is marked as not safe for work."""
 
     def get_channel_id(self) -> str:
         return self.id
@@ -632,7 +632,7 @@ class GroupChannel(BaseChannel, Messageable):
 
     @property
     def permissions(self) -> Permissions | None:
-        """:class:`.Permissions`: The permissions assigned to members of this group.
+        """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
 
         .. note::
             This attribute does not apply to the owner of the group.
@@ -834,25 +834,25 @@ PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
 @define(slots=True)
 class BaseServerChannel(BaseChannel):
     server_id: str = field(repr=True, kw_only=True)
-    """The server ID that channel belongs to."""
+    """:class:`str`: The server ID that channel belongs to."""
 
     name: str = field(repr=True, kw_only=True)
-    """The display name of the channel."""
+    """:class:`str`: The display name of the channel."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The channel description."""
+    """Optional[:class:`str`]: The channel description."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless custom channel icon."""
+    """Optional[:class:`.StatelessAsset`]: The stateless custom channel icon."""
 
     default_permissions: PermissionOverride | None = field(repr=True, kw_only=True)
-    """Default permissions assigned to users in this channel."""
+    """Optional[:class:`.PermissionOverride`]: Default permissions assigned to users in this channel."""
 
     role_permissions: dict[str, PermissionOverride] = field(repr=True, kw_only=True)
-    """Permissions assigned based on role to this channel."""
+    """Dict[:class:`str`, :class:`.PermissionOverride`]: The permissions assigned based on role to this channel."""
 
     nsfw: bool = field(repr=True, kw_only=True)
-    """Whether this channel is marked as not safe for work."""
+    """:class:`bool`: Whether this channel is marked as not safe for work."""
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -880,19 +880,19 @@ class BaseServerChannel(BaseChannel):
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The custom channel icon."""
+        """Optional[:class:`.Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def server(self) -> Server:
-        """:class:`Server`: The server that channel belongs to."""
+        """:class:`.Server`: The server that channel belongs to."""
         server = self.get_server()
         if server:
             return server
         raise NoData(self.server_id, 'channel server')
 
     def get_server(self) -> Server | None:
-        """Optional[:class:`Server`]: The server that channel belongs to."""
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
         if not self.state.cache:
             return None
         return self.state.cache.get_server(self.server_id, caching._USER_REQUEST)
@@ -1078,7 +1078,7 @@ class BaseServerChannel(BaseChannel):
 @define(slots=True)
 class ChannelVoiceMetadata:
     max_users: int = field(repr=True, kw_only=True)
-    """The maximium amount of users allowed in the voice channel at once.
+    """:class:`int`: The maximium amount of users allowed in the voice channel at once.
     
     Zero means a infinite amount of users can connect to voice channel.
     """
@@ -1089,10 +1089,10 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a text channel that belongs to a server on Revolt."""
 
     last_message_id: str | None = field(repr=True, kw_only=True)
-    """The last message ID sent in the channel."""
+    """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
-    """The voice's metadata in the channel."""
+    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel."""
 
     def get_channel_id(self) -> str:
         return self.id
@@ -1171,10 +1171,10 @@ class ChannelVoiceStateContainer:
     """Represents voice state container for the channel."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID."""
+    """:class:`str`: The channel's ID."""
 
     participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
-    """The channel's participants."""
+    """Dict[:class:`str`, :class:`.UserVoiceState`]: The channel's participants."""
 
     def locally_add(self, state: UserVoiceState, /) -> None:
         """Locally adds user's voice state into this container.
@@ -1207,10 +1207,10 @@ class PartialMessageable(Messageable):
     """Represents a partial messageable to aid with working messageable channels when only a channel ID is present."""
 
     state: State = field(repr=False, kw_only=True)
-    """The state."""
+    """:class:`.State`: The state."""
 
     id: str = field(repr=True, kw_only=True)
-    """The channel's ID."""
+    """:class:`str`: The channel's ID."""
 
     def get_channel_id(self) -> str:
         return self.id

@@ -36,16 +36,16 @@ class BaseEmoji(Base):
     """Representation of an emoji on Revolt."""
 
     creator_id: str = field(repr=True, kw_only=True)
-    """The user ID of the uploader."""
+    """:class:`str`: The user's ID who uploaded this emoji."""
 
     name: str = field(repr=True, kw_only=True)
-    """Emoji name."""
+    """:class:`str`: The emoji's name."""
 
     animated: bool = field(repr=True, kw_only=True)
-    """Whether the emoji is animated."""
+    """:class:`bool`: Whether the emoji is animated."""
 
     nsfw: bool = field(repr=True, kw_only=True)
-    """Whether the emoji is marked as NSFW."""
+    """:class:`bool`: Whether the emoji is marked as NSFW."""
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseEmoji) and self.id == other.id
@@ -55,7 +55,7 @@ class BaseEmoji(Base):
 
     @property
     def image(self) -> Asset:
-        """:class:`Asset`: The emoji asset."""
+        """:class:`.Asset`: The emoji asset."""
         return Asset(
             id=self.id,
             filename='',
@@ -79,10 +79,10 @@ class BaseEmoji(Base):
 
 @define(slots=True)
 class ServerEmoji(BaseEmoji):
-    """Representation of an emoji in server on Revolt."""
+    """Represents an emoji in server on Revolt."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """What server owns this emoji."""
+    """The server's ID the emoji belongs to."""
 
     async def delete(self) -> None:
         """|coro|
@@ -101,14 +101,14 @@ class ServerEmoji(BaseEmoji):
 
 @define(slots=True)
 class DetachedEmoji(BaseEmoji):
-    """Represents of an deleted emoji on Revolt."""
+    """Represents a deleted emoji on Revolt."""
 
 
 Emoji = ServerEmoji | DetachedEmoji
 ResolvableEmoji = BaseEmoji | str
 
 
-def resolve_emoji(resolvable: ResolvableEmoji) -> str:
+def resolve_emoji(resolvable: ResolvableEmoji, /) -> str:
     return resolvable.id if isinstance(resolvable, BaseEmoji) else resolvable
 
 

@@ -81,22 +81,22 @@ _new_user_flags = UserFlags.__new__
 @define(slots=True)
 class BaseEvent:
     # shard: Shard = field(repr=True, kw_only=True)
-    is_cancelled: bool = field(default=False, repr=True, kw_only=True)
+    is_canceled: bool = field(default=False, repr=True, kw_only=True)
 
-    def set_cancelled(self, value: bool, /) -> bool:
+    def set_canceled(self, value: bool, /) -> bool:
         """Whether to cancel event processing (updating cache) or not."""
-        if self.is_cancelled is value:
+        if self.is_canceled is value:
             return False
-        self.is_cancelled = value
+        self.is_canceled = value
         return True
 
     def cancel(self) -> bool:
         """Cancels the event processing (updating cache)."""
-        return self.set_cancelled(True)
+        return self.set_canceled(True)
 
     def uncancel(self, value: bool, /) -> bool:
         """Uncancels the event processing (updating cache)."""
-        return self.set_cancelled(False)
+        return self.set_canceled(False)
 
     async def abefore_dispatch(self) -> None:
         pass
@@ -127,42 +127,42 @@ class ReadyEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['ready']] = 'ready'
 
     users: list[User] = field(repr=True, kw_only=True)
-    """The users that the client can see (from DMs, groups, and relationships).
+    """List[:class:`.User`]: The users that the client can see (from DMs, groups, and relationships).
     
     This attribute contains connected user, usually at end of list, but sometimes not at end.
     """
 
     servers: list[Server] = field(repr=True, kw_only=True)
-    """The servers the connected user is in."""
+    """List[:class:`.Server`]: The servers the connected user is in."""
 
     channels: list[Channel] = field(repr=True, kw_only=True)
-    """The DM channels, server channels and groups the connected user participates in."""
+    """List[:class:`.Channel`]: The DM channels, server channels and groups the connected user participates in."""
 
     members: list[Member] = field(repr=True, kw_only=True)
-    """The own members for servers."""
+    """List[:class:`.Member`]: The own members for servers."""
 
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
-    """The emojis from servers the user participating in."""
+    """List[:class:`.ServerEmoji`]: The emojis from servers the user participating in."""
 
     me: OwnUser = field(repr=True, kw_only=True)
-    """The connected user."""
+    """:class:`.OwnUser`: The connected user."""
 
     user_settings: UserSettings = field(repr=True, kw_only=True)
-    """The settings for connected user.
+    """:class:`.UserSettings`: The settings for connected user.
     
     .. note::
         This attribute is unavailable on bot accounts.
     """
 
     read_states: list[ReadState] = field(repr=True, kw_only=True)
-    """The read states for channels ever seen by user. This is not always populated, and unavailable for bots.
+    """List[:class:`.ReadState`]: The read states for channels ever seen by user. This is not always populated, and unavailable for bots.
 
     .. note::
         This attribute is unavailable on bot accounts.
     """
 
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """The voice states of the text/voice channels."""
+    """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
@@ -218,7 +218,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
     event_name: typing.ClassVar[str] = 'private_channel_create'
 
     channel: PrivateChannel = field(repr=True, kw_only=True)
-    """The joined DM or group channel."""
+    """:class:`.PrivateChannel`: The joined DM or group channel."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -241,7 +241,7 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
     event_name: typing.ClassVar[str] = 'server_channel_create'
 
     channel: ServerChannel = field(repr=True, kw_only=True)
-    """The created server channel."""
+    """:class:`.ServerChannel`: The created server channel."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -262,13 +262,13 @@ class ChannelUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['channel_update']] = 'channel_update'
 
     channel: PartialChannel = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialChannel`: The fields that were updated."""
 
     before: Channel | None = field(repr=True, kw_only=True)
-    """The channel as it was before being updated, if available."""
+    """Optional[:class:`.Channel`]: The channel as it was before being updated, if available."""
 
     after: Channel | None = field(repr=True, kw_only=True)
-    """The channel as it was updated, if available."""
+    """Optional[:class:`.Channel`]: The channel as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -298,10 +298,10 @@ class ChannelDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['channel_delete']] = 'channel_delete'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID that got deleted or hidden."""
+    """:class:`str`: The channel's ID that got deleted or hidden."""
 
     channel: Channel | None = field(repr=True, kw_only=True)
-    """The deleted channel object, if available."""
+    """Optional[:class:`.Channel`]: The deleted channel object, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -338,13 +338,13 @@ class GroupRecipientAddEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['recipient_add']] = 'recipient_add'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The affected group's ID."""
+    """:class:`str`: The affected group's ID."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID who was added to the group."""
+    """:class:`str`: The user's ID who was added to the group."""
 
     group: GroupChannel | None = field(repr=True, kw_only=True)
-    """The group in cache (in previous state as it had no recipient), if available."""
+    """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had no recipient), if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -376,13 +376,13 @@ class GroupRecipientRemoveEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['recipient_remove']] = 'recipient_remove'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The affected group's ID."""
+    """:class:`str`: The affected group's ID."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID who was removed from the group."""
+    """:class:`str`: The user's ID who was removed from the group."""
 
     group: GroupChannel | None = field(repr=True, kw_only=True)
-    """The group in cache (in previous state as it had recipient), if available."""
+    """Optional[:class:`GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -414,10 +414,10 @@ class ChannelStartTypingEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['channel_start_typing']] = 'channel_start_typing'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID where user started typing in."""
+    """:class:`str`: The channel's ID where user started typing in."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID who started typing."""
+    """:class:`str`: The user's ID who started typing."""
 
 
 @define(slots=True)
@@ -427,21 +427,26 @@ class ChannelStopTypingEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['channel_stop_typing']] = 'channel_stop_typing'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID where user stopped typing in."""
+    """:class:`str`: The channel's ID where user stopped typing in."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID who stopped typing."""
+    """:class:`str`: The user's ID who stopped typing."""
 
 
 @define(slots=True)
 class MessageAckEvent(ShardEvent):
-    """Dispatched when the connected user acknowledges the message in a channel (probably from remote device)."""
+    """Dispatched when the connected user acknowledges the message in a channel (usually from remote device)."""
 
     event_name: typing.ClassVar[typing.Literal['message_ack']] = 'message_ack'
 
     channel_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the message is in."""
+
     message_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The message's ID that got acknowledged."""
+
     user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The connected user's ID."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -469,7 +474,7 @@ class MessageCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
 
     message: Message = field(repr=True, kw_only=True)
-    """The message sent."""
+    """:class:`.Message`: The message sent."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -520,7 +525,7 @@ class MessageCreateEvent(ShardEvent):
 
         return True
 
-    def call_object_handlers_hook(self, client: Client) -> utils.MaybeAwaitable[None]:
+    def call_object_handlers_hook(self, client: Client, /) -> utils.MaybeAwaitable[None]:
         if hasattr(client, 'on_message'):
             return client.on_message(self.message)
 
@@ -532,13 +537,13 @@ class MessageUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_update']] = 'message_update'
 
     message: PartialMessage = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialMessage`: The fields that were updated."""
 
     before: Message | None = field(repr=True, kw_only=True)
-    """The message as it was before being updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
     after: Message | None = field(repr=True, kw_only=True)
-    """The message as it was updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -569,10 +574,10 @@ class MessageAppendEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_append']] = 'message_append'
 
     data: MessageAppendData = field(repr=True, kw_only=True)
-    """The data that got appended to message."""
+    """:class:`.MessageAppendData`: The data that got appended to message."""
 
     message: Message | None = field(repr=True, kw_only=True)
-    """The message as it was before being updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -599,13 +604,13 @@ class MessageDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_delete']] = 'message_delete'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the message was in."""
+    """:class:`str`: The channel's ID the message was in."""
 
     message_id: str = field(repr=True, kw_only=True)
-    """The deleted message's ID."""
+    """:class:`str`: The deleted message's ID."""
 
     message: Message | None = field(repr=True, kw_only=True)
-    """The deleted message object, if available."""
+    """Optional[:class:`.Message`]: The deleted message object, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -630,19 +635,19 @@ class MessageReactEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_react']] = 'message_react'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the message is in."""
+    """:class:`str`: The channel's ID the message is in."""
 
     message_id: str = field(repr=True, kw_only=True)
-    """The message's ID that got a reaction."""
+    """:class:`str`: The message's ID that got a reaction."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID that added a reaction to the message."""
+    """:class:`str`: The user's ID that added a reaction to the message."""
 
     emoji: str = field(repr=True, kw_only=True)
-    """The emoji that was reacted with. May be either ULID or Unicode emoji."""
+    """:class:`str`: The emoji that was reacted with. May be either ULID or Unicode emoji."""
 
     message: Message | None = field(repr=True, kw_only=True)
-    """The message as it was before being updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -668,19 +673,19 @@ class MessageUnreactEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_unreact']] = 'message_unreact'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the message is in."""
+    """:class:`str`: The channel's ID the message is in."""
 
     message_id: str = field(repr=True, kw_only=True)
-    """The message's ID that lost a reaction."""
+    """:class:`str`: The message's ID that lost a reaction."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID that removed reaction from the message."""
+    """:class:`str`: The user's ID that removed reaction from the message."""
 
     emoji: str = field(repr=True, kw_only=True)
-    """The emoji that was reacted with before. May be either ULID or Unicode emoji."""
+    """:class:`str`: The emoji that was reacted with before. May be either ULID or Unicode emoji."""
 
     message: Message | None = field(repr=True, kw_only=True)
-    """The message as it was before being updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -706,16 +711,16 @@ class MessageClearReactionEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_clear_reaction']] = 'message_clear_reaction'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the message is in."""
+    """:class:`str`: The channel's ID the message is in."""
 
     message_id: str = field(repr=True, kw_only=True)
-    """The message's ID that lost reactions."""
+    """:class:`str`: The message's ID that lost reactions."""
 
     emoji: str = field(repr=True, kw_only=True)
-    """The emoji whose reactions were removed. May be either ULID or Unicode emoji."""
+    """:class:`str`: The emoji whose reactions were removed. May be either ULID or Unicode emoji."""
 
     message: Message | None = field(repr=True, kw_only=True)
-    """The message as it was before being updated, if available."""
+    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -738,16 +743,16 @@ class MessageClearReactionEvent(ShardEvent):
 class MessageDeleteBulkEvent(ShardEvent):
     """Dispatched when multiple messages are deleted from channel."""
 
-    event_name: typing.ClassVar[typing.Literal['bulk_message_delete']] = 'bulk_message_delete'
+    event_name: typing.ClassVar[typing.Literal['message_delete_bulk']] = 'message_delete_bulk'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID where messages got deleted from."""
+    """:class:`str`: The channel's ID where messages got deleted from."""
 
     message_ids: list[str] = field(repr=True, kw_only=True)
-    """The list of message's IDs that got deleted."""
+    """List[:class:`str`]: The list of message's IDs that got deleted."""
 
     messages: list[Message] = field(repr=True, kw_only=True)
-    """The list of deleted messages, potentially retrieved from cache.
+    """List[:class:`.Message`]: The list of deleted messages, potentially retrieved from cache.
     
     Unlike :attr:`.message_ids`, some messages are
     not guaranteed to be here.
@@ -783,13 +788,13 @@ class ServerCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_create']] = 'server_create'
 
     joined_at: datetime = field(repr=True, kw_only=True)
-    """When the client got added to server, generated locally, and used internally."""
+    """:class:`~datetime.datetime`: When the client got added to server, generated locally, and used internally."""
 
     server: Server = field(repr=True, kw_only=True)
-    """The server that client was added to."""
+    """:class:`.Server`: The server that client was added to."""
 
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
-    """The server emojis."""
+    """List[:class:`.ServerEmoji`]: The server emojis."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -831,7 +836,7 @@ class ServerEmojiCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_emoji_create']] = 'server_emoji_create'
 
     emoji: ServerEmoji = field(repr=True, kw_only=True)
-    """The created emoji."""
+    """:class:`.ServerEmoji`: The created emoji."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -848,13 +853,13 @@ class ServerEmojiDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
 
     server_id: str | None = field(repr=True, kw_only=True)
-    """The server's ID where emoji got deleted from."""
+    """:class:`str`: The server's ID where emoji got deleted from."""
 
     emoji_id: str = field(repr=True, kw_only=True)
-    """The deleted emoji's ID."""
+    """:class:`str`: The deleted emoji's ID."""
 
     emoji: ServerEmoji | None = field(repr=True, kw_only=True)
-    """The deleted emoji object, if available."""
+    """Optional[:class:`.ServerEmoji`]: The deleted emoji object, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -881,13 +886,13 @@ class ServerUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_update']] = 'server_update'
 
     server: PartialServer = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialServer`: The fields that were updated."""
 
     before: Server | None = field(repr=True, kw_only=True)
-    """The server as it was before being updated, if available."""
+    """Optional[:class:`.Server`]: The server as it was before being updated, if available."""
 
     after: Server | None = field(repr=True, kw_only=True)
-    """The server as it was updated, if available."""
+    """Optional[:class:`.Server`]: The server as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -917,10 +922,10 @@ class ServerDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_delete']] = 'server_delete'
 
     server_id: str = field(repr=True, kw_only=True)
-    """The deleted server's ID."""
+    """:class:`str`: The deleted server's ID."""
 
     server: Server | None = field(repr=True, kw_only=True)
-    """The deleted server object, if available."""
+    """Optional[:class:`.Server`]: The deleted server object, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -953,7 +958,7 @@ class ServerMemberJoinEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_member_join']] = 'server_member_join'
 
     member: Member = field(repr=True, kw_only=True)
-    """The joined member."""
+    """:class:`.Member`: The joined member."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -970,13 +975,13 @@ class ServerMemberUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_member_update']] = 'server_member_update'
 
     member: PartialMember = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialMember`: The fields that were updated."""
 
     before: Member | None = field(repr=True, kw_only=True)
-    """The member as it was before being updated, if available."""
+    """Optional[:class:`.Member`]: The member as it was before being updated, if available."""
 
     after: Member | None = field(repr=True, kw_only=True)
-    """The member as it was updated, if available."""
+    """Optional[:class:`.Member`]: The member as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1006,16 +1011,16 @@ class ServerMemberRemoveEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_member_remove']] = 'server_member_remove'
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID from which the user was removed from."""
+    """:class:`str`: The server's ID from which the user was removed from."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The removed user's ID."""
+    """:class:`str`: The removed user's ID."""
 
     member: Member | None = field(repr=True, kw_only=True)
-    """The removed member object, if available."""
+    """Optional[:class:`.Member`]: The removed member object, if available."""
 
     reason: MemberRemovalIntention = field(repr=True, kw_only=True)
-    """The reason why member was removed."""
+    """:class:`.MemberRemovalIntention`: The reason why member was removed."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1047,16 +1052,16 @@ class RawServerRoleUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['raw_server_role_update']] = 'raw_server_role_update'
 
     role: PartialRole = field(repr=True, kw_only=True)
-    """The fields that got updated."""
+    """:class:`.PartialRole`: The fields that got updated."""
 
     old_role: Role | None = field(repr=True, kw_only=True)
-    """The role as it was before being updated, if available."""
+    """Optional[:class:`.Role`]: The role as it was before being updated, if available."""
 
     new_role: Role | None = field(repr=True, kw_only=True)
-    """The role as it was created or updated, if available."""
+    """Optional[:class:`.Role`]: The role as it was created or updated, if available."""
 
     server: Server | None = field(repr=True, kw_only=True)
-    """The server the role got created or updated in."""
+    """Optional[:class:`.Server`]: The server the role got created or updated in."""
 
     def before_dispatch(self) -> None:
         self.new_role = self.role.into_full()
@@ -1085,16 +1090,16 @@ class ServerRoleDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['server_role_delete']] = 'server_role_delete'
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID the role was in."""
+    """:class:`str`: The server's ID the role was in."""
 
     role_id: str = field(repr=True, kw_only=True)
-    """The deleted role's ID."""
+    """:class:`str`: The deleted role's ID."""
 
     server: Server | None = field(repr=True, kw_only=True)
-    """The server the role was deleted from, if available."""
+    """Optional[:class:`.Server`]: The server the role was deleted from, if available."""
 
     role: Role | None = field(repr=True, kw_only=True)
-    """The deleted role object, if available."""
+    """Optional[:class:`.Role`]: The deleted role object, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1126,7 +1131,7 @@ class ReportCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['report_create']] = 'report_create'
 
     report: CreatedReport = field(repr=True, kw_only=True)
-    """The created report."""
+    """:class:`.CreatedReport`: The created report."""
 
 
 @define(slots=True)
@@ -1136,13 +1141,13 @@ class UserUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['user_update']] = 'user_update'
 
     user: PartialUser = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialUser`: The fields that were updated."""
 
     before: User | None = field(repr=True, kw_only=True)
-    """The user as it was before being updated, if available."""
+    """:class:`.User`: The user as it was before being updated, if available."""
 
     after: User | None = field(repr=True, kw_only=True)
-    """The user as it was updated, if available."""
+    """:class:`.User`: The user as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1172,16 +1177,16 @@ class UserRelationshipUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['user_relationship_update']] = 'user_relationship_update'
 
     current_user_id: str = field(repr=True, kw_only=True)
-    """The current user ID."""
+    """:class:`str`: The current user ID."""
 
     old_user: User | None = field(repr=True, kw_only=True)
-    """The user as it was before being updated, if available."""
+    """Optional[:class:`.User`]: The user as it was before being updated, if available."""
 
     new_user: User = field(repr=True, kw_only=True)
-    """The user as it was updated."""
+    """:class:`.User`: The user as it was updated."""
 
     before: RelationshipStatus | None = field(repr=True, kw_only=True)
-    """The old relationship found in cache."""
+    """Optional[:class:`.RelationshipStatus`]: The old relationship found in cache."""
 
     @property
     def after(self) -> RelationshipStatus:
@@ -1230,17 +1235,17 @@ class UserSettingsUpdateEvent(ShardEvent):
     """The current user ID."""
 
     partial: UserSettings = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.UserSettings`: The fields that were updated."""
 
     before: UserSettings = field(repr=True, kw_only=True)
-    """The settings as they were before being updated.
+    """:class:`.UserSettings`: The settings as they were before being updated.
     
     .. note::
         This is populated properly only if user settings are available.
     """
 
     after: UserSettings = field(repr=True, kw_only=True)
-    """The settings as they were updated."""
+    """:class:`.UserSettings`: The settings as they were updated."""
 
     def process(self) -> bool:
         settings = self.shard.state.settings
@@ -1266,16 +1271,16 @@ class UserPlatformWipeEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['user_platform_wipe']] = 'user_platform_wipe'
 
     user_id: str = field(repr=True, kw_only=True)
-    """The wiped user's ID."""
+    """:class:`str`: The wiped user's ID."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The user's flags raw value, explaining reason of the wipe."""
+    """:class:`int`: The user's flags raw value, explaining reason of the wipe."""
 
     before: User | None = field(repr=True, kw_only=True)
-    """The user as it would exist before, if available."""
+    """Optional[:class:`.User`]: The user as it would exist before, if available."""
 
     after: User | None = field(repr=True, kw_only=True)
-    """The wiped user, if available."""
+    """Optional[:class:`.User`]: The wiped user, if available."""
 
     @property
     def flags(self) -> UserFlags:
@@ -1317,7 +1322,7 @@ class WebhookCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['webhook_create']] = 'webhook_create'
 
     webhook: Webhook = field(repr=True, kw_only=True)
-    """The created webhook."""
+    """:class:`.Webhook`: The created webhook."""
 
 
 @define(slots=True)
@@ -1327,7 +1332,7 @@ class WebhookUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['webhook_update']] = 'webhook_update'
 
     webhook: PartialWebhook = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialWebhook`: The fields that were updated."""
 
 
 @define(slots=True)
@@ -1337,10 +1342,10 @@ class WebhookDeleteEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['webhook_delete']] = 'webhook_delete'
 
     webhook_id: str = field(repr=True, kw_only=True)
-    """The deleted webhook's ID."""
+    """:class:`str`: The deleted webhook's ID."""
 
     webhook: Webhook | None = field(repr=True, kw_only=True)
-    """The deleted webhook object, if available."""
+    """Optional[:class:`.Webhook`]: The deleted webhook object, if available."""
 
 
 @define(slots=True)
@@ -1357,7 +1362,7 @@ class SessionCreateEvent(AuthifierEvent):
     event_name: typing.ClassVar[str] = 'session_create'
 
     session: Session = field(repr=True, kw_only=True)
-    """The created session."""
+    """:class:`.Session`: The created session."""
 
 
 @define(slots=True)
@@ -1367,10 +1372,10 @@ class SessionDeleteEvent(AuthifierEvent):
     event_name: typing.ClassVar[str] = 'session_delete'
 
     current_user_id: str = field(repr=True, kw_only=True)
-    """The connected user's ID."""
+    """:class:`str`: The connected user's ID."""
 
     session_id: str = field(repr=True, kw_only=True)
-    """The deleted session's ID."""
+    """:class:`str`: The deleted session's ID."""
 
 
 @define(slots=True)
@@ -1380,10 +1385,10 @@ class SessionDeleteAllEvent(AuthifierEvent):
     event_name: typing.ClassVar[str] = 'session_delete_all'
 
     current_user_id: str = field(repr=True, kw_only=True)
-    """The connected user's ID."""
+    """:class:`str`: The connected user's ID."""
 
     exclude_session_id: str | None = field(repr=True, kw_only=True)
-    """The session's ID that is excluded from deletion, if any."""
+    """Optional[:class:`str`]: The session's ID that is excluded from deletion, if any."""
 
 
 @define(slots=True)
@@ -1400,10 +1405,10 @@ class VoiceChannelJoinEvent(ShardEvent):
     event_name: typing.ClassVar[str] = 'voice_channel_join'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the user joined to."""
+    """:class:`str`: The channel's ID the user joined to."""
 
     state: UserVoiceState = field(repr=True, kw_only=True)
-    """The user's voice state."""
+    """:class:`.UserVoiceState`: The user's voice state."""
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -1429,16 +1434,16 @@ class VoiceChannelLeaveEvent(ShardEvent):
     event_name: typing.ClassVar[str] = 'voice_channel_leave'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the user left from."""
+    """:class:`str`: The channel's ID the user left from."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID that left the voice channel."""
+    """:class:`str`: The user's ID that left the voice channel."""
 
     container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
-    """The channel's voice state container."""
+    """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
 
     state: UserVoiceState | None = field(repr=True, kw_only=True)
-    """The user's voice state."""
+    """Optional[:class:`.UserVoiceState`]: The user's voice state."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1469,19 +1474,19 @@ class UserVoiceStateUpdateEvent(ShardEvent):
     event_name: typing.ClassVar[str] = 'user_voice_state_update'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the user's voice state is in."""
+    """:class:`str`: The channel's ID the user's voice state is in."""
 
     container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
-    """The channel's voice state container."""
+    """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
 
     state: PartialUserVoiceState = field(repr=True, kw_only=True)
-    """The fields that were updated."""
+    """:class:`.PartialUserVoiceState`: The fields that were updated."""
 
     before: UserVoiceState | None = field(repr=True, kw_only=True)
-    """The user's voice state as it was before being updated, if available."""
+    """Optional[:class:`.UserVoiceState`]: The user's voice state as it was before being updated, if available."""
 
     after: UserVoiceState | None = field(repr=True, kw_only=True)
-    """The user's voice state as it was updated, if available."""
+    """Optional[:class:`.UserVoiceState`]: The user's voice state as it was updated, if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1534,7 +1539,7 @@ class AfterConnectEvent(ShardEvent):
     event_name: typing.ClassVar[str] = 'after_connect'
 
     socket: aiohttp.ClientWebSocketResponse = field(repr=True, kw_only=True)
-    """The connected WebSocket."""
+    """:class:`aiohttp.ClientWebSocketResponse`: The connected WebSocket."""
 
 
 __all__ = (

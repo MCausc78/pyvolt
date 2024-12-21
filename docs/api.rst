@@ -1387,7 +1387,7 @@ BaseFlags
 
 .. autofunction:: flag
 
-.. autofunction:: doc_flag
+.. autofunction:: doc_flags
 
 BotFlags
 ~~~~~~~~

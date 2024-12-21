@@ -226,7 +226,7 @@ class BaseRole(Base):
 
         Returns
         -------
-        :class:`Role`
+        :class:`.Role`
             The newly updated role.
         """
         return await self.state.http.edit_role(
@@ -273,22 +273,22 @@ class PartialRole(BaseRole):
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new role's name."""
+    """UndefinedOr[:class:`str`]: The new role's name."""
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
-    """The new role's permissions."""
+    """UndefinedOr[:class:`.PermissionOverride`]: The new role's permissions."""
 
     color: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """The new role's color. This can be any valid CSS color."""
+    """UndefinedOr[Optional[:class:`str`]]: The new role's color. This can be any valid CSS color."""
 
     hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether this role should be shown separately on the member sidebar."""
+    """UndefinedOr[:class:`bool`]: Whether this role should be shown separately on the member sidebar."""
 
     rank: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """The new role's rank."""
+    """UndefinedOr[:class:`int`]: The new role's rank."""
 
     def into_full(self) -> Role | None:
-        """Optional[:class:`Role`]: Tries transform this partial role into full object. This is useful when caching role."""
+        """Optional[:class:`.Role`]: Tries transform this partial role into full object. This is useful when caching role."""
         if (
             self.name is not UNDEFINED
             and self.permissions is not UNDEFINED
@@ -313,19 +313,19 @@ class Role(BaseRole):
     """Represents a role in Revolt server."""
 
     name: str = field(repr=True, kw_only=True)
-    """The role's name."""
+    """:class:`str`: The role's name."""
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
-    """Permissions available to this role."""
+    """:class:`.PermissionOverride`: Permissions available to this role."""
 
     color: str | None = field(repr=True, kw_only=True)
-    """The role's color. This is valid CSS color."""
+    """Optional[:class:`str`]: The role's color. This is valid CSS color."""
 
     hoist: bool = field(repr=True, kw_only=True)
-    """Whether this role should be shown separately on the member sidebar."""
+    """:class:`bool`: Whether this role should be shown separately on the member sidebar."""
 
     rank: int = field(repr=True, kw_only=True)
-    """The role's rank."""
+    """:class:`int`: The role's rank."""
 
     def locally_update(self, data: PartialRole, /) -> None:
         """Locally updates role with provided data.
@@ -359,7 +359,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        Optional[:class:`ServerEmoji`]
+        Optional[:class:`.ServerEmoji`]
             The emoji or ``None`` if not found.
         """
         cache = self.state.cache
@@ -379,7 +379,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        Optional[:class:`Member`]
+        Optional[:class:`.Member`]
             The member or ``None`` if not found.
         """
         cache = self.state.cache
@@ -392,7 +392,7 @@ class BaseServer(Base):
 
     @property
     def emojis(self) -> Mapping[str, ServerEmoji]:
-        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
+        """Mapping[:class:`str`, :class:`.ServerEmoji`]: Returns all emojis of this server."""
         cache = self.state.cache
         if cache:
             return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
@@ -400,7 +400,7 @@ class BaseServer(Base):
 
     @property
     def members(self) -> Mapping[str, Member]:
-        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
+        """Mapping[:class:`str`, :class:`.Member`]: Returns all members of this server."""
         cache = self.state.cache
         if cache:
             return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
@@ -822,7 +822,7 @@ def sort_member_roles(
         The IDs of roles to sort (:attr:`Member.roles`).
     safe: :class:`bool`
         Whether to raise exception or not if role is missing in cache.
-    server_roles: Dict[:class:`str`, :class:`Role`]
+    server_roles: Dict[:class:`str`, :class:`.Role`]
         The mapping of role IDs to role objects (:attr:`Server.roles`).
 
     Raises
@@ -832,7 +832,7 @@ def sort_member_roles(
 
     Returns
     -------
-    List[:class:`Role`]
+    List[:class:`.Role`]
         The sorted result.
     """
     if not safe:
@@ -864,8 +864,8 @@ def calculate_server_permissions(
 
     Parameters
     ----------
-    target_roles: List[:class:`Role`]
-        The target member's roles. Should be empty list if calculating against :class:`User`,
+    target_roles: List[:class:`.Role`]
+        The target member's roles. Should be empty list if calculating against :class:`.User`,
         and ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)``
         for member.
     target_timeout: Optional[:class:`~datetime.datetime`]
@@ -1086,7 +1086,7 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        member: :class:`Member`
+        member: :class:`.Member`
             The member to calculate permissions for.
         safe: :class:`bool`
             Whether to raise exception or not if role is missing in cache.
@@ -1134,7 +1134,7 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        data: Union[:class:`PartialRole`, :class:`Role`]
+        data: Union[:class:`.PartialRole`, :class:`.Role`]
             The role to upsert.
         """
         if isinstance(data, PartialRole):
@@ -1148,16 +1148,16 @@ class Ban:
     """Represents a server ban on Revolt."""
 
     server_id: str = field(repr=False, kw_only=True)
-    """The server's ID."""
+    """:class:`str`: The server's ID."""
 
     user_id: str = field(repr=False, kw_only=True)
-    """The user's ID that was banned."""
+    """:class:`str`: The user's ID that was banned."""
 
     reason: str | None = field(repr=False, kw_only=True)
-    """The ban's reason."""
+    """Optional[:class:`str`]: The ban's reason."""
 
     user: DisplayUser | None = field(repr=False, kw_only=True)
-    """The user that was banned."""
+    """Optional[:class:`.DisplayUser`]: The user that was banned."""
 
     def __hash__(self) -> int:
         return hash((self.server_id, self.user_id))
@@ -1175,15 +1175,15 @@ class BaseMember:
     """Represents a Revolt base member to a :class:`Server`."""
 
     state: State = field(repr=False, kw_only=True)
-    """State that controls this member."""
+    """:class:`.State`: State that controls this member."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID the member in."""
+    """:class:`str`: The server's ID the member in."""
 
     _user: User | str = field(repr=True, kw_only=True, alias='_user')
 
     def get_user(self) -> User | None:
-        """Optional[:class:`User`]: Grabs the user from cache."""
+        """Optional[:class:`.User`]: Grabs the user from cache."""
         if isinstance(self._user, User):
             return self._user
         cache = self.state.cache
@@ -1213,7 +1213,7 @@ class BaseMember:
 
     @property
     def user(self) -> User:
-        """:class:`User`: The member user."""
+        """:class:`.User`: The member user."""
         user = self.get_user()
         if not user:
             raise NoData(self.id, 'member user')
@@ -1232,22 +1232,22 @@ class BaseMember:
         user = self.get_user()
         if user:
             return user.badges
-        return UserBadges.NONE
+        return UserBadges.none()
 
     @property
     def status(self) -> UserStatus | None:
-        """Optional[:class:`UserStatus`]: The current user's status."""
+        """Optional[:class:`.UserStatus`]: The current user's status."""
         user = self.get_user()
         if user:
             return user.status
 
     @property
     def flags(self) -> UserFlags:
-        """Optional[:class:`UserFlags`]: The user flags."""
+        """Optional[:class:`.UserFlags`]: The user flags."""
         user = self.get_user()
         if user:
             return user.flags
-        return UserFlags.NONE
+        return UserFlags.none()
 
     @property
     def privileged(self) -> bool:
@@ -1334,7 +1334,7 @@ class BaseMember:
 
         Returns
         -------
-        :class:`Member`
+        :class:`.Member`
             The newly updated member.
         """
         return await self.state.http.edit_member(
@@ -1389,27 +1389,27 @@ class Member(BaseMember):
     """Represents a Revolt member to a :class:`Server`."""
 
     joined_at: datetime = field(repr=True, kw_only=True)
-    """Time at which this user joined the server."""
+    """When the member joined the server."""
 
     nick: str | None = field(repr=True, kw_only=True)
-    """The member's nick."""
+    """Optional[:class:`str`]: The member's nick."""
 
     internal_server_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
     """The member's avatar on server."""
 
     roles: list[str] = field(repr=True, kw_only=True)
-    """The member's roles."""
+    """List[:class:`str`]: The member's roles."""
 
     timed_out_until: datetime | None = field(repr=True, kw_only=True)
     """The timestamp this member is timed out until."""
 
     can_publish: bool = field(repr=True, kw_only=True)
-    """Whether the member can send voice data."""
+    """:class:`bool`: Whether the member can send voice data."""
 
     can_receive: bool = field(repr=True, kw_only=True)
-    """Whether the member can receive voice data."""
+    """:class:`bool`: Whether the member can receive voice data."""
 
-    def locally_update(self, data: PartialMember) -> None:
+    def locally_update(self, data: PartialMember, /) -> None:
         """Locally updates member with provided data.
 
         .. warning::
@@ -1417,7 +1417,7 @@ class Member(BaseMember):
 
         Parameters
         ----------
-        data: :class:`PartialMember`
+        data: :class:`.PartialMember`
             The data to update member with.
         """
         if data.nick is not UNDEFINED:

@@ -853,8 +853,8 @@ class Client:
         if handler:
             await self._run_callback(handler, event, name)
 
-        if event.is_cancelled:
-            _L.debug('%s processing was cancelled', event.__class__.__name__)
+        if event.is_canceled:
+            _L.debug('%s processing was canceled', event.__class__.__name__)
         else:
             _L.debug('Processing %s', event.__class__.__name__)
             event.process()

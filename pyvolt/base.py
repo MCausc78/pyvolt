@@ -38,10 +38,10 @@ if typing.TYPE_CHECKING:
 @define(slots=True)
 class Base:
     state: State = field(repr=False, kw_only=True)
-    """State that controls this entity."""
+    """:class:`.State`: The state that controls this entity."""
 
     id: str = field(repr=True, kw_only=True)
-    """The ID of the entity."""
+    """:class:`str`: The ID of the entity."""
 
     def __hash__(self) -> int:
         return hash(self.id)

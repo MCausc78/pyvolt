@@ -38,16 +38,16 @@ class ReadState:
     state: State = field(repr=False, kw_only=True)
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID the read state for."""
+    """:class:`str`: The channel's ID the read state for."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID the read state belongs to."""
+    """:class:`str`: The user's ID the read state belongs to."""
 
     last_acked_message_id: str | None = field(repr=True, kw_only=True)
-    """The ID of the last acknowledged message. It *may* not point to an existing or valid message."""
+    """Optional[:class:`str`]: The last acknowledged message's ID. It *may* not point to an existing or valid message."""
 
     mentioned_in: list[str] = field(repr=True, kw_only=True)
-    """The message's IDs that mention the user."""
+    """List[:class:`str`]: The message's IDs that mention the user."""
 
     def __hash__(self) -> int:
         return hash((self.channel_id, self.user_id))

@@ -321,13 +321,26 @@ def doc_flags(
     *,
     added_in: str | None = None,
 ) -> Callable[[type[BF]], type[BF]]:
+    """Document flag classes.
+
+    Parameters
+    ----------
+    intro: :class:`str`
+        The intro.
+    added_in: Optional[:class:`str`]
+        The version the flags were added in.
+
+    Returns
+    -------
+    Callable[[Type[BF]], Type[BF]]
+        The documented class.
+    """
+
     def decorator(cls: type[BF]) -> type[BF]:
         directives = ''
 
         if added_in:
-            directives += '    \n'
-            directives += f'    .. versionadded:: {added_in}'
-            directives += '\n'
+            directives += '    \n    .. versionadded:: {}\n'.format(added_in)
         cls.__doc__ = f"""{intro}
 
     .. container:: operations

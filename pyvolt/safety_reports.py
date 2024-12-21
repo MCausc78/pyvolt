@@ -42,16 +42,16 @@ class BaseReport(Base):
     """Represents a user-generated platform moderation report on Revolt."""
 
     author_id: str = field(repr=True, kw_only=True)
-    """The user's ID who created this report."""
+    """:class:`str`: The user's ID who created this report."""
 
     content: ReportedContent = field(repr=True, kw_only=True)
-    """The reported content."""
+    """:class:`.ReportedContent`: The reported content."""
 
     additional_context: str | None = field(repr=True, kw_only=True)
-    """The additional context included in report."""
+    """Optional[:class:`str`]: The additional context included in report."""
 
     notes: str = field(repr=True, kw_only=True)
-    """The additional notes included in report."""
+    """:class:`str`: The additional notes included in report."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -75,10 +75,10 @@ class RejectedReport(BaseReport):
     """Represents a rejected report on Revolt."""
 
     rejection_reason: str = field(repr=True, kw_only=True)
-    """The reason why this report was rejected."""
+    """:class:`str`: The reason why this report was rejected."""
 
     closed_at: datetime | None = field(repr=True, kw_only=True)
-    """When the report was closed."""
+    """Optional[:class:`~datetime.datetime`]: When the report was closed."""
 
     @property
     def status(self) -> typing.Literal[ReportStatus.rejected]:
@@ -91,7 +91,7 @@ class ResolvedReport(BaseReport):
     """Represents a resolved report on Revolt."""
 
     closed_at: datetime | None = field(repr=True, kw_only=True)
-    """When the report was closed."""
+    """Optional[:class:`~datetime.datetime`]: When the report was closed."""
 
     @property
     def status(self) -> typing.Literal[ReportStatus.resolved]:
@@ -107,7 +107,7 @@ class BaseReportedContent:
     """Represents content being reported."""
 
     target_id: str = field(repr=True, kw_only=True)
-    """The target's ID."""
+    """:class:`str`: The target's ID."""
 
 
 @define(slots=True)
@@ -115,7 +115,7 @@ class MessageReportedContent(BaseReportedContent):
     """Represents a message being reported."""
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
-    """The reason why message was reported."""
+    """:class:`.ContentReportReason`: The reason why message was reported."""
 
     @property
     def type(self) -> typing.Literal[ReportedContentType.message]:
@@ -128,7 +128,7 @@ class ServerReportedContent(BaseReportedContent):
     """Represents a server being reported."""
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
-    """The reason why server was reported."""
+    """:class:`.ContentReportReason`: The reason why server was reported."""
 
     @property
     def type(self) -> typing.Literal[ReportedContentType.server]:
@@ -141,10 +141,10 @@ class UserReportedContent(BaseReportedContent):
     """Represents a user being reported."""
 
     reason: UserReportReason = field(repr=True, kw_only=True)
-    """The reason why user was reported."""
+    """:class:`.UserReportReason`: The reason why user was reported."""
 
     message_id: str | None = field(repr=True, kw_only=True)
-    """The message's ID with report context."""
+    """Optional[:class:`str`]: The message's ID with report context."""
 
     @property
     def type(self) -> typing.Literal[ReportedContentType.user]:
