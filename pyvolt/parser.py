@@ -163,7 +163,7 @@ from .invite import (
     Invite,
 )
 from .message import (
-    Interactions,
+    MessageInteractions,
     Masquerade,
     MessageWebhook,
     PartialMessage,
@@ -242,7 +242,7 @@ class Parser:
 
     Attributes
     ----------
-    state: :class:`State`
+    state: :class:`.State`
         The state the parser is attached to.
     """
 
@@ -1213,8 +1213,8 @@ class Parser:
     def parse_message_event(self, shard: Shard, payload: raw.ClientMessageEvent, /) -> MessageCreateEvent:
         return MessageCreateEvent(shard=shard, message=self.parse_message(payload))
 
-    def parse_message_interactions(self, payload: raw.Interactions, /) -> Interactions:
-        return Interactions(
+    def parse_message_interactions(self, payload: raw.Interactions, /) -> MessageInteractions:
+        return MessageInteractions(
             reactions=payload.get('reactions', []),
             restrict_reactions=payload.get('restrict_reactions', False),
         )
@@ -2079,7 +2079,7 @@ class Parser:
             channel_description=payload.get('channel_description'),
             user_name=payload['user_name'],
             internal_user_avatar=self.parse_asset(user_avatar) if user_avatar else None,
-            members_count=payload['member_count'],
+            member_count=payload['member_count'],
         )
 
     def parse_server_reported_content(self, payload: raw.ServerReportedContent, /) -> ServerReportedContent:

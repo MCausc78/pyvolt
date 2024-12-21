@@ -35,7 +35,7 @@ from .core import (
 )
 from .message import (
     Reply,
-    Interactions,
+    MessageInteractions,
     Masquerade,
     SendableEmbed,
     BaseMessage,
@@ -48,7 +48,7 @@ _new_permissions = Permissions.__new__
 
 @define(slots=True)
 class BaseWebhook(Base):
-    """Representation of Revolt webhook."""
+    """Represents a webhook on Revolt."""
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseWebhook) and self.id == other.id
@@ -93,9 +93,9 @@ class BaseWebhook(Base):
             The webhook token.
         name: UndefinedOr[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             New webhook avatar.
-        permissions: UndefinedOr[:class:`Permissions`]
+        permissions: UndefinedOr[:class:`.Permissions`]
             New webhook permissions.
 
         Raises
@@ -132,7 +132,7 @@ class BaseWebhook(Base):
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
     ) -> Message:
         """|coro|
 
@@ -162,26 +162,26 @@ class BaseWebhook(Base):
 class PartialWebhook(BaseWebhook):
     """Represents a partial webhook on Revolt.
 
-    Unmodified fields will have ``UNDEFINED`` value.
+    Unmodified fields will have :data:`.UNDEFINED` value.
     """
 
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new webhook's name."""
+    """UndefinedOr[:class:`str`]: The new webhook's name."""
 
     internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new webhook's stateless avatar."""
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new webhook's stateless avatar."""
 
     raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The new webhook's permissions raw value."""
+    """:class:`int`: The new webhook's permissions raw value."""
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """UndefinedOr[Optional[:class:`Asset`]]: The new avatar of the webhook."""
+        """UndefinedOr[Optional[:class:`.Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        """UndefinedOr[:class:`Permissions`]: The new webhook's permissions."""
+        """UndefinedOr[:class:`.Permissions`]: The new webhook's permissions."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -194,19 +194,19 @@ class Webhook(BaseWebhook):
     """Represents a webhook on Revolt."""
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The webhook's name."""
+    """:class:`str`: The webhook's name."""
 
     internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The webhook's stateless avatar."""
+    """Optional[:class:`.StatelessAsset`]: The webhook's stateless avatar."""
 
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The channel the webhook belongs to."""
+    """:class:`str`: The channel the webhook belongs to."""
 
     raw_permissions: int = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The webhook's permissions raw value."""
+    """:class:`int`: The webhook's permissions raw value."""
 
     token: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The webhook's private token."""
+    """Optional[:class:`str`]: The webhook's private token."""
 
     def locally_update(self, data: PartialWebhook, /) -> None:
         """Locally updates webhook with provided data.
@@ -216,7 +216,7 @@ class Webhook(BaseWebhook):
 
         Parameters
         ----------
-        data: :class:`PartialWebhook`
+        data: :class:`.PartialWebhook`
             The data to update webhook with.
         """
         if data.name is not UNDEFINED:
@@ -228,12 +228,12 @@ class Webhook(BaseWebhook):
 
     @property
     def avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The webhook's avatar."""
+        """Optional[:class:`.Asset`]: The webhook's avatar."""
         return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
 
     @property
     def permissions(self) -> Permissions:
-        """:class:`Permissions`: The webhook's permissions."""
+        """:class:`.Permissions`: The webhook's permissions."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret

@@ -36,8 +36,9 @@ extensions = [
 ]
 
 autodoc_member_order = 'bysource'
-autodoc_typehints = 'description'
-autodoc_typehints_description_target = 'documented'
+autodoc_typehints = 'none'
+# autodoc_typehints = 'description'
+# autodoc_typehints_description_target = 'documented'
 
 
 # maybe consider this?

@@ -173,6 +173,7 @@ class BaseRole(Base):
     """Represents a base role in Revolt server."""
 
     server_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The server's ID the role belongs to."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -269,7 +270,7 @@ class BaseRole(Base):
 class PartialRole(BaseRole):
     """Represents a partial role for the server.
 
-    Unmodified fields will have ``UNDEFINED`` value.
+    Unmodified fields will have :data:`.UNDEFINED` value.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -423,10 +424,10 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+        user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to ban.
         reason: Optional[:class:`str`]
-            The ban reason. Should be between 1 and 1024 chars long.
+            The ban reason. Must be between 1 and 1024 chars long.
 
         Raises
         ------
@@ -747,40 +748,44 @@ class PartialServer(BaseServer):
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new server's name."""
+    """UndefinedOr[:class:`str`]: The new server's name."""
 
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new user's ID who owns this server."""
+    """UndefinedOr[:class:`str`]: The new user's ID who owns this server."""
 
     description: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """The new server's description."""
+    """UndefinedOr[Optional[:class:`str`]]: The new server's description."""
 
     channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
-    """The server's channels now."""
+    """UndefinedOr[List[:class:`str`]]: The server's channels now."""
 
     categories: UndefinedOr[list[Category] | None] = field(repr=True, kw_only=True)
-    """The server's categories now."""
+    """UndefinedOr[Optional[List[:class:`.Category`]]]: The server's categories now."""
 
     system_messages: UndefinedOr[SystemMessageChannels | None] = field(repr=True, kw_only=True)
-    """The new server's system message assignments."""
+    """UndefinedOr[Optional[:class:`.SystemMessageChannels`]]: The new server's system message assignments."""
 
     raw_default_permissions: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """The raw value of new default permissions for everyone."""
+    """UndefinedOr[:class:`int`]: The raw value of new default permissions for everyone."""
 
     internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new server's icon, if any."""
+
     internal_banner: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new server's banner, if any."""
+
     raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """The new server's flags raw value."""
+    """UndefinedOr[:class:`int`]: The new server's flags raw value."""
 
     discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the server is publicly discoverable."""
+    """UndefinedOr[:class:`bool`]: Whether the server is publicly discoverable."""
 
     analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the server activity is being analyzed in real-time."""
+    """UndefinedOr[:class:`bool`]: Whether the server activity is being analyzed in real-time."""
 
     @property
     def default_permissions(self) -> UndefinedOr[Permissions]:
-        """UndefinedOr[:class:`Permissions`]: The new default permissions for everyone."""
+        """UndefinedOr[:class:`.Permissions`]: The new default permissions for everyone."""
         if self.raw_default_permissions is UNDEFINED:
             return self.raw_default_permissions
         ret = _new_permissions(Permissions)
@@ -789,7 +794,7 @@ class PartialServer(BaseServer):
 
     @property
     def flags(self) -> UndefinedOr[ServerFlags]:
-        """UndefinedOr[:class:`ServerFlags`]: The new server's flags."""
+        """UndefinedOr[:class:`.ServerFlags`]: The new server's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_server_flags(ServerFlags)
@@ -798,12 +803,12 @@ class PartialServer(BaseServer):
 
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
-        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server icon."""
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def banner(self) -> UndefinedOr[Asset | None]:
-        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server banner."""
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
 
@@ -819,11 +824,11 @@ def sort_member_roles(
     Parameters
     ----------
     target_roles: List[:class:`str`]
-        The IDs of roles to sort (:attr:`Member.roles`).
+        The IDs of roles to sort (:attr:`.Member.roles`).
     safe: :class:`bool`
         Whether to raise exception or not if role is missing in cache.
     server_roles: Dict[:class:`str`, :class:`.Role`]
-        The mapping of role IDs to role objects (:attr:`Server.roles`).
+        The mapping of role IDs to role objects (:attr:`.Server.roles`).
 
     Raises
     ------
@@ -860,7 +865,7 @@ def calculate_server_permissions(
     can_publish: bool = True,
     can_receive: bool = True,
 ) -> Permissions:
-    """Calculates the permissions in :class:`Server` scope.
+    """Calculates the permissions in :class:`.Server` scope.
 
     Parameters
     ----------
@@ -869,9 +874,9 @@ def calculate_server_permissions(
         and ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)``
         for member.
     target_timeout: Optional[:class:`~datetime.datetime`]
-        The target timeout, if applicable (:attr:`Member.timed_out_until`).
+        The target timeout, if applicable (:attr:`.Member.timed_out_until`).
     default_permissions: :class:`Permissions`
-        The default channel permissions (:attr:`Server.default_permissions`).
+        The default channel permissions (:attr:`.Server.default_permissions`).
     can_publish: :class:`bool`
         Whether the member can send voice data. Defaults to ``True``.
     can_receive: :class:`bool`
@@ -879,7 +884,7 @@ def calculate_server_permissions(
 
     Returns
     -------
-    :class:`Permissions`
+    :class:`.Permissions`
         The calculated permissions.
     """
     result = default_permissions.copy()
@@ -905,47 +910,47 @@ class Server(BaseServer):
     """Represents a server on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """The user's ID who owns this server."""
+    """:class:`str`: The user's ID who owns this server."""
 
     name: str = field(repr=True, kw_only=True)
-    """The server's name."""
+    """:class:`str`: The server's name."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The server's description."""
+    """Optional[:class:`str`]: The server's description."""
 
     internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
         field(repr=True, kw_only=True)
     )
 
     categories: list[Category] | None = field(repr=True, kw_only=True)
-    """The server's categories."""
+    """Optional[List[:class:`.Category`]]: The server's categories."""
 
     system_messages: SystemMessageChannels | None = field(repr=True, kw_only=True)
-    """The configuration for sending system event messages."""
+    """Optional[:class:`.SystemMessageChannels`]: The configuration for sending system event messages."""
 
     roles: dict[str, Role] = field(repr=True, kw_only=True)
-    """The server's roles."""
+    """Dict[:class:`str`, :class:`.Role`]: The server's roles."""
 
     raw_default_permissions: int = field(repr=True, kw_only=True)
-    """The raw value of default permissions for everyone."""
+    """:class:`int`: The raw value of default permissions for everyone."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server's icon."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server's icon."""
 
     internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server's banner."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server's banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The server's flags raw value."""
+    """:class:`int`: The server's flags raw value."""
 
     nsfw: bool = field(repr=True, kw_only=True)
-    """Whether the server is flagged as not safe for work."""
+    """:class:`bool`: Whether the server is flagged as not safe for work."""
 
     analytics: bool = field(repr=True, kw_only=True)
-    """Whether the server activity is being analyzed in real-time."""
+    """:class:`bool`: Whether the server activity is being analyzed in real-time."""
 
     discoverable: bool = field(repr=True, kw_only=True)
-    """Whether the server is publicly discoverable."""
+    """:class:`bool`: Whether the server is publicly discoverable."""
 
     def get_channel(self, channel_id: str, /) -> ServerChannel | None:
         """Retrieves a server channel from cache.
@@ -957,7 +962,7 @@ class Server(BaseServer):
 
         Returns
         -------
-        Optional[:class:`ServerChannel`]
+        Optional[:class:`.ServerChannel`]
             The channel or ``None`` if not found.
         """
         cache = self.state.cache
@@ -978,12 +983,12 @@ class Server(BaseServer):
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server icon."""
+        """Optional[:class:`.Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
 
     @property
     def banner(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server banner."""
+        """Optional[:class:`.Asset`]: The server banner."""
         return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
 
     @property
@@ -1021,14 +1026,14 @@ class Server(BaseServer):
 
     @property
     def default_permissions(self) -> Permissions:
-        """:class:`Permissions`: The default permissions for everyone."""
+        """:class:`.Permissions`: The default permissions for everyone."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_default_permissions
         return ret
 
     @property
     def flags(self) -> ServerFlags:
-        """:class:`ServerFlags`: The server's flags."""
+        """:class:`.ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
@@ -1046,7 +1051,7 @@ class Server(BaseServer):
 
         .. warning::
             This is called by library internally to keep cache up to date.
-            You likely want to use :meth:`BaseServer.edit` method instead.
+            You likely want to use :meth:`.BaseServer.edit` method instead.
         """
         if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
@@ -1118,7 +1123,7 @@ class Server(BaseServer):
         )
 
     def prepare_cached(self) -> list[ServerChannel]:
-        """List[:class:`ServerChannel`]: Prepares the server to be cached."""
+        """List[:class:`.ServerChannel`]: Prepares the server to be cached."""
         if not self.internal_channels[0]:
             channels = self.internal_channels[1]
             self.internal_channels = (True, self.channel_ids)
@@ -1368,7 +1373,7 @@ class BaseMember:
 class PartialMember(BaseMember):
     """Represents a Revolt member to a :class:`Server`.
 
-    Unmodified fields will have ``UNDEFINED`` value.
+    Unmodified fields will have :data:`.UNDEFINED` value.
     """
 
     nick: UndefinedOr[str | None] = field(repr=True, kw_only=True)
@@ -1386,22 +1391,22 @@ class PartialMember(BaseMember):
 
 @define(slots=True)
 class Member(BaseMember):
-    """Represents a Revolt member to a :class:`Server`."""
+    """Represents a Revolt member to a :class:`.Server`."""
 
     joined_at: datetime = field(repr=True, kw_only=True)
-    """When the member joined the server."""
+    """:class:`~datetime.datetime`: When the member joined the server."""
 
     nick: str | None = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The member's nick."""
 
     internal_server_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The member's avatar on server."""
+    """Optional[:class:`.StatelessAsset`]: The member's avatar on server."""
 
     roles: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The member's roles."""
 
     timed_out_until: datetime | None = field(repr=True, kw_only=True)
-    """The timestamp this member is timed out until."""
+    """Optional[:class:`~datetime.datetime`]: The timestamp this member is timed out until."""
 
     can_publish: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the member can send voice data."""
@@ -1433,7 +1438,7 @@ class Member(BaseMember):
 
     @property
     def server_avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The member's avatar on server."""
+        """Optional[:class:`.Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
 
 
@@ -1442,7 +1447,10 @@ class MemberList:
     """A member list of a server."""
 
     members: list[Member] = field(repr=True, kw_only=True)
+    """List[:class:`.Member`]: The members in server."""
+
     users: list[User] = field(repr=True, kw_only=True)
+    """List[:class:`.User`]: The users."""
 
 
 __all__ = (

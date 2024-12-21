@@ -180,7 +180,7 @@ class UserSettings:
         return self.data[key][1]
 
     def get(self, key: str, default: D = None) -> str | D:
-        """Unionl[:class:`str`, D]: Get a user setting."""
+        """Union[:class:`str`, D]: Get a user setting."""
         if key in self.data:
             return self.data[key][1]
         return default
@@ -1127,8 +1127,8 @@ class ReviteUserSettings:
             overrides=overrides,
         )
 
-        # It works tho
-        await self.parent.edit({}, edited_at, **payload)
+        # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
+        await self.parent.edit(payload, edited_at)  # type: ignore
 
 
 class JoltUserSettings:
@@ -1294,7 +1294,8 @@ class JoltUserSettings:
             send_typing_indicators=send_typing_indicators,
             receive_typing_indicators=receive_typing_indicators,
         )
-        await self.parent.edit({}, edited_at, **payload)
+        # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
+        await self.parent.edit(payload, edited_at)  # type: ignore
 
 
 __all__ = (

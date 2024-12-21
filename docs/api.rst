@@ -117,7 +117,6 @@ CDNClient
 
     A union of types that can be resolved into resource.
 
-    
     The following classes are included in this union:
 
     - :class:`.Resource`
@@ -810,7 +809,6 @@ Discover
     .. attribute:: large
         
         Show large preview at the bottom of the embed.
-
     .. attribute:: preview
 
         Show small preview to the side of the embed.
@@ -1047,12 +1045,13 @@ Discover
     Specifies order of messages.
 
     .. attribute:: relevance
-        Sort messages by relevance.
-    
-    .. attribute:: latest
-        Sort messages by timestamp in descending order.
 
+        Sort messages by relevance.
+    .. attribute:: latest
+        
+        Sort messages by timestamp in descending order.
     .. attribute:: oldest
+
         Sort messages by timestamp in ascending order.
     
 .. class:: ContentReportReason
@@ -1572,26 +1571,31 @@ Channel
 
 .. autoclass:: PartialChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: SavedMessagesChannel
 
 .. autoclass:: SavedMessagesChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: DMChannel
 
 .. autoclass:: DMChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: GroupChannel
 
 .. autoclass:: GroupChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: BaseServerChannel
 
 .. autoclass:: BaseServerChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: ChannelVoiceMetadata
 
@@ -1602,11 +1606,13 @@ Channel
 
 .. autoclass:: TextChannel
     :members:
+    :inherited-members:
 
 .. attributetable:: VoiceChannel
 
 .. autoclass:: VoiceChannel
     :members:
+    :inherited-members:
 
 .. class:: PrivateChannel
     A union of all channels that do not belong to a server.
@@ -1652,6 +1658,48 @@ Channel
 .. attributetable:: ChannelVoiceStateContainer
 
 .. autoclass:: ChannelVoiceStateContainer
+    :members:
+
+Emoji
+~~~~~
+
+.. attributetable:: BaseEmoji
+
+.. autoclass:: BaseEmoji
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerEmoji
+
+.. autoclass:: ServerEmoji
+    :members:
+    :inherited-members:
+
+.. attributetable:: DetachedEmoji
+
+.. autoclass:: DetachedEmoji
+    :members:
+    :inherited-members:
+
+.. class:: Emoji
+    A union of all emoji types.
+
+    The following classes are included in this union:
+    
+    - :class:`ServerEmoji`
+    - :class:`DetachedEmoji`
+
+.. class:: ResolvableEmoji
+    A union of either :class:`.BaseEmoji` or :class:`str`.
+
+.. autofunction:: resolve_emoji
+
+PermissionOverride
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PermissionOverride
+
+.. autoclass:: PermissionOverride
     :members:
 
 ReadState
@@ -1720,6 +1768,242 @@ Member
 .. autoclass:: MemberList
     :members:
 
+SystemEvent
+~~~~~~~~~~~
+
+.. attributetable:: BaseSystemEvent
+
+.. autoclass:: BaseSystemEvent
+    :members:
+
+.. attributetable:: TextSystemEvent
+
+.. autoclass:: TextSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserAddedSystemEvent
+
+.. autoclass:: StatelessUserAddedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserAddedSystemEvent
+
+.. autoclass:: UserAddedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserRemovedSystemEvent
+
+.. autoclass:: StatelessUserRemovedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserRemovedSystemEvent
+
+.. autoclass:: UserRemovedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserJoinedSystemEvent
+
+.. autoclass:: StatelessUserJoinedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserJoinedSystemEvent
+
+.. autoclass:: UserJoinedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserLeftSystemEvent
+
+.. autoclass:: StatelessUserLeftSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserLeftSystemEvent
+
+.. autoclass:: UserLeftSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserKickedSystemEvent
+
+.. autoclass:: StatelessUserKickedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserKickedSystemEvent
+
+.. autoclass:: UserKickedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessUserBannedSystemEvent
+
+.. autoclass:: StatelessUserBannedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserBannedSystemEvent
+
+.. autoclass:: UserBannedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessChannelRenamedSystemEvent
+
+.. autoclass:: StatelessChannelRenamedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelRenamedSystemEvent
+
+.. autoclass:: ChannelRenamedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessChannelDescriptionChangedSystemEvent
+
+.. autoclass:: StatelessChannelDescriptionChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelDescriptionChangedSystemEvent
+
+.. autoclass:: ChannelDescriptionChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessChannelIconChangedSystemEvent
+
+.. autoclass:: StatelessChannelIconChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelIconChangedSystemEvent
+
+.. autoclass:: ChannelIconChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessChannelOwnershipChangedSystemEvent
+
+.. autoclass:: StatelessChannelOwnershipChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelOwnershipChangedSystemEvent
+
+.. autoclass:: ChannelOwnershipChangedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessMessagePinnedSystemEvent
+
+.. autoclass:: StatelessMessagePinnedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessagePinnedSystemEvent
+
+.. autoclass:: MessagePinnedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessMessageUnpinnedSystemEvent
+
+.. autoclass:: StatelessMessageUnpinnedSystemEvent
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageUnpinnedSystemEvent
+
+.. autoclass:: MessageUnpinnedSystemEvent
+    :members:
+    :inherited-members:
+
+.. class:: StatelessSystemEvent
+
+    A union of all stateless system events that message may hold.
+
+    The following classes are included in this union:
+
+    - :class:`.TextSystemEvent`
+    - :class:`.StatelessUserAddedSystemEvent`
+    - :class:`.StatelessUserRemovedSystemEvent`
+    - :class:`.StatelessUserJoinedSystemEvent`
+    - :class:`.StatelessUserLeftSystemEvent`
+    - :class:`.StatelessUserKickedSystemEvent`
+    - :class:`.StatelessUserBannedSystemEvent`
+    - :class:`.StatelessChannelRenamedSystemEvent`
+    - :class:`.StatelessChannelDescriptionChangedSystemEvent`
+    - :class:`.StatelessChannelIconChangedSystemEvent`
+    - :class:`.StatelessChannelOwnershipChangedSystemEvent`
+    - :class:`.StatelessMessagePinnedSystemEvent`
+    - :class:`.StatelessMessageUnpinnedSystemEvent`
+
+.. class:: SystemEvent
+
+    A union of all system events that message may hold.
+
+    The following classes are included in this union:
+
+    - :class:`.TextSystemEvent`
+    - :class:`.UserAddedSystemEvent`
+    - :class:`.UserRemovedSystemEvent`
+    - :class:`.UserJoinedSystemEvent`
+    - :class:`.UserLeftSystemEvent`
+    - :class:`.UserKickedSystemEvent`
+    - :class:`.UserBannedSystemEvent`
+    - :class:`.ChannelRenamedSystemEvent`
+    - :class:`.ChannelDescriptionChangedSystemEvent`
+    - :class:`.ChannelIconChangedSystemEvent`
+    - :class:`.ChannelOwnershipChangedSystemEvent`
+    - :class:`.MessagePinnedSystemEvent`
+    - :class:`.MessageUnpinnedSystemEvent`
+
+Message
+~~~~~~~
+
+.. attributetable:: BaseMessage
+
+.. autoclass:: BaseMessage
+    :members:
+
+.. attributetable:: PartialMessage
+
+.. autoclass:: PartialMessage
+    :members:
+
+.. attributetable:: MessageAppendData
+
+.. autoclass:: MessageAppendData
+    :members:
+
+.. attributetable:: Message
+
+.. autoclass:: Message
+    :members:
+    :inherited-members:
+
+.. attributetable:: Reply
+
+.. autoclass:: Reply
+    :members:
+
+.. attributetable:: MessageInteractions
+
+.. autoclass:: MessageInteractions
+    :members:
+
+.. attributetable:: MessageWebhook
+
+.. autoclass:: MessageWebhook
+    :members:
 
 Role
 ~~~~

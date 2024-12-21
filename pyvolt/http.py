@@ -424,6 +424,11 @@ class DefaultRateLimiter(RateLimiter):
             del self._routes_to_bucket[key]
 
 
+def _resolve_member_id(target: str | BaseUser | BaseMember, /) -> str:
+    ret: str = getattr(target, 'id', target)  # type: ignore
+    return ret
+
+
 class HTTPClient:
     """Represents an HTTP client sending HTTP requests to the Revolt API.
 
@@ -2883,7 +2888,7 @@ class HTTPClient:
         """
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
-            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
+            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
             json=payload,
         )
         return self.state.parser.parse_ban(
@@ -3165,7 +3170,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_EDIT.compile(
                 server_id=resolve_id(server),
-                member_id=resolve_id(member),
+                member_id=_resolve_member_id(member),
             ),
             json=payload,
         )
@@ -3222,7 +3227,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_FETCH.compile(
                 server_id=resolve_id(server),
-                member_id=resolve_id(member),
+                member_id=_resolve_member_id(member),
             )
         )
         return self.state.parser.parse_member(resp)
@@ -3303,7 +3308,7 @@ class HTTPClient:
             Kicking the member failed.
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=resolve_id(member))
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member))
         )
 
     async def set_server_permissions_for_role(

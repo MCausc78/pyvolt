@@ -24,7 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
 from attrs import define, field
 import typing
 
@@ -62,7 +61,8 @@ if typing.TYPE_CHECKING:
 _new_permissions = Permissions.__new__
 
 
-class BaseChannel(Base, abc.ABC):
+@define(slots=True)
+class BaseChannel(Base):
     """Represents channel on Revolt."""
 
     def __eq__(self, other: object, /) -> bool:
@@ -233,7 +233,7 @@ class BaseChannel(Base, abc.ABC):
 
         Returns
         -------
-        :class:`Permissions`
+        :class:`.Permissions`
             The calculated permissions.
         """
         return Permissions.none()

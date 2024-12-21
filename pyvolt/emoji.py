@@ -33,7 +33,7 @@ from .enums import AssetMetadataType
 
 @define(slots=True)
 class BaseEmoji(Base):
-    """Representation of an emoji on Revolt."""
+    """Represents an emoji on Revolt."""
 
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who uploaded this emoji."""
@@ -79,10 +79,10 @@ class BaseEmoji(Base):
 
 @define(slots=True)
 class ServerEmoji(BaseEmoji):
-    """Represents an emoji in server on Revolt."""
+    """Represents an emoji in Revolt :class:`.Server`."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID the emoji belongs to."""
+    """:class:`str`: The server's ID the emoji belongs to."""
 
     async def delete(self) -> None:
         """|coro|
@@ -109,6 +109,18 @@ ResolvableEmoji = BaseEmoji | str
 
 
 def resolve_emoji(resolvable: ResolvableEmoji, /) -> str:
+    """:class:`str`: Resolves emoji's ID from parameter.
+
+    Parameters
+    ----------
+    resolvable: :class:`.ResolvableEmoji`
+        The object to resolve ID from.
+
+    Returns
+    -------
+    :class:`str`
+        The resolved emoji's ID.
+    """
     return resolvable.id if isinstance(resolvable, BaseEmoji) else resolvable
 
 

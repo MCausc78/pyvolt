@@ -135,7 +135,7 @@ class ServerPublicInvite(BaseInvite):
     """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     member_count: int = field(repr=True, kw_only=True)
-    """The count of members in target server."""
+    """:class:`int`: The count of members in target server."""
 
     @property
     def server_flags(self) -> ServerFlags:

@@ -25,9 +25,9 @@ BF = typing.TypeVar('BF', bound='BaseFlags')
 
 class flag(typing.Generic[BF]):
     __slots__ = (
+        '__doc__',
         '_func',
         '_parent',
-        'doc',
         'name',
         'value',
         'alias',
@@ -36,9 +36,9 @@ class flag(typing.Generic[BF]):
     )
 
     def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
+        self.__doc__: str | None = None
         self._func: Callable[[BF], int] = MISSING
         self._parent: type[BF] = MISSING
-        self.doc: str | None = None
         self.name: str = ''
         self.value: int = 0
         self.alias: bool = alias
@@ -47,7 +47,7 @@ class flag(typing.Generic[BF]):
 
     def __call__(self, func: Callable[[BF], int], /) -> Self:
         self._func = func
-        self.doc = func.__doc__
+        self.__doc__ = func.__doc__
         self.name = func.__name__
         return self
 
@@ -100,7 +100,7 @@ class BaseFlags:
     def __init_subclass__(cls, *, inverted: bool = False, support_kwargs: bool = True) -> None:
         valid_flags = {}
         flags = {}
-        for k, f in inspect.getmembers(cls):
+        for _, f in inspect.getmembers(cls):
             if isinstance(f, flag):
                 f.value = f._func(cls)
                 if f.alias:
@@ -214,10 +214,12 @@ class BaseFlags:
 
     @classmethod
     def all(cls) -> Self:
+        """Returns instance with all flags."""
         return cls(cls.ALL_VALUE)
 
     @classmethod
     def none(cls) -> Self:
+        """Returns instance with no flags."""
         return cls(cls.NONE_VALUE)
 
     @classmethod
@@ -342,7 +344,7 @@ def doc_flags(
         if added_in:
             directives += '    \n    .. versionadded:: {}\n'.format(added_in)
         cls.__doc__ = f"""{intro}
-
+{directives}
     .. container:: operations
 
         .. describe:: x == y
@@ -351,35 +353,32 @@ def doc_flags(
         .. describe:: x != y
 
             Checks if two flags are not equal.
-
         .. describe:: x | y, x |= y
 
             Returns a {cls.__name__} instance with all enabled flags from
             both x and y.
-
         .. describe:: x & y, x &= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             both x and y.
-
         .. describe:: x ^ y, x ^= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             only one of x or y, not on both.
-
         .. describe:: ~x
+
             Returns a {cls.__name__} instance with all flags inverted from x.
-
         .. describe:: hash(x)
-            Return the flag's hash.
 
+            Return the flag's hash.
         .. describe:: iter(x)
+
             Returns an iterator of ``(name, value)`` pairs. This allows it
             to be, for example, constructed as a dict or a list of pairs.
-
         .. describe:: bool(b)
+
             Returns whether any flag is set to ``True``.
-{directives}
+
     Attributes
     ----------
     value: :class:`int`
@@ -431,7 +430,7 @@ class MessageFlags(BaseFlags, support_kwargs=False):
         return 1 << 2
 
 
-@doc_flags('Wraps up a Permission flag value.')
+@doc_flags('Wraps up a Permission flag value.', added_in='8.0')
 class Permissions(BaseFlags, support_kwargs=True):
     __slots__ = ()
 

@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
     from .cdn import ResolvableResource
     from .core import ULIDOr
     from .enums import MessageSort
-    from .message import Reply, Interactions, Masquerade, SendableEmbed, BaseMessage, Message
+    from .message import Reply, MessageInteractions, Masquerade, SendableEmbed, BaseMessage, Message
     from .state import State
 
 
@@ -159,7 +159,7 @@ class Messageable:
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
     ) -> Message:
         """|coro|

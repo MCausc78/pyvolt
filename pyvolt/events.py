@@ -80,8 +80,11 @@ _new_user_flags = UserFlags.__new__
 
 @define(slots=True)
 class BaseEvent:
+    """Base class for all events."""
+
     # shard: Shard = field(repr=True, kw_only=True)
     is_canceled: bool = field(default=False, repr=True, kw_only=True)
+    """:class:`bool`: Whether the event is canceled."""
 
     def set_canceled(self, value: bool, /) -> bool:
         """Whether to cancel event processing (updating cache) or not."""
@@ -113,7 +116,10 @@ class BaseEvent:
 
 @define(slots=True)
 class ShardEvent(BaseEvent):
+    """Base class for events arrived over WebSocket."""
+
     shard: Shard = field(repr=True, kw_only=True)
+    """:class:`.Shard`: The shard the event arrived on."""
 
 
 @define(slots=True)
@@ -382,7 +388,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
     """:class:`str`: The user's ID who was removed from the group."""
 
     group: GroupChannel | None = field(repr=True, kw_only=True)
-    """Optional[:class:`GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
+    """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
