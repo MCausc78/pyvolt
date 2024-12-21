@@ -107,11 +107,11 @@ class Route:
         return CompiledRoute(self, **args)
 
 
-GET: HTTPMethod = 'GET'
-POST: HTTPMethod = 'POST'
-PUT: HTTPMethod = 'PUT'
-DELETE: HTTPMethod = 'DELETE'
-PATCH: HTTPMethod = 'PATCH'
+GET: typing.Final[HTTPMethod] = 'GET'
+POST: typing.Final[HTTPMethod] = 'POST'
+PUT: typing.Final[HTTPMethod] = 'PUT'
+DELETE: typing.Final[HTTPMethod] = 'DELETE'
+PATCH: typing.Final[HTTPMethod] = 'PATCH'
 
 ROOT: typing.Final[Route] = Route(GET, '/')
 

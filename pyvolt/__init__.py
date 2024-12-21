@@ -9,7 +9,12 @@ A basic wrapper for the Revolt API.
 
 """
 
-from . import abc as abc
+from . import (
+    abc as abc,
+    routes as routes,
+    utils as utils,
+)
+
 from .authentication import *
 from .base import *
 from .bot import *
@@ -20,6 +25,7 @@ from .client import *
 from .context_managers import *
 from .core import *
 from .discovery import *
+from .embed import *
 from .emoji import *
 from .enums import *
 from .errors import *
@@ -32,9 +38,6 @@ from .message import *
 from .parser import *
 from .permissions import *
 from .read_state import *
-
-# Explicitly re-export, this is public API.
-from . import routes as routes
 from .safety_reports import *
 from .server import *
 from .settings import *

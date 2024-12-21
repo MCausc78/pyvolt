@@ -348,7 +348,7 @@ class Role(BaseRole):
 
 @define(slots=True)
 class BaseServer(Base):
-    """Base representation of a server on Revolt."""
+    """Represents a server on Revolt."""
 
     def get_emoji(self, emoji_id: str, /) -> ServerEmoji | None:
         """Retrieves a server emoji from cache.
@@ -804,12 +804,12 @@ class PartialServer(BaseServer):
     @property
     def icon(self) -> UndefinedOr[Asset | None]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def banner(self) -> UndefinedOr[Asset | None]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server banner."""
-        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
+        return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
 
 def sort_member_roles(
@@ -984,12 +984,12 @@ class Server(BaseServer):
     @property
     def icon(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The server icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def banner(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The server banner."""
-        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
+        return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
     @property
     def channel_ids(self) -> list[str]:
@@ -1386,7 +1386,7 @@ class PartialMember(BaseMember):
     @property
     def server_avatar(self) -> UndefinedOr[Asset | None]:
         """UndefinedOr[Optional[:class:`Asset`]]: The member's avatar on server."""
-        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
+        return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
 
 
 @define(slots=True)
@@ -1439,7 +1439,7 @@ class Member(BaseMember):
     @property
     def server_avatar(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The member's avatar on server."""
-        return self.internal_server_avatar and self.internal_server_avatar._stateful(self.state, 'avatars')
+        return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
 
 
 @define(slots=True)

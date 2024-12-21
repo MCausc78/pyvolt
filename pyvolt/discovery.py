@@ -92,7 +92,7 @@ class DiscoverableServer(BaseServer):
     @property
     def icon(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The server's icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def invite_code(self) -> str:
@@ -102,7 +102,7 @@ class DiscoverableServer(BaseServer):
     @property
     def banner(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The server's banner."""
-        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
+        return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
 
 @define(slots=True)
@@ -137,7 +137,7 @@ class DiscoverableBot(BaseBot):
     @property
     def avatar(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The bot's avatar."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def description(self) -> str:
@@ -147,7 +147,7 @@ class DiscoverableBot(BaseBot):
     @property
     def profile(self) -> UserProfile:
         """:class:`.UserProfile`: The bot's profile."""
-        return self.internal_profile._stateful(self.state, self.id)
+        return self.internal_profile.attach_state(self.state, self.id)
 
 
 @define(slots=True)

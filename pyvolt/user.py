@@ -122,7 +122,16 @@ class StatelessUserProfile:
     internal_background: StatelessAsset | None = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless background visible on user's profile."""
 
-    def _stateful(self, state: State, user_id: str, /) -> UserProfile:
+    def attach_state(self, state: State, user_id: str, /) -> UserProfile:
+        """:class:`.UserProfile`: Attach a state to user profile.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state to attach.
+        user_id: :class:`str`
+            The user's ID to attach.
+        """
         return UserProfile(
             content=self.content,
             internal_background=self.internal_background,
@@ -136,17 +145,20 @@ class UserProfile(StatelessUserProfile):
     r"""Represents Revolt :class:`.User`\'s profile."""
 
     state: State = field(repr=False, kw_only=True)
+    """:class:`.State`: The internal state used to attach state to other fields."""
+
     user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: """
 
     @property
     def background(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
+        return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
 @define(slots=True)
 class PartialUserProfile:
-    """The user's profile."""
+    """Represents partial user's profile."""
 
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: The state."""
@@ -160,7 +172,7 @@ class PartialUserProfile:
     @property
     def background(self) -> UndefinedOr[Asset | None]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
+        return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
 class UserProfileEdit:
@@ -487,7 +499,7 @@ class PartialUser(BaseUser):
         """UndefinedOr[Optional[:class:`Asset`]]: The new user's avatar."""
         if self.internal_avatar in (None, UNDEFINED):
             return self.internal_avatar
-        return self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def badges(self) -> UndefinedOr[UserBadges]:
@@ -527,7 +539,7 @@ class DisplayUser(BaseUser):
     @property
     def avatar(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def tag(self) -> str:

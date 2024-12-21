@@ -278,7 +278,7 @@ class PartialChannel(BaseChannel):
         r"""UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon
-        return self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
@@ -628,7 +628,7 @@ class GroupChannel(BaseChannel, Messageable):
     @property
     def icon(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The group icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def permissions(self) -> Permissions | None:
@@ -881,7 +881,7 @@ class BaseServerChannel(BaseChannel):
     @property
     def icon(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The custom channel icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def server(self) -> Server:

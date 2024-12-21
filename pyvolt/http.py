@@ -4080,7 +4080,7 @@ class HTTPClient:
         """
         user_id = resolve_id(user)
         resp: raw.UserProfile = await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
-        return self.state.parser.parse_user_profile(resp)._stateful(self.state, user_id)
+        return self.state.parser.parse_user_profile(resp).attach_state(self.state, user_id)
 
     async def get_me(self) -> OwnUser:
         """|coro|

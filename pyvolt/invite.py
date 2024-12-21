@@ -147,17 +147,17 @@ class ServerPublicInvite(BaseInvite):
     @property
     def server_icon(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The icon of the server."""
-        return self.internal_server_icon and self.internal_server_icon._stateful(self.state, 'icons')
+        return self.internal_server_icon and self.internal_server_icon.attach_state(self.state, 'icons')
 
     @property
     def server_banner(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The banner of the server."""
-        return self.internal_server_banner and self.internal_server_banner._stateful(self.state, 'banners')
+        return self.internal_server_banner and self.internal_server_banner.attach_state(self.state, 'banners')
 
     @property
     def user_avatar(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
-        return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
+        return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self) -> Server:
         """|coro|
@@ -200,7 +200,7 @@ class GroupPublicInvite(BaseInvite):
     @property
     def user_avatar(self) -> Asset | None:
         """Optional[:class:`Asset`]: The user's avatar who created this invite."""
-        return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
+        return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self) -> GroupChannel:
         """|coro|

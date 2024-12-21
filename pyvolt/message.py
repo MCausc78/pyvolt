@@ -486,7 +486,9 @@ class PartialMessage(BaseMessage):
     def embeds(self) -> UndefinedOr[list[Embed]]:
         """UndefinedOr[List[:class:`.Embed`]]: The new message embeds."""
         return (
-            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
+            UNDEFINED
+            if self.internal_embeds is UNDEFINED
+            else [e.attach_state(self.state) for e in self.internal_embeds]
         )
 
 
@@ -501,7 +503,9 @@ class MessageAppendData(BaseMessage):
     def embeds(self) -> UndefinedOr[list[Embed]]:
         """UndefinedOr[List[:class:`.Embed`]]: The embeds that were appended."""
         return (
-            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
+            UNDEFINED
+            if self.internal_embeds is UNDEFINED
+            else [e.attach_state(self.state) for e in self.internal_embeds]
         )
 
 
@@ -516,7 +520,14 @@ class TextSystemEvent(BaseSystemEvent):
     content: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The event contents."""
 
-    def _stateful(self, message: Message, /) -> TextSystemEvent:
+    def attach_state(self, message: Message, /) -> TextSystemEvent:
+        """:class:`.TextSystemEvent` Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return self
 
     @property
@@ -563,7 +574,14 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> UserAddedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserAddedSystemEvent:
+        """:class:`.UserAddedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserAddedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -683,7 +701,14 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> UserRemovedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserRemovedSystemEvent:
+        """:class:`.UserRemovedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserRemovedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -784,7 +809,14 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserJoinedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserJoinedSystemEvent:
+        """:class:`.UserJoinedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserJoinedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -853,7 +885,14 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserLeftSystemEvent:
+    def attach_state(self, message: Message, /) -> UserLeftSystemEvent:
+        """:class:`.UserLeftSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserLeftSystemEvent(
             message=message,
             internal_user=self._user,
@@ -922,7 +961,14 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message, /) -> UserKickedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserKickedSystemEvent:
+        """:class:`.UserKickedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserKickedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -991,7 +1037,14 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message, /) -> UserBannedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserBannedSystemEvent:
+        """:class:`.UserBannedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserBannedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -1068,7 +1121,14 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message, /) -> ChannelRenamedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelRenamedSystemEvent:
+        """:class:`.ChannelRenamedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelRenamedSystemEvent(
             message=message,
             name=self.name,
@@ -1135,7 +1195,14 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message) -> ChannelDescriptionChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelDescriptionChangedSystemEvent:
+        """:class:`.ChannelDescriptionChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelDescriptionChangedSystemEvent(
             message=message,
             internal_by=self._by,
@@ -1197,7 +1264,14 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message) -> ChannelIconChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelIconChangedSystemEvent:
+        """:class:`.ChannelIconChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelIconChangedSystemEvent(
             message=message,
             internal_by=self._by,
@@ -1277,7 +1351,14 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
         if isinstance(self._from, User):
             return self._from
 
-    def _stateful(self, message: Message, /) -> ChannelOwnershipChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelOwnershipChangedSystemEvent:
+        """:class:`.ChannelOwnershipChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelOwnershipChangedSystemEvent(
             message=message,
             internal_from=self._from,
@@ -1371,7 +1452,14 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message, /) -> MessagePinnedSystemEvent:
+    def attach_state(self, message: Message, /) -> MessagePinnedSystemEvent:
+        """:class:`.MessagePinnedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return MessagePinnedSystemEvent(
             message=message,
             pinned_message_id=self.pinned_message_id,
@@ -1449,7 +1537,14 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message, /) -> MessageUnpinnedSystemEvent:
+    def attach_state(self, message: Message, /) -> MessageUnpinnedSystemEvent:
+        """:class:`.MessageUnpinnedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return MessageUnpinnedSystemEvent(
             message=message,
             unpinned_message_id=self.unpinned_message_id,
@@ -1702,7 +1797,7 @@ class Message(BaseMessage):
     @property
     def attachments(self) -> list[Asset]:
         """List[:class:`.Asset`]: The attachments on this message."""
-        return [a._stateful(self.state, 'attachments') for a in self.internal_attachments]
+        return [a.attach_state(self.state, 'attachments') for a in self.internal_attachments]
 
     @property
     def author(self) -> User | Member:
@@ -1722,7 +1817,7 @@ class Message(BaseMessage):
     @property
     def embeds(self) -> list[Embed]:
         """List[:class:`.Embed`]: The attached embeds to this message."""
-        return [e._stateful(self.state) for e in self.internal_embeds]
+        return [e.attach_state(self.state) for e in self.internal_embeds]
 
     @property
     def flags(self) -> MessageFlags:
@@ -1745,7 +1840,7 @@ class Message(BaseMessage):
     def system_event(self) -> SystemEvent | None:
         """Optional[:class:`.SystemEvent`]: The system event information, occured in this message, if any."""
         if self.internal_system_event:
-            return self.internal_system_event._stateful(self)
+            return self.internal_system_event.attach_state(self)
 
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message is silent."""

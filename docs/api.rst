@@ -89,6 +89,14 @@ Shard
 .. autoclass:: Shard
     :members:
 
+EventHandler
+~~~~~~~~~~~~
+
+.. attributetable:: EventHandler
+
+.. autoclass:: EventHandler
+    :members:
+
 State
 ~~~~~
 
@@ -105,13 +113,49 @@ CDNClient
 .. autoclass:: CDNClient
     :members:
 
+Tag
+~~~
+
 .. class:: Tag
     
     An alias to :class:`typing.Literal` with available CDN tags.
 
+Resource
+~~~~~~~~
+
+.. attributetable:: Resource
+
 .. autoclass:: Resource
+    :members:
+    :inherited-members:
+
+Upload
+~~~~~~
+
+.. attributetable:: Upload
 
 .. autoclass:: Upload
+    :members:
+    :inherited-members:
+
+Content
+~~~~~~~
+
+.. class:: Content
+
+    A union of types that can be resolved into content.
+
+    The following classes are included in this union:
+
+    - :class:`bytes`
+    - :class:`str`, as asset ID
+    - :class:`bytearray`
+    - :class:`io.IOBase`
+
+.. autofunction:: resolve_content
+
+ResolvableResource
+~~~~~~~~~~~~~~~~~~
 
 .. class:: ResolvableResource
 
@@ -122,10 +166,8 @@ CDNClient
     - :class:`.Resource`
     - :class:`str`
     - :class:`bytes`
-    - Tuple[:class:`str`, :class:`Content`]
+    - Tuple[:class:`str`, :class:`.Content`]
 
-.. autofunction:: resolve_content
-    
 .. autofunction:: resolve_resource
 
 Cache
@@ -359,8 +401,8 @@ Events
     
     The following classes are included in this union:
 
-    - :class:`PrivateChannelCreateEvent`
-    - :class:`ServerChannelCreateEvent`
+    - :class:`.PrivateChannelCreateEvent`
+    - :class:`.ServerChannelCreateEvent`
 
 .. attributetable:: ChannelUpdateEvent
 
@@ -1619,28 +1661,28 @@ Channel
     
     The following classes are included in this union:
 
-    - :class:`SavedMessagesChannel`
-    - :class:`DMChannel`
-    - :class:`GroupChannel`
+    - :class:`.SavedMessagesChannel`
+    - :class:`.DMChannel`
+    - :class:`.GroupChannel`
     
 .. class:: ServerChannel
     A union of all channels that belong to a server.
     
     The following classes are included in this union:
 
-    - :class:`TextChannel`
-    - :class:`VoiceChannel`
+    - :class:`.TextChannel`
+    - :class:`.VoiceChannel`
 
 .. class:: TextableChannel
     A union of all channels that can have messages in them.
     
     The following classes are included in this union:
     
-    - :class:`SavedMessagesChannel`
-    - :class:`DMChannel`
-    - :class:`GroupChannel`
-    - :class:`TextChannel`
-    - :class:`VoiceChannel`
+    - :class:`.SavedMessagesChannel`
+    - :class:`.DMChannel`
+    - :class:`.GroupChannel`
+    - :class:`.TextChannel`
+    - :class:`.VoiceChannel`
 
 .. class:: Channel
     A union of all channels.
@@ -1649,16 +1691,165 @@ Channel
 
     The following classes are included in this union:
     
-    - :class:`SavedMessagesChannel`
-    - :class:`DMChannel`
-    - :class:`GroupChannel`
-    - :class:`TextChannel`
-    - :class:`VoiceChannel`
+    - :class:`.SavedMessagesChannel`
+    - :class:`.DMChannel`
+    - :class:`.GroupChannel`
+    - :class:`.TextChannel`
+    - :class:`.VoiceChannel`
 
 .. attributetable:: ChannelVoiceStateContainer
 
 .. autoclass:: ChannelVoiceStateContainer
     :members:
+
+Embed
+~~~~~
+
+.. attributetable:: BaseEmbed
+
+.. autoclass:: BaseEmbed
+    :members:
+
+.. attributetable:: BaseEmbedSpecial
+
+.. autoclass:: BaseEmbedSpecial
+    :members:
+
+.. attributetable:: NoneEmbedSpecial
+
+.. autoclass:: NoneEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: GifEmbedSpecial
+
+.. autoclass:: GifEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: YouTubeEmbedSpecial
+
+.. autoclass:: YouTubeEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: LightspeedEmbedSpecial
+
+.. autoclass:: LightspeedEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: TwitchEmbedSpecial
+
+.. autoclass:: TwitchEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: SpotifyEmbedSpecial
+
+.. autoclass:: SpotifyEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: SoundcloudEmbedSpecial
+
+.. autoclass:: SoundcloudEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: BandcampEmbedSpecial
+
+.. autoclass:: BandcampEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: AppleMusicEmbedSpecial
+
+.. autoclass:: AppleMusicEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: StreamableEmbedSpecial
+
+.. autoclass:: StreamableEmbedSpecial
+    :members:
+    :inherited-members:
+
+.. attributetable:: ImageEmbed
+
+.. autoclass:: ImageEmbed
+    :members:
+    :inherited-members:
+
+.. attributetable:: VideoEmbed
+
+.. autoclass:: VideoEmbed
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebsiteEmbed
+
+.. autoclass:: WebsiteEmbed
+    :members:
+    :inherited-members:
+
+.. attributetable:: StatelessTextEmbed
+
+.. autoclass:: StatelessTextEmbed
+    :members:
+    :inherited-members:
+
+.. attributetable:: TextEmbed
+
+.. autoclass:: TextEmbed
+    :members:
+    :inherited-members:
+
+.. attributetable:: NoneEmbed
+
+.. autoclass:: NoneEmbed
+    :members:
+    :inherited-members:
+
+.. class:: EmbedSpecial
+
+    A union of all embed special types.
+
+    The following classes are included in this union:
+    
+    - :class:`.GifEmbedSpecial`
+    - :class:`.YouTubeEmbedSpecial`
+    - :class:`.LightspeedEmbedSpecial`
+    - :class:`.TwitchEmbedSpecial`
+    - :class:`.SpotifyEmbedSpecial`
+    - :class:`.SoundcloudEmbedSpecial`
+    - :class:`.BandcampEmbedSpecial`
+    - :class:`.AppleMusicEmbedSpecial`
+    - :class:`.StreamableEmbedSpecial`
+
+.. class:: StatelessEmbed
+
+    A union of all stateless embed types.
+
+    The following classes are included in this union:
+    
+    - :class:`.WebsiteEmbed`
+    - :class:`.ImageEmbed`
+    - :class:`.VideoEmbed`
+    - :class:`.StatelessTextEmbed`
+    - :class:`.NoneEmbed`
+
+.. class:: Embed
+
+    A union of all embed types.
+
+    The following classes are included in this union:
+    
+    - :class:`.WebsiteEmbed`
+    - :class:`.ImageEmbed`
+    - :class:`.VideoEmbed`
+    - :class:`.TextEmbed`
+    - :class:`.NoneEmbed`
 
 Emoji
 ~~~~~
@@ -1686,8 +1877,8 @@ Emoji
 
     The following classes are included in this union:
     
-    - :class:`ServerEmoji`
-    - :class:`DetachedEmoji`
+    - :class:`.ServerEmoji`
+    - :class:`.DetachedEmoji`
 
 .. class:: ResolvableEmoji
     A union of either :class:`.BaseEmoji` or :class:`str`.

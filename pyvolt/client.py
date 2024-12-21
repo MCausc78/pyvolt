@@ -878,6 +878,33 @@ class Client:
     def dispatch(self, event: BaseEvent, /) -> asyncio.Task[None]:
         """Dispatches a event.
 
+        Examples
+        ---------
+
+        Dispatch a event when someone sends silent message: ::
+
+            from attrs import define, field
+            import pyvolt
+
+            # ...
+
+
+            @define(slots=True)
+            class SilentMessageEvent(pyvolt.BaseEvent):
+                message: pyvolt.Message = field(repr=True, kw_only=True)
+
+
+            @client.on(pyvolt.MessageCreateEvent)
+            async def on_message_create(event):
+                message = event.message
+                if message.flags.suppress_notifications:
+                    event = SilentMessageEvent(message=message)
+
+                    # Block until event gets fully handled (run hooks, calling event handlers, cache received data).
+                    await client.dispatch(event)
+
+                    # Note, that `dispatch` returns `asyncio.Task`, as such you may just do `client.dispatch(event)`.
+
         Parameters
         ----------
         event: :class:`.BaseEvent`
@@ -1246,7 +1273,7 @@ class Client:
 
         Returns
         -------
-        :class:`Channel`
+        :class:`.Channel`
             The retrieved channel.
         """
         return await self.http.get_channel(channel_id)
@@ -1261,7 +1288,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`Emoji`]
+        Optional[:class:`.Emoji`]
             The emoji or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1295,7 +1322,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`ReadState`]
+        Optional[:class:`.ReadState`]
             The read state or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1312,7 +1339,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`Server`]
+        Optional[:class:`.Server`]
             The server or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1322,7 +1349,7 @@ class Client:
     async def fetch_server(self, server_id: str, /) -> Server:
         """|coro|
 
-        Retrieves a server from API. This is shortcut to :meth:`HTTPClient.get_server`.
+        Retrieves a server from API. This is shortcut to :meth:`.HTTPClient.get_server`.
 
         Parameters
         ----------
@@ -1331,7 +1358,7 @@ class Client:
 
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The server.
         """
         return await self.http.get_server(server_id)
@@ -1346,7 +1373,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`User`]
+        Optional[:class:`.User`]
             The user or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1372,12 +1399,12 @@ class Client:
 
     @property
     def settings(self) -> UserSettings:
-        """:class:`UserSettings`: The current user settings."""
+        """:class:`.UserSettings`: The current user settings."""
         return self._state.settings
 
     @property
     def system(self) -> User:
-        """:class:`User`: The Revolt sentinel user."""
+        """:class:`.User`: The Revolt sentinel user."""
         return self._state.system
 
     async def start(self) -> None:

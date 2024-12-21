@@ -2361,7 +2361,7 @@ class Parser:
 
         return StatelessUserProfile(
             content=payload.get('content'),
-            internal_background=self.parse_asset(background) if background else None,
+            internal_background=None if background is None else self.parse_asset(background),
         )
 
     def parse_user_relationship_event(

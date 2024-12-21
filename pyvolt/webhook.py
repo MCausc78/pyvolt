@@ -177,7 +177,7 @@ class PartialWebhook(BaseWebhook):
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The new avatar of the webhook."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
@@ -229,7 +229,7 @@ class Webhook(BaseWebhook):
     @property
     def avatar(self) -> Asset | None:
         """Optional[:class:`.Asset`]: The webhook's avatar."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def permissions(self) -> Permissions:

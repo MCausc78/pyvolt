@@ -197,51 +197,85 @@ class HTTPException(PyvoltError):
 
 
 class Unauthorized(HTTPException):
+    """HTTP exception that corresponds to HTTP 401 status code."""
+
     __slots__ = ()
 
 
 class Forbidden(HTTPException):
+    """HTTP exception that corresponds to HTTP 403 status code."""
+
     __slots__ = ()
 
 
 class NotFound(HTTPException):
+    """HTTP exception that corresponds to HTTP 404 status code."""
+
     __slots__ = ()
 
 
 class Conflict(HTTPException):
+    """HTTP exception that corresponds to HTTP 409 status code."""
+
     __slots__ = ()
 
 
 class Ratelimited(HTTPException):
+    """HTTP exception that corresponds to HTTP 429 status code."""
+
     __slots__ = ()
 
 
 class InternalServerError(HTTPException):
+    """HTTP exception that corresponds to HTTP 5xx status code."""
+
     __slots__ = ()
 
 
 class BadGateway(HTTPException):
+    """HTTP exception that corresponds to HTTP 502 status code."""
+
     __slots__ = ()
 
 
 class ShardError(PyvoltError):
+    """Exception that's raised when WebSocket"""
+
     __slots__ = ()
 
 
 class AuthenticationError(ShardError):
+    """Exception that's raised when WebSocket
+    authentication fails.
+
+    Attributes
+    ----------
+    payload: Optional[Dict[:class:`str`, Any]]
+        The WebSocket payload.
+    """
+
     __slots__ = ()
 
-    def __init__(self, a: typing.Any, /) -> None:
-        self.message: typing.Any = a
-        super().__init__('Failed to connect shard', a)
+    def __init__(self, payload: dict[str, typing.Any], /) -> None:
+        self.payload: dict[str, typing.Any] = payload
+        super().__init__(f'Failed to connect shard: {payload}')
 
 
 class ConnectError(ShardError):
+    """Exception that's raised when the library fails
+    to connect to Revolt WebSocket.
+
+    Attributes
+    ----------
+    errors: List[:exc:`Exception`]
+        The errors.
+    """
+
     __slots__ = ('errors',)
 
     def __init__(self, tries: int, errors: list[Exception], /) -> None:
-        self.errors = errors
-        super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
+        self.errors: list[Exception] = errors
+        super().__init__(f'Giving up, after {tries} tries, last 3 errors: {errors[-3:]}')
 
 
 class DiscoverError(PyvoltError):
@@ -273,6 +307,12 @@ class InvalidData(PyvoltError):
 
 
 class NoData(PyvoltError):
+    """Exception that's raised when the library did not found
+    data requested from cache.
+
+    This is different from :exc:`.NotFound`.
+    """
+
     __slots__ = ('what', 'type')
 
     def __init__(self, what: str, type: str) -> None:

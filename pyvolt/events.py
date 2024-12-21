@@ -94,23 +94,45 @@ class BaseEvent:
         return True
 
     def cancel(self) -> bool:
-        """Cancels the event processing (updating cache)."""
+        """Cancels the event processing (updating cache).
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the event was not canceled before.
+        """
         return self.set_canceled(True)
 
-    def uncancel(self, value: bool, /) -> bool:
-        """Uncancels the event processing (updating cache)."""
+    def uncancel(self) -> bool:
+        """Uncancels the event processing (updating cache).
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the event was not canceled before.
+        """
         return self.set_canceled(False)
 
     async def abefore_dispatch(self) -> None:
+        """|coro|
+
+        Asynchronous version of :meth:`.before_dispatch`.
+        """
         pass
 
     def before_dispatch(self) -> None:
+        """Called before handlers are invoked."""
         pass
 
     async def aprocess(self) -> typing.Any:
+        """|coro|
+
+        Asynchronous version of :meth:`.process`.
+        """
         pass
 
     def process(self) -> typing.Any:
+        """Any: Called when handlers got invoked and temporary subscriptions were handled and removed."""
         pass
 
 
