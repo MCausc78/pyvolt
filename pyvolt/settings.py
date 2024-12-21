@@ -57,14 +57,14 @@ class UserSettings:
 
     Attributes
     ----------
-    state: :class:`State`
+    state: :class:`.State`
         The state that manages current user settings.
     data: Dict[:class:`str`, Tuple[:class:`int`, :class:`str`]]
         The mapping of ``{key: (timestamp, value)}``.
     mocked: :class:`bool`
         Whether user settings are mocked. Mocked user settings are created by library itself, if not logged in, or in HTTP-only mode.
     partial: :class:`bool`
-        Whether user settings are partial. This is set to ``True`` when used via :attr:`UserSettingsUpdateEvent.partial`.
+        Whether user settings are partial. This is set to ``True`` when used via :attr:`.UserSettingsUpdateEvent.partial`.
     """
 
     __slots__ = (
@@ -131,7 +131,7 @@ class UserSettings:
 
         Parameters
         ----------
-        partial: :class:`UserSettings`
+        partial: :class:`.UserSettings`
             The data to update settings with.
         """
         self.data.update(partial.data)
@@ -139,7 +139,7 @@ class UserSettings:
 
     @property
     def android(self) -> AndroidUserSettings:
-        """:class:`AndroidUserSettings`: The Android user settings.
+        """:class:`.AndroidUserSettings`: The Android user settings.
 
         Raises
         ------
@@ -152,7 +152,7 @@ class UserSettings:
 
     @property
     def revite(self) -> ReviteUserSettings:
-        """:class:`ReviteUserSettings`: The Revite user settings.
+        """:class:`.ReviteUserSettings`: The Revite user settings.
 
         Raises
         ------
@@ -165,7 +165,7 @@ class UserSettings:
 
     @property
     def jolt(self) -> JoltUserSettings:
-        """:class:`JoltUserSettings`: The Jolt user settings.
+        """:class:`.JoltUserSettings`: The Jolt user settings.
 
         Raises
         ------
@@ -207,7 +207,7 @@ class AndroidUserSettings:
 
     Attributes
     ----------
-    parent: :class:`UserSettings`
+    parent: :class:`.UserSettings`
         The parent.
     """
 
@@ -267,7 +267,7 @@ class AndroidUserSettings:
 
     @property
     def theme(self) -> AndroidTheme:
-        """:class:`AndroidTheme`: The current theme."""
+        """:class:`.AndroidTheme`: The current theme."""
         return self._theme or AndroidTheme.system
 
     @property
@@ -277,7 +277,7 @@ class AndroidUserSettings:
 
     @property
     def reply_style(self) -> AndroidMessageReplyStyle:
-        """:class:`AndroidMessageReplyStyle`: The current theme."""
+        """:class:`.AndroidMessageReplyStyle`: The current theme."""
         return self._reply_style or AndroidMessageReplyStyle.swipe_to_reply
 
     @property
@@ -329,13 +329,13 @@ class AndroidUserSettings:
         ----------
         initial_payload: UndefinedOr[raw.AndroidUserSettings]
             The initial payload.
-        theme: UndefinedOr[Optional[:class:`AndroidTheme`]]
+        theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
             The new theme.  Could be ``None`` to remove it from internal object.
         color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
-        reply_style: UndefinedOr[Optional[:class:`AndroidMessageReplyStyle`]]
+        reply_style: UndefinedOr[Optional[:class:`.AndroidMessageReplyStyle`]]
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
-        avatar_radius: UndefinedOr[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
+        avatar_radius: UndefinedOr[Optional[Union[:class:`.AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         initial_special_embed_settings_payload: UndefinedOr[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
             The initial payload. Could be ``None`` to remove it from internal object.
@@ -427,13 +427,13 @@ class AndroidUserSettings:
         ----------
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
             External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
-        theme: UndefinedOr[Optional[:class:`AndroidTheme`]]
+        theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
             The new theme.  Could be ``None`` to remove it from internal object.
         color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
-        reply_style: UndefinedOr[Optional[:class:`AndroidMessageReplyStyle`]]
+        reply_style: UndefinedOr[Optional[:class:`.AndroidMessageReplyStyle`]]
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
-        avatar_radius: UndefinedOr[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
+        avatar_radius: UndefinedOr[Optional[Union[:class:`.AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
         initial_special_embed_settings_payload: UndefinedOr[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
             The initial payload. Could be ``None`` to remove it from internal object.
@@ -462,9 +462,9 @@ class ReviteNotificationOptions:
 
     Attributes
     ----------
-    servers: Dict[:class:`str`, :class:`ReviteNotificationState`]
+    servers: Dict[:class:`str`, :class:`.ReviteNotificationState`]
         The servers.
-    channels: Dict[:class:`str`, :class:`ReviteNotificationState`]
+    channels: Dict[:class:`str`, :class:`.ReviteNotificationState`]
         The channels.
     """
 
