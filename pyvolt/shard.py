@@ -34,7 +34,7 @@ import typing
 from . import utils
 from .core import ULIDOr, resolve_id, __version__ as version
 from .enums import ShardFormat
-from .errors import PyvoltError, ShardError, AuthenticationError, ConnectError
+from .errors import PyvoltError, ShardClosedError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
@@ -219,7 +219,7 @@ class Shard:
         """
         if self._socket:
             if self._closed:
-                raise ShardError('Already closed')
+                raise ShardClosedError('Already closed')
             self._closed = True
             await self._socket.close(code=1000)
 

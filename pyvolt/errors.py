@@ -239,7 +239,17 @@ class BadGateway(HTTPException):
 
 
 class ShardError(PyvoltError):
-    """Exception that's raised when WebSocket"""
+    """Exception that's raised when any shard-related
+    error happens.
+    """
+
+    __slots__ = ()
+
+
+class ShardClosedError(ShardError):
+    """Exception that's raised when shard
+    was already closed.
+    """
 
     __slots__ = ()
 
@@ -332,6 +342,7 @@ __all__ = (
     'InternalServerError',
     'BadGateway',
     'ShardError',
+    'ShardClosedError',
     'AuthenticationError',
     'ConnectError',
     'DiscoverError',
