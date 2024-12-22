@@ -164,6 +164,7 @@ cython_debug/
 /local
 /local*.py
 /local*.json
+/local*.txt
 
 # ruff
 .ruff_cache/

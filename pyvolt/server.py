@@ -1130,7 +1130,7 @@ class Server(BaseServer):
             return channels  # type: ignore
         return []
 
-    def upsert_role(self, data: PartialRole | Role, /) -> None:
+    def upsert_role(self, role: PartialRole | Role, /) -> None:
         """Locally upserts role into :attr:`Server.roles` mapping.
 
         .. warning::
@@ -1139,13 +1139,13 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        data: Union[:class:`.PartialRole`, :class:`.Role`]
+        role: Union[:class:`.PartialRole`, :class:`.Role`]
             The role to upsert.
         """
-        if isinstance(data, PartialRole):
-            self.roles[data.id].locally_update(data)
+        if isinstance(role, PartialRole):
+            self.roles[role.id].locally_update(role)
         else:
-            self.roles[data.id] = data
+            self.roles[role.id] = role
 
 
 @define(slots=True)

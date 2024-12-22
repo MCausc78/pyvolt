@@ -28,7 +28,7 @@ from copy import copy
 from datetime import datetime
 import typing
 
-from attrs import define, field
+from attrs import Factory, define, field
 
 from . import cache as caching, utils
 from .channel import (
@@ -205,29 +205,38 @@ class ReadyEvent(ShardEvent):
         if not cache:
             return False
 
+        ctx = (
+            caching.ReadyEventCacheContext(
+                type=caching.CacheContextType.ready_event,
+                event=self,
+            )
+            if 'ReadyEvent' in state.provide_cache_context_in
+            else caching._READY_EVENT
+        )
+
         for u in self.users:
-            cache.store_user(u, caching._READY)
+            cache.store_user(u, ctx)
 
         for s in self.servers:
-            cache.store_server(s, caching._READY)
+            cache.store_server(s, ctx)
 
         for channel in self.channels:
-            cache.store_channel(channel, caching._READY)
+            cache.store_channel(channel, ctx)
             if channel.__class__ is DMChannel or isinstance(channel, DMChannel):
-                cache.store_private_channel_by_user(channel, caching._READY)  # type: ignore
+                cache.store_private_channel_by_user(channel, ctx)  # type: ignore
             elif channel.__class__ is SavedMessagesChannel or isinstance(channel, SavedMessagesChannel):
                 state._saved_notes = channel  # type: ignore
 
         for m in self.members:
-            cache.store_server_member(m, caching._READY)
+            cache.store_server_member(m, ctx)
 
         for e in self.emojis:
-            cache.store_emoji(e, caching._READY)
+            cache.store_emoji(e, ctx)
 
         for rs in self.read_states:
-            cache.store_read_state(rs, caching._READY)
+            cache.store_read_state(rs, ctx)
 
-        cache.bulk_store_channel_voice_states({vs.channel_id: vs for vs in self.voice_states}, caching._READY)
+        cache.bulk_store_channel_voice_states({vs.channel_id: vs for vs in self.voice_states}, ctx)
 
         return True
 
@@ -249,15 +258,26 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
     """:class:`.PrivateChannel`: The joined DM or group channel."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
 
+        ctx = (
+            caching.PrivateChannelCreateEventCacheContext(
+                type=caching.CacheContextType.private_channel_create_event,
+                event=self,
+            )
+            if 'PrivateChannelCreate' in state.provide_cache_context_in
+            else caching._PRIVATE_CHANNEL_CREATE_EVENT
+        )
+
         channel = self.channel
-        cache.store_channel(channel, caching._CHANNEL_CREATE)
+        cache.store_channel(channel, ctx)
 
         if isinstance(channel, DMChannel):
-            cache.store_private_channel_by_user(channel, caching._CHANNEL_CREATE)
+            cache.store_private_channel_by_user(channel, ctx)
 
         return True
 
@@ -272,11 +292,22 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
     """:class:`.ServerChannel`: The created server channel."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
 
-        cache.store_channel(self.channel, caching._CHANNEL_CREATE)
+        ctx = (
+            caching.ServerChannelCreateEventCacheContext(
+                type=caching.CacheContextType.server_channel_create_event,
+                event=self,
+            )
+            if 'ServerChannelCreate' in state.provide_cache_context_in
+            else caching._SERVER_CHANNEL_CREATE_EVENT
+        )
+
+        cache.store_channel(self.channel, ctx)
         return True
 
 
@@ -298,11 +329,28 @@ class ChannelUpdateEvent(ShardEvent):
     after: Channel | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The channel as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ChannelUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ChannelUpdateEventCacheContext(
+                type=caching.CacheContextType.channel_update_event,
+                event=self,
+            )
+            if 'ChannelUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._CHANNEL_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContextType`, :class:`.ChannelUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        before = cache.get_channel(self.channel.id, caching._CHANNEL_UPDATE)
+        before = cache.get_channel(self.channel.id, self.cache_context)
         self.before = before
         if not before:
             return
@@ -315,7 +363,7 @@ class ChannelUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache or not self.after:
             return False
-        cache.store_channel(self.after, caching._CHANNEL_UPDATE)
+        cache.store_channel(self.after, self.cache_context)
         return True
 
 
@@ -331,31 +379,48 @@ class ChannelDeleteEvent(ShardEvent):
     channel: Channel | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The deleted channel object, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ChannelDeleteEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ChannelDeleteEventCacheContext(
+                type=caching.CacheContextType.channel_delete_event,
+                event=self,
+            )
+            if 'ChannelDeleteEvent' in self.shard.state.provide_cache_context_in
+            else caching._CHANNEL_DELETE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ChannelDeleteEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        self.channel = cache.get_channel(self.channel_id, caching._CHANNEL_DELETE)
+        self.channel = cache.get_channel(self.channel_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
         if not cache:
             return False
 
-        cache.delete_channel(self.channel_id, caching._CHANNEL_DELETE)
+        cache.delete_channel(self.channel_id, self.cache_context)
         # TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
         if isinstance(self.channel, BaseServerChannel):
-            server = cache.get_server(self.channel.server_id, caching._CHANNEL_DELETE)
+            server = cache.get_server(self.channel.server_id, self.cache_context)
             if server:
                 try:
                     server.internal_channels[1].remove(self.channel.id)  # type: ignore # cached servers have only channel IDs internally
                 except ValueError:
                     pass
                 else:
-                    cache.store_server(server, caching._CHANNEL_DELETE)
+                    cache.store_server(server, self.cache_context)
         elif isinstance(self.channel, DMChannel):
-            cache.delete_private_channel_by_user(self.channel.recipient_id, caching._CHANNEL_DELETE)
-        cache.delete_messages_of(self.channel_id, caching._CHANNEL_DELETE)
+            cache.delete_private_channel_by_user(self.channel.recipient_id, self.cache_context)
+        cache.delete_messages_of(self.channel_id, self.cache_context)
         return True
 
 
@@ -374,11 +439,28 @@ class GroupRecipientAddEvent(ShardEvent):
     group: GroupChannel | None = field(repr=True, kw_only=True)
     """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had no recipient), if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.GroupRecipientAddEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.GroupRecipientAddEventCacheContext(
+                type=caching.CacheContextType.group_recipient_add_event,
+                event=self,
+            )
+            if 'GroupRecipientAddEvent' in self.shard.state.provide_cache_context_in
+            else caching._GROUP_RECIPIENT_ADD_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.GroupRecipientAddEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        group = cache.get_channel(self.channel_id, caching._GROUP_RECIPIENT_ADD)
+        group = cache.get_channel(self.channel_id, self.cache_context)
         if not isinstance(group, GroupChannel):
             return
         self.group = group
@@ -392,7 +474,7 @@ class GroupRecipientAddEvent(ShardEvent):
             return False
 
         self.group._join(self.user_id)
-        cache.store_channel(self.group, caching._GROUP_RECIPIENT_ADD)
+        cache.store_channel(self.group, self.cache_context)
 
         return True
 
@@ -412,11 +494,28 @@ class GroupRecipientRemoveEvent(ShardEvent):
     group: GroupChannel | None = field(repr=True, kw_only=True)
     """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.GroupRecipientRemoveEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.GroupRecipientRemoveEventCacheContext(
+                type=caching.CacheContextType.group_recipient_remove_event,
+                event=self,
+            )
+            if 'GroupRecipientRemoveEvent' in self.shard.state.provide_cache_context_in
+            else caching._GROUP_RECIPIENT_REMOVE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.GroupRecipientRemoveEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        group = cache.get_channel(self.channel_id, caching._GROUP_RECIPIENT_REMOVE)
+        group = cache.get_channel(self.channel_id, self.cache_context)
         if not isinstance(group, GroupChannel):
             return
         self.group = group
@@ -430,7 +529,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
             return False
 
         self.group._leave(self.user_id)
-        cache.store_channel(self.group, caching._GROUP_RECIPIENT_REMOVE)
+        cache.store_channel(self.group, self.cache_context)
 
         return True
 
@@ -477,11 +576,22 @@ class MessageAckEvent(ShardEvent):
     """:class:`str`: The connected user's ID."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
 
-        read_state = cache.get_read_state(self.channel_id, caching._MESSAGE_ACK)
+        ctx = (
+            caching.MessageAckEventCacheContext(
+                type=caching.CacheContextType.message_ack_event,
+                event=self,
+            )
+            if 'MessageAck' in state.provide_cache_context_in
+            else caching._MESSAGE_ACK_EVENT
+        )
+
+        read_state = cache.get_read_state(self.channel_id, ctx)
         if read_state:
             # opposite effect cannot be done
             if read_state.last_acked_message_id and self.message_id >= read_state.last_acked_message_id:
@@ -490,7 +600,7 @@ class MessageAckEvent(ShardEvent):
                 read_state.mentioned_in = [m for m in read_state.mentioned_in if m >= acked_message_id]
 
             read_state.last_acked_message_id = self.message_id
-            cache.store_read_state(read_state, caching._MESSAGE_ACK)
+            cache.store_read_state(read_state, ctx)
 
         return True
 
@@ -505,26 +615,37 @@ class MessageCreateEvent(ShardEvent):
     """:class:`.Message`: The message sent."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
+
+        ctx = (
+            caching.MessageCreateEventCacheContext(
+                type=caching.CacheContextType.message_create_event,
+                event=self,
+            )
+            if 'MessageCreate' in state.provide_cache_context_in
+            else caching._MESSAGE_CREATE_EVENT
+        )
 
         author = self.message._author
         if isinstance(author, Member):
             if isinstance(author._user, User):
-                cache.store_user(author._user, caching._MESSAGE_CREATE)
-            cache.store_server_member(author, caching._MESSAGE_CREATE)
+                cache.store_user(author._user, ctx)
+            cache.store_server_member(author, ctx)
         elif isinstance(author, User):
-            cache.store_user(author, caching._MESSAGE_CREATE)
+            cache.store_user(author, ctx)
 
-        channel = cache.get_channel(self.message.channel_id, caching._MESSAGE_CREATE)
+        channel = cache.get_channel(self.message.channel_id, ctx)
         if channel and isinstance(
             channel,
             (DMChannel, GroupChannel, TextChannel),
         ):
             channel.last_message_id = self.message.id
 
-        read_state = cache.get_read_state(self.message.channel_id, caching._MESSAGE_CREATE)
+        read_state = cache.get_read_state(self.message.channel_id, ctx)
         if read_state:
             flags = self.message.flags
 
@@ -534,22 +655,22 @@ class MessageCreateEvent(ShardEvent):
             role_mention_ids = self.message.role_mention_ids
             if not mentioned and role_mention_ids and isinstance(channel, BaseServerChannel):
                 server_id = channel.server_id
-                me = cache.get_server_member(server_id, read_state.user_id, caching._MESSAGE_CREATE)
+                me = cache.get_server_member(server_id, read_state.user_id, ctx)
                 if me is not None:
                     mentioned = any(role_id in role_mention_ids for role_id in me.roles)
 
             if mentioned and self.message.id not in read_state.mentioned_in:
                 read_state.mentioned_in.append(self.message.id)
-                cache.store_read_state(read_state, caching._MESSAGE_CREATE)
+                cache.store_read_state(read_state, ctx)
 
-        channel = cache.get_channel(self.message.channel_id, caching._MESSAGE_CREATE)
+        channel = cache.get_channel(self.message.channel_id, ctx)
         if channel and isinstance(
             channel,
             (DMChannel, GroupChannel, TextChannel),
         ):
             channel.last_message_id = self.message.id
 
-        cache.store_message(self.message, caching._MESSAGE_CREATE)
+        cache.store_message(self.message, ctx)
 
         return True
 
@@ -573,12 +694,29 @@ class MessageUpdateEvent(ShardEvent):
     after: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageUpdateEventCacheContext(
+                type=caching.CacheContextType.message_update_event,
+                event=self,
+            )
+            if 'MessageUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        before = cache.get_message(self.message.channel_id, self.message.id, caching._MESSAGE_UPDATE)
+        before = cache.get_message(self.message.channel_id, self.message.id, self.cache_context)
         if not before:
             return
         self.before = before
@@ -591,7 +729,7 @@ class MessageUpdateEvent(ShardEvent):
 
         if not cache or not self.after:
             return False
-        cache.store_message(self.after, caching._MESSAGE_UPDATE)
+        cache.store_message(self.after, self.cache_context)
         return True
 
 
@@ -607,12 +745,29 @@ class MessageAppendEvent(ShardEvent):
     message: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageAppendEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageAppendEventCacheContext(
+                type=caching.CacheContextType.message_append_event,
+                event=self,
+            )
+            if 'MessageAppendEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_APPEND_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageAppendEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        self.message = cache.get_message(self.data.channel_id, self.data.id, caching._MESSAGE_APPEND)
+        self.message = cache.get_message(self.data.channel_id, self.data.id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -621,7 +776,7 @@ class MessageAppendEvent(ShardEvent):
             return False
 
         self.message.locally_append(self.data)
-        cache.store_message(self.message, caching._MESSAGE_APPEND)
+        cache.store_message(self.message, self.cache_context)
         return True
 
 
@@ -640,19 +795,36 @@ class MessageDeleteEvent(ShardEvent):
     message: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The deleted message object, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageDeleteEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageDeleteEventCacheContext(
+                type=caching.CacheContextType.message_delete_event,
+                event=self,
+            )
+            if 'MessageDeleteEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_DELETE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageDeleteEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_DELETE)
+        self.message = cache.get_message(self.channel_id, self.message_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
 
         if not cache:
             return False
-        cache.delete_message(self.channel_id, self.message_id, caching._MESSAGE_DELETE)
+        cache.delete_message(self.channel_id, self.message_id, self.cache_context)
         return True
 
 
@@ -677,12 +849,29 @@ class MessageReactEvent(ShardEvent):
     message: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageReactEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageReactEventCacheContext(
+                type=caching.CacheContextType.message_react_event,
+                event=self,
+            )
+            if 'MessageReactEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_REACT_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        # init=False,
+        # eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageReactEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_REACT)
+        self.message = cache.get_message(self.channel_id, self.message_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -690,7 +879,7 @@ class MessageReactEvent(ShardEvent):
         if not cache or not self.message:
             return False
         self.message.locally_react(self.user_id, self.emoji)
-        cache.store_message(self.message, caching._MESSAGE_REACT)
+        cache.store_message(self.message, self.cache_context)
         return True
 
 
@@ -715,12 +904,29 @@ class MessageUnreactEvent(ShardEvent):
     message: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageUnreactEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageUnreactEventCacheContext(
+                type=caching.CacheContextType.message_unreact_event,
+                event=self,
+            )
+            if 'MessageUnreactEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_UNREACT_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageUnreactEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_UNREACT)
+        self.message = cache.get_message(self.channel_id, self.message_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -728,7 +934,7 @@ class MessageUnreactEvent(ShardEvent):
         if not cache or not self.message:
             return False
         self.message.locally_unreact(self.user_id, self.emoji)
-        cache.store_message(self.message, caching._MESSAGE_UNREACT)
+        cache.store_message(self.message, self.cache_context)
         return True
 
 
@@ -750,12 +956,29 @@ class MessageClearReactionEvent(ShardEvent):
     message: Message | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageClearReactionEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageClearReactionEventCacheContext(
+                type=caching.CacheContextType.message_clear_reaction_event,
+                event=self,
+            )
+            if 'MessageClearReactionEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_CLEAR_REACTION_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageClearReactionEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
-        self.message = cache.get_message(self.channel_id, self.message_id, caching._MESSAGE_CLEAR_REACTION)
+        self.message = cache.get_message(self.channel_id, self.message_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -763,7 +986,7 @@ class MessageClearReactionEvent(ShardEvent):
         if not cache or not self.message:
             return False
         self.message.locally_clear_reactions(self.emoji)
-        cache.store_message(self.message, caching._MESSAGE_CLEAR_REACTION)
+        cache.store_message(self.message, self.cache_context)
         return True
 
 
@@ -786,6 +1009,23 @@ class MessageDeleteBulkEvent(ShardEvent):
     not guaranteed to be here.
     """
 
+    cache_context: caching.UndefinedCacheContext | caching.MessageDeleteBulkEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.MessageDeleteBulkEventCacheContext(
+                type=caching.CacheContextType.message_delete_bulk_event,
+                event=self,
+            )
+            if 'MessageDeleteBulkEvent' in self.shard.state.provide_cache_context_in
+            else caching._MESSAGE_DELETE_BULK_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageDeleteBulkEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
@@ -793,7 +1033,7 @@ class MessageDeleteBulkEvent(ShardEvent):
             return
 
         for message_id in self.message_ids:
-            message = cache.get_message(self.channel_id, message_id, caching._MESSAGE_DELETE_BULK)
+            message = cache.get_message(self.channel_id, message_id, self.cache_context)
             if message:
                 self.messages.append(message)
 
@@ -804,7 +1044,7 @@ class MessageDeleteBulkEvent(ShardEvent):
             return False
 
         for message_id in self.message_ids:
-            cache.delete_message(self.channel_id, message_id, caching._MESSAGE_DELETE_BULK)
+            cache.delete_message(self.channel_id, message_id, self.cache_context)
 
         return True
 
@@ -826,14 +1066,23 @@ class ServerCreateEvent(ShardEvent):
 
     def process(self) -> bool:
         state = self.shard.state
-
         cache = state.cache
+
         if not cache:
             return False
 
+        ctx = (
+            caching.ServerCreateEventCacheContext(
+                type=caching.CacheContextType.server_create_event,
+                event=self,
+            )
+            if 'ServerCreateEvent' in state.provide_cache_context_in
+            else caching._SERVER_CREATE_EVENT
+        )
+
         for channel in self.server.prepare_cached():
-            cache.store_channel(channel, caching._SERVER_CREATE)
-        cache.store_server(self.server, caching._SERVER_CREATE)
+            cache.store_channel(channel, ctx)
+        cache.store_server(self.server, ctx)
 
         if state.me:
             cache.store_server_member(
@@ -849,11 +1098,11 @@ class ServerCreateEvent(ShardEvent):
                     can_publish=True,
                     can_receive=True,
                 ),
-                caching._SERVER_CREATE,
+                ctx,
             )
 
         for emoji in self.emojis:
-            cache.store_emoji(emoji, caching._SERVER_CREATE)
+            cache.store_emoji(emoji, ctx)
         return True
 
 
@@ -867,10 +1116,22 @@ class ServerEmojiCreateEvent(ShardEvent):
     """:class:`.ServerEmoji`: The created emoji."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
-        cache.store_emoji(self.emoji, caching._SERVER_EMOJI_CREATE)
+
+        ctx = (
+            caching.ServerEmojiCreateEventCacheContext(
+                type=caching.CacheContextType.server_emoji_create_event,
+                event=self,
+            )
+            if 'ServerEmojiCreateEvent' in state.provide_cache_context_in
+            else caching._SERVER_EMOJI_CREATE_EVENT
+        )
+
+        cache.store_emoji(self.emoji, ctx)
         return True
 
 
@@ -889,12 +1150,29 @@ class ServerEmojiDeleteEvent(ShardEvent):
     emoji: ServerEmoji | None = field(repr=True, kw_only=True)
     """Optional[:class:`.ServerEmoji`]: The deleted emoji object, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerEmojiDeleteEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerEmojiDeleteEventCacheContext(
+                type=caching.CacheContextType.server_emoji_delete_event,
+                event=self,
+            )
+            if 'ServerEmojiDeleteEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_EMOJI_DELETE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerEmojiDeleteEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
 
-        emoji = cache.get_emoji(self.emoji_id, caching._SERVER_EMOJI_DELETE)
+        emoji = cache.get_emoji(self.emoji_id, self.cache_context)
         if isinstance(emoji, ServerEmoji):
             self.emoji = emoji
             self.server_id = emoji.server_id
@@ -903,7 +1181,7 @@ class ServerEmojiDeleteEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
-        cache.delete_emoji(self.emoji_id, self.server_id, caching._SERVER_EMOJI_DELETE)
+        cache.delete_emoji(self.emoji_id, self.server_id, self.cache_context)
         return True
 
 
@@ -922,11 +1200,28 @@ class ServerUpdateEvent(ShardEvent):
     after: Server | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerUpdateEventCacheContext(
+                type=caching.CacheContextType.server_update_event,
+                event=self,
+            )
+            if 'ServerUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        before = cache.get_server(self.server.id, caching._SERVER_UPDATE)
+        before = cache.get_server(self.server.id, self.cache_context)
         self.before = before
         if not before:
             return
@@ -939,7 +1234,7 @@ class ServerUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache or not self.after:
             return False
-        cache.store_server(self.after, caching._SERVER_UPDATE)
+        cache.store_server(self.after, self.cache_context)
         return True
 
 
@@ -955,26 +1250,43 @@ class ServerDeleteEvent(ShardEvent):
     server: Server | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The deleted server object, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerDeleteEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerDeleteEventCacheContext(
+                type=caching.CacheContextType.server_delete_event,
+                event=self,
+            )
+            if 'ServerDeleteEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_DELETE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerDeleteEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        self.server = cache.get_server(self.server_id, caching._SERVER_DELETE)
+        self.server = cache.get_server(self.server_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
         if not cache:
             return False
 
-        cache.delete_server_emojis_of(self.server_id, caching._SERVER_DELETE)
-        cache.delete_server_members_of(self.server_id, caching._SERVER_DELETE)
-        cache.delete_server(self.server_id, caching._SERVER_DELETE)
+        cache.delete_server_emojis_of(self.server_id, self.cache_context)
+        cache.delete_server_members_of(self.server_id, self.cache_context)
+        cache.delete_server(self.server_id, self.cache_context)
 
         if self.server is not None:
             for channel_id in self.server.internal_channels[1]:
                 assert isinstance(channel_id, str)
-                cache.delete_read_state(channel_id, caching._SERVER_DELETE)
-                cache.delete_channel_voice_state(channel_id, caching._SERVER_DELETE)
+                cache.delete_read_state(channel_id, self.cache_context)
+                cache.delete_channel_voice_state(channel_id, self.cache_context)
 
         return True
 
@@ -989,10 +1301,22 @@ class ServerMemberJoinEvent(ShardEvent):
     """:class:`.Member`: The joined member."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
-        cache.store_server_member(self.member, caching._SERVER_MEMBER_ADD)
+
+        ctx = (
+            caching.ServerMemberJoinEventCacheContext(
+                type=caching.CacheContextType.server_member_join_event,
+                event=self,
+            )
+            if 'ServerMemberJoinEvent' in state.provide_cache_context_in
+            else caching._SERVER_MEMBER_JOIN_EVENT
+        )
+
+        cache.store_server_member(self.member, ctx)
         return True
 
 
@@ -1011,11 +1335,28 @@ class ServerMemberUpdateEvent(ShardEvent):
     after: Member | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Member`]: The member as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerMemberUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerMemberUpdateEventCacheContext(
+                type=caching.CacheContextType.server_member_update_event,
+                event=self,
+            )
+            if 'ServerMemberUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_MEMBER_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerMemberUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        before = cache.get_server_member(self.member.server_id, self.member.id, caching._SERVER_MEMBER_UPDATE)
+        before = cache.get_server_member(self.member.server_id, self.member.id, self.cache_context)
         self.before = before
         if not before:
             return
@@ -1028,7 +1369,7 @@ class ServerMemberUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache or not self.after:
             return False
-        cache.store_server_member(self.after, caching._SERVER_MEMBER_UPDATE)
+        cache.store_server_member(self.after, self.cache_context)
         return True
 
 
@@ -1050,11 +1391,28 @@ class ServerMemberRemoveEvent(ShardEvent):
     reason: MemberRemovalIntention = field(repr=True, kw_only=True)
     """:class:`.MemberRemovalIntention`: The reason why member was removed."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerMemberRemoveEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerMemberRemoveEventCacheContext(
+                type=caching.CacheContextType.server_member_remove_event,
+                event=self,
+            )
+            if 'ServerMemberRemoveEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_MEMBER_REMOVE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerMemberRemoveEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        self.member = cache.get_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_REMOVE)
+        self.member = cache.get_server_member(self.server_id, self.user_id, self.cache_context)
 
     def process(self) -> bool:
         state = self.shard.state
@@ -1065,11 +1423,11 @@ class ServerMemberRemoveEvent(ShardEvent):
         me = state.me
         is_me = me.id == self.user_id if me else False
 
-        cache.delete_server_member(self.server_id, self.user_id, caching._SERVER_MEMBER_REMOVE)
+        cache.delete_server_member(self.server_id, self.user_id, self.cache_context)
         if is_me:
-            cache.delete_server_emojis_of(self.server_id, caching._SERVER_MEMBER_REMOVE)
-            cache.delete_server_members_of(self.server_id, caching._SERVER_MEMBER_REMOVE)
-            cache.delete_server(self.server_id, caching._SERVER_MEMBER_REMOVE)
+            cache.delete_server_emojis_of(self.server_id, self.cache_context)
+            cache.delete_server_members_of(self.server_id, self.cache_context)
+            cache.delete_server(self.server_id, self.cache_context)
         return True
 
 
@@ -1091,15 +1449,38 @@ class RawServerRoleUpdateEvent(ShardEvent):
     server: Server | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server the role got created or updated in."""
 
+    cache_context: caching.UndefinedCacheContext | caching.RawServerRoleUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.RawServerRoleUpdateEventCacheContext(
+                type=caching.CacheContextType.raw_server_role_update_event,
+                event=self,
+            )
+            if 'RawServerRoleUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._RAW_SERVER_ROLE_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.RawServerRoleUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         self.new_role = self.role.into_full()
 
         cache = self.shard.state.cache
         if not cache:
             return
-        self.server = cache.get_server(self.role.server_id, caching._SERVER_ROLE_UPDATE)
+
+        self.server = cache.get_server(self.role.server_id, self.cache_context)
         if self.server:
-            self.old_role = self.server.roles.get(self.role.id)
+            old = self.old_role = self.server.roles.get(self.role.id)
+
+            if old is not None:
+                new = copy(old)
+                new.locally_update(self.role)
+                self.new_role = new
 
     def process(self) -> bool:
         cache = self.shard.state.cache
@@ -1107,7 +1488,7 @@ class RawServerRoleUpdateEvent(ShardEvent):
             return False
 
         self.server.upsert_role(self.new_role or self.role)
-        cache.store_server(self.server, caching._SERVER_ROLE_UPDATE)
+        cache.store_server(self.server, self.cache_context)
         return True
 
 
@@ -1129,11 +1510,28 @@ class ServerRoleDeleteEvent(ShardEvent):
     role: Role | None = field(repr=True, kw_only=True)
     """Optional[:class:`.Role`]: The deleted role object, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.ServerRoleDeleteEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.ServerRoleDeleteEventCacheContext(
+                type=caching.CacheContextType.server_role_delete_event,
+                event=self,
+            )
+            if 'ServerRoleDeleteEvent' in self.shard.state.provide_cache_context_in
+            else caching._SERVER_ROLE_DELETE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerRoleDeleteEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        self.server = cache.get_server(self.server_id, caching._SERVER_ROLE_DELETE)
+        self.server = cache.get_server(self.server_id, self.cache_context)
         if self.server:
             self.role = self.server.roles.get(self.role_id)
 
@@ -1144,7 +1542,7 @@ class ServerRoleDeleteEvent(ShardEvent):
 
         self.server.roles.pop(self.role_id, None)
 
-        cache.store_server(self.server, caching._SERVER_ROLE_DELETE)
+        cache.store_server(self.server, self.cache_context)
         return True
 
 
@@ -1177,11 +1575,28 @@ class UserUpdateEvent(ShardEvent):
     after: User | None = field(repr=True, kw_only=True)
     """:class:`.User`: The user as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.UserUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.UserUpdateEventCacheContext(
+                type=caching.CacheContextType.user_update_event,
+                event=self,
+            )
+            if 'UserUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._USER_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.UserUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        before = cache.get_user(self.user.id, caching._USER_UPDATE)
+        before = cache.get_user(self.user.id, self.cache_context)
         self.before = before
         if not before:
             return
@@ -1194,7 +1609,7 @@ class UserUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache or not self.after:
             return False
-        cache.store_user(self.after, caching._USER_UPDATE)
+        cache.store_user(self.after, self.cache_context)
         return True
 
 
@@ -1216,6 +1631,23 @@ class UserRelationshipUpdateEvent(ShardEvent):
     before: RelationshipStatus | None = field(repr=True, kw_only=True)
     """Optional[:class:`.RelationshipStatus`]: The old relationship found in cache."""
 
+    cache_context: caching.UndefinedCacheContext | caching.UserRelationshipUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.UserRelationshipUpdateEventCacheContext(
+                type=caching.CacheContextType.user_relationship_update_event,
+                event=self,
+            )
+            if 'UserRelationshipUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._USER_RELATIONSHIP_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.UserRelationshipUpdateEventCacheContext`]: The cache context used."""
+
     @property
     def after(self) -> RelationshipStatus:
         """:class:`.RelationshipStatus`: The new relationship with the user."""
@@ -1225,7 +1657,7 @@ class UserRelationshipUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return
-        self.old_user = cache.get_user(self.new_user.id, caching._USER_RELATIONSHIP_UPDATE)
+        self.old_user = cache.get_user(self.new_user.id, self.cache_context)
 
         if self.old_user:
             self.before = self.old_user.relationship
@@ -1249,7 +1681,7 @@ class UserRelationshipUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache:
             return False
-        cache.store_user(self.new_user, caching._USER_RELATIONSHIP_UPDATE)
+        cache.store_user(self.new_user, self.cache_context)
         return True
 
 
@@ -1310,9 +1742,26 @@ class UserPlatformWipeEvent(ShardEvent):
     after: User | None = field(repr=True, kw_only=True)
     """Optional[:class:`.User`]: The wiped user, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.UserPlatformWipeEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.UserPlatformWipeEventCacheContext(
+                type=caching.CacheContextType.user_platform_wipe_event,
+                event=self,
+            )
+            if 'UserPlatformWipeEvent' in self.shard.state.provide_cache_context_in
+            else caching._USER_PLATFORM_WIPE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.UserPlatformWipeEventCacheContext`]: The cache context used."""
+
     @property
     def flags(self) -> UserFlags:
-        """The user's flags, explaining reason of the wipe."""
+        """:class:`.UserFlags`: The user's flags, explaining reason of the wipe."""
         ret = _new_user_flags(UserFlags)
         ret.value = self.raw_flags
         return ret
@@ -1322,7 +1771,7 @@ class UserPlatformWipeEvent(ShardEvent):
         if not cache:
             return
 
-        self.before = cache.get_user(self.user_id, caching._USER_PLATFORM_WIPE)
+        self.before = cache.get_user(self.user_id, self.cache_context)
 
         before = self.before
         if before is not None:
@@ -1339,7 +1788,7 @@ class UserPlatformWipeEvent(ShardEvent):
         cache = self.shard.state.cache
         if not cache or not self.after:
             return False
-        cache.store_user(self.after, caching._USER_RELATIONSHIP_UPDATE)
+        cache.store_user(self.after, self.cache_context)
         return True
 
 
@@ -1439,10 +1888,22 @@ class VoiceChannelJoinEvent(ShardEvent):
     """:class:`.UserVoiceState`: The user's voice state."""
 
     def process(self) -> bool:
-        cache = self.shard.state.cache
+        state = self.shard.state
+        cache = state.cache
+
         if not cache:
             return False
-        cs = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_JOIN)
+
+        ctx = (
+            caching.VoiceChannelJoinEventCacheContext(
+                type=caching.CacheContextType.voice_channel_join_event,
+                event=self,
+            )
+            if 'VoiceChannelJoinEvent' in state.provide_cache_context_in
+            else caching._VOICE_CHANNEL_JOIN_EVENT
+        )
+
+        cs = cache.get_channel_voice_state(self.channel_id, ctx)
         if cs is not None:
             cs.locally_add(self.state)
         else:
@@ -1450,7 +1911,7 @@ class VoiceChannelJoinEvent(ShardEvent):
                 channel_id=self.channel_id,
                 participants={self.state.user_id: self.state},
             )
-        cache.store_channel_voice_state(cs, caching._VOICE_CHANNEL_JOIN)
+        cache.store_channel_voice_state(cs, ctx)
 
         return True
 
@@ -1473,11 +1934,28 @@ class VoiceChannelLeaveEvent(ShardEvent):
     state: UserVoiceState | None = field(repr=True, kw_only=True)
     """Optional[:class:`.UserVoiceState`]: The user's voice state."""
 
+    cache_context: caching.UndefinedCacheContext | caching.VoiceChannelLeaveEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.VoiceChannelLeaveEventCacheContext(
+                type=caching.CacheContextType.voice_channel_leave_event,
+                event=self,
+            )
+            if 'VoiceChannelLeaveEvent' in self.shard.state.provide_cache_context_in
+            else caching._VOICE_CHANNEL_LEAVE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.VoiceChannelLeaveEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
         if not cache:
             return
-        self.container = cache.get_channel_voice_state(self.channel_id, caching._VOICE_CHANNEL_LEAVE)
+        self.container = cache.get_channel_voice_state(self.channel_id, self.cache_context)
 
         if self.container is None:
             return
@@ -1490,7 +1968,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
         container = self.container
         container.locally_remove(self.user_id)
-        cache.store_channel_voice_state(container, caching._VOICE_CHANNEL_LEAVE)
+        cache.store_channel_voice_state(container, self.cache_context)
 
         return True
 
@@ -1516,13 +1994,30 @@ class UserVoiceStateUpdateEvent(ShardEvent):
     after: UserVoiceState | None = field(repr=True, kw_only=True)
     """Optional[:class:`.UserVoiceState`]: The user's voice state as it was updated, if available."""
 
+    cache_context: caching.UndefinedCacheContext | caching.UserVoiceStateUpdateEventCacheContext = field(
+        default=Factory(
+            lambda self: caching.UserVoiceStateUpdateEventCacheContext(
+                type=caching.CacheContextType.user_voice_state_update_event,
+                event=self,
+            )
+            if 'UserVoiceStateUpdateEvent' in self.shard.state.provide_cache_context_in
+            else caching._USER_VOICE_STATE_UPDATE_EVENT,
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.UserVoiceStateUpdateEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
 
         if not cache:
             return
 
-        container = cache.get_channel_voice_state(self.channel_id, caching._USER_VOICE_STATE_UPDATE)
+        container = cache.get_channel_voice_state(self.channel_id, self.cache_context)
         if not container:
             return
 
@@ -1542,7 +2037,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
         if not cache or not self.container:
             return False
 
-        cache.store_channel_voice_state(self.container, caching._USER_VOICE_STATE_UPDATE)
+        cache.store_channel_voice_state(self.container, self.cache_context)
         return True
 
 

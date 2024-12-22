@@ -38,6 +38,51 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .channel import DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
+    from .events import (
+        ReadyEvent,
+        PrivateChannelCreateEvent,
+        ServerChannelCreateEvent,
+        ChannelUpdateEvent,
+        ChannelDeleteEvent,
+        GroupRecipientAddEvent,
+        GroupRecipientRemoveEvent,
+        ChannelStartTypingEvent,
+        ChannelStopTypingEvent,
+        MessageAckEvent,
+        MessageCreateEvent,
+        MessageUpdateEvent,
+        MessageAppendEvent,
+        MessageDeleteEvent,
+        MessageReactEvent,
+        MessageUnreactEvent,
+        MessageClearReactionEvent,
+        MessageDeleteBulkEvent,
+        ServerCreateEvent,
+        ServerEmojiCreateEvent,
+        ServerEmojiDeleteEvent,
+        ServerUpdateEvent,
+        ServerDeleteEvent,
+        ServerMemberJoinEvent,
+        ServerMemberUpdateEvent,
+        ServerMemberRemoveEvent,
+        RawServerRoleUpdateEvent,
+        ServerRoleDeleteEvent,
+        ReportCreateEvent,
+        UserUpdateEvent,
+        UserRelationshipUpdateEvent,
+        UserSettingsUpdateEvent,
+        UserPlatformWipeEvent,
+        WebhookCreateEvent,
+        WebhookUpdateEvent,
+        WebhookDeleteEvent,
+        SessionCreateEvent,
+        SessionDeleteEvent,
+        SessionDeleteAllEvent,
+        VoiceChannelJoinEvent,
+        VoiceChannelLeaveEvent,
+        UserVoiceStateUpdateEvent,
+        AuthenticatedEvent,
+    )
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
@@ -47,54 +92,8 @@ _L = logging.getLogger(__name__)
 
 class CacheContextType(Enum):
     undefined = 'UNDEFINED'
-    """Context is not provided."""
-
     user_request = 'USER_REQUEST'
-    """The end user is asking for object."""
-
     library_request = 'LIBRARY_REQUEST'
-    """Library needs the object for internal purposes."""
-
-    ready = 'READY'
-    message_ack = 'MESSAGE_ACK'
-    message_create = 'MESSAGE_CREATE'
-    message_update = 'MESSAGE_UPDATE'
-    message_append = 'MESSAGE_APPEND'
-    message_delete = 'MESSAGE_DELETE'
-    message_react = 'MESSAGE_REACT'
-    message_unreact = 'MESSAGE_UNREACT'
-    message_clear_reaction = 'MESAGE_CLEAR_REACTION'
-    message_delete_bulk = 'MESSAGE_DELETE_BULK'
-
-    server_create = 'SERVER_CREATE'
-    server_update = 'SERVER_UPDATE'
-    server_delete = 'SERVER_DELETE'
-
-    server_member_add = 'SERVER_MEMBER_ADD'
-    server_member_update = 'SERVER_MEMBER_UPDATE'
-    server_member_remove = 'SERVER_MEMBER_REMOVE'
-
-    server_role_update = 'SERVER_ROLE_UPDATE'
-    server_role_delete = 'SERVER_ROLE_DELETE'
-
-    user_update = 'USER_UPDATE'
-    user_relationship_update = 'USER_RELATIONSHIP_UPDATE'
-    user_platform_wipe = 'USER_PLATFORM_WIPE'
-
-    server_emoji_create = 'SERVER_EMOJI_CREATE'
-    server_emoji_delete = 'SERVER_EMOJI_DELETE'
-
-    channel_create = 'CHANNEL_CREATE'
-    channel_update = 'CHANNEL_UPDATE'
-    channel_delete = 'CHANNEL_DELETE'
-
-    group_recipient_add = 'GROUP_RECIPIENT_ADD'
-    group_recipient_remove = 'GROUP_RECIPIENT_REMOVE'
-
-    voice_channel_join = 'VOICE_CHANNEL_JOIN'
-    voice_channel_leave = 'VOICE_CHANNEL_LEAVE'
-    user_voice_state_update = 'USER_VOICE_STATE_UPDATE'
-    """Data from websocket event."""
 
     emoji = 'EMOJI'
     member = 'MEMBER'
@@ -104,13 +103,62 @@ class CacheContextType(Enum):
     user = 'USER'
     webhook = 'WEBHOOK'
 
+    ready_event = 'ReadyEvent'
+    private_channel_create_event = 'PrivateChannelCreateEvent'
+    server_channel_create_event = 'ServerChannelCreateEvent'
+    channel_update_event = 'ChannelUpdateEvent'
+    channel_delete_event = 'ChannelDeleteEvent'
+    group_recipient_add_event = 'GroupRecipientAddEvent'
+    group_recipient_remove_event = 'GroupRecipientRemoveEvent'
+    channel_start_typing_event = 'ChannelStartTypingEvent'
+    channel_stop_typing_event = 'ChannelStopTypingEvent'
+    message_ack_event = 'MessageAckEvent'
+    message_create_event = 'MessageCreateEvent'
+    message_update_event = 'MessageUpdateEvent'
+    message_append_event = 'MessageAppendEvent'
+    message_delete_event = 'MessageDeleteEvent'
+    message_react_event = 'MessageReactEvent'
+    message_unreact_event = 'MessageUnreactEvent'
+    message_clear_reaction_event = 'MessageClearReactionEvent'
+    message_delete_bulk_event = 'MessageDeleteBulkEvent'
+    server_create_event = 'ServerCreateEvent'
+    server_emoji_create_event = 'ServerEmojiCreateEvent'
+    server_emoji_delete_event = 'ServerEmojiDeleteEvent'
+    server_update_event = 'ServerUpdateEvent'
+    server_delete_event = 'ServerDeleteEvent'
+    server_member_join_event = 'ServerMemberJoinEvent'
+    server_member_update_event = 'ServerMemberUpdateEvent'
+    server_member_remove_event = 'ServerMemberRemoveEvent'
+    raw_server_role_update_event = 'RawServerRoleUpdateEvent'
+    server_role_delete_event = 'ServerRoleDeleteEvent'
+    report_create_event = 'ReportCreateEvent'
+    user_update_event = 'UserUpdateEvent'
+    user_relationship_update_event = 'UserRelationshipUpdateEvent'
+    user_settings_update_event = 'UserSettingsUpdateEvent'
+    user_platform_wipe_event = 'UserPlatformWipeEvent'
+    webhook_create_event = 'WebhookCreateEvent'
+    webhook_update_event = 'WebhookUpdateEvent'
+    webhook_delete_event = 'WebhookDeleteEvent'
+    session_create_event = 'SessionCreateEvent'
+    session_delete_event = 'SessionDeleteEvent'
+    session_delete_all_event = 'SessionDeleteAllEvent'
+    voice_channel_join_event = 'VoiceChannelJoinEvent'
+    voice_channel_leave_event = 'VoiceChannelLeaveEvent'
+    user_voice_state_update_event = 'UserVoiceStateUpdateEvent'
+    authenticated_event = 'AuthenticatedEvent'
+
 
 @define(slots=True)
 class BaseCacheContext:
     """Represents a cache context."""
 
     type: CacheContextType = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The context's type."""
+    """:class:`.CacheContextType`: The context's type."""
+
+
+@define(slots=True)
+class UndefinedCacheContext(BaseCacheContext):
+    """Represents a undefined cache context."""
 
 
 @define(slots=True)
@@ -118,7 +166,7 @@ class DetachedEmojiCacheContext(BaseCacheContext):
     """Represents a cache context that involves a detached emoji."""
 
     emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The detached emoji involved."""
+    """:class:`.DetachedEmoji`: The detached emoji involved."""
 
 
 @define(slots=True)
@@ -126,7 +174,7 @@ class MessageCacheContext(BaseCacheContext):
     """Represents a cache context that involves a message."""
 
     message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The message involved."""
+    """:class:`.Message`: The message involved."""
 
 
 @define(slots=True)
@@ -134,7 +182,7 @@ class ServerCacheContext(BaseCacheContext):
     """Represents a cache context that involves a server."""
 
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The server involved."""
+    """:class:`.Server`: The server involved."""
 
 
 @define(slots=True)
@@ -142,7 +190,7 @@ class ServerEmojiCacheContext(BaseCacheContext):
     """Represents a cache context that involves a server emoji."""
 
     emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The emoji involved."""
+    """:class:`.ServerEmoji` The emoji involved."""
 
 
 @define(slots=True)
@@ -150,44 +198,448 @@ class UserCacheContext(BaseCacheContext):
     """Represents a cache context that involves a user."""
 
     user: User = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The user involved."""
+    """:class:`.User`: The user involved."""
 
 
-_UNDEFINED = BaseCacheContext(type=CacheContextType.undefined)
-_USER_REQUEST = BaseCacheContext(type=CacheContextType.user_request)
-_READY = BaseCacheContext(type=CacheContextType.ready)
-_MESSAGE_ACK = BaseCacheContext(type=CacheContextType.message_ack)
-_MESSAGE_CREATE = BaseCacheContext(type=CacheContextType.message_create)
-_MESSAGE_UPDATE = BaseCacheContext(type=CacheContextType.message_update)
-_MESSAGE_APPEND = BaseCacheContext(type=CacheContextType.message_append)
-_MESSAGE_DELETE = BaseCacheContext(type=CacheContextType.message_delete)
-_MESSAGE_REACT = BaseCacheContext(type=CacheContextType.message_react)
-_MESSAGE_UNREACT = BaseCacheContext(type=CacheContextType.message_unreact)
-_MESSAGE_CLEAR_REACTION = BaseCacheContext(type=CacheContextType.message_clear_reaction)
-_MESSAGE_DELETE_BULK = BaseCacheContext(type=CacheContextType.message_delete_bulk)
-_SERVER_CREATE = BaseCacheContext(type=CacheContextType.server_create)
-_SERVER_UPDATE = BaseCacheContext(type=CacheContextType.server_update)
-_SERVER_DELETE = BaseCacheContext(type=CacheContextType.server_delete)
-_SERVER_MEMBER_ADD = BaseCacheContext(type=CacheContextType.server_member_add)
-_SERVER_MEMBER_UPDATE = BaseCacheContext(type=CacheContextType.server_member_update)
-_SERVER_MEMBER_REMOVE = BaseCacheContext(type=CacheContextType.server_member_remove)
-_SERVER_ROLE_UPDATE = BaseCacheContext(type=CacheContextType.server_role_update)
-_SERVER_ROLE_DELETE = BaseCacheContext(type=CacheContextType.server_role_delete)
-_USER_UPDATE = BaseCacheContext(type=CacheContextType.user_update)
-_USER_RELATIONSHIP_UPDATE = BaseCacheContext(type=CacheContextType.user_relationship_update)
-_USER_PLATFORM_WIPE = BaseCacheContext(type=CacheContextType.user_platform_wipe)
-_SERVER_EMOJI_CREATE = BaseCacheContext(type=CacheContextType.server_emoji_create)
-_SERVER_EMOJI_DELETE = BaseCacheContext(type=CacheContextType.server_emoji_delete)
-_CHANNEL_CREATE = BaseCacheContext(type=CacheContextType.channel_create)
-_CHANNEL_UPDATE = BaseCacheContext(type=CacheContextType.channel_update)
-_CHANNEL_DELETE = BaseCacheContext(type=CacheContextType.channel_delete)
-_GROUP_RECIPIENT_ADD = BaseCacheContext(type=CacheContextType.group_recipient_add)
-_GROUP_RECIPIENT_REMOVE = BaseCacheContext(type=CacheContextType.group_recipient_remove)
-_VOICE_CHANNEL_JOIN = BaseCacheContext(type=CacheContextType.voice_channel_join)
-_VOICE_CHANNEL_LEAVE = BaseCacheContext(type=CacheContextType.voice_channel_leave)
-_USER_VOICE_STATE_UPDATE = BaseCacheContext(type=CacheContextType.user_voice_state_update)
+@define(slots=True)
+class EventCacheContext(BaseCacheContext):
+    """Base class for cache contexts created by WebSocket events."""
+
+
+@define(slots=True)
+class ReadyEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ReadyEvent`."""
+
+    event: ReadyEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ReadyEvent`: The event involved."""
+
+
+@define(slots=True)
+class PrivateChannelCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.PrivateChannelCreateEvent`."""
+
+    event: PrivateChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.PrivateChannelCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerChannelCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerChannelCreateEvent`."""
+
+    event: ServerChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerChannelCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ChannelUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ChannelUpdateEvent`."""
+
+    event: ChannelUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ChannelUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ChannelDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ChannelDeleteEvent`."""
+
+    event: ChannelDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ChannelDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class GroupRecipientAddEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.GroupRecipientAddEvent`."""
+
+    event: GroupRecipientAddEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.GroupRecipientAddEvent`: The event involved."""
+
+
+@define(slots=True)
+class GroupRecipientRemoveEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.GroupRecipientRemoveEvent`."""
+
+    event: GroupRecipientRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.GroupRecipientRemoveEvent`: The event involved."""
+
+
+@define(slots=True)
+class ChannelStartTypingEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ChannelStartTypingEvent`."""
+
+    event: ChannelStartTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ChannelStartTypingEvent`: The event involved."""
+
+
+@define(slots=True)
+class ChannelStopTypingEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ChannelStopTypingEvent`."""
+
+    event: ChannelStopTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ChannelStopTypingEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageAckEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageAckEvent`."""
+
+    event: MessageAckEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageAckEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageCreateEvent`."""
+
+    event: MessageCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageUpdateEvent`."""
+
+    event: MessageUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageAppendEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageAppendEvent`."""
+
+    event: MessageAppendEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageAppendEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageDeleteEvent`."""
+
+    event: MessageDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageReactEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageReactEvent`."""
+
+    event: MessageReactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageReactEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageUnreactEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageUnreactEvent`."""
+
+    event: MessageUnreactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageUnreactEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageClearReactionEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageClearReactionEvent`."""
+
+    event: MessageClearReactionEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageClearReactionEvent`: The event involved."""
+
+
+@define(slots=True)
+class MessageDeleteBulkEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.MessageDeleteBulkEvent`."""
+
+    event: MessageDeleteBulkEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.MessageDeleteBulkEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerCreateEvent`."""
+
+    event: ServerCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerEmojiCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerEmojiCreateEvent`."""
+
+    event: ServerEmojiCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerEmojiCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerEmojiDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerEmojiDeleteEvent`."""
+
+    event: ServerEmojiDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerEmojiDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerUpdateEvent`."""
+
+    event: ServerUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerDeleteEvent`."""
+
+    event: ServerDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerMemberJoinEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerMemberJoinEvent`."""
+
+    event: ServerMemberJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerMemberJoinEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerMemberUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerMemberUpdateEvent`."""
+
+    event: ServerMemberUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerMemberUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerMemberRemoveEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerMemberRemoveEvent`."""
+
+    event: ServerMemberRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerMemberRemoveEvent`: The event involved."""
+
+
+@define(slots=True)
+class RawServerRoleUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.RawServerRoleUpdateEvent`."""
+
+    event: RawServerRoleUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.RawServerRoleUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerRoleDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerRoleDeleteEvent`."""
+
+    event: ServerRoleDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerRoleDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class ReportCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ReportCreateEvent`."""
+
+    event: ReportCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ReportCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.UserUpdateEvent`."""
+
+    event: UserUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.UserUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserRelationshipUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.UserRelationshipUpdateEvent`."""
+
+    event: UserRelationshipUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.UserRelationshipUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserSettingsUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.UserSettingsUpdateEvent`."""
+
+    event: UserSettingsUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.UserSettingsUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserPlatformWipeEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.UserPlatformWipeEvent`."""
+
+    event: UserPlatformWipeEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.UserPlatformWipeEvent`: The event involved."""
+
+
+@define(slots=True)
+class WebhookCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.WebhookCreateEvent`."""
+
+    event: WebhookCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.WebhookCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class WebhookUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.WebhookUpdateEvent`."""
+
+    event: WebhookUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.WebhookUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class WebhookDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.WebhookDeleteEvent`."""
+
+    event: WebhookDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.WebhookDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class SessionCreateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.SessionCreateEvent`."""
+
+    event: SessionCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.SessionCreateEvent`: The event involved."""
+
+
+@define(slots=True)
+class SessionDeleteEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.SessionDeleteEvent`."""
+
+    event: SessionDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.SessionDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class SessionDeleteAllEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.SessionDeleteAllEvent`."""
+
+    event: SessionDeleteAllEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.SessionDeleteAllEvent`: The event involved."""
+
+
+@define(slots=True)
+class VoiceChannelJoinEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.VoiceChannelJoinEvent`."""
+
+    event: VoiceChannelJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.VoiceChannelJoinEvent`: The event involved."""
+
+
+@define(slots=True)
+class VoiceChannelLeaveEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.VoiceChannelLeaveEvent`."""
+
+    event: VoiceChannelLeaveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.VoiceChannelLeaveEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.UserVoiceStateUpdateEvent`."""
+
+    event: UserVoiceStateUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.UserVoiceStateUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class AuthenticatedEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.AuthenticatedEvent`."""
+
+    event: AuthenticatedEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.AuthenticatedEvent`: The event involved."""
+
+
+_UNDEFINED = UndefinedCacheContext(type=CacheContextType.undefined)
+_USER_REQUEST = UndefinedCacheContext(type=CacheContextType.user_request)
+_READY_EVENT = UndefinedCacheContext(type=CacheContextType.ready_event)
+_PRIVATE_CHANNEL_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.private_channel_create_event)
+_SERVER_CHANNEL_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_channel_create_event)
+_CHANNEL_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.channel_update_event)
+_CHANNEL_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.channel_delete_event)
+_GROUP_RECIPIENT_ADD_EVENT = UndefinedCacheContext(type=CacheContextType.group_recipient_add_event)
+_GROUP_RECIPIENT_REMOVE_EVENT = UndefinedCacheContext(type=CacheContextType.group_recipient_remove_event)
+_CHANNEL_START_TYPING_EVENT = UndefinedCacheContext(type=CacheContextType.channel_start_typing_event)
+_CHANNEL_STOP_TYPING_EVENT = UndefinedCacheContext(type=CacheContextType.channel_stop_typing_event)
+_MESSAGE_ACK_EVENT = UndefinedCacheContext(type=CacheContextType.message_ack_event)
+_MESSAGE_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.message_create_event)
+_MESSAGE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.message_update_event)
+_MESSAGE_APPEND_EVENT = UndefinedCacheContext(type=CacheContextType.message_append_event)
+_MESSAGE_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.message_delete_event)
+_MESSAGE_REACT_EVENT = UndefinedCacheContext(type=CacheContextType.message_react_event)
+_MESSAGE_UNREACT_EVENT = UndefinedCacheContext(type=CacheContextType.message_unreact_event)
+_MESSAGE_CLEAR_REACTION_EVENT = UndefinedCacheContext(type=CacheContextType.message_clear_reaction_event)
+_MESSAGE_DELETE_BULK_EVENT = UndefinedCacheContext(type=CacheContextType.message_delete_bulk_event)
+_SERVER_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_create_event)
+_SERVER_EMOJI_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_emoji_create_event)
+_SERVER_EMOJI_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_emoji_delete_event)
+_SERVER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_update_event)
+_SERVER_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_delete_event)
+_SERVER_MEMBER_JOIN_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_join_event)
+_SERVER_MEMBER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_update_event)
+_SERVER_MEMBER_REMOVE_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_remove_event)
+_RAW_SERVER_ROLE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.raw_server_role_update_event)
+_SERVER_ROLE_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_role_delete_event)
+_REPORT_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.report_create_event)
+_USER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_update_event)
+_USER_RELATIONSHIP_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_relationship_update_event)
+_USER_SETTINGS_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_settings_update_event)
+_USER_PLATFORM_WIPE_EVENT = UndefinedCacheContext(type=CacheContextType.user_platform_wipe_event)
+_WEBHOOK_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_create_event)
+_WEBHOOK_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_update_event)
+_WEBHOOK_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_delete_event)
+_SESSION_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.session_create_event)
+_SESSION_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.session_delete_event)
+_SESSION_DELETE_ALL_EVENT = UndefinedCacheContext(type=CacheContextType.session_delete_all_event)
+_VOICE_CHANNEL_JOIN_EVENT = UndefinedCacheContext(type=CacheContextType.voice_channel_join_event)
+_VOICE_CHANNEL_LEAVE_EVENT = UndefinedCacheContext(type=CacheContextType.voice_channel_leave_event)
+_USER_VOICE_STATE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_voice_state_update_event)
+_AUTHENTICATED_EVENT = UndefinedCacheContext(type=CacheContextType.authenticated_event)
 
 ProvideCacheContextIn = typing.Literal[
+    'ReadyEvent',
+    'PrivateChannelCreateEvent',
+    'ServerChannelCreateEvent',
+    'ChannelUpdateEvent',
+    'ChannelDeleteEvent',
+    'GroupRecipientAddEvent',
+    'GroupRecipientRemoveEvent',
+    'ChannelStartTypingEvent',
+    'ChannelStopTypingEvent',
+    'MessageAckEvent',
+    'MessageCreateEvent',
+    'MessageUpdateEvent',
+    'MessageAppendEvent',
+    'MessageDeleteEvent',
+    'MessageReactEvent',
+    'MessageUnreactEvent',
+    'MessageClearReactionEvent',
+    'MessageDeleteBulkEvent',
+    'ServerCreateEvent',
+    'ServerEmojiCreateEvent',
+    'ServerEmojiDeleteEvent',
+    'ServerUpdateEvent',
+    'ServerDeleteEvent',
+    'ServerMemberJoinEvent',
+    'ServerMemberUpdateEvent',
+    'ServerMemberRemoveEvent',
+    'RawServerRoleUpdateEvent',
+    'ServerRoleDeleteEvent',
+    'ReportCreateEvent',
+    'UserUpdateEvent',
+    'UserRelationshipUpdateEvent',
+    'UserSettingsUpdateEvent',
+    'UserPlatformWipeEvent',
+    'WebhookCreateEvent',
+    'WebhookUpdateEvent',
+    'WebhookDeleteEvent',
+    'SessionCreateEvent',
+    'SessionDeleteEvent',
+    'SessionDeleteAllEvent',
+    'VoiceChannelJoinEvent',
+    'VoiceChannelLeaveEvent',
+    'UserVoiceStateUpdateEvent',
+    'AuthenticatedEvent',
     'DMChannel.recipients',
     'DMChannel.get_initiator',
     'DMChannel.get_target',
@@ -1477,44 +1929,99 @@ class MapCache(Cache):
 __all__ = (
     'CacheContextType',
     'BaseCacheContext',
+    'UndefinedCacheContext',
     'DetachedEmojiCacheContext',
     'MessageCacheContext',
     'ServerCacheContext',
     'ServerEmojiCacheContext',
     'UserCacheContext',
+    'PrivateChannelCreateEventCacheContext',
+    'ServerChannelCreateEventCacheContext',
+    'ChannelUpdateEventCacheContext',
+    'ChannelDeleteEventCacheContext',
+    'GroupRecipientAddEventCacheContext',
+    'GroupRecipientRemoveEventCacheContext',
+    'ChannelStartTypingEventCacheContext',
+    'ChannelStopTypingEventCacheContext',
+    'MessageAckEventCacheContext',
+    'MessageCreateEventCacheContext',
+    'MessageUpdateEventCacheContext',
+    'MessageAppendEventCacheContext',
+    'MessageDeleteEventCacheContext',
+    'MessageReactEventCacheContext',
+    'MessageUnreactEventCacheContext',
+    'MessageClearReactionEventCacheContext',
+    'MessageDeleteBulkEventCacheContext',
+    'ServerCreateEventCacheContext',
+    'ServerEmojiCreateEventCacheContext',
+    'ServerEmojiDeleteEventCacheContext',
+    'ServerUpdateEventCacheContext',
+    'ServerDeleteEventCacheContext',
+    'ServerMemberJoinEventCacheContext',
+    'ServerMemberUpdateEventCacheContext',
+    'ServerMemberRemoveEventCacheContext',
+    'RawServerRoleUpdateEventCacheContext',
+    'ServerRoleDeleteEventCacheContext',
+    'ReportCreateEventCacheContext',
+    'UserUpdateEventCacheContext',
+    'UserRelationshipUpdateEventCacheContext',
+    'UserSettingsUpdateEventCacheContext',
+    'UserPlatformWipeEventCacheContext',
+    'WebhookCreateEventCacheContext',
+    'WebhookUpdateEventCacheContext',
+    'WebhookDeleteEventCacheContext',
+    'SessionCreateEventCacheContext',
+    'SessionDeleteEventCacheContext',
+    'SessionDeleteAllEventCacheContext',
+    'VoiceChannelJoinEventCacheContext',
+    'VoiceChannelLeaveEventCacheContext',
+    'UserVoiceStateUpdateEventCacheContext',
+    'AuthenticatedEventCacheContext',
     '_UNDEFINED',
     '_USER_REQUEST',
-    '_READY',
-    '_MESSAGE_ACK',
-    '_MESSAGE_CREATE',
-    '_MESSAGE_UPDATE',
-    '_MESSAGE_APPEND',
-    '_MESSAGE_DELETE',
-    '_MESSAGE_REACT',
-    '_MESSAGE_UNREACT',
-    '_MESSAGE_CLEAR_REACTION',
-    '_MESSAGE_DELETE_BULK',
-    '_SERVER_CREATE',
-    '_SERVER_UPDATE',
-    '_SERVER_DELETE',
-    '_SERVER_MEMBER_ADD',
-    '_SERVER_MEMBER_UPDATE',
-    '_SERVER_MEMBER_REMOVE',
-    '_SERVER_ROLE_UPDATE',
-    '_SERVER_ROLE_DELETE',
-    '_USER_UPDATE',
-    '_USER_RELATIONSHIP_UPDATE',
-    '_USER_PLATFORM_WIPE',
-    '_SERVER_EMOJI_CREATE',
-    '_SERVER_EMOJI_DELETE',
-    '_CHANNEL_CREATE',
-    '_CHANNEL_UPDATE',
-    '_CHANNEL_DELETE',
-    '_GROUP_RECIPIENT_ADD',
-    '_GROUP_RECIPIENT_REMOVE',
-    '_VOICE_CHANNEL_JOIN',
-    '_VOICE_CHANNEL_LEAVE',
-    '_USER_VOICE_STATE_UPDATE',
+    '_READY_EVENT',
+    '_PRIVATE_CHANNEL_CREATE_EVENT',
+    '_SERVER_CHANNEL_CREATE_EVENT',
+    '_CHANNEL_UPDATE_EVENT',
+    '_CHANNEL_DELETE_EVENT',
+    '_GROUP_RECIPIENT_ADD_EVENT',
+    '_GROUP_RECIPIENT_REMOVE_EVENT',
+    '_CHANNEL_START_TYPING_EVENT',
+    '_CHANNEL_STOP_TYPING_EVENT',
+    '_MESSAGE_ACK_EVENT',
+    '_MESSAGE_CREATE_EVENT',
+    '_MESSAGE_UPDATE_EVENT',
+    '_MESSAGE_APPEND_EVENT',
+    '_MESSAGE_DELETE_EVENT',
+    '_MESSAGE_REACT_EVENT',
+    '_MESSAGE_UNREACT_EVENT',
+    '_MESSAGE_CLEAR_REACTION_EVENT',
+    '_MESSAGE_DELETE_BULK_EVENT',
+    '_SERVER_CREATE_EVENT',
+    '_SERVER_EMOJI_CREATE_EVENT',
+    '_SERVER_EMOJI_DELETE_EVENT',
+    '_SERVER_UPDATE_EVENT',
+    '_SERVER_DELETE_EVENT',
+    '_SERVER_MEMBER_JOIN_EVENT',
+    '_SERVER_MEMBER_UPDATE_EVENT',
+    '_SERVER_MEMBER_REMOVE_EVENT',
+    '_RAW_SERVER_ROLE_UPDATE_EVENT',
+    '_SERVER_ROLE_DELETE_EVENT',
+    '_REPORT_CREATE_EVENT',
+    '_USER_UPDATE_EVENT',
+    '_USER_RELATIONSHIP_UPDATE_EVENT',
+    '_USER_SETTINGS_UPDATE_EVENT',
+    '_USER_PLATFORM_WIPE_EVENT',
+    '_WEBHOOK_CREATE_EVENT',
+    '_WEBHOOK_UPDATE_EVENT',
+    '_WEBHOOK_DELETE_EVENT',
+    '_SESSION_CREATE_EVENT',
+    '_SESSION_DELETE_EVENT',
+    '_SESSION_DELETE_ALL_EVENT',
+    '_VOICE_CHANNEL_JOIN_EVENT',
+    '_VOICE_CHANNEL_LEAVE_EVENT',
+    '_USER_VOICE_STATE_UPDATE_EVENT',
+    '_AUTHENTICATED_EVENT',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',
