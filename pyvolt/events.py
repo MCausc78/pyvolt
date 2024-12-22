@@ -1474,17 +1474,19 @@ class RawServerRoleUpdateEvent(ShardEvent):
             return
 
         self.server = cache.get_server(self.role.server_id, self.cache_context)
-        if self.server:
-            old = self.old_role = self.server.roles.get(self.role.id)
 
-            if old is not None:
-                new = copy(old)
-                new.locally_update(self.role)
-                self.new_role = new
+        if self.server is None:
+            return
+
+        old = self.old_role = self.server.roles.get(self.role.id)
+        if old is not None:
+            new = copy(old)
+            new.locally_update(self.role)
+            self.new_role = new
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.server:
+        if not cache or self.server is None:
             return False
 
         self.server.upsert_role(self.new_role or self.role)
