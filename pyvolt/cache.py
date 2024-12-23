@@ -550,51 +550,131 @@ class AuthenticatedEventCacheContext(EventCacheContext):
     """:class:`.AuthenticatedEvent`: The event involved."""
 
 
-_UNDEFINED = UndefinedCacheContext(type=CacheContextType.undefined)
-_USER_REQUEST = UndefinedCacheContext(type=CacheContextType.user_request)
-_READY_EVENT = UndefinedCacheContext(type=CacheContextType.ready_event)
-_PRIVATE_CHANNEL_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.private_channel_create_event)
-_SERVER_CHANNEL_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_channel_create_event)
-_CHANNEL_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.channel_update_event)
-_CHANNEL_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.channel_delete_event)
-_GROUP_RECIPIENT_ADD_EVENT = UndefinedCacheContext(type=CacheContextType.group_recipient_add_event)
-_GROUP_RECIPIENT_REMOVE_EVENT = UndefinedCacheContext(type=CacheContextType.group_recipient_remove_event)
-_CHANNEL_START_TYPING_EVENT = UndefinedCacheContext(type=CacheContextType.channel_start_typing_event)
-_CHANNEL_STOP_TYPING_EVENT = UndefinedCacheContext(type=CacheContextType.channel_stop_typing_event)
-_MESSAGE_ACK_EVENT = UndefinedCacheContext(type=CacheContextType.message_ack_event)
-_MESSAGE_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.message_create_event)
-_MESSAGE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.message_update_event)
-_MESSAGE_APPEND_EVENT = UndefinedCacheContext(type=CacheContextType.message_append_event)
-_MESSAGE_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.message_delete_event)
-_MESSAGE_REACT_EVENT = UndefinedCacheContext(type=CacheContextType.message_react_event)
-_MESSAGE_UNREACT_EVENT = UndefinedCacheContext(type=CacheContextType.message_unreact_event)
-_MESSAGE_CLEAR_REACTION_EVENT = UndefinedCacheContext(type=CacheContextType.message_clear_reaction_event)
-_MESSAGE_DELETE_BULK_EVENT = UndefinedCacheContext(type=CacheContextType.message_delete_bulk_event)
-_SERVER_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_create_event)
-_SERVER_EMOJI_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_emoji_create_event)
-_SERVER_EMOJI_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_emoji_delete_event)
-_SERVER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_update_event)
-_SERVER_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_delete_event)
-_SERVER_MEMBER_JOIN_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_join_event)
-_SERVER_MEMBER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_update_event)
-_SERVER_MEMBER_REMOVE_EVENT = UndefinedCacheContext(type=CacheContextType.server_member_remove_event)
-_RAW_SERVER_ROLE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.raw_server_role_update_event)
-_SERVER_ROLE_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.server_role_delete_event)
-_REPORT_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.report_create_event)
-_USER_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_update_event)
-_USER_RELATIONSHIP_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_relationship_update_event)
-_USER_SETTINGS_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_settings_update_event)
-_USER_PLATFORM_WIPE_EVENT = UndefinedCacheContext(type=CacheContextType.user_platform_wipe_event)
-_WEBHOOK_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_create_event)
-_WEBHOOK_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_update_event)
-_WEBHOOK_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.webhook_delete_event)
-_SESSION_CREATE_EVENT = UndefinedCacheContext(type=CacheContextType.session_create_event)
-_SESSION_DELETE_EVENT = UndefinedCacheContext(type=CacheContextType.session_delete_event)
-_SESSION_DELETE_ALL_EVENT = UndefinedCacheContext(type=CacheContextType.session_delete_all_event)
-_VOICE_CHANNEL_JOIN_EVENT = UndefinedCacheContext(type=CacheContextType.voice_channel_join_event)
-_VOICE_CHANNEL_LEAVE_EVENT = UndefinedCacheContext(type=CacheContextType.voice_channel_leave_event)
-_USER_VOICE_STATE_UPDATE_EVENT = UndefinedCacheContext(type=CacheContextType.user_voice_state_update_event)
-_AUTHENTICATED_EVENT = UndefinedCacheContext(type=CacheContextType.authenticated_event)
+_UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
+_USER_REQUEST: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_request)
+_READY_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.ready_event)
+_PRIVATE_CHANNEL_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.private_channel_create_event
+)
+_SERVER_CHANNEL_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_channel_create_event
+)
+_CHANNEL_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_update_event
+)
+_CHANNEL_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_delete_event
+)
+_GROUP_RECIPIENT_ADD_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.group_recipient_add_event
+)
+_GROUP_RECIPIENT_REMOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.group_recipient_remove_event
+)
+_CHANNEL_START_TYPING_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_start_typing_event
+)
+_CHANNEL_STOP_TYPING_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_stop_typing_event
+)
+_MESSAGE_ACK_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.message_ack_event)
+_MESSAGE_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_create_event
+)
+_MESSAGE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_update_event
+)
+_MESSAGE_APPEND_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_append_event
+)
+_MESSAGE_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_delete_event
+)
+_MESSAGE_REACT_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_react_event
+)
+_MESSAGE_UNREACT_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_unreact_event
+)
+_MESSAGE_CLEAR_REACTION_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_clear_reaction_event
+)
+_MESSAGE_DELETE_BULK_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_delete_bulk_event
+)
+_SERVER_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_create_event
+)
+_SERVER_EMOJI_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_emoji_create_event
+)
+_SERVER_EMOJI_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_emoji_delete_event
+)
+_SERVER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_update_event
+)
+_SERVER_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_delete_event
+)
+_SERVER_MEMBER_JOIN_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_member_join_event
+)
+_SERVER_MEMBER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_member_update_event
+)
+_SERVER_MEMBER_REMOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_member_remove_event
+)
+_RAW_SERVER_ROLE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.raw_server_role_update_event
+)
+_SERVER_ROLE_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_role_delete_event
+)
+_REPORT_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.report_create_event
+)
+_USER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_update_event)
+_USER_RELATIONSHIP_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_relationship_update_event
+)
+_USER_SETTINGS_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_settings_update_event
+)
+_USER_PLATFORM_WIPE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_platform_wipe_event
+)
+_WEBHOOK_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.webhook_create_event
+)
+_WEBHOOK_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.webhook_update_event
+)
+_WEBHOOK_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.webhook_delete_event
+)
+_SESSION_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.session_create_event
+)
+_SESSION_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.session_delete_event
+)
+_SESSION_DELETE_ALL_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.session_delete_all_event
+)
+_VOICE_CHANNEL_JOIN_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.voice_channel_join_event
+)
+_VOICE_CHANNEL_LEAVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.voice_channel_leave_event
+)
+_USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_voice_state_update_event
+)
+_AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.authenticated_event
+)
 
 ProvideCacheContextIn = typing.Literal[
     'ReadyEvent',

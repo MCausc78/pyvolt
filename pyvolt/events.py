@@ -28,6 +28,9 @@ from copy import copy
 from datetime import datetime
 import typing
 
+# Due to Pyright being stupid (or attrs), we have to cast everything to typing.Any
+from typing import cast as _cast
+
 from attrs import Factory, define, field
 
 from . import cache as caching, utils
@@ -331,12 +334,15 @@ class ChannelUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ChannelUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ChannelUpdateEventCacheContext(
-                type=caching.CacheContextType.channel_update_event,
-                event=self,
-            )
-            if 'ChannelUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._CHANNEL_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ChannelUpdateEventCacheContext(
+                    type=caching.CacheContextType.channel_update_event,
+                    event=self,
+                )
+                if 'ChannelUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._CHANNEL_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -381,12 +387,15 @@ class ChannelDeleteEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ChannelDeleteEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ChannelDeleteEventCacheContext(
-                type=caching.CacheContextType.channel_delete_event,
-                event=self,
-            )
-            if 'ChannelDeleteEvent' in self.shard.state.provide_cache_context_in
-            else caching._CHANNEL_DELETE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ChannelDeleteEventCacheContext(
+                    type=caching.CacheContextType.channel_delete_event,
+                    event=self,
+                )
+                if 'ChannelDeleteEvent' in self.shard.state.provide_cache_context_in
+                else caching._CHANNEL_DELETE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -441,12 +450,15 @@ class GroupRecipientAddEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.GroupRecipientAddEventCacheContext = field(
         default=Factory(
-            lambda self: caching.GroupRecipientAddEventCacheContext(
-                type=caching.CacheContextType.group_recipient_add_event,
-                event=self,
-            )
-            if 'GroupRecipientAddEvent' in self.shard.state.provide_cache_context_in
-            else caching._GROUP_RECIPIENT_ADD_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.GroupRecipientAddEventCacheContext(
+                    type=caching.CacheContextType.group_recipient_add_event,
+                    event=self,
+                )
+                if 'GroupRecipientAddEvent' in self.shard.state.provide_cache_context_in
+                else caching._GROUP_RECIPIENT_ADD_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -496,12 +508,15 @@ class GroupRecipientRemoveEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.GroupRecipientRemoveEventCacheContext = field(
         default=Factory(
-            lambda self: caching.GroupRecipientRemoveEventCacheContext(
-                type=caching.CacheContextType.group_recipient_remove_event,
-                event=self,
-            )
-            if 'GroupRecipientRemoveEvent' in self.shard.state.provide_cache_context_in
-            else caching._GROUP_RECIPIENT_REMOVE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.GroupRecipientRemoveEventCacheContext(
+                    type=caching.CacheContextType.group_recipient_remove_event,
+                    event=self,
+                )
+                if 'GroupRecipientRemoveEvent' in self.shard.state.provide_cache_context_in
+                else caching._GROUP_RECIPIENT_REMOVE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -696,12 +711,15 @@ class MessageUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageUpdateEventCacheContext(
-                type=caching.CacheContextType.message_update_event,
-                event=self,
-            )
-            if 'MessageUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageUpdateEventCacheContext(
+                    type=caching.CacheContextType.message_update_event,
+                    event=self,
+                )
+                if 'MessageUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -747,12 +765,15 @@ class MessageAppendEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageAppendEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageAppendEventCacheContext(
-                type=caching.CacheContextType.message_append_event,
-                event=self,
-            )
-            if 'MessageAppendEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_APPEND_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageAppendEventCacheContext(
+                    type=caching.CacheContextType.message_append_event,
+                    event=self,
+                )
+                if 'MessageAppendEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_APPEND_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -797,12 +818,15 @@ class MessageDeleteEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageDeleteEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageDeleteEventCacheContext(
-                type=caching.CacheContextType.message_delete_event,
-                event=self,
-            )
-            if 'MessageDeleteEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_DELETE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageDeleteEventCacheContext(
+                    type=caching.CacheContextType.message_delete_event,
+                    event=self,
+                )
+                if 'MessageDeleteEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_DELETE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -851,12 +875,15 @@ class MessageReactEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageReactEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageReactEventCacheContext(
-                type=caching.CacheContextType.message_react_event,
-                event=self,
-            )
-            if 'MessageReactEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_REACT_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageReactEventCacheContext(
+                    type=caching.CacheContextType.message_react_event,
+                    event=self,
+                )
+                if 'MessageReactEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_REACT_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -906,12 +933,15 @@ class MessageUnreactEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageUnreactEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageUnreactEventCacheContext(
-                type=caching.CacheContextType.message_unreact_event,
-                event=self,
-            )
-            if 'MessageUnreactEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_UNREACT_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageUnreactEventCacheContext(
+                    type=caching.CacheContextType.message_unreact_event,
+                    event=self,
+                )
+                if 'MessageUnreactEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_UNREACT_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -958,12 +988,15 @@ class MessageClearReactionEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageClearReactionEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageClearReactionEventCacheContext(
-                type=caching.CacheContextType.message_clear_reaction_event,
-                event=self,
-            )
-            if 'MessageClearReactionEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_CLEAR_REACTION_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageClearReactionEventCacheContext(
+                    type=caching.CacheContextType.message_clear_reaction_event,
+                    event=self,
+                )
+                if 'MessageClearReactionEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_CLEAR_REACTION_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1011,12 +1044,15 @@ class MessageDeleteBulkEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.MessageDeleteBulkEventCacheContext = field(
         default=Factory(
-            lambda self: caching.MessageDeleteBulkEventCacheContext(
-                type=caching.CacheContextType.message_delete_bulk_event,
-                event=self,
-            )
-            if 'MessageDeleteBulkEvent' in self.shard.state.provide_cache_context_in
-            else caching._MESSAGE_DELETE_BULK_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.MessageDeleteBulkEventCacheContext(
+                    type=caching.CacheContextType.message_delete_bulk_event,
+                    event=self,
+                )
+                if 'MessageDeleteBulkEvent' in self.shard.state.provide_cache_context_in
+                else caching._MESSAGE_DELETE_BULK_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1152,12 +1188,15 @@ class ServerEmojiDeleteEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerEmojiDeleteEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerEmojiDeleteEventCacheContext(
-                type=caching.CacheContextType.server_emoji_delete_event,
-                event=self,
-            )
-            if 'ServerEmojiDeleteEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_EMOJI_DELETE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerEmojiDeleteEventCacheContext(
+                    type=caching.CacheContextType.server_emoji_delete_event,
+                    event=self,
+                )
+                if 'ServerEmojiDeleteEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_EMOJI_DELETE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1202,12 +1241,15 @@ class ServerUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerUpdateEventCacheContext(
-                type=caching.CacheContextType.server_update_event,
-                event=self,
-            )
-            if 'ServerUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerUpdateEventCacheContext(
+                    type=caching.CacheContextType.server_update_event,
+                    event=self,
+                )
+                if 'ServerUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1252,12 +1294,15 @@ class ServerDeleteEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerDeleteEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerDeleteEventCacheContext(
-                type=caching.CacheContextType.server_delete_event,
-                event=self,
-            )
-            if 'ServerDeleteEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_DELETE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerDeleteEventCacheContext(
+                    type=caching.CacheContextType.server_delete_event,
+                    event=self,
+                )
+                if 'ServerDeleteEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_DELETE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1337,12 +1382,15 @@ class ServerMemberUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerMemberUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerMemberUpdateEventCacheContext(
-                type=caching.CacheContextType.server_member_update_event,
-                event=self,
-            )
-            if 'ServerMemberUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_MEMBER_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerMemberUpdateEventCacheContext(
+                    type=caching.CacheContextType.server_member_update_event,
+                    event=self,
+                )
+                if 'ServerMemberUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_MEMBER_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1393,12 +1441,15 @@ class ServerMemberRemoveEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerMemberRemoveEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerMemberRemoveEventCacheContext(
-                type=caching.CacheContextType.server_member_remove_event,
-                event=self,
-            )
-            if 'ServerMemberRemoveEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_MEMBER_REMOVE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerMemberRemoveEventCacheContext(
+                    type=caching.CacheContextType.server_member_remove_event,
+                    event=self,
+                )
+                if 'ServerMemberRemoveEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_MEMBER_REMOVE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1451,12 +1502,15 @@ class RawServerRoleUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.RawServerRoleUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.RawServerRoleUpdateEventCacheContext(
-                type=caching.CacheContextType.raw_server_role_update_event,
-                event=self,
-            )
-            if 'RawServerRoleUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._RAW_SERVER_ROLE_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.RawServerRoleUpdateEventCacheContext(
+                    type=caching.CacheContextType.raw_server_role_update_event,
+                    event=self,
+                )
+                if 'RawServerRoleUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._RAW_SERVER_ROLE_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1514,12 +1568,15 @@ class ServerRoleDeleteEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.ServerRoleDeleteEventCacheContext = field(
         default=Factory(
-            lambda self: caching.ServerRoleDeleteEventCacheContext(
-                type=caching.CacheContextType.server_role_delete_event,
-                event=self,
-            )
-            if 'ServerRoleDeleteEvent' in self.shard.state.provide_cache_context_in
-            else caching._SERVER_ROLE_DELETE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerRoleDeleteEventCacheContext(
+                    type=caching.CacheContextType.server_role_delete_event,
+                    event=self,
+                )
+                if 'ServerRoleDeleteEvent' in self.shard.state.provide_cache_context_in
+                else caching._SERVER_ROLE_DELETE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1579,12 +1636,15 @@ class UserUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.UserUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.UserUpdateEventCacheContext(
-                type=caching.CacheContextType.user_update_event,
-                event=self,
-            )
-            if 'UserUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._USER_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.UserUpdateEventCacheContext(
+                    type=caching.CacheContextType.user_update_event,
+                    event=self,
+                )
+                if 'UserUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._USER_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1635,12 +1695,15 @@ class UserRelationshipUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.UserRelationshipUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.UserRelationshipUpdateEventCacheContext(
-                type=caching.CacheContextType.user_relationship_update_event,
-                event=self,
-            )
-            if 'UserRelationshipUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._USER_RELATIONSHIP_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.UserRelationshipUpdateEventCacheContext(
+                    type=caching.CacheContextType.user_relationship_update_event,
+                    event=self,
+                )
+                if 'UserRelationshipUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._USER_RELATIONSHIP_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1746,12 +1809,15 @@ class UserPlatformWipeEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.UserPlatformWipeEventCacheContext = field(
         default=Factory(
-            lambda self: caching.UserPlatformWipeEventCacheContext(
-                type=caching.CacheContextType.user_platform_wipe_event,
-                event=self,
-            )
-            if 'UserPlatformWipeEvent' in self.shard.state.provide_cache_context_in
-            else caching._USER_PLATFORM_WIPE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.UserPlatformWipeEventCacheContext(
+                    type=caching.CacheContextType.user_platform_wipe_event,
+                    event=self,
+                )
+                if 'UserPlatformWipeEvent' in self.shard.state.provide_cache_context_in
+                else caching._USER_PLATFORM_WIPE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1938,12 +2004,15 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.VoiceChannelLeaveEventCacheContext = field(
         default=Factory(
-            lambda self: caching.VoiceChannelLeaveEventCacheContext(
-                type=caching.CacheContextType.voice_channel_leave_event,
-                event=self,
-            )
-            if 'VoiceChannelLeaveEvent' in self.shard.state.provide_cache_context_in
-            else caching._VOICE_CHANNEL_LEAVE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.VoiceChannelLeaveEventCacheContext(
+                    type=caching.CacheContextType.voice_channel_leave_event,
+                    event=self,
+                )
+                if 'VoiceChannelLeaveEvent' in self.shard.state.provide_cache_context_in
+                else caching._VOICE_CHANNEL_LEAVE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
@@ -1998,12 +2067,15 @@ class UserVoiceStateUpdateEvent(ShardEvent):
 
     cache_context: caching.UndefinedCacheContext | caching.UserVoiceStateUpdateEventCacheContext = field(
         default=Factory(
-            lambda self: caching.UserVoiceStateUpdateEventCacheContext(
-                type=caching.CacheContextType.user_voice_state_update_event,
-                event=self,
-            )
-            if 'UserVoiceStateUpdateEvent' in self.shard.state.provide_cache_context_in
-            else caching._USER_VOICE_STATE_UPDATE_EVENT,
+            lambda self: _cast(
+                'typing.Any',
+                caching.UserVoiceStateUpdateEventCacheContext(
+                    type=caching.CacheContextType.user_voice_state_update_event,
+                    event=self,
+                )
+                if 'UserVoiceStateUpdateEvent' in self.shard.state.provide_cache_context_in
+                else caching._USER_VOICE_STATE_UPDATE_EVENT,
+            ),
             takes_self=True,
         ),
         repr=False,
