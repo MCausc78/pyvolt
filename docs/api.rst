@@ -40,6 +40,10 @@ Client
 
 .. autoclass:: Client
     :members:
+    :exclude-members: on
+
+    .. automethod:: Client.on(event, /)
+        :decorator:
 
 ClientEventHandler
 ~~~~~~~~~~~~~~~~~~

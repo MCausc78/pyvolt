@@ -412,7 +412,7 @@ class EventSubscription(typing.Generic[EventT]):
         The client that this subscription is tied to.
     id: :class:`int`
         The ID of the subscription.
-    callback
+    callback: MaybeAwaitableFunc[[EventT], None]
         The callback.
     """
 
@@ -751,8 +751,8 @@ class Client:
                     )
                 )
             )
-        self._token = token
-        self.bot = bot
+        self._token: str = token
+        self.bot: bool = bot
         # self._subscribe_methods()
 
     def _get_i(self) -> int:
@@ -786,7 +786,7 @@ class Client:
         """Handles library errors. By default, this logs exception.
 
         .. note::
-            This won't be called if handling `Ready` will raise a exception as it is fatal.
+            This won't be called if handling ``Ready`` will raise a exception as it is fatal.
         """
 
         type = payload['type']
@@ -879,7 +879,7 @@ class Client:
         """Dispatches a event.
 
         Examples
-        ---------
+        --------
 
         Dispatch a event when someone sends silent message: ::
 
@@ -937,7 +937,7 @@ class Client:
         ----------
         event: Type[EventT]
             The type of the event.
-        callback
+        callback: MaybeAwaitableFunc[[EventT], None]
             The callback for the event.
         """
         sub: EventSubscription[EventT] = EventSubscription(
@@ -960,6 +960,29 @@ class Client:
         [utils.MaybeAwaitableFunc[[EventT], None]],
         EventSubscription[EventT],
     ]:
+        """Register an event listener.
+
+        Examples
+        --------
+
+        Ping Pong: ::
+
+            @client.on(pyvolt.MessageCreateEvent)
+            async def on_message_create(event):
+                message = event.message
+                if message.content == '!ping':
+                    await message.reply('pong!')
+
+
+            # It returns :class:`EventSubscription`, so you can do ``on_message_create.remove()``
+
+        Parameters
+        ----------
+        event: Type[EventT]
+            The event to listen to.
+
+        """
+
         def decorator(
             handler: utils.MaybeAwaitableFunc[[EventT], None],
         ) -> EventSubscription[EventT]:
@@ -1025,7 +1048,7 @@ class Client:
         This function returns the **first event that meets the requirements**.
 
         Examples
-        ---------
+        --------
 
         Waiting for a user reply: ::
 

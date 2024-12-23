@@ -25,13 +25,14 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import aiohttp
 import asyncio
 from datetime import datetime, timedelta
 from inspect import isawaitable
 import logging
-import multidict
 import typing
+
+import aiohttp
+from multidict import CIMultiDict
 
 from . import routes, utils
 from .authentication import (
@@ -531,7 +532,7 @@ class HTTPClient:
 
     def add_headers(
         self,
-        headers: multidict.CIMultiDict[typing.Any],
+        headers: CIMultiDict[typing.Any],
         route: routes.CompiledRoute,
         /,
         *,
@@ -574,7 +575,7 @@ class HTTPClient:
             headers['User-Agent'] = user_agent
 
         if mfa_ticket is not None:
-            headers['X-MFA-Ticket'] = mfa_ticket
+            headers['X-Mfa-Ticket'] = mfa_ticket
 
     async def send_request(
         self,
@@ -583,7 +584,7 @@ class HTTPClient:
         *,
         method: str,
         url: str,
-        headers: multidict.CIMultiDict[typing.Any],
+        headers: CIMultiDict[typing.Any],
         **kwargs,
     ) -> aiohttp.ClientResponse:
         return await session.request(
@@ -639,7 +640,12 @@ class HTTPClient:
         :class:`aiohttp.ClientResponse`
             The aiohttp response.
         """
-        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
+        headers: CIMultiDict[str]
+
+        try:
+            headers = CIMultiDict(kwargs.pop('headers'))
+        except KeyError:
+            headers = CIMultiDict()
 
         retries = 0
 

@@ -25,12 +25,14 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import aiohttp
-from attrs import define, field
 import io
 import logging
 import typing
 from urllib.parse import quote
+
+import aiohttp
+from attrs import define, field
+from multidict import CIMultiDict
 
 from . import utils
 from .core import __version__ as version
@@ -39,6 +41,7 @@ from .errors import HTTPException
 if typing.TYPE_CHECKING:
     from .enums import AssetMetadataType
     from .state import State
+
     from typing_extensions import Self
 
 
@@ -378,6 +381,16 @@ async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, t
 
 
 class CDNClient:
+    """Represents an HTTP client sending HTTP requests to the Revolt Autumn API.
+
+    Attributes
+    ----------
+    state: :class:`.State`
+        The state.
+    user_agent: :class:`str`
+        The HTTP user agent used when making requests.
+    """
+
     __slots__ = (
         '_base',
         '_session',
@@ -403,13 +416,37 @@ class CDNClient:
 
     @property
     def base(self) -> str:
+        """:class:`str`: The base URL"""
         return self._base
 
+    @property
+    def bot(self) -> bool:
+        """:class:`bool`: Whether the token belongs to bot account."""
+        return self.state.http.bot
+
+    @property
+    def token(self) -> str:
+        """:class:`str`: The token in use. May be empty if not started."""
+        return self.state.http.token
+
     async def request(self, method: str, route: str, /, **kwargs) -> aiohttp.ClientResponse:
-        headers: dict[str, typing.Any] = kwargs.pop('headers', {})
+        headers: CIMultiDict[str]
+
+        try:
+            tmp = kwargs.pop('headers')
+        except KeyError:
+            headers = CIMultiDict()
+        else:
+            headers = CIMultiDict(tmp)
+
+        if kwargs.pop('authenticated', True):
+            th = 'X-Bot-Token' if self.bot else 'X-Session-Token'
+            headers[th] = self.token
+
         if not kwargs.pop('manual_accept', False):
-            headers['accept'] = 'application/json'
-        headers['user-agent'] = self.user_agent
+            headers['Accept'] = 'application/json'
+
+        headers['User-Agent'] = self.user_agent
 
         url = self._base + route
 
