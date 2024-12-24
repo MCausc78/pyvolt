@@ -296,7 +296,6 @@ def setup_logging(
     logger.addHandler(handler)
 
 
-
 _UTC: datetime.timezone = datetime.timezone.utc
 
 PY_310: bool = sys.version_info >= (3, 10)

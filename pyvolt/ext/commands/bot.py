@@ -146,24 +146,24 @@ class Bot(Client):
 
     async def invoke(self, ctx: Context[Self], /) -> None:
         if ctx.command is not None:
-            self.dispatch(CommandEvent(shard=ctx.shard, context=ctx))
+            self.dispatch(CommandEvent(context=ctx))
 
-            self.dispatch(CommandCompletionEvent(shard=ctx.shard, context=ctx))
+            self.dispatch(CommandCompletionEvent(context=ctx))
         elif ctx.label:
             exc = CommandNotFound(f'Command "{ctx.label}" is not found')
-            self.dispatch(CommandErrorEvent(shard=ctx.shard, context=ctx, error=exc))
+            self.dispatch(CommandErrorEvent(context=ctx, error=exc))
 
     async def process_commands(self, message: Message, shard: Shard, /) -> None:
         ctx = await self.get_context(message, shard)
 
-        tmp = self.skip_check(ctx)
+        tmp = self.skip_check(ctx)  # type: ignore
         if isawaitable(tmp):
             tmp = await tmp
 
         if tmp:
             return
 
-        await self.invoke(ctx)
+        await self.invoke(ctx)  # type: ignore
 
     async def on_message_create(self, event: MessageCreateEvent, /) -> None:
         await self.process_commands(event.message, event.shard)

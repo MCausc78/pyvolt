@@ -59,7 +59,7 @@ class Command:
         example: str = '',
         hidden: bool = False,
     ) -> None:
-        self.aliases: list[str] = aliases
+        self.aliases: list[str] = aliases or []
         self.args: str = args
         # self.callback: Callable[[E, Context], pyvolt.utils.MaybeAwaitable[typing.Any]] = callback
         # self.checks: list[Check] = checks

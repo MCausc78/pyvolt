@@ -317,4 +317,4 @@ CurrentServer._fallback = True
 
 class Signature(inspect.Signature):
     _parameter_cls = Parameter
-    parameters: OrderedDict[str, Parameter]
+    parameters: OrderedDict[str, Parameter]  # type: ignore # make pyright shut up

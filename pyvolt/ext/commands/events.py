@@ -42,10 +42,10 @@ class CommandErrorEvent(BaseEvent):
     event_name: typing.ClassVar[typing.Literal['command_error']] = 'command_error'
 
     context: Context[Bot] = field(repr=True, kw_only=True)
-    """The invocation context."""
+    """:class:`.Context`: The invocation context."""
 
     error: CommandError = field(repr=True, kw_only=True)
-    """The error that was raised."""
+    """:class:`.CommandError`: The error that was raised."""
 
 
 @define(slots=True)
@@ -55,7 +55,7 @@ class CommandEvent(BaseEvent):
     event_name: typing.ClassVar[typing.Literal['command']] = 'command'
 
     context: Context[Bot] = field(repr=True, kw_only=True)
-    """The invocation context."""
+    """:class:`.Context`: The invocation context."""
 
 
 @define(slots=True)
@@ -68,7 +68,7 @@ class CommandCompletionEvent(BaseEvent):
     event_name: typing.ClassVar[typing.Literal['command_completion']] = 'command_completion'
 
     context: Context[Bot] = field(repr=True, kw_only=True)
-    """The invocation context."""
+    """:class:`.Context`: The invocation context."""
 
 
 __all__ = (

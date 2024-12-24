@@ -322,7 +322,7 @@ class NoData(PyvoltException):
 
     This is different from :exc:`.NotFound`.
     """
-    
+
     __slots__ = ('what', 'type')
 
     def __init__(self, what: str, type: str) -> None:
