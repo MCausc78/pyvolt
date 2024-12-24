@@ -57,14 +57,14 @@ class UserSettings:
 
     Attributes
     ----------
-    state: :class:`State`
+    state: :class:`.State`
         The state that manages current user settings.
     data: Dict[:class:`str`, Tuple[:class:`int`, :class:`str`]]
         The mapping of ``{key: (timestamp, value)}``.
     mocked: :class:`bool`
         Whether user settings are mocked. Mocked user settings are created by library itself, if not logged in, or in HTTP-only mode.
     partial: :class:`bool`
-        Whether user settings are partial. This is set to ``True`` when used via :attr:`UserSettingsUpdateEvent.partial`.
+        Whether user settings are partial. This is set to ``True`` when used via :attr:`.UserSettingsUpdateEvent.partial`.
     """
 
     __slots__ = (
@@ -126,12 +126,12 @@ class UserSettings:
     def locally_update(self, partial: UserSettings, /) -> None:
         """Locally updates user settings with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep settings up to date.
 
         Parameters
         ----------
-        partial: :class:`UserSettings`
+        partial: :class:`.UserSettings`
             The data to update settings with.
         """
         self.data.update(partial.data)
@@ -139,7 +139,7 @@ class UserSettings:
 
     @property
     def android(self) -> AndroidUserSettings:
-        """:class:`AndroidUserSettings`: The Android user settings.
+        """:class:`.AndroidUserSettings`: The Android user settings.
 
         Raises
         ------
@@ -152,7 +152,7 @@ class UserSettings:
 
     @property
     def revite(self) -> ReviteUserSettings:
-        """:class:`ReviteUserSettings`: The Revite user settings.
+        """:class:`.ReviteUserSettings`: The Revite user settings.
 
         Raises
         ------
@@ -165,7 +165,7 @@ class UserSettings:
 
     @property
     def jolt(self) -> JoltUserSettings:
-        """:class:`JoltUserSettings`: The Jolt user settings.
+        """:class:`.JoltUserSettings`: The Jolt user settings.
 
         Raises
         ------
@@ -180,7 +180,7 @@ class UserSettings:
         return self.data[key][1]
 
     def get(self, key: str, default: D = None) -> str | D:
-        """Unionl[:class:`str`, D]: Get a user setting."""
+        """Union[:class:`str`, D]: Get a user setting."""
         if key in self.data:
             return self.data[key][1]
         return default
@@ -207,7 +207,7 @@ class AndroidUserSettings:
 
     Attributes
     ----------
-    parent: :class:`UserSettings`
+    parent: :class:`.UserSettings`
         The parent.
     """
 
@@ -228,10 +228,10 @@ class AndroidUserSettings:
 
         self.locally_update(payload)
 
-    def locally_update(self, payload: raw.AndroidUserSettings) -> None:
+    def locally_update(self, payload: raw.AndroidUserSettings, /) -> None:
         """Locally updates user settings with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep settings up to date.
 
         Parameters
@@ -267,7 +267,7 @@ class AndroidUserSettings:
 
     @property
     def theme(self) -> AndroidTheme:
-        """:class:`AndroidTheme`: The current theme."""
+        """:class:`.AndroidTheme`: The current theme."""
         return self._theme or AndroidTheme.system
 
     @property
@@ -277,7 +277,7 @@ class AndroidUserSettings:
 
     @property
     def reply_style(self) -> AndroidMessageReplyStyle:
-        """:class:`AndroidMessageReplyStyle`: The current theme."""
+        """:class:`.AndroidMessageReplyStyle`: The current theme."""
         return self._reply_style or AndroidMessageReplyStyle.swipe_to_reply
 
     @property
@@ -327,24 +327,21 @@ class AndroidUserSettings:
 
         Parameters
         ----------
-        initial_payload: :class:`UndefinedOr`[raw.AndroidUserSettings]
+        initial_payload: UndefinedOr[raw.AndroidUserSettings]
             The initial payload.
-        theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
+        theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
             The new theme.  Could be ``None`` to remove it from internal object.
-        color_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
+        color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
-        reply_style: :class:`UndefinedOr`[Optional[:class:`AndroidMessageReplyStyle`]]
+        reply_style: UndefinedOr[Optional[:class:`.AndroidMessageReplyStyle`]]
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
-        avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
+        avatar_radius: UndefinedOr[Optional[Union[:class:`.AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
-        initial_special_embed_settings_payload: :class:`UndefinedOr`[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
+        initial_special_embed_settings_payload: UndefinedOr[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
             The initial payload. Could be ``None`` to remove it from internal object.
-
-            .. note::
-                Passing ``embed_youtube`` and ``embed_apple_music`` .
-        embed_youtube: :class:`UndefinedOr`[:class:`bool`]
+        embed_youtube: UndefinedOr[:class:`bool`]
             Whether to render special YouTube embeds.
-        embed_apple_music: :class:`UndefinedOr`[:class:`bool`]
+        embed_apple_music: UndefinedOr[:class:`bool`]
             Whether to render special Apple Music embeds.
         """
 
@@ -427,22 +424,19 @@ class AndroidUserSettings:
         ----------
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
             External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
-        theme: :class:`UndefinedOr`[Optional[:class:`AndroidTheme`]]
+        theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
             The new theme.  Could be ``None`` to remove it from internal object.
-        color_overrides: :class:`UndefinedOr`[Optional[Dict[:class:`str`, :class:`int`]]]
+        color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
-        reply_style: :class:`UndefinedOr`[Optional[:class:`AndroidMessageReplyStyle`]]
+        reply_style: UndefinedOr[Optional[:class:`.AndroidMessageReplyStyle`]]
             The new message reply style. Passing ``None`` denotes ``messageReplyStyle`` removal in internal object.
-        avatar_radius: :class:`UndefinedOr`[Optional[Union[:class:`AndroidProfilePictureShape`, :class:`int`]]]
+        avatar_radius: UndefinedOr[Optional[Union[:class:`.AndroidProfilePictureShape`, :class:`int`]]]
             The new avatar radius. Passing ``None`` denotes ``avatarRadius`` removal in internal object.
-        initial_special_embed_settings_payload: :class:`UndefinedOr`[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
+        initial_special_embed_settings_payload: UndefinedOr[Optional[raw.AndroidUserSettingsSpecialEmbedSettings]]
             The initial payload. Could be ``None`` to remove it from internal object.
-
-            .. note::
-                Passing ``embed_youtube`` and ``embed_apple_music`` .
-        embed_youtube: :class:`UndefinedOr`[:class:`bool`]
+        embed_youtube: UndefinedOr[:class:`bool`]
             Whether to render special YouTube embeds.
-        embed_apple_music: :class:`UndefinedOr`[:class:`bool`]
+        embed_apple_music: UndefinedOr[:class:`bool`]
             Whether to render special Apple Music embeds.
         """
         payload = self.payload_for(
@@ -462,9 +456,9 @@ class ReviteNotificationOptions:
 
     Attributes
     ----------
-    servers: Dict[:class:`str`, :class:`ReviteNotificationState`]
+    servers: Dict[:class:`str`, :class:`.ReviteNotificationState`]
         The servers.
-    channels: Dict[:class:`str`, :class:`ReviteNotificationState`]
+    channels: Dict[:class:`str`, :class:`.ReviteNotificationState`]
         The channels.
     """
 
@@ -490,9 +484,9 @@ class ReviteUserSettings:
 
     Attributes
     ----------
-    parent: :class:`UserSettings`
+    parent: :class:`.UserSettings`
         The raw user settings.
-    last_viewed_changelog_entry: Optional[:class:`ReviteChangelogEntry`]
+    last_viewed_changelog_entry: Optional[:class:`.ReviteChangelogEntry`]
         The last viewed changelog entry.
     seasonal: Optional[:class:`bool`]
         Whether to display effects in the home tab during holiday seasons or not.
@@ -501,7 +495,7 @@ class ReviteUserSettings:
     ligatures: Optional[:class:`bool`]
         Whether to combine characters together or not.
         For example, ``->`` turns into an arrow if this property is ``True``.
-        Applicable only for supported fonts (such as :attr:`ReviteFont.inter`).
+        Applicable only for supported fonts (such as :attr:`.ReviteFont.inter`).
     """
 
     __slots__ = (
@@ -528,7 +522,7 @@ class ReviteUserSettings:
         '_appearance_theme_overrides',
     )
 
-    def __init__(self, parent: UserSettings) -> None:
+    def __init__(self, parent: UserSettings, /) -> None:
         self.parent: UserSettings = parent
         self.locally_update(parent, full=True)
 
@@ -536,21 +530,21 @@ class ReviteUserSettings:
         return f'<{self.__class__.__name__} last_viewed_changelog_entry={self.last_viewed_changelog_entry!r} language={self.language!r} notification_options={self._notification_options!r} ordering={self.ordering!r} emoji_pack={self.emoji_pack!r} seasonal={self.seasonal!r} transparent={self.transparent!r} ligatures={self.ligatures!r} base_theme={self.base_theme!r} custom_css={self.custom_css!r} font={self.font!r} monofont={self.monofont!r} theme_overrides={self.theme_overrides!r}>'
 
     def get_language(self) -> Language | None:
-        """Optional[:class:`Language`]: The current language."""
+        """Optional[:class:`.Language`]: The current language."""
         return self._language
 
     @property
     def language(self) -> Language:
-        """:class:`Language`: The current language. Defaults to :attr:`Language.english_simplified` if language is undefined."""
+        """:class:`.Language`: The current language. Defaults to :attr:`.Language.english_simplified` if language is undefined."""
         return self._language or Language.english
 
     def get_notification_options(self) -> ReviteNotificationOptions | None:
-        """Optional[:class:`ReviteNotificationOptions`]: The notification options."""
+        """Optional[:class:`.ReviteNotificationOptions`]: The notification options."""
         return self._notification_options
 
     @property
     def notification_options(self) -> ReviteNotificationOptions:
-        """:class:`ReviteNotificationOptions`: The notification options."""
+        """:class:`.ReviteNotificationOptions`: The notification options."""
         return self._notification_options or ReviteNotificationOptions({'server': {}, 'channel': {}})
 
     @property
@@ -559,12 +553,12 @@ class ReviteUserSettings:
         return self._ordering or []
 
     def get_emoji_pack(self) -> ReviteEmojiPack | None:
-        """Optional[:class:`ReviteEmojiPack`]: Gets the current emoji pack."""
+        """Optional[:class:`.ReviteEmojiPack`]: Gets the current emoji pack."""
         return self._appearance_emoji_pack
 
     @property
     def emoji_pack(self) -> ReviteEmojiPack:
-        """:class:`ReviteEmojiPack`: The current emoji pack."""
+        """:class:`.ReviteEmojiPack`: The current emoji pack."""
         return self._appearance_emoji_pack or ReviteEmojiPack.mutant_remix
 
     def is_seasonal(self) -> bool:
@@ -579,17 +573,17 @@ class ReviteUserSettings:
         """:class:`bool`: Whether to combine characters together or not.
         For example, ``->`` turns into an arrow if this property is ``True``.
 
-        Applicable only for supported fonts (such as :attr:`ReviteFont.inter`).
+        Applicable only for supported fonts (such as :attr:`.ReviteFont.inter`).
         """
         return self.ligatures is not False
 
     def get_base_theme(self) -> ReviteBaseTheme | None:
-        """Optional[:class:`ReviteBaseTheme`]: The current base theme."""
+        """Optional[:class:`.ReviteBaseTheme`]: The current base theme."""
         return self._appearance_theme_base
 
     @property
     def base_theme(self) -> ReviteBaseTheme:
-        """:class:`ReviteBaseTheme`: The current base theme. Defaults to :attr:`ReviteBaseTheme.dark` if base theme is undefined."""
+        """:class:`.ReviteBaseTheme`: The current base theme. Defaults to :attr:`.ReviteBaseTheme.dark` if base theme is undefined."""
         return self._appearance_theme_base or ReviteBaseTheme.dark
 
     @property
@@ -598,30 +592,30 @@ class ReviteUserSettings:
         return self._appearance_theme_css
 
     def get_font(self) -> ReviteFont | None:
-        """Optional[:class:`ReviteFont`]: The current Revite font."""
+        """Optional[:class:`.ReviteFont`]: The current Revite font."""
         return self._appearance_theme_font
 
     @property
     def font(self) -> ReviteFont:
-        """:class:`ReviteFont`: The current Revite font. Defaults to :attr:`ReviteFont.open_sans` if font is undefined."""
+        """:class:`.ReviteFont`: The current Revite font. Defaults to :attr:`.ReviteFont.open_sans` if font is undefined."""
         return self._appearance_theme_font or ReviteFont.open_sans
 
     def get_monofont(self) -> ReviteMonoFont | None:
-        """Optional[:class:`ReviteMonoFont`]: The current Revite monospace font."""
+        """Optional[:class:`.ReviteMonoFont`]: The current Revite monospace font."""
         return self._appearance_theme_monofont
 
     @property
     def monofont(self) -> ReviteMonoFont:
-        """:class:`ReviteMonoFont`: The current Revite monospace font. Defaults to :attr:`ReviteMonoFont.fira_code` if monofont is undefined."""
+        """:class:`.ReviteMonoFont`: The current Revite monospace font. Defaults to :attr:`.ReviteMonoFont.fira_code` if monofont is undefined."""
         return self._appearance_theme_monofont or ReviteMonoFont.fira_code
 
     def get_theme_overrides(self) -> dict[ReviteThemeVariable, str] | None:
-        """Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]: The theme overrides."""
+        """Optional[Dict[:class:`.ReviteThemeVariable`, :class:`str`]]: The theme overrides."""
         return self._appearance_theme_overrides
 
     @property
     def theme_overrides(self) -> dict[ReviteThemeVariable, str]:
-        """Dict[:class:`ReviteThemeVariable`, :class:`str`]: The theme overrides."""
+        """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides."""
         return self._appearance_theme_overrides or {}
 
     def _on_changelog(self, changelog: raw.ReviteChangelog, /) -> None:
@@ -686,12 +680,12 @@ class ReviteUserSettings:
     def locally_update(self, payload: UserSettings, /, *, full: bool) -> None:
         """Locally updates user settings with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep settings up to date.
 
         Parameters
         ----------
-        payload: :class:`UserSettings`
+        payload: :class:`.UserSettings`
             The data to update settings with.
         full: :class:`bool`
             Whether the payload is full.
@@ -778,7 +772,7 @@ class ReviteUserSettings:
         monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
         overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
     ) -> raw.ReviteUserSettingsPayload:
-        """Builds a payload for Revite user settings. You must pass it as first argument to :meth:`HTTPClient.edit_user_settings`, like so:
+        """Builds a payload for Revite user settings. You must pass it as first argument to :meth:`.HTTPClient.edit_user_settings`, like so:
 
         .. code-block:: python3
 
@@ -787,63 +781,63 @@ class ReviteUserSettings:
 
         Parameters
         ----------
-        initial_changelog_payload: :class:`UndefinedOr`[raw.ReviteChangelog]
+        initial_changelog_payload: UndefinedOr[raw.ReviteChangelog]
             The initial ``changelog`` payload.
-        last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
+        last_viewed_changelog_entry: UndefinedOr[Union[:class:`.ReviteChangelogEntry`, :class:`int`]]
             The last viewed changelog entry.
-        initial_locale_payload: :class:`UndefinedOr`[raw.ReviteLocaleOptions]
+        initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions]
             The initial ``locale`` payload.
-        language: :class:`UndefinedOr`[:class:`Language`]
+        language: UndefinedOr[:class:`.Language`]
             The language.
-        initial_notifications_payload: :class:`UndefinedOr`[raw.ReviteNotificationOptions]
+        initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions]
             The initial ``notifications`` payload.
-        server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+        server_notifications: UndefinedOr[Dict[ULIDOr[:class:`.BaseServer`], :class:`.ReviteNotificationState`]]
             The notification options for servers.
         merge_server_notifications: :class:`bool`
             Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
-        channel_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+        channel_notifications: UndefinedOr[Dict[ULIDOr[:class:`.Channel`], :class:`.ReviteNotificationState`]]
             The notification options for channels.
         merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
-        initial_ordering_payload: :class:`UndefinedOr`[raw.ReviteOrdering]
+        initial_ordering_payload: UndefinedOr[raw.ReviteOrdering]
             The initial ``ordering`` payload.
-        ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
+        ordering: UndefinedOr[List[ULIDOr[:class:`.BaseServer`]]]
             The servers tab order.
-        initial_appearance_payload: :class:`UndefinedOr`[raw.ReviteAppearanceSettings]
+        initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings]
             The initial ``appearance`` payload.
-        emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
+        emoji_pack: UndefinedOr[Optional[:class:`.ReviteEmojiPack`]]
             The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
-        seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        seasonal: UndefinedOr[Optional[:class:`bool`]]
             To display effects in the home tab during holiday seasons or not.
             Passing ``None`` denotes ``appearance.appearance:seasonal`` removal in internal object.
-        transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        transparent: UndefinedOr[Optional[:class:`bool`]]
             To enable transparency effects throughout the app or not.
             Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
-        initial_theme_payload: :class:`UndefinedOr`[raw.ReviteThemeSettings]
+        initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings]
             The initial ``theme`` payload.
-        ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
-            To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
+        ligatures: UndefinedOr[Optional[:class:`bool`]]
+            To combine characters together or not. More details in :attr:`.ReviteUserSettings.ligatures`.
             Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
-        base_theme: :class:`UndefinedOr`[Optional[:class:`ReviteBaseTheme`]]
+        base_theme: UndefinedOr[Optional[:class:`.ReviteBaseTheme`]]
             The base theme to use.
             Passing ``None`` denotes ``theme.appearance:theme:base`` removal in internal object.
-        custom_css: :class:`UndefinedOr`[Optional[:class:`str`]]
+        custom_css: UndefinedOr[Optional[:class:`str`]]
             The CSS string.
             Passing ``None`` denotes ``theme.appearance:theme:css`` removal in internal object.
-        font: :class:`UndefinedOr`[Optional[:class:`ReviteFont`]]
+        font: UndefinedOr[Optional[:class:`.ReviteFont`]]
             The font to use across the app.
             Passing ``None`` denotes ``theme.appearance:theme:font`` removal in internal object.
-        monofont: :class:`UndefinedOr`[Optional[:class:`ReviteMonoFont`]]
+        monofont: UndefinedOr[Optional[:class:`.ReviteMonoFont`]]
             The monospace font to use in codeblocks.
             Passing ``None`` denotes ``theme.appearance:theme:monoFont`` removal in internal object.
-        overrides: :class:`UndefinedOr`[Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]]
+        overrides: UndefinedOr[Optional[Dict[:class:`.ReviteThemeVariable`, :class:`str`]]]
             The theme overrides.
             Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
 
         Returns
         -------
         Dict[:class:`str`, Any]
-            The payload that must to be passed in :meth:`HTTPClient.edit_user_settings`.
+            The payload that must to be passed in :meth:`.HTTPClient.edit_user_settings`.
         """
         payload: raw.ReviteUserSettingsPayload = {}
 
@@ -1048,56 +1042,56 @@ class ReviteUserSettings:
         ----------
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
             External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
-        initial_changelog_payload: :class:`UndefinedOr`[raw.ReviteChangelog]
+        initial_changelog_payload: UndefinedOr[raw.ReviteChangelog]
             The initial ``changelog`` payload.
-        last_viewed_changelog_entry: :class:`UndefinedOr`[Union[:class:`ReviteChangelogEntry`, :class:`int`]]
+        last_viewed_changelog_entry: UndefinedOr[Union[:class:`.ReviteChangelogEntry`, :class:`int`]]
             The last viewed changelog entry.
-        initial_locale_payload: :class:`UndefinedOr`[raw.ReviteLocaleOptions]
+        initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions]
             The initial ``locale`` payload.
-        language: :class:`UndefinedOr`[:class:`Language`]
+        language: UndefinedOr[:class:`.Language`]
             The language.
-        initial_notifications_payload: :class:`UndefinedOr`[raw.ReviteNotificationOptions]
+        initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions]
             The initial ``notifications`` payload.
-        server_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`BaseServer`], :class:`ReviteNotificationState`]]
+        server_notifications: UndefinedOr[Dict[ULIDOr[:class:`.BaseServer`], :class:`.ReviteNotificationState`]]
             The notification options for servers.
         merge_server_notifications: :class:`bool`
             Whether to merge new servers notifications options into existing ones. Defaults to ``True``.
-        channel_notifications: :class:`UndefinedOr`[Dict[:class:`ULIDOr`[:class:`Channel`], :class:`ReviteNotificationState`]]
+        channel_notifications: UndefinedOr[Dict[ULIDOr[:class:`.Channel`], :class:`.ReviteNotificationState`]]
             The notification options for channels.
         merge_channel_notifications: :class:`bool`
             Whether to merge new channels notifications options into existing ones. Defaults to ``True``.
-        initial_ordering_payload: :class:`UndefinedOr`[raw.ReviteOrdering]
+        initial_ordering_payload: UndefinedOr[raw.ReviteOrdering]
             The initial ``ordering`` payload.
-        ordering: :class:`UndefinedOr`[List[:class:`ULIDOr`[:class:`BaseServer`]]]
+        ordering: UndefinedOr[List[ULIDOr[:class:`.BaseServer`]]]
             The servers tab order.
-        initial_appearance_payload: :class:`UndefinedOr`[raw.ReviteAppearanceSettings]
+        initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings]
             The initial ``appearance`` payload.
-        emoji_pack: :class:`UndefinedOr`[Optional[:class:`ReviteEmojiPack`]]
+        emoji_pack: UndefinedOr[Optional[:class:`.ReviteEmojiPack`]]
             The new emoji pack to use. Passing ``None`` denotes ``appearance.appearance:emoji`` removal in internal object.
-        seasonal: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        seasonal: UndefinedOr[Optional[:class:`bool`]]
             To display effects in the home tab during holiday seasons or not.
             Passing ``None`` denotes ``appearance.appearance:seasonal`` removal in internal object.
-        transparent: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        transparent: UndefinedOr[Optional[:class:`bool`]]
             To enable transparency effects throughout the app or not.
             Passing ``None`` denotes ``appearance.appearance:transparency`` removal in internal object.
-        initial_theme_payload: :class:`UndefinedOr`[raw.ReviteThemeSettings]
+        initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings]
             The initial ``theme`` payload.
-        ligatures: :class:`UndefinedOr`[Optional[:class:`bool`]]
-            To combine characters together or not. More details in :attr:`ReviteUserSettings.ligatures`.
+        ligatures: UndefinedOr[Optional[:class:`bool`]]
+            To combine characters together or not. More details in :attr:`.ReviteUserSettings.ligatures`.
             Passing ``None`` denotes ``theme.appearance:ligatures`` removal in internal object.
-        base_theme: :class:`UndefinedOr`[Optional[:class:`ReviteBaseTheme`]]
+        base_theme: UndefinedOr[Optional[:class:`.ReviteBaseTheme`]]
             The base theme to use.
             Passing ``None`` denotes ``theme.appearance:theme:base`` removal in internal object.
-        custom_css: :class:`UndefinedOr`[Optional[:class:`str`]]
+        custom_css: UndefinedOr[Optional[:class:`str`]]
             The CSS string.
             Passing ``None`` denotes ``theme.appearance:theme:css`` removal in internal object.
-        font: :class:`UndefinedOr`[Optional[:class:`ReviteFont`]]
+        font: UndefinedOr[Optional[:class:`.ReviteFont`]]
             The font to use across the app.
             Passing ``None`` denotes ``theme.appearance:theme:font`` removal in internal object.
-        monofont: :class:`UndefinedOr`[Optional[:class:`ReviteMonoFont`]]
+        monofont: UndefinedOr[Optional[:class:`.ReviteMonoFont`]]
             The monospace font to use in codeblocks.
             Passing ``None`` denotes ``theme.appearance:theme:monoFont`` removal in internal object.
-        overrides: :class:`UndefinedOr`[Optional[Dict[:class:`ReviteThemeVariable`, :class:`str`]]]
+        overrides: UndefinedOr[Optional[Dict[:class:`.ReviteThemeVariable`, :class:`str`]]]
             The theme overrides.
             Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
         """
@@ -1127,8 +1121,8 @@ class ReviteUserSettings:
             overrides=overrides,
         )
 
-        # It works tho
-        await self.parent.edit({}, edited_at, **payload)
+        # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
+        await self.parent.edit(payload, edited_at)  # type: ignore
 
 
 class JoltUserSettings:
@@ -1136,7 +1130,7 @@ class JoltUserSettings:
 
     Attributes
     ----------
-    parent: :class:`UserSettings`
+    parent: :class:`.UserSettings`
         The raw user settings.
     low_data_mode: Optional[:class:`bool`]
         Whether Jolt should NOT load images and fetch users if not found in cache.
@@ -1156,7 +1150,7 @@ class JoltUserSettings:
         'receive_typing_indicators',
     )
 
-    def __init__(self, parent: UserSettings) -> None:
+    def __init__(self, parent: UserSettings, /) -> None:
         self.parent: UserSettings = parent
         self.locally_update(parent, full=True)
 
@@ -1182,12 +1176,12 @@ class JoltUserSettings:
     def locally_update(self, payload: UserSettings, /, *, full: bool) -> None:
         """Locally updates user settings with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep settings up to date.
 
         Parameters
         ----------
-        payload: :class:`UserSettings`
+        payload: :class:`.UserSettings`
             The data to update settings with.
         full: :class:`bool`
             Whether the payload is full.
@@ -1237,19 +1231,19 @@ class JoltUserSettings:
 
         Parameters
         ----------
-        low_data_mode: :class:`UndefinedOr`[:class:`bool`]
+        low_data_mode: UndefinedOr[:class:`bool`]
             Whether Jolt should NOT load images and fetch users if not found in cache.
-        compact_mode: :class:`UndefinedOr`[:class:`bool`]
+        compact_mode: UndefinedOr[:class:`bool`]
             Whether to hide user profile pictures in chats. Easier on the eyes.
-        send_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+        send_typing_indicators: UndefinedOr[:class:`bool`]
             Whether to send typing indicators when writing messages.
-        receive_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+        receive_typing_indicators: UndefinedOr[:class:`bool`]
             Whether to show typing indicators ('<user> is typing...').
 
         Returns
         -------
         Dict[:class:`str`, Any]
-            The payload that must to be passed in :meth:`HTTPClient.edit_user_settings`.
+            The payload that must to be passed in :meth:`.HTTPClient.edit_user_settings`.
         """
         payload: raw.JoltUserSettings = {}
         if low_data_mode is not UNDEFINED:
@@ -1278,14 +1272,14 @@ class JoltUserSettings:
         Parameters
         ----------
         edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
-            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
-        low_data_mode: :class:`UndefinedOr`[:class:`bool`]
+            External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
+        low_data_mode: UndefinedOr[:class:`bool`]
             Whether Jolt should NOT load images and fetch users if not found in cache.
-        compact_mode: :class:`UndefinedOr`[:class:`bool`]
+        compact_mode: UndefinedOr[:class:`bool`]
             Whether to hide user profile pictures in chats. Easier on the eyes.
-        send_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+        send_typing_indicators: UndefinedOr[:class:`bool`]
             Whether to send typing indicators when writing messages.
-        receive_typing_indicators: :class:`UndefinedOr`[:class:`bool`]
+        receive_typing_indicators: UndefinedOr[:class:`bool`]
             Whether to show typing indicators ('<user> is typing...').
         """
         payload = self.payload_for(
@@ -1294,7 +1288,8 @@ class JoltUserSettings:
             send_typing_indicators=send_typing_indicators,
             receive_typing_indicators=receive_typing_indicators,
         )
-        await self.parent.edit({}, edited_at, **payload)
+        # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
+        await self.parent.edit(payload, edited_at)  # type: ignore
 
 
 __all__ = (

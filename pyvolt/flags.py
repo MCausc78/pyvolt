@@ -9,14 +9,16 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing_extensions import Self
 
+from .utils import MISSING
+
 BF = typing.TypeVar('BF', bound='BaseFlags')
 
 
 class flag(typing.Generic[BF]):
     __slots__ = (
+        '__doc__',
         '_func',
         '_parent',
-        'doc',
         'name',
         'value',
         'alias',
@@ -25,9 +27,9 @@ class flag(typing.Generic[BF]):
     )
 
     def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
+        self.__doc__: str | None = None
         self._func: Callable[[BF], int] = MISSING
         self._parent: type[BF] = MISSING
-        self.doc: str | None = None
         self.name: str = ''
         self.value: int = 0
         self.alias: bool = alias
@@ -36,7 +38,7 @@ class flag(typing.Generic[BF]):
 
     def __call__(self, func: Callable[[BF], int], /) -> Self:
         self._func = func
-        self.doc = func.__doc__
+        self.__doc__ = func.__doc__
         self.name = func.__name__
         return self
 
@@ -52,7 +54,7 @@ class flag(typing.Generic[BF]):
         else:
             return instance._get(self)
 
-    def __set__(self, instance: BF, value: bool) -> None:
+    def __set__(self, instance: BF, value: bool, /) -> None:
         instance._set(self, value)
 
     def __and__(self, other: BF | flag[BF] | int, /) -> BF:
@@ -66,6 +68,9 @@ class flag(typing.Generic[BF]):
 
     def __xor__(self, other: BF | flag[BF] | int, /) -> BF:
         return self._parent(self.value) ^ other
+
+    def __int__(self) -> int:
+        return self.value
 
 
 class BaseFlags:
@@ -86,7 +91,7 @@ class BaseFlags:
     def __init_subclass__(cls, *, inverted: bool = False, support_kwargs: bool = True) -> None:
         valid_flags = {}
         flags = {}
-        for k, f in inspect.getmembers(cls):
+        for _, f in inspect.getmembers(cls):
             if isinstance(f, flag):
                 f.value = f._func(cls)
                 if f.alias:
@@ -200,10 +205,12 @@ class BaseFlags:
 
     @classmethod
     def all(cls) -> Self:
+        """Returns instance with all flags."""
         return cls(cls.ALL_VALUE)
 
     @classmethod
     def none(cls) -> Self:
+        """Returns instance with no flags."""
         return cls(cls.NONE_VALUE)
 
     @classmethod
@@ -237,19 +244,19 @@ class BaseFlags:
         else:
             raise TypeError(f'cannot get {other.__class__.__name__} value')
 
-    def is_subset(self, other: Self | flag[Self] | int) -> bool:
+    def is_subset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or fewer flags as other."""
         return (self.value & self._value_of(other)) == self.value
 
-    def is_superset(self, other: Self | flag[Self] | int) -> bool:
+    def is_superset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or more flags as other."""
         return (self.value | self._value_of(other)) == self.value
 
-    def is_strict_subset(self, other: Self | flag[Self] | int) -> bool:
+    def is_strict_subset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict subset of those on self."""
         return self.is_subset(other) and self != other
 
-    def is_strict_superset(self, other: Self | flag[Self] | int) -> bool:
+    def is_strict_superset(self, other: Self | flag[Self] | int, /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict superset of those on self."""
         return self.is_superset(other) and self != other
 
@@ -291,7 +298,7 @@ class BaseFlags:
         self.value ^= self._value_of(other)
         return self
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other: object, /) -> bool:
         return not self.__eq__(other)
 
     def __or__(self, other: Self | flag[Self] | int, /) -> Self:
@@ -307,15 +314,28 @@ def doc_flags(
     *,
     added_in: str | None = None,
 ) -> Callable[[type[BF]], type[BF]]:
+    """Document flag classes.
+
+    Parameters
+    ----------
+    intro: :class:`str`
+        The intro.
+    added_in: Optional[:class:`str`]
+        The version the flags were added in.
+
+    Returns
+    -------
+    Callable[[Type[BF]], Type[BF]]
+        The documented class.
+    """
+
     def decorator(cls: type[BF]) -> type[BF]:
         directives = ''
 
         if added_in:
-            directives += '    \n'
-            directives += f'    .. versionadded:: {added_in}'
-            directives += '\n'
+            directives += '    \n    .. versionadded:: {}\n'.format(added_in)
         cls.__doc__ = f"""{intro}
-
+{directives}
     .. container:: operations
 
         .. describe:: x == y
@@ -324,35 +344,32 @@ def doc_flags(
         .. describe:: x != y
 
             Checks if two flags are not equal.
-
         .. describe:: x | y, x |= y
 
             Returns a {cls.__name__} instance with all enabled flags from
             both x and y.
-
         .. describe:: x & y, x &= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             both x and y.
-
         .. describe:: x ^ y, x ^= y
 
             Returns a {cls.__name__} instance with only flags enabled on
             only one of x or y, not on both.
-
         .. describe:: ~x
+
             Returns a {cls.__name__} instance with all flags inverted from x.
-
         .. describe:: hash(x)
-            Return the flag's hash.
 
+            Return the flag's hash.
         .. describe:: iter(x)
+
             Returns an iterator of ``(name, value)`` pairs. This allows it
             to be, for example, constructed as a dict or a list of pairs.
-
         .. describe:: bool(b)
+
             Returns whether any flag is set to ``True``.
-{directives}
+
     Attributes
     ----------
     value: :class:`int`
@@ -389,8 +406,22 @@ class MessageFlags(BaseFlags, support_kwargs=False):
         """:class:`bool`: Whether the message will not send push/desktop notifications."""
         return 1 << 0
 
+    @flag()
+    def mention_everyone(cls) -> int:
+        """:class:`bool`: Whether the message will mention all users who can see the channel."""
+        return 1 << 1
 
-@doc_flags('Wraps up a Permission flag value.')
+    @flag()
+    def mention_online(cls) -> int:
+        """:class:`bool`: Whether the message will mention all users who are online and can see the channel.
+
+        .. note::
+            If this is ``True``, then :attr:`.mention_everyone` cannot be ``True`` either.
+        """
+        return 1 << 2
+
+
+@doc_flags('Wraps up a Permission flag value.', added_in='8.0')
 class Permissions(BaseFlags, support_kwargs=True):
     __slots__ = ()
 
@@ -531,10 +562,20 @@ class Permissions(BaseFlags, support_kwargs=True):
         """:class:`bool`: Whether the user can react to messages with emojis."""
         return 1 << 29
 
+    @flag()
+    def mention_everyone(cls) -> int:
+        """:class:`bool`: Whether the user can mention everyone and online members."""
+        return 1 << 37
+
+    @flag()
+    def mention_roles(cls) -> int:
+        """:class:`bool`: Whether the user can mention roles."""
+        return 1 << 38
+
     @classmethod
     def channel(cls) -> Self:
         """:class:`Permissions`: Returns channel-related permissions."""
-        return cls(0b00000000_00000000_00000000_00000000_00111111_11110000_00000000_00000000)
+        return cls(0b00000000_00000000_00000000_00110000_00111111_11110000_00000000_00000000)
 
     # * Voice permissions
 

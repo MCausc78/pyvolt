@@ -56,7 +56,7 @@ class HTTPException(PyvoltException):
     status: :class:`int`
         The status code of the HTTP request.
     type: :class:`str`
-        The Revolt specific error code for the failure.
+        The Revolt specific error type for the failure.
     retry_after: Optional[:class:`float`]
         The duration in seconds to wait until ratelimit expires.
     error: Optional[:class:`str`]
@@ -94,6 +94,12 @@ class HTTPException(PyvoltException):
         - ``'IncorrectData'``
 
         Not always available when :attr:`~.type` is ``'DatabaseError'``.
+    feature: Optional[:class:`str`]
+        The feature that was disabled.
+        Only applicable when :attr:`~.type` is ``'FeatureDisabled'``.
+
+        Possible values:
+        - ``'features.mass_mentions_enabled'``
     """
 
     # response: Response
@@ -119,6 +125,7 @@ class HTTPException(PyvoltException):
         'collection',
         'location',
         'with_',
+        'feature',
     )
 
     def __init__(
@@ -144,83 +151,141 @@ class HTTPException(PyvoltException):
             self.collection: str | None = None
             self.location: str | None = None
             self.with_: str | None = None
+            self.feature: str | None = None
         else:
             self.type = data.get('type', 'Unknown')
+
             self.retry_after = data.get('retry_after', 0)
             if self.retry_after is not None:
                 errors.append(f'retry_after={self.retry_after}')
+
             self.error = data.get('error')
             if self.error is not None:
                 errors.append(f'error={self.error}')
+
             self.max = data.get('max')
             if self.max is not None:
                 errors.append(f'max={self.max}')
+
             self.permission = data.get('permission')
             if self.permission is not None:
                 errors.append(f'permission={self.permission}')
+
             self.operation = data.get('operation')
             if self.operation is not None:
                 errors.append(f'operation={self.operation}')
+
             self.collection = data.get('collection')
             if self.collection is not None:
                 errors.append(f'collection={self.collection}')
+
             self.location = data.get('location')
             if self.location is not None:
                 errors.append(f'location={self.location}')
+
             self.with_ = data.get('with')
             if self.with_ is not None:
                 errors.append(f'with={self.with_}')
+
+            self.feature = data.get('feature')
+            if self.feature is not None:
+                errors.append(f'feature={self.feature}')
+
         super().__init__(
             f'{self.type} (raw={data})' if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n"
         )
 
 
 class Unauthorized(HTTPException):
+    """HTTP exception that corresponds to HTTP 401 status code."""
+
     __slots__ = ()
 
 
 class Forbidden(HTTPException):
+    """HTTP exception that corresponds to HTTP 403 status code."""
+
     __slots__ = ()
 
 
 class NotFound(HTTPException):
+    """HTTP exception that corresponds to HTTP 404 status code."""
+
     __slots__ = ()
 
 
 class Conflict(HTTPException):
+    """HTTP exception that corresponds to HTTP 409 status code."""
+
     __slots__ = ()
 
 
 class Ratelimited(HTTPException):
+    """HTTP exception that corresponds to HTTP 429 status code."""
+
     __slots__ = ()
 
 
 class InternalServerError(HTTPException):
+    """HTTP exception that corresponds to HTTP 5xx status code."""
+
     __slots__ = ()
 
 
 class BadGateway(HTTPException):
+    """HTTP exception that corresponds to HTTP 502 status code."""
+
     __slots__ = ()
 
 
 class ShardError(PyvoltException):
+    """Exception that's raised when any shard-related
+    error happens.
+    """
+
+    __slots__ = ()
+
+
+class ShardClosedError(ShardError):
+    """Exception that's raised when shard
+    was already closed.
+    """
+
     __slots__ = ()
 
 
 class AuthenticationError(ShardError):
+    """Exception that's raised when WebSocket
+    authentication fails.
+
+    Attributes
+    ----------
+    payload: Optional[Dict[:class:`str`, Any]]
+        The WebSocket payload.
+    """
+
     __slots__ = ()
 
-    def __init__(self, a: typing.Any, /) -> None:
-        self.message: typing.Any = a
-        super().__init__('Failed to connect shard', a)
+    def __init__(self, payload: dict[str, typing.Any], /) -> None:
+        self.payload: dict[str, typing.Any] = payload
+        super().__init__(f'Failed to connect shard: {payload}')
 
 
 class ConnectError(ShardError):
+    """Exception that's raised when the library fails
+    to connect to Revolt WebSocket.
+
+    Attributes
+    ----------
+    errors: List[:exc:`Exception`]
+        The errors.
+    """
+
     __slots__ = ('errors',)
 
     def __init__(self, tries: int, errors: list[Exception], /) -> None:
-        self.errors = errors
-        super().__init__(f'Giving up, after {tries} tries, last 3 errors:', errors[-3:])
+        self.errors: list[Exception] = errors
+        super().__init__(f'Giving up, after {tries} tries, last 3 errors: {errors[-3:]}')
 
 
 class DiscoverError(PyvoltException):
@@ -252,6 +317,12 @@ class InvalidData(PyvoltException):
 
 
 class NoData(PyvoltException):
+    """Exception that's raised when the library did not found
+    data requested from cache.
+
+    This is different from :exc:`.NotFound`.
+    """
+    
     __slots__ = ('what', 'type')
 
     def __init__(self, what: str, type: str) -> None:
@@ -271,6 +342,7 @@ __all__ = (
     'InternalServerError',
     'BadGateway',
     'ShardError',
+    'ShardClosedError',
     'AuthenticationError',
     'ConnectError',
     'DiscoverError',

@@ -39,10 +39,10 @@ class PermissionOverride:
 
     Attributes
     ----------
-    allow: :class:`Permissions`
-        The permissions to allow.
-    deny: :class:`Permissions`
-        The permissions to deny.
+    raw_allow: :class:`int`
+        The raw value of permissions to allow.
+    raw_deny: :class:`int`
+        The raw value of permissions to deny.
     """
 
     __slots__ = (
@@ -61,7 +61,7 @@ class PermissionOverride:
 
     @property
     def allow(self) -> Permissions:
-        """:class:`Permissions`: The permissions to allow."""
+        """:class:`.Permissions`: The permissions to allow."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_allow
         return ret
@@ -72,7 +72,7 @@ class PermissionOverride:
 
     @property
     def deny(self) -> Permissions:
-        """:class:`Permissions`: The permissions to deny."""
+        """:class:`.Permissions`: The permissions to deny."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_deny
         return ret

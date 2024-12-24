@@ -81,13 +81,13 @@ class BaseBot(Base):
 
         Parameters
         ----------
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        public: :class:`UndefinedOr`[:class:`bool`]
+        public: UndefinedOr[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether to allow Revolt collect analytics about the bot.
-        interactions_url: :class:`UndefinedOr`[Optional[:class:`str`]]
+        interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
@@ -136,38 +136,38 @@ class Bot(BaseBot):
     """Represents a bot on Revolt."""
 
     owner_id: str = field(repr=True, kw_only=True)
-    """The user's ID who owns this bot."""
+    """:class:`str`: The user's ID who owns this bot."""
 
     token: str = field(repr=False)
-    """The bot's token used to authenticate requests."""
+    """:class:`str`: The bot's token used to authenticate requests."""
 
     public: bool = field(repr=True, kw_only=True)
-    """Whether the bot is public (may be invited by anyone)."""
+    """:class:`bool`: Whether the bot is public (may be invited by anyone)."""
 
     analytics: bool = field(repr=True, kw_only=True)
-    """Whether to enable analytics."""
+    """:class:`bool`: Whether to enable analytics."""
 
     discoverable: bool = field(repr=True, kw_only=True)
-    """Whether the bot is publicly discoverable."""
+    """:class:`bool`: Whether the bot is publicly discoverable."""
 
     interactions_url: str | None = field(repr=True, kw_only=True)
-    """The URL to send interactions to.
+    """Optional[:class:`str`]: The URL to send interactions to.
     
     .. note::
         This attribute is reserved.
     """
 
     terms_of_service_url: str | None = field(repr=True, kw_only=True)
-    """The Terms of Service's URL."""
+    """Optional[:class:`str`]: The Terms of Service's URL."""
 
     privacy_policy_url: str | None = field(repr=True, kw_only=True)
-    """The privacy policy URL."""
+    """Optional[:class:`str`]: The privacy policy URL."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The bot's flags raw value."""
+    """:class:`int`: The bot's flags raw value."""
 
     user: User = field(repr=True, kw_only=True)
-    """The user associated with this bot."""
+    """:class:`.User`: The user associated with this bot."""
 
     @property
     def flags(self) -> BotFlags:
@@ -182,13 +182,13 @@ class PublicBot(BaseBot):
     """Represents public bot on Revolt."""
 
     name: str = field(repr=True, kw_only=True)
-    """The bot's name."""
+    """:class:`str`: The bot's name."""
 
     internal_avatar_id: str | None = field(repr=True, kw_only=True)
-    """The bot's avatar ID."""
+    """Optional[:class:`str`]: The bot's avatar ID."""
 
     description: str = field(repr=True, kw_only=True)
-    """The bot's description."""
+    """:class:`str`: The bot's description."""
 
 
 __all__ = ('BaseBot', 'Bot', 'PublicBot')

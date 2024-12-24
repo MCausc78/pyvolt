@@ -35,19 +35,19 @@ if typing.TYPE_CHECKING:
 class ReadState:
     """Represents the read state of a channel."""
 
-    state: State = field(repr=False, hash=False, kw_only=True, eq=False)
+    state: State = field(repr=False, kw_only=True)
 
-    channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The channel's ID the read state for."""
+    channel_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the read state for."""
 
-    user_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The user's ID the read state belongs to."""
+    user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The user's ID the read state belongs to."""
 
-    last_acked_message_id: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The ID of the last acknowledged message. It *may* not point to an existing or valid message."""
+    last_acked_message_id: str | None = field(repr=True, kw_only=True)
+    """Optional[:class:`str`]: The last acknowledged message's ID. It *may* not point to an existing or valid message."""
 
-    mentioned_in: list[str] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """The message's IDs that mention the user."""
+    mentioned_in: list[str] = field(repr=True, kw_only=True)
+    """List[:class:`str`]: The message's IDs that mention the user."""
 
     def __hash__(self) -> int:
         return hash((self.channel_id, self.user_id))

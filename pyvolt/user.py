@@ -55,15 +55,15 @@ class UserStatus:
     """Represents user's active status."""
 
     text: str | None = field(repr=True, kw_only=True)
-    """The custom status text."""
+    """Optional[:class:`str`]: The custom status text."""
 
     presence: Presence | None = field(repr=True, kw_only=True)
-    """The current presence option."""
+    """Optional[:class:`.Presence`]: The current presence option."""
 
     def locally_update(self, data: UserStatusEdit, /) -> None:
         """Locally updates user status with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
         if data.text is not UNDEFINED:
@@ -77,9 +77,9 @@ class UserStatusEdit:
 
     Attributes
     ----------
-    text: :class:`UndefinedOr`[Optional[:class:`str`]]
+    text: UndefinedOr[Optional[:class:`str`]]
         The new custom status text.
-    presence: :class:`UndefinedOr`[Optional[:class:`Presence`]]
+    presence: UndefinedOr[Optional[:class:`.Presence`]]
         The presence to use.
     """
 
@@ -91,8 +91,8 @@ class UserStatusEdit:
         text: UndefinedOr[str | None] = UNDEFINED,
         presence: UndefinedOr[Presence | None] = UNDEFINED,
     ) -> None:
-        self.text = text
-        self.presence = presence
+        self.text: UndefinedOr[str | None] = text
+        self.presence: UndefinedOr[Presence | None] = presence
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
@@ -114,15 +114,24 @@ class UserStatusEdit:
 
 @define(slots=True)
 class StatelessUserProfile:
-    """The stateless user's profile."""
+    r"""Represents Revolt :class:`.User`\'s stateless profile."""
 
     content: str | None = field(repr=True, kw_only=True)
-    """The user's profile content."""
+    """Optional[:class:`str`]: The user's profile content."""
 
     internal_background: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless background visible on user's profile."""
+    """Optional[:class:`.StatelessAsset`]: The stateless background visible on user's profile."""
 
-    def _stateful(self, state: State, user_id: str) -> UserProfile:
+    def attach_state(self, state: State, user_id: str, /) -> UserProfile:
+        """:class:`.UserProfile`: Attach a state to user profile.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state to attach.
+        user_id: :class:`str`
+            The user's ID to attach.
+        """
         return UserProfile(
             content=self.content,
             internal_background=self.internal_background,
@@ -133,34 +142,37 @@ class StatelessUserProfile:
 
 @define(slots=True)
 class UserProfile(StatelessUserProfile):
-    """User's profile."""
+    r"""Represents Revolt :class:`.User`\'s profile."""
 
     state: State = field(repr=False, kw_only=True)
+    """:class:`.State`: The internal state used to attach state to other fields."""
+
     user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: """
 
     @property
     def background(self) -> Asset | None:
-        """Background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
+        """Optional[:class:`.Asset`]: The background visible on user's profile."""
+        return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
 @define(slots=True)
 class PartialUserProfile:
-    """The user's profile."""
+    """Represents partial user's profile."""
 
     state: State = field(repr=False, kw_only=True)
-    """The state."""
+    """:class:`.State`: The state."""
 
     content: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """The user's profile content."""
+    """Undefined[Optional[:class:`str`]]: The user's profile content."""
 
     internal_background: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
-    """The stateless background visible on user's profile."""
+    """Undefined[Optional[:class:`.StatelessAsset`]]: The stateless background visible on user's profile."""
 
     @property
     def background(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The background visible on user's profile."""
-        return self.internal_background and self.internal_background._stateful(self.state, 'backgrounds')
+        """UndefinedOr[Optional[:class:`.Asset`]]: The background visible on user's profile."""
+        return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
 class UserProfileEdit:
@@ -168,9 +180,9 @@ class UserProfileEdit:
 
     Attributes
     ----------
-    content: :class:`UndefinedOr`[Optional[:class:`str`]]
+    content: UndefinedOr[Optional[:class:`str`]]
         The text to use in user profile description.
-    background: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+    background: UndefinedOr[Optional[:class:`ResolvableResource`]]
         The background to use on user's profile.
     """
 
@@ -182,8 +194,8 @@ class UserProfileEdit:
         *,
         background: UndefinedOr[ResolvableResource | None] = UNDEFINED,
     ) -> None:
-        self.content = content
-        self.background = background
+        self.content: UndefinedOr[str | None] = content
+        self.background: UndefinedOr[ResolvableResource | None] = background
 
     @property
     def remove(self) -> list[raw.FieldsUser]:
@@ -196,7 +208,7 @@ class UserProfileEdit:
 
     async def build(self, state: State, /) -> raw.DataUserProfile:
         payload: raw.DataUserProfile = {}
-        if self.content:
+        if self.content not in (None, UNDEFINED):
             payload['content'] = self.content
         if self.background:
             payload['background'] = await resolve_resource(state, self.background, tag='backgrounds')
@@ -208,10 +220,10 @@ class Relationship:
     """Represents a relationship entry indicating current status with other user."""
 
     id: str = field(repr=True, kw_only=True)
-    """The user's ID the relationship with."""
+    """:class:`str`: The user's ID the relationship with."""
 
     status: RelationshipStatus = field(repr=True, kw_only=True)
-    """The relationship status with them."""
+    """:class:`.RelationshipStatus`: The relationship status with them."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -225,10 +237,10 @@ class Mutuals:
     """Mutual friends and servers response."""
 
     user_ids: list[str] = field(repr=True, kw_only=True)
-    """Array of mutual user IDs that both users are friends with."""
+    """List[:class:`str`]: The user's IDs that both you and target user are friends with."""
 
     server_ids: list[str] = field(repr=True, kw_only=True)
-    """Array of mutual server IDs that both users are in."""
+    """List[:class:`str`]: The server's IDs that both users are in."""
 
 
 class BaseUser(Base, Connectable, Messageable):
@@ -277,7 +289,7 @@ class BaseUser(Base, Connectable, Messageable):
 
     @property
     def dm_channel(self) -> DMChannel | None:
-        """Optional[:class:`DMChannel`]: The private channel with this user."""
+        """Optional[:class:`.DMChannel`]: The private channel with this user."""
         dm_channel_id = self.dm_channel_id
 
         cache = self.state.cache
@@ -320,17 +332,17 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`.UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`.UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`.UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`.UserFlags`]
             The new user flags.
 
         Raises
@@ -340,7 +352,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`User`
+        :class:`.User`
             The newly updated user.
         """
         return await self.state.http.edit_user(
@@ -393,11 +405,11 @@ class BaseUser(Base, Connectable, Messageable):
     async def fetch_profile(self) -> UserProfile:
         """|coro|
 
-        Retrives user profile.
+        Retrieves user profile.
 
         Returns
         -------
-        :class`UserProfile`
+        :class:`.UserProfile`
             The user's profile page.
         """
         return await self.state.http.get_user_profile(self.id)
@@ -456,42 +468,42 @@ class PartialUser(BaseUser):
     """Represents a partial user on Revolt."""
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new user's name."""
+    """UndefinedOr[:class:`str`]: The new user's name."""
 
     discriminator: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new user's discriminator."""
+    """UndefinedOr[:class:`str`]: The new user's discriminator."""
 
     display_name: UndefinedOr[str | None] = field(repr=True, kw_only=True)
-    """The new user's display name."""
+    """UndefinedOr[Optional[:class:`str`]]: The new user's display name."""
 
     internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True)
-    """The new user's stateless avatar."""
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new user's stateless avatar."""
 
     raw_badges: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """The new user's badges raw value."""
+    """UndefinedOr[:class:`int`]: The new user's badges raw value."""
 
     status: UndefinedOr[UserStatusEdit] = field(repr=True, kw_only=True)
-    """The new user's status."""
+    """UndefinedOr[:class:`.UserStatusEdit`]: The new user's status."""
 
     # internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
     # """The new user's profile page."""
 
     raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
-    """The user's flags raw value."""
+    """UndefinedOr[:class:`int`]: The user's flags raw value."""
 
     online: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the user came online."""
+    """UndefinedOr[:class:`bool`]: Whether the user came online."""
 
     @property
     def avatar(self) -> UndefinedOr[Asset | None]:
-        """:class:`UndefinedOr`[Optional[:class:`Asset`]]: The new user's avatar."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new user's avatar."""
         if self.internal_avatar in (None, UNDEFINED):
             return self.internal_avatar
-        return self.internal_avatar._stateful(self.state, 'avatars')
+        return self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def badges(self) -> UndefinedOr[UserBadges]:
-        """:class:`UndefinedOr`[:class:`UserBadges`]: The new user's badges."""
+        """UndefinedOr[:class:`UserBadges`]: The new user's badges."""
         if self.raw_badges is UNDEFINED:
             return self.raw_badges
         ret = _new_user_badges(UserBadges)
@@ -500,7 +512,7 @@ class PartialUser(BaseUser):
 
     @property
     def flags(self) -> UndefinedOr[UserFlags]:
-        """:class:`UndefinedOr`[:class:`UserFlags`]: The user's flags."""
+        """UndefinedOr[:class:`UserFlags`]: The user's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_user_flags(UserFlags)
@@ -513,28 +525,28 @@ class DisplayUser(BaseUser):
     """Represents a user on Revolt that can be easily displayed in UI."""
 
     name: str = field(repr=True, kw_only=True)
-    """The username of the user."""
+    """:class:`str`: The username of the user."""
 
     discriminator: str = field(repr=True, kw_only=True)
-    """The discriminator of the user."""
+    """:class:`str`: The discriminator of the user."""
 
     internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless avatar of the user."""
+    """Optional[:class:`.StatelessAsset`]: The stateless avatar of the user."""
 
     def __str__(self) -> str:
         return self.name
 
     @property
     def avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        """Optional[:class:`.Asset`]: The avatar of the user."""
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def tag(self) -> str:
         """:class:`str`: The tag of the user.
 
-        Assuming that :attr:`User.name` is ``'vlf'`` and :attr:`User.discriminator` is ``'3510'``,
-        example output would be ``'vlf#3510'``.
+        Assuming that :attr:`User.name` is ``'kotlin.Unit'`` and :attr:`User.discriminator` is ``'3510'``,
+        example output would be ``'kotlin.Unit#3510'``.
         """
         return f'{self.name}#{self.discriminator}'
 
@@ -556,7 +568,7 @@ class DisplayUser(BaseUser):
 @define(slots=True)
 class BotUserInfo:
     owner_id: str = field(repr=True, kw_only=True)
-    """The ID of the owner of this bot."""
+    """:class:`str`: The user's ID who owns bot."""
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
@@ -578,20 +590,20 @@ def calculate_user_permissions(
     ----------
     user_id: :class:`str`
         The target ID.
-    user_relationship: :class:`RelationshipStatus`
-        The relationship between us and target user (:attr:`User.relationship`).
-    user_bot: Optional[:class:`BotUserInfo`]
-        The bot information about the user (:attr:`User.bot`), if applicable.
+    user_relationship: :class:`.RelationshipStatus`
+        The relationship between us and target user (:attr:`.User.relationship`).
+    user_bot: Optional[:class:`.BotUserInfo`]
+        The bot information about the user (:attr:`.User.bot`), if applicable.
     perspective_id: :class:`str`
         The ID of the current user.
-    perspective_bot: Optional[:class:`BotUserInfo`]
-        The bot information about the current user (:attr:`User.bot`), if applicable.
+    perspective_bot: Optional[:class:`.BotUserInfo`]
+        The bot information about the current user (:attr:`.User.bot`), if applicable.
     perspective_privileged: :class:`bool`
-        Whether the current user is privileged (:attr:`User.privileged`).
+        Whether the current user is privileged (:attr:`.User.privileged`).
 
     Returns
     -------
-    :class:`UserPermissions`
+    :class:`.UserPermissions`
         The calculated permissions.
     """
     if perspective_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
@@ -614,33 +626,33 @@ class User(DisplayUser):
     """Represents a user on Revolt."""
 
     display_name: str | None = field(repr=True, kw_only=True)
-    """The user's display name."""
+    """Optional[:class:`str`]: The user's display name."""
 
     raw_badges: int = field(repr=True, kw_only=True)
-    """The user's badges raw value."""
+    """:class:`int`: The user's badges raw value."""
 
     status: UserStatus | None = field(repr=True, kw_only=True)
-    """The current user's status."""
+    """Optional[:class:`.UserStatus`]: The current user's status."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The user's flags raw value."""
+    """:class:`int`: The user's flags raw value."""
 
     privileged: bool = field(repr=True, kw_only=True)
-    """Whether the user is privileged."""
+    """:class:`bool`: Whether the user is privileged."""
 
     bot: BotUserInfo | None = field(repr=True, kw_only=True)
-    """The information about the bot."""
+    """Optional[:class:`.BotUserInfo`]: The information about the bot."""
 
     relationship: RelationshipStatus = field(repr=True, kw_only=True)
-    """The current session user's relationship with this user."""
+    """:class:`.RelationshipStatus`: The current session user's relationship with this user."""
 
     online: bool = field(repr=True, kw_only=True)
-    """Whether the user is currently online."""
+    """:class:`bool`: Whether the user is currently online."""
 
     def locally_update(self, data: PartialUser, /) -> None:
         """Locally updates user with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
         if data.name is not UNDEFINED:
@@ -669,14 +681,14 @@ class User(DisplayUser):
 
     @property
     def badges(self) -> UserBadges:
-        """The user's badges."""
+        """:class:`.UserBadges`: The user's badges."""
         ret = _new_user_badges(UserBadges)
         ret.value = self.raw_badges
         return ret
 
     @property
     def flags(self) -> UserFlags:
-        """The user's badges."""
+        """:class:`.UserFlags`: The user's badges."""
         ret = _new_user_flags(UserFlags)
         ret.value = self.raw_flags
         return ret
@@ -749,7 +761,7 @@ class OwnUser(User):
     """Represents a current user on Revolt."""
 
     relations: dict[str, Relationship] = field(repr=True, kw_only=True)
-    """The dictionary of relationships with other users."""
+    """Dict[:class:`str`, :class:`.Relationship`]: The dictionary of relationships with other users."""
 
     async def edit(
         self,
@@ -767,17 +779,17 @@ class OwnUser(User):
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -805,24 +817,24 @@ class UserVoiceState:
     """Represents a voice state for the user."""
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID this voice state belongs to."""
+    """:class:`str`: The user's ID this voice state belongs to."""
 
     can_publish: bool = field(repr=True, kw_only=True)
-    """Whether the user can send voice data."""
+    """:class:`bool`: Whether the user can send voice data."""
 
     can_receive: bool = field(repr=True, kw_only=True)
-    """Whether the user can receive voice data."""
+    """:class:`bool`: Whether the user can receive voice data."""
 
     screensharing: bool = field(repr=True, kw_only=True)
-    """Whether the user is sharing their screen."""
+    """:class:`bool`: Whether the user is sharing their screen."""
 
     camera: bool = field(repr=True, kw_only=True)
-    """Whether the user is sharing their camera."""
+    """:class:`bool`: Whether the user is sharing their camera."""
 
     def locally_update(self, data: PartialUserVoiceState, /) -> None:
         """Locally updates voice state with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
         """
 
@@ -847,19 +859,19 @@ class PartialUserVoiceState:
     """
 
     user_id: str = field(repr=True, kw_only=True)
-    """The user's ID this voice state belongs to."""
+    """:class:`str`: The user's ID this voice state belongs to."""
 
     can_publish: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the user can send voice data."""
+    """UndefinedOr[:class:`bool`]: Whether the user can send voice data."""
 
     can_receive: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the user can receive voice data."""
+    """UndefinedOr[:class:`bool`]: Whether the user can receive voice data."""
 
     screensharing: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the user is sharing their screen."""
+    """UndefinedOr[:class:`bool`]: Whether the user is sharing their screen."""
 
     camera: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the user is sharing their camera."""
+    """UndefinedOr[:class:`bool`]: Whether the user is sharing their camera."""
 
 
 __all__ = (

@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
 import datetime
+from functools import partial
 import inspect
 import json
 import logging
@@ -40,8 +40,10 @@ import sys
 import types
 import typing
 
+import aiohttp
+
 try:
-    import orjson
+    import orjson  # type: ignore
 except ModuleNotFoundError:
     HAS_ORJSON = False
 else:
@@ -294,8 +296,11 @@ def setup_logging(
     logger.addHandler(handler)
 
 
-PY_310 = sys.version_info >= (3, 10)
-PY_312 = sys.version_info >= (3, 12)
+
+_UTC: datetime.timezone = datetime.timezone.utc
+
+PY_310: bool = sys.version_info >= (3, 10)
+PY_312: bool = sys.version_info >= (3, 12)
 
 
 def flatten_literal_params(parameters: Iterable[typing.Any], /) -> tuple[typing.Any, ...]:
@@ -319,6 +324,7 @@ def evaluate_annotation(
     globals: dict[str, typing.Any],
     locals: dict[str, typing.Any],
     cache: dict[str, typing.Any],
+    /,
     *,
     implicit_str: bool = True,
 ) -> typing.Any:
@@ -391,6 +397,7 @@ def resolve_annotation(
     globalns: dict[str, typing.Any],
     localns: dict[str, typing.Any] | None,
     cache: dict[str, typing.Any] | None,
+    /,
 ) -> typing.Any:
     if annotation is None:
         return type(None)
@@ -413,6 +420,16 @@ def is_inside_class(func: Callable[..., typing.Any], /) -> bool:
     # outer.<locals>.A.foo and outer.<locals>.foo
 
     return func.__qualname__ != func.__name__ and not func.__qualname__.rpartition('.')[0].endswith('<locals>')
+
+
+def unwrap_function(function: Callable[..., typing.Any], /) -> Callable[..., typing.Any]:
+    while True:
+        if hasattr(function, '__wrapped__'):
+            function = function.__wrapped__  # type: ignore
+        elif isinstance(function, partial):
+            function = function.func
+        else:
+            return function
 
 
 class _MissingSentinel:
@@ -440,6 +457,7 @@ __all__ = (
     'stream_supports_color',
     'new_formatter',
     'setup_logging',
+    '_UTC',
     'PY_310',
     'PY_312',
     'flatten_literal_params',

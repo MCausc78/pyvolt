@@ -25,12 +25,14 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import aiohttp
 import asyncio
 from datetime import datetime, timedelta
+from inspect import isawaitable
 import logging
-import multidict
 import typing
+
+import aiohttp
+from multidict import CIMultiDict
 
 from . import routes, utils
 from .authentication import (
@@ -79,7 +81,7 @@ from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
 from .invite import BaseInvite, ServerInvite, Invite
 from .message import (
     Reply,
-    Interactions,
+    MessageInteractions,
     Masquerade,
     SendableEmbed,
     BaseMessage,
@@ -108,8 +110,8 @@ if typing.TYPE_CHECKING:
     from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
     from .instance import Instance
     from .read_state import ReadState
+    from .settings import UserSettings
     from .state import State
-    from .user_settings import UserSettings
     from .user import (
         UserStatusEdit,
         UserProfile,
@@ -423,6 +425,11 @@ class DefaultRateLimiter(RateLimiter):
             del self._routes_to_bucket[key]
 
 
+def _resolve_member_id(target: str | BaseUser | BaseMember, /) -> str:
+    ret: str = getattr(target, 'id', target)  # type: ignore
+    return ret
+
+
 class HTTPClient:
     """Represents an HTTP client sending HTTP requests to the Revolt API.
 
@@ -472,7 +479,7 @@ class HTTPClient:
         user_agent: str | None = None,
     ) -> None:
         if base is None:
-            base = 'https://api.revolt.chat'
+            base = 'https://api.revolt.chat/0.8'
         self._base: str = base.rstrip('/')
         self.bot: bool = bot
         self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
@@ -495,7 +502,7 @@ class HTTPClient:
         """:class:`str`: The base URL used for API requests."""
         return self._base
 
-    def url_for(self, route: routes.CompiledRoute) -> str:
+    def url_for(self, route: routes.CompiledRoute, /) -> str:
         """Returns a URL for route.
 
         Parameters
@@ -518,20 +525,86 @@ class HTTPClient:
         token: :class:`str`
             The authentication token.
         bot: :class:`bool`
-            Whether the token belongs to bot account or not.
+            Whether the token belongs to bot account or not. Defaults to ``True``.
         """
         self.token = token
         self.bot = bot
+
+    def add_headers(
+        self,
+        headers: CIMultiDict[typing.Any],
+        route: routes.CompiledRoute,
+        /,
+        *,
+        accept_json: bool = True,
+        bot: UndefinedOr[bool] = UNDEFINED,
+        cookie: UndefinedOr[str | None] = UNDEFINED,
+        json_body: bool = False,
+        mfa_ticket: str | None = None,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str | None] = UNDEFINED,
+    ) -> utils.MaybeAwaitable[None]:
+        if accept_json:
+            headers['Accept'] = 'application/json'
+
+        if json_body:
+            headers['Content-type'] = 'application/json'
+
+        # Allow users to set cookie if Revolt is under attack mode
+        if cookie is UNDEFINED:
+            if self.cookie:
+                headers['Cookie'] = self.cookie
+        elif cookie is not None:
+            headers['Cookie'] = cookie
+
+        if bot is UNDEFINED:
+            bot = self.bot
+
+        th = 'X-Bot-Token' if bot else 'X-Session-Token'
+
+        if token is UNDEFINED:
+            token = self.token
+
+        if token:
+            headers[th] = token
+
+        if user_agent is UNDEFINED:
+            user_agent = self.user_agent
+
+        if user_agent is not None:
+            headers['User-Agent'] = user_agent
+
+        if mfa_ticket is not None:
+            headers['X-Mfa-Ticket'] = mfa_ticket
+
+    async def send_request(
+        self,
+        session: aiohttp.ClientSession,
+        /,
+        *,
+        method: str,
+        url: str,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> aiohttp.ClientResponse:
+        return await session.request(
+            method,
+            url,
+            headers=headers,
+            **kwargs,
+        )
 
     async def raw_request(
         self,
         route: routes.CompiledRoute,
         *,
-        authenticated: bool = True,
         accept_json: bool = True,
-        user_agent: str = '',
-        mfa_ticket: str | None = None,
+        bot: UndefinedOr[bool] = UNDEFINED,
+        cookie: UndefinedOr[str | None] = UNDEFINED,
         json: UndefinedOr[typing.Any] = UNDEFINED,
+        mfa_ticket: str | None = None,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> aiohttp.ClientResponse:
         """|coro|
@@ -542,16 +615,20 @@ class HTTPClient:
         ----------
         route: :class:`~routes.CompiledRoute`
             The route.
-        authenticated: :class:`bool`
-            Whether this route should have provided authentication or not. Defaults to ``True``.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        user_agent: :class:`str`
-            The user agent to use for HTTP request. This is reserved field.
+        bot: UndefinedOr[:class:`bool`]
+            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        cookie: UndefinedOr[:class:`str`]
+            The cookies to use when performing a request.
+        json: UndefinedOr[typing.Any]
+            The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
-        json: :class:`UndefinedOr`[typing.Any]
-            The JSON payload to pass in.
+        token: UndefinedOr[Optional[:class:`str`]]
+            The token to use when requesting the route.
+        user_agent: UndefinedOr[:class:`str`]
+            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
         ------
@@ -563,29 +640,35 @@ class HTTPClient:
         :class:`aiohttp.ClientResponse`
             The aiohttp response.
         """
-        headers: multidict.CIMultiDict[typing.Any] = multidict.CIMultiDict(kwargs.pop('headers', {}))
+        headers: CIMultiDict[str]
 
-        # Allow users to set cookie if Revolt is under attack mode
-        cookie = kwargs.pop('cookie', self.cookie)
-        if cookie:
-            headers['cookie'] = cookie
+        try:
+            headers = CIMultiDict(kwargs.pop('headers'))
+        except KeyError:
+            headers = CIMultiDict()
 
-        if self.token is not None and authenticated:
-            headers['x-bot-token' if self.bot else 'x-session-token'] = self.token
-        if accept_json:
-            headers['accept'] = 'application/json'
-        headers['user-agent'] = user_agent or self.user_agent
-        if mfa_ticket is not None:
-            headers['x-mfa-ticket'] = mfa_ticket
         retries = 0
 
-        if json is not UNDEFINED:
-            headers['content-type'] = 'application/json'
-            kwargs['data'] = utils.to_json(json)
+        tmp = self.add_headers(
+            headers,
+            route,
+            accept_json=accept_json,
+            bot=bot,
+            cookie=cookie,
+            json_body=json is not UNDEFINED,
+            mfa_ticket=mfa_ticket,
+            token=token,
+            user_agent=user_agent,
+        )
+        if isawaitable(tmp):
+            await tmp
 
         method = route.route.method
         path = route.build()
         url = self._base + path
+
+        if json is not UNDEFINED:
+            kwargs['data'] = utils.to_json(json)
 
         rate_limiter = self.rate_limiter
 
@@ -617,9 +700,10 @@ class HTTPClient:
                 self._session = session
 
             try:
-                response = await session.request(
-                    method,
-                    url,
+                response = await self.send_request(
+                    session,
+                    method=method,
+                    url=url,
                     headers=headers,
                     **kwargs,
                 )
@@ -649,7 +733,8 @@ class HTTPClient:
                         data = await utils._json_or_text(response)
                         raise BadGateway(response, data)
                     continue
-                if response.status == 429:
+
+                elif response.status == 429:
                     if retries < self.max_retries:
                         data = await utils._json_or_text(response)
                         if isinstance(data, dict):
@@ -664,6 +749,7 @@ class HTTPClient:
                         )
                         await asyncio.sleep(retry_after)
                         continue
+
                 data = await utils._json_or_text(response)
                 if isinstance(data, dict) and isinstance(data.get('error'), dict):
                     error = data['error']
@@ -672,6 +758,7 @@ class HTTPClient:
                     description = error.get('description')
                     data['type'] = 'RocketError'
                     data['err'] = f'{code} {reason}: {description}'
+
                 raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
             return response
 
@@ -679,12 +766,13 @@ class HTTPClient:
         self,
         route: routes.CompiledRoute,
         *,
-        authenticated: bool = True,
         accept_json: bool = True,
-        user_agent: str = '',
+        bot: UndefinedOr[bool] = UNDEFINED,
         mfa_ticket: str | None = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
+        token: UndefinedOr[str | None] = UNDEFINED,
+        user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> typing.Any:
         """|coro|
@@ -695,18 +783,21 @@ class HTTPClient:
         ----------
         route: :class:`~routes.CompiledRoute`
             The route.
-        authenticated: :class:`bool`
-            Whether this route should have provided authentication or not. Defaults to ``True``.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
-        user_agent: :class:`str`
-            The user agent to use for HTTP request. This is reserved field.
-        mfa_ticket: Optional[:class:`str`]
-            The MFA ticket to pass in headers.
-        json: :class:`UndefinedOr`[typing.Any]
+        bot: UndefinedOr[:class:`bool`]
+            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         log: :class:`bool`
-            Whether to log successful response or not. This option is intended to avoid catastrophic spam.
+            Whether to log successful response or not. This option is intended to avoid console spam caused
+            by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+        token: UndefinedOr[Optional[:class:`str`]]
+            The token to use when requesting the route.
+        user_agent: UndefinedOr[:class:`str`]
+            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
 
         Raises
         ------
@@ -720,11 +811,12 @@ class HTTPClient:
         """
         response = await self.raw_request(
             route,
-            authenticated=authenticated,
             accept_json=accept_json,
-            user_agent=user_agent,
-            mfa_ticket=mfa_ticket,
+            bot=bot,
             json=json,
+            mfa_ticket=mfa_ticket,
+            token=token,
+            user_agent=user_agent,
             **kwargs,
         )
         result = await utils._json_or_text(response)
@@ -766,7 +858,7 @@ class HTTPClient:
         :class:`Instance`
             The instance.
         """
-        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), authenticated=False)
+        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), token=None)
         return self.state.parser.parse_instance(resp)
 
     # Bots control
@@ -786,17 +878,17 @@ class HTTPClient:
         Raises
         ------
         HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``IsBot``                                 | The current token belongs to bot account.               |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.               |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``ReachedMaximumBots``                    | The current user has too many bots.                     |
+            +-------------------------------------------+---------------------------------------------------------+
         Unauthorized
             +------------------------------------------+-----------------------------------------+
             | Possible :attr:`Unauthorized.type` value | Reason                                  |
@@ -833,7 +925,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to delete.
 
         Raises
@@ -875,15 +967,15 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        public: :class:`UndefinedOr`[:class:`bool`]
+        public: UndefinedOr[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether to allow Revolt collect analytics about the bot.
-        interactions_url: :class:`UndefinedOr`[Optional[:class:`str`]]
+        interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
@@ -891,13 +983,13 @@ class HTTPClient:
         Raises
         ------
         HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+---------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                  |
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. +
+            +-------------------------------------------+---------------------------------------------------------+
+            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |
+            +-------------------------------------------+---------------------------------------------------------+
         Unauthorized
             +------------------------------------------+-----------------------------------------+
             | Possible :attr:`Unauthorized.type` value | Reason                                  |
@@ -965,7 +1057,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The ID of the bot.
 
         Raises
@@ -1038,7 +1130,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[:class:`BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The ID of the bot.
 
         Raises
@@ -1105,11 +1197,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: :class:`ULIDOr`[Union[:class:`BaseBot`, :class:`BaseUser`]]
+        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
             The bot.
-        server: Optional[:class:`ULIDOr`[:class:`BaseServer`]]
+        server: Optional[ULIDOr[:class:`BaseServer`]]
             The destination server.
-        group: Optional[:class:`ULIDOr`[:class:`GroupChannel`]]
+        group: Optional[ULIDOr[:class:`GroupChannel`]]
             The destination group.
 
         Raises
@@ -1129,17 +1221,17 @@ class HTTPClient:
             | ``IsBot``                                 | The current token belongs to bot account.            |
             +-------------------------------------------+------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                              | Populated attributes         |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``Banned``                            | The bot was banned in target server.                |                              |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``BotIsPrivate``                      | You do not own the bot to add it.                   |                              |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.     | :attr:`Forbidden.max`        |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to add bots. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-----------------------------------------------------+------------------------------+
+            +---------------------------------------+-----------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                              |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``Banned``                            | The bot was banned in target server.                |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``BotIsPrivate``                      | You do not own the bot to add it.                   |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``GroupTooLarge``                     | The group exceeded maximum count of recipients.     |
+            +---------------------------------------+-----------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to add bots. |
+            +---------------------------------------+-----------------------------------------------------+
         NotFound
             +--------------------------------------+-------------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                              |
@@ -1160,7 +1252,6 @@ class HTTPClient:
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
             | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
             +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-
         TypeError
             You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
@@ -1192,9 +1283,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1212,11 +1303,11 @@ class HTTPClient:
             | ``IsBot``                                 | The current token belongs to bot account.               |
             +-------------------------------------------+---------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the message. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the message. |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+----------------------------+
             | Possible :attr:`NotFound.type` value | Reason                     |
@@ -1240,7 +1331,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
@@ -1254,11 +1345,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                                    | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
+            +---------------------------------------+---------------------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                                    |
+            +---------------------------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. |
+            +---------------------------------------+---------------------------------------------------------------------------+
         NotFound
             +--------------------------------------+----------------------------+
             | Possible :attr:`NotFound.type` value | Reason                     |
@@ -1302,21 +1393,21 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        owner: :class:`UndefinedOr`[:clsas:`ULIDOr`[:class:`BaseUser`]]
+        owner: UndefinedOr[ULIDOr[:class:`BaseUser`]]
             The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        nsfw: :class:`UndefinedOr`[:class:`bool`]
+        nsfw: UndefinedOr[:class:`bool`]
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        archived: :class:`UndefinedOr`[:class:`bool`]
+        archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        default_permissions: :class:`UndefinedOr`[None]
+        default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
@@ -1328,21 +1419,21 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         HTTPException
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                               | Populated attributes        |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | Invalid data was passed.                             | :attr:`HTTPException.error` |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
-            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |                             |
-            +-------------------------------------------+------------------------------------------------------+-----------------------------+
+            +-------------------------------------------+------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                               |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``FailedValidation``                      | The payload was invalid.                             |
+            +-------------------------------------------+------------------------------------------------------+
+            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |
+            +-------------------------------------------+------------------------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``NotOwner``                          | You do not own the group.                                   |                              |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``NotOwner``                          | You do not own the group.                                   |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                          |
@@ -1402,7 +1493,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to fetch.
 
         Raises
@@ -1414,11 +1505,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
+            +---------------------------------------+-------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                      |
+            +---------------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. |
+            +---------------------------------------+-------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                          |
@@ -1448,9 +1539,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to add.
 
         Raises
@@ -1485,7 +1576,7 @@ class HTTPClient:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
             The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
@@ -1527,7 +1618,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
         user: :class:`ULID`[:class:`BaseUser`]
             The user to remove.
@@ -1556,7 +1647,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The invite destination channel.
 
         Raises
@@ -1584,7 +1675,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group channel.
 
         Raises
@@ -1615,9 +1706,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        messages: Sequence[:class:`ULIDOr`[:class:`BaseMessage`]]
+        messages: Sequence[ULIDOr[:class:`BaseMessage`]]
             The messages to delete.
 
         Raises
@@ -1629,7 +1720,7 @@ class HTTPClient:
         """
         payload: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
         await self.request(
-            routes.CHANNELS_MESSAGE_BULK_DELETE.compile(channel_id=resolve_id(channel)),
+            routes.CHANNELS_MESSAGE_DELETE_BULK.compile(channel_id=resolve_id(channel)),
             json=payload,
         )
 
@@ -1642,9 +1733,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1656,11 +1747,11 @@ class HTTPClient:
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
         Forbidden
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                              | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------+------------------------------+
+            +---------------------------------------+---------------------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                              |
+            +---------------------------------------+---------------------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to remove all the reactions. |
+            +---------------------------------------+---------------------------------------------------------------------+
         NotFound
             +--------------------------------------+---------------------------------------+
             | Possible :attr:`NotFound.type` value | Reason                                |
@@ -1689,9 +1780,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1722,13 +1813,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        content: :class:`UndefinedOr`[:class:`str`]
+        content: UndefinedOr[:class:`str`]
             The new content to replace the message with.
-        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
         Raises
@@ -1764,9 +1855,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1806,17 +1897,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
         limit: Optional[:class:`int`]
             Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             The message sort direction.
-        nearby: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        nearby: Optional[ULIDOr[:class:`BaseMessage`]]
             The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
@@ -1866,9 +1957,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
             The emoji to react with.
@@ -1909,7 +2000,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to search in.
         query: Optional[:class:`str`]
             Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
@@ -1917,9 +2008,9 @@ class HTTPClient:
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
-        before: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[:class:`ULIDOr`[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             Sort used for retrieving.
@@ -1968,9 +2059,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -1997,41 +2088,121 @@ class HTTPClient:
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
+        mention_everyone: bool | None = None,
+        mention_online: bool | None = None,
     ) -> Message:
         """|coro|
 
         Sends a message to the given channel.
+
         You must have :attr:`~Permissions.send_messages` to do this.
+
+        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do this.
+        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do this.
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
-            The channel.
+        channel: ULIDOr[:class:`TextChannel`]
+            The destination channel.
         content: Optional[:class:`str`]
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`ResolvableResource`]]
-            The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+            The attachments to send the message with.
+
+            You must have :attr:`~Permissions.upload_files` to provide this.
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
-            The message embeds.
+            The embeds to send the message with.
+
+            You must have :attr:`~Permissions.send_embeds` to provide non-null or non-empty value.
         masquearde: Optional[:class:`Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`Interactions`]
+
+            You must have :attr:`~Permissions.use_masquerade` to provide this.
+
+            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
+
+            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel.
+
+            User accounts cannot set this to ``True``.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel.
+
+            User accounts cannot set this to ``True``.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to send
+        Unauthorized
+            +------------------------------------------+----------------------------------------+
+            | Possible :attr:`Unauthorized.type` value | Reason                                 |
+            +------------------------------------------+----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid. |
+            +------------------------------------------+----------------------------------------+
         HTTPException
-            Sending the message failed.
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Possible :attr:`HTTPException.type` value | Reason                                                                                                             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``                          | The message was empty.                                                                                             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``                      | The payload was invalid.                                                                                           |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``                      | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``                      | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
+            +-------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``                       | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``                                 | The current token belongs to bot account.                                                                         |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``                              | The current token belongs to user account.                                                                        |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``                       | The message was too large.                                                                                        |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments``                    | You provided more attachments than allowed on this instance.                                                      |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``                         | You provided more embeds than allowed on this instance.                                                           |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``                        | You was replying to more messages than was allowed on this instance.                                              |
+            +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        Forbidden
+            +---------------------------------------+----------------------------------------------------------+
+            | Possible :attr:`Forbidden.type` value | Reason                                                   |
+            +---------------------------------------+----------------------------------------------------------+
+            | ``MissingPermission``                 | You do not have the proper permissions to send messages. |
+            +---------------------------------------+----------------------------------------------------------+
+        NotFound
+            +--------------------------------------+---------------------------------------+
+            | Possible :attr:`NotFound.type` value | Reason                                |
+            +--------------------------------------+---------------------------------------+
+            | ``NotFound``                         | The channel/file/reply was not found. |
+            +--------------------------------------+---------------------------------------+
+        Conflict
+            +--------------------------------------+-------------------------------+
+            | Possible :attr:`Conflict.type` value | Reason                        |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInGroup``                   | The bot is already in group.  |
+            +--------------------------------------+-------------------------------+
+            | ``AlreadyInServer``                  | The bot is already in server. |
+            +--------------------------------------+-------------------------------+
+        InternalServerError
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | Possible :attr:`InternalServerError.type` value | Reason                                                | Populated attributes                                                          |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``DatabaseError``                               | Something went wrong during querying database.        | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
+            | ``InternalError``                               | Somehow something went wrong during message creation. |                                                                               |
+            +-------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -2058,10 +2229,27 @@ class HTTPClient:
             payload['interactions'] = interactions.build()
 
         flags = None
+
         if silent is not None:
-            flags = 0
+            if flags is None:
+                flags = 0
+
             if silent:
                 flags |= MessageFlags.suppress_notifications.value
+
+        if mention_everyone is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_everyone:
+                flags |= MessageFlags.mention_everyone.value
+
+        if mention_online is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_online:
+                flags |= MessageFlags.mention_online.value
 
         if flags is not None:
             payload['flags'] = flags
@@ -2069,6 +2257,7 @@ class HTTPClient:
         headers = {}
         if nonce is not None:
             headers['Idempotency-Key'] = nonce
+
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
             json=payload,
@@ -2084,9 +2273,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
 
         Raises
@@ -2120,13 +2309,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel.
-        message: :class:`ULIDOr`[:class:`BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
+        user: Optional[ULIDOr[:class:`BaseUser`]]
             Remove reactions from this user. You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. You must have :attr:`~Permissions.manage_messages` to provide this.
@@ -2167,9 +2356,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`ServerChannel`]
+        channel: ULIDOr[:class:`ServerChannel`]
             The channel.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
 
         Raises
@@ -2224,7 +2413,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The channel.
         permissions: Union[:class:`Permissions`, :class:`PermissionOverride`]
             The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
@@ -2258,7 +2447,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
+        channel: ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
             The channel.
 
         Raises
@@ -2290,7 +2479,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[Union[:class:`GroupChannel`, :class:`TextChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`TextChannel`]]
             The channel to create webhook in.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
@@ -2359,7 +2548,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         data: :class:`ResolvableResource`
             The emoji data.
@@ -2401,7 +2590,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: :class:`ULIDOr`[:class:`ServerEmoji`]
+        emoji: ULIDOr[:class:`ServerEmoji`]
             The emoji to delete.
 
         Raises
@@ -2420,7 +2609,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: :class:`ULIDOr`[:class:`BaseEmoji`]
+        emoji: ULIDOr[:class:`BaseEmoji`]
             The emoji.
 
         Raises
@@ -2477,7 +2666,7 @@ class HTTPClient:
         invite_code = code.code if isinstance(code, BaseInvite) else code
         resp: raw.InviteResponse = await self.request(
             routes.INVITES_INVITE_FETCH.compile(invite_code=invite_code),
-            authenticated=False,
+            token=None,
         )
         return self.state.parser.parse_public_invite(resp)
 
@@ -2689,7 +2878,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to ban from the server.
@@ -2705,7 +2894,7 @@ class HTTPClient:
         """
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
-            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
+            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
             json=payload,
         )
         return self.state.parser.parse_ban(
@@ -2720,7 +2909,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Returns
@@ -2738,9 +2927,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unban from the server.
 
         Raises
@@ -2854,11 +3043,11 @@ class HTTPClient:
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
-        Retrieves all custom :class:`ServerEmoji`s from the server.
+        Retrieves all custom :class:`ServerEmoji`'s from the server.
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Returns
@@ -2878,7 +3067,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
 
         Raises
@@ -2922,20 +3111,20 @@ class HTTPClient:
             The server.
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member.
-        nick: :class:`UndefinedOr`[Optional[:class:`str`]]
+        nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
-        roles: :class:`UndefinedOr`[Optional[List[:class:`BaseRole`]]]
+        roles: UndefinedOr[Optional[List[:class:`BaseRole`]]]
             The member's new list of roles. This *replaces* the roles.
-        timeout: :class:`UndefinedOr`[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+        timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
-        can_publish: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
-        can_receive: :class:`UndefinedOr`[Optional[:class:`bool`]]
+        can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: :class:`UndefinedOr`[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns
@@ -2987,7 +3176,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_EDIT.compile(
                 server_id=resolve_id(server),
-                member_id=resolve_id(member),
+                member_id=_resolve_member_id(member),
             ),
             json=payload,
         )
@@ -3000,7 +3189,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         query: :class:`str`
             The query to search members for.
@@ -3031,7 +3220,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The ID of the user.
@@ -3044,7 +3233,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_FETCH.compile(
                 server_id=resolve_id(server),
-                member_id=resolve_id(member),
+                member_id=_resolve_member_id(member),
             )
         )
         return self.state.parser.parse_member(resp)
@@ -3056,7 +3245,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -3085,7 +3274,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -3112,7 +3301,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         member: :class:`Union`[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member to kick.
@@ -3125,7 +3314,7 @@ class HTTPClient:
             Kicking the member failed.
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=resolve_id(member))
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member))
         )
 
     async def set_server_permissions_for_role(
@@ -3143,9 +3332,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
         allow: :class:`Permissions`
             New allow flags.
@@ -3184,7 +3373,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         permissions: :class:`Permissions`
             New default permissions.
@@ -3245,9 +3434,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to delete.
 
         Raises
@@ -3276,17 +3465,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New role name. Should be between 1 and 32 chars long.
-        color: :class:`UndefinedOr`[Optional[:class:`str`]]
+        color: UndefinedOr[Optional[:class:`str`]]
             New role color. This should be valid CSS color.
-        hoist: :class:`UndefinedOr`[:class:`bool`]
+        hoist: UndefinedOr[:class:`bool`]
             Whether this role should be displayed separately.
-        rank: :class:`UndefinedOr`[:class:`int`]
+        rank: UndefinedOr[:class:`int`]
             The new ranking position. Smaller values take priority.
 
         Raises
@@ -3342,9 +3531,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: :class:`ULIDOr`[:class:`BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The ID of the role to retrieve.
 
         Raises
@@ -3379,7 +3568,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to mark as read.
         """
         await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
@@ -3422,7 +3611,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to delete.
         """
         await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
@@ -3434,7 +3623,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to leave from.
         silent: Optional[:class:`bool`]
             Whether to not send a leave message.
@@ -3468,25 +3657,25 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to edit.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New server name. Should be between 1 and 32 chars long.
-        description: :class:`UndefinedOr`[Optional[:class:`str`]]
+        description: UndefinedOr[Optional[:class:`str`]]
             New server description. Can be 1024 chars maximum long.
-        icon: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server icon.
-        banner: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New server banner.
-        categories: :class:`UndefinedOr`[Optional[List[:class:`Category`]]]
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
             New category structure for this server.
-        system_messsages: :class:`UndefinedOr`[Optional[:class:`SystemMessageChannels`]]
+        system_messsages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
             New system message channels configuration.
-        flags: :class:`UndefinedOr`[:class:`ServerFlags`]
+        flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. Can be passed only if you're privileged user.
-        discoverable: :class:`UndefinedOr`[:class:`bool`]
+        discoverable: UndefinedOr[:class:`bool`]
             Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_. Can be passed only if you're privileged user.
-        analytics: :class:`UndefinedOr`[:class:`bool`]
+        analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
 
         Raises
@@ -3561,7 +3750,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The ID of the server.
         populate_channels: :class:`bool`
             Whether to populate channels.
@@ -3657,7 +3846,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to friend with.
 
         Returns
@@ -3678,7 +3867,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to block.
 
         Returns
@@ -3770,17 +3959,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -3822,19 +4011,19 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to edit.
-        display_name: :class:`UndefinedOr`[Optional[:class:`str`]]
+        display_name: UndefinedOr[Optional[:class:`str`]]
             New display name. Pass ``None`` to remove it.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableULID`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableULID`]]
             New avatar. Pass ``None`` to remove it.
-        status: :class:`UndefinedOr`[:class:`UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             New user status.
-        profile: :class:`UndefinedOr`[:class:`UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             New user profile data. This is applied as a partial.
-        badges: :class:`UndefinedOr`[:class:`UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges.
-        flags: :class:`UndefinedOr`[:class:`UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags.
 
         Raises
@@ -3882,7 +4071,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user.
 
         Raises
@@ -3897,7 +4086,7 @@ class HTTPClient:
         """
         user_id = resolve_id(user)
         resp: raw.UserProfile = await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
-        return self.state.parser.parse_user_profile(resp)._stateful(self.state, user_id)
+        return self.state.parser.parse_user_profile(resp).attach_state(self.state, user_id)
 
     async def get_me(self) -> OwnUser:
         """|coro|
@@ -3928,7 +4117,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user.
 
         Raises
@@ -3979,7 +4168,7 @@ class HTTPClient:
         """
         response = await self.raw_request(
             routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user)[-1]),
-            authenticated=False,
+            token=None,
             accept_json=False,
         )
         avatar = await response.read()
@@ -4078,7 +4267,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: :class:`ULIDOr`[:class:`BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unblock.
         """
         resp: raw.User = await self.request(routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user)))
@@ -4092,7 +4281,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to delete.
         token: Optional[:class:`str`]
             The webhook token.
@@ -4109,7 +4298,7 @@ class HTTPClient:
         else:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
-                authenticated=False,
+                token=None,
             )
 
     async def edit_webhook(
@@ -4128,15 +4317,15 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to edit.
         token: Optional[:class:`str`]
             The webhook token.
-        name: :class:`UndefinedOr`[:class:`str`]
+        name: UndefinedOr[:class:`str`]
             New webhook name. Should be between 1 and 32 chars long.
-        avatar: :class:`UndefinedOr`[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             New webhook avatar.
-        permissions: :class:`UndefinedOr`[:class:`Permissions`]
+        permissions: UndefinedOr[:class:`Permissions`]
             New webhook permissions.
 
         Raises
@@ -4174,7 +4363,7 @@ class HTTPClient:
             resp = await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
                 json=payload,
-                authenticated=False,
+                token=None,
             )
         return self.state.parser.parse_webhook(resp)
 
@@ -4190,8 +4379,10 @@ class HTTPClient:
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
+        mention_everyone: bool | None = None,
+        mention_online: bool | None = None,
     ) -> Message:
         """|coro|
 
@@ -4199,7 +4390,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`.BaseWebhook`]
             The ID of the webhook.
         token: :class:`str`
             The webhook token.
@@ -4207,18 +4398,22 @@ class HTTPClient:
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`ResolvableResource`]]
+        attachments: Optional[List[:class:`.ResolvableResource`]]
             The message attachments.
-        replies: Optional[List[Union[:class:`Reply`, :class:`ULIDOr`[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
             The message embeds.
-        masquearde: Optional[:class:`Masquerade`]
+        masquearde: Optional[:class:`.Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`Interactions`]
+        interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel.
 
         Returns
         -------
@@ -4245,10 +4440,27 @@ class HTTPClient:
             payload['interactions'] = interactions.build()
 
         flags = None
+
         if silent is not None:
-            flags = 0
+            if flags is None:
+                flags = 0
+
             if silent:
                 flags |= MessageFlags.suppress_notifications.value
+
+        if mention_everyone is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_everyone:
+                flags |= MessageFlags.mention_everyone.value
+
+        if mention_online is not None:
+            if flags is None:
+                flags = 0
+
+            if mention_online:
+                flags |= MessageFlags.mention_online.value
 
         if flags is not None:
             payload['flags'] = flags
@@ -4260,7 +4472,7 @@ class HTTPClient:
             routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
             json=payload,
             headers=headers,
-            authenticated=False,
+            token=None,
         )
         return self.state.parser.parse_message(resp)
 
@@ -4280,7 +4492,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: :class:`ULIDOr`[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The ID of the webhook.
         token: Optional[:class:`str`]
             The webhook token.
@@ -4306,7 +4518,7 @@ class HTTPClient:
         else:
             r2: raw.Webhook = await self.request(
                 routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
-                authenticated=False,
+                token=None,
             )
             return self.state.parser.parse_webhook(r2)
 
@@ -4401,7 +4613,7 @@ class HTTPClient:
         payload: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
             routes.AUTH_ACCOUNT_CONFIRM_DELETION.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4442,7 +4654,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CREATE_ACCOUNT.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4538,7 +4750,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_PASSWORD_RESET.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4567,7 +4779,7 @@ class HTTPClient:
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4591,7 +4803,7 @@ class HTTPClient:
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
-            authenticated=False,
+            token=None,
             json=payload,
         )
 
@@ -4610,7 +4822,7 @@ class HTTPClient:
         HTTPException
             Verifying the email address failed.
         """
-        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), authenticated=False)
+        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
         if response is not None and isinstance(response, dict) and 'ticket' in response:
             return self.state.parser.parse_mfa_ticket(response['ticket'])
         else:
@@ -4714,7 +4926,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        session: :class:`ULIDOr`[:class:`PartialSession`]
+        session: ULIDOr[:class:`PartialSession`]
             The session to edit.
         friendly_name: :class:`str`
             The new device name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
@@ -4763,9 +4975,7 @@ class HTTPClient:
             'password': password,
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=payload
-        )
+        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
         return self.state.parser.parse_response_login(resp, friendly_name)
 
     async def login_with_mfa(
@@ -4799,9 +5009,7 @@ class HTTPClient:
             'mfa_response': by.build() if by else None,
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(
-            routes.AUTH_SESSION_LOGIN.compile(), authenticated=False, json=payload
-        )
+        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
         ret = self.state.parser.parse_response_login(resp, friendly_name)
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret

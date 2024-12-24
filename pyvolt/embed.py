@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
+from abc import ABC, abstractmethod
 from attrs import define, field
 import typing
 
@@ -35,78 +35,90 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 
+class BaseEmbed(ABC):
+    """Base class for message embeds."""
+
+    __slots__ = ()
+
+    @abstractmethod
+    def attach_state(self, state: State, /) -> Embed:
+        """:class:`.Embed`: Attach a state to embed.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state to attach.
+        """
+        ...
+
+
 @define(slots=True)
-class _BaseEmbed(abc.ABC):
-    """The message embed."""
-
-    @abc.abstractmethod
-    def _stateful(self, state: State, /) -> Embed: ...
-
-
-@define(slots=True)
-class EmbedSpecial:
+class BaseEmbedSpecial:
     """Information about special remote content."""
 
 
-class NoneEmbedSpecial(EmbedSpecial):
+@define(slots=True)
+class NoneEmbedSpecial(BaseEmbedSpecial):
     """No remote content."""
 
 
 _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 
 
-class GifEmbedSpecial(EmbedSpecial):
-    """This is content hint that embed contains a GIF. Use metadata to find video or image to play."""
+@define(slots=True)
+class GifEmbedSpecial(BaseEmbedSpecial):
+    """A content hint that embed contains a GIF. Metadata should be used to find video or image to play."""
 
 
 _GIF_EMBED_SPECIAL = GifEmbedSpecial()
 
 
 @define(slots=True)
-class YouTubeEmbedSpecial(EmbedSpecial):
+class YouTubeEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Youtube video."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The video ID."""
+    """:class:`str`: The video ID."""
 
     timestamp: str | None = field(repr=True, kw_only=True, eq=True)
-    """The video timestamp."""
+    """Optional[:class:`str`]: The video timestamp."""
 
 
 @define(slots=True)
-class LightspeedEmbedSpecial(EmbedSpecial):
+class LightspeedEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Lightspeed.tv stream."""
 
     content_type: LightspeedContentType = field(repr=True, kw_only=True, eq=True)
-    """The Lightspeed.tv content type."""
+    """:class:`.LightspeedContentType`: The Lightspeed.tv content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The Lightspeed.tv stream ID."""
+    """:class:`str`: The Lightspeed.tv stream ID."""
 
 
 @define(slots=True)
-class TwitchEmbedSpecial(EmbedSpecial):
+class TwitchEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Twitch stream or clip."""
 
     content_type: TwitchContentType = field(repr=True, kw_only=True, eq=True)
-    """The Twitch content type."""
+    """:class:`.TwitchContentType`: The Twitch content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The Twitch content ID."""
+    """:class:`str`: The Twitch content ID."""
 
 
 @define(slots=True)
-class SpotifyEmbedSpecial(EmbedSpecial):
+class SpotifyEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Spotify track."""
 
     content_type: str = field(repr=True, kw_only=True, eq=True)
-    """The Spotify content type."""
+    """:class:`str`: The Spotify content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The Spotify content ID."""
+    """:class:`str`: The Spotify content ID."""
 
 
-class SoundcloudEmbedSpecial(EmbedSpecial):
+@define(slots=True)
+class SoundcloudEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Soundcloud track."""
 
 
@@ -114,133 +126,133 @@ _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 
 
 @define(slots=True)
-class BandcampEmbedSpecial(EmbedSpecial):
+class BandcampEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Bandcamp track."""
 
     content_type: BandcampContentType = field(repr=True, kw_only=True, eq=True)
-    """The Bandcamp content type."""
+    """:class:`.BandcampContentType`: The Bandcamp content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The Bandcamp content ID."""
+    """:class:`str`: The Bandcamp content ID."""
 
 
 @define(slots=True)
-class AppleMusicEmbedSpecial(EmbedSpecial):
+class AppleMusicEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Apple Music track."""
 
     album_id: str = field(repr=True, kw_only=True, eq=True)
-    """The Apple Music album ID."""
+    """:class:`str`: The Apple Music album ID."""
 
     track_id: str | None = field(repr=True, kw_only=True, eq=True)
-    """The Apple Music track ID."""
+    """Optional[:class:`str`]: The Apple Music track ID."""
 
 
 @define(slots=True)
-class StreamableEmbedSpecial(EmbedSpecial):
+class StreamableEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Streamable video."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
-    """The video ID."""
+    """:class:`str`: The video ID."""
 
 
 @define(slots=True)
-class ImageEmbed(_BaseEmbed):
+class ImageEmbed(BaseEmbed):
     """Represents an image in a embed."""
 
     url: str = field(repr=True, kw_only=True, eq=True)
-    """The URL to the original image."""
+    """:class:`str`: The URL to the original image."""
 
     width: int = field(repr=True, kw_only=True, eq=True)
-    """The width of the image."""
+    """:class:`int`: The width of the image."""
 
     height: int = field(repr=True, kw_only=True, eq=True)
-    """The height of the image."""
+    """:class:`int`: The height of the image."""
 
     size: ImageSize = field(repr=True, kw_only=True, eq=True)
-    """The positioning and size of the image."""
+    """:class:`.ImageSize`: The positioning and size of the image."""
 
-    def _stateful(self, state: State, /) -> Embed:
+    def attach_state(self, state: State, /) -> Embed:
         return self
 
 
 @define(slots=True)
-class VideoEmbed(_BaseEmbed):
+class VideoEmbed(BaseEmbed):
     """Represents an video in a embed."""
 
     url: str = field(repr=True, kw_only=True, eq=True)
-    """The URL to the original video."""
+    """:class:`str`: The URL to the original video."""
 
     width: int = field(repr=True, kw_only=True, eq=True)
-    """The width of the video."""
+    """:class:`int`: The width of the video."""
 
     height: int = field(repr=True, kw_only=True, eq=True)
-    """The height of the video."""
+    """:class:`int`: The height of the video."""
 
-    def _stateful(self, state: State, /) -> Embed:
+    def attach_state(self, state: State, /) -> Embed:
         return self
 
 
 @define(slots=True)
-class WebsiteEmbed(_BaseEmbed):
+class WebsiteEmbed(BaseEmbed):
     """Represents website embed within Revolt message."""
 
     url: str | None = field(repr=True, kw_only=True, eq=True)
-    """The direct URL to web page."""
+    """Optional[:class:`str`]: The direct URL to web page."""
 
     original_url: str | None = field(repr=True, kw_only=True, eq=True)
-    """The original direct URL."""
+    """Optional[:class:`str`]: The original direct URL."""
 
     special: EmbedSpecial | None = field(repr=True, kw_only=True, eq=True)
-    """The remote content."""
+    """Optional[:class:`.EmbedSpecial`]: The remote content."""
 
     title: str | None = field(repr=True, kw_only=True, eq=True)
-    """The title of website."""
+    """Optional[:class:`str`]: The title of website."""
 
     description: str | None = field(repr=True, kw_only=True, eq=True)
-    """The description of website."""
+    """Optional[:class:`str`]: The description of website."""
 
     image: ImageEmbed | None = field(repr=True, kw_only=True, eq=True)
-    """The embedded image."""
+    """Optional[:class:`.ImageEmbed`]: The embedded image."""
 
     video: VideoEmbed | None = field(repr=True, kw_only=True, eq=True)
-    """The embedded video."""
+    """Optional[:class:`.VideoEmbed`]: The embedded video."""
 
     site_name: str | None = field(repr=True, kw_only=True, eq=True)
-    """The site name."""
+    """Optional[:class:`str`]: The site name."""
 
     icon_url: str | None = field(repr=True, kw_only=True, eq=True)
-    """The URL to site icon."""
+    """Optional[:class:`str`]: The URL to site icon."""
 
     color: str | None = field(repr=True, kw_only=True, eq=True)
-    """The embed's CSS color."""
+    """Optional[:class:`str`]: The embed's CSS color."""
 
-    def _stateful(self, state: State, /) -> Embed:
+    def attach_state(self, state: State, /) -> Embed:
         return self
 
 
 @define(slots=True)
-class StatelessTextEmbed(_BaseEmbed):
-    """Stateless representation of text embed within Revolt message."""
+class StatelessTextEmbed(BaseEmbed):
+    """Represents stateless text embed within Revolt message."""
 
     icon_url: str | None = field(repr=True, kw_only=True, eq=True)
-    """The URL to site icon."""
+    """Optional[:class:`str`]: The URL to site icon."""
 
     url: str | None = field(repr=True, kw_only=True, eq=True)
-    """The direct URL to web page."""
+    """Optional[:class:`str`]: The direct URL to web page."""
 
     title: str | None = field(repr=True, kw_only=True, eq=True)
-    """The embed's title."""
+    """Optional[:class:`str`]: The embed's title."""
 
     description: str | None = field(repr=True, kw_only=True, eq=True)
-    """The embed's description."""
+    """Optional[:class:`str`]: The embed's description."""
 
     internal_media: StatelessAsset | None = field(repr=True, kw_only=True, eq=True)
-    """The stateless embed media."""
+    """Optional[:class:`.StatelessAsset`]: The stateless embed media."""
 
     color: str | None = field(repr=True, kw_only=True, eq=True)
-    """The embed's CSS color."""
+    """Optional[:class:`str`]: The embed's CSS color."""
 
-    def _stateful(self, state: State, /) -> Embed:
+    def attach_state(self, state: State, /) -> Embed:
         return TextEmbed(
             icon_url=self.icon_url,
             url=self.url,
@@ -254,31 +266,43 @@ class StatelessTextEmbed(_BaseEmbed):
 
 @define(slots=True)
 class TextEmbed(StatelessTextEmbed):
-    """Representation of text embed within Revolt message."""
+    """Represents a text embed within Revolt message."""
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     @property
     def media(self) -> Asset | None:
         """Optional[:class:`Asset`]: The embed media."""
-        return self.internal_media._stateful(self.state, 'attachments') if self.internal_media else None
+        return self.internal_media.attach_state(self.state, 'attachments') if self.internal_media else None
 
 
-class NoneEmbed(_BaseEmbed):
+class NoneEmbed(BaseEmbed):
     """Embed that holds nothing."""
 
-    def _stateful(self, state: State, /) -> Embed:
+    def attach_state(self, state: State, /) -> Embed:
         return self
 
 
 _NONE_EMBED = NoneEmbed()
 
+EmbedSpecial = (
+    NoneEmbedSpecial
+    | GifEmbedSpecial
+    | YouTubeEmbedSpecial
+    | LightspeedEmbedSpecial
+    | TwitchEmbedSpecial
+    | SpotifyEmbedSpecial
+    | SoundcloudEmbedSpecial
+    | BandcampEmbedSpecial
+    | AppleMusicEmbedSpecial
+    | StreamableEmbedSpecial
+)
 StatelessEmbed = WebsiteEmbed | ImageEmbed | VideoEmbed | StatelessTextEmbed | NoneEmbed
 Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
 
 __all__ = (
-    '_BaseEmbed',
-    'EmbedSpecial',
+    'BaseEmbed',
+    'BaseEmbedSpecial',
     'NoneEmbedSpecial',
     '_NONE_EMBED_SPECIAL',
     'GifEmbedSpecial',
@@ -299,6 +323,7 @@ __all__ = (
     'TextEmbed',
     'NoneEmbed',
     '_NONE_EMBED',
+    'EmbedSpecial',
     'StatelessEmbed',
     'Embed',
 )

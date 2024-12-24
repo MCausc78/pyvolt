@@ -24,11 +24,15 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
-from attrs import define, field
+from inspect import isawaitable
 import logging
 import re
 import typing
+
+import aiohttp
+from attrs import define, field
+
+from multidict import CIMultiDict
 
 from . import utils
 from .bot import BaseBot
@@ -40,9 +44,9 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .cdn import StatelessAsset, Asset
     from .enums import ServerActivity, BotUsage, ReviteBaseTheme
+    from .settings import ReviteThemeVariable
     from .state import State
     from .user import StatelessUserProfile, UserProfile
-    from .user_settings import ReviteThemeVariable
 
 _L = logging.getLogger(__name__)
 DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'
@@ -55,40 +59,40 @@ class DiscoverableServer(BaseServer):
     """Represents a server on Revolt Discovery. The ID is a invite code."""
 
     name: str = field(repr=True, kw_only=True)
-    """The server's name."""
+    """:class:`str`: The server's name."""
 
     description: str | None = field(repr=True, kw_only=True)
-    """The server's description."""
+    """Optional[:class:`str`]: The server's description."""
 
     internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server icon."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server icon."""
 
     internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless server banner."""
+    """Optional[:class:`.StatelessAsset`]: The stateless server banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The server's flags raw value."""
+    """:class:`int`: The server's flags raw value."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The server's tags."""
+    """List[:class:`str`]: The server's tags."""
 
     member_count: int = field(repr=True, kw_only=True)
-    """The server's member count."""
+    """:class:`int`: The server's member count."""
 
     activity: ServerActivity = field(repr=True, kw_only=True)
-    """The server's activity."""
+    """:class:`.ServerActivity`: The server's activity."""
 
     @property
     def flags(self) -> ServerFlags:
-        """The server's flags."""
+        """:class:`.ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
 
     @property
     def icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server's icon."""
-        return self.internal_icon and self.internal_icon._stateful(self.state, 'icons')
+        """Optional[:class:`.Asset`]: The server's icon."""
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def invite_code(self) -> str:
@@ -97,43 +101,43 @@ class DiscoverableServer(BaseServer):
 
     @property
     def banner(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The server's banner."""
-        return self.internal_banner and self.internal_banner._stateful(self.state, 'banners')
+        """Optional[:class:`.Asset`]: The server's banner."""
+        return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
 
 @define(slots=True)
 class DiscoverableServersPage:
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """The listed servers, up to 200 servers."""
+    """List[:class:`.DiscoverableServer`]: The listed servers, up to 200 servers."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """Popular tags used in discovery servers."""
+    """List[:class:`str`]: Popular tags used in discovery servers."""
 
 
 @define(slots=True)
 class DiscoverableBot(BaseBot):
     name: str = field(repr=True, kw_only=True)
-    """The bot's name."""
+    """:class:`str`: The bot's name."""
 
     internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The stateless bot's avatar."""
+    """Optional[:class:`.StatelessAsset`]: The stateless bot's avatar."""
 
     internal_profile: StatelessUserProfile = field(repr=True, kw_only=True)
-    """The stateless bot's profile."""
+    """Optional[:class:`.StatelessUserProfile`]: The stateless bot's profile."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The bot's tags."""
+    """List[:class:`int`]: The bot's tags."""
 
     server_count: int = field(repr=True, kw_only=True)
-    """The bot's servers count."""
+    """:class:`int`: The bot's servers count."""
 
     usage: BotUsage = field(repr=True, kw_only=True)
-    """How frequently is bot being used."""
+    """:class:`.BotUsage`: How frequently is bot being used."""
 
     @property
     def avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The bot's avatar."""
-        return self.internal_avatar and self.internal_avatar._stateful(self.state, 'avatars')
+        """Optional[:class:`.Asset`]: The bot's avatar."""
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def description(self) -> str:
@@ -142,47 +146,47 @@ class DiscoverableBot(BaseBot):
 
     @property
     def profile(self) -> UserProfile:
-        """:class:`UserProfile`: The bot's profile."""
-        return self.internal_profile._stateful(self.state, self.id)
+        """:class:`.UserProfile`: The bot's profile."""
+        return self.internal_profile.attach_state(self.state, self.id)
 
 
 @define(slots=True)
 class DiscoverableBotsPage:
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """The listed bots, up to 200 bots."""
+    """List[:class:`.DiscoverableBot`]: The listed bots, up to 200 bots."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """Popular tags used in discovery bots."""
+    """List[:class:`str`]: Popular tags used in discovery bots."""
 
 
 @define(slots=True)
 class DiscoverableTheme:
     state: State = field(repr=False)
-    """State that controls this theme."""
+    """:class:`.State`: State that controls this theme."""
 
     name: str = field(repr=True, kw_only=True)
-    """The theme name."""
+    """:class:`str`: The theme name."""
 
     description: str = field(repr=True, kw_only=True)
-    """The theme description."""
+    """:class:`str`: The theme description."""
 
     creator: str = field(repr=True, kw_only=True)
-    """The theme creator."""
+    """:class:`str`: The theme creator."""
 
     slug: str = field(repr=True, kw_only=True)
-    """The theme slug."""
+    """:class:`str`: The theme slug."""
 
     tags: list[str] = field(repr=True, kw_only=True)
-    """The theme tags."""
+    """List[:class:`str`]: The theme tags."""
 
     overrides: dict[ReviteThemeVariable, str] = field(repr=True, kw_only=True)
-    """The theme overrides in format `{css_class: css_color}`."""
+    """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides in format `{css_class: css_color}`."""
 
     version: str = field(repr=True, kw_only=True)
-    """The theme version."""
+    """:class:`str`: The theme version."""
 
     custom_css: str | None = field(repr=True, kw_only=True)
-    """The theme CSS string."""
+    """Optional[:class:`str`]: The theme CSS string."""
 
     def __hash__(self) -> int:
         return hash((self.name, self.creator))
@@ -199,6 +203,11 @@ class DiscoverableTheme:
         """|coro|
 
         Applies the theme to current user account.
+
+        Parameters
+        ----------
+        base_theme: UndefinedOr[:class:`.ReviteBaseTheme`]
+            The base theme to use, when applying theme.
         """
         await self.state.settings.revite.edit(
             overrides=self.overrides,
@@ -209,14 +218,11 @@ class DiscoverableTheme:
 
 @define(slots=True)
 class DiscoverableThemesPage:
-    themes: list[DiscoverableTheme] = field(
-        repr=True,
-        kw_only=True,
-    )
-    """The listed themes, up to 200 themes."""
+    themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
+    """List[:class:`.DiscoverableTheme`]: The listed themes, up to 200 themes."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """The popular tags used in discoverable themes."""
+    """List[:class:`str`]: The popular tags used in discoverable themes."""
 
 
 # 'relatedTags' contains deduplicated tags, calculated with:
@@ -234,16 +240,16 @@ class ServerSearchResult:
     """The server search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The servers count."""
+    """:class:`int`: The servers count."""
 
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """The listed servers."""
+    """List[:class:`.DiscoverableServer`]: The listed servers."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed servers have."""
+    """List[:class:`str`]: All of tags that listed servers have."""
 
 
 @define(slots=True)
@@ -251,16 +257,16 @@ class BotSearchResult:
     """The bot search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The bots count."""
+    """:class:`int`: The bots count."""
 
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """The listed bots."""
+    """List[:class:`.DiscoverableBot`]: The listed bots."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed bots have."""
+    """List[:class:`str`]: All of tags that listed bots have."""
 
 
 @define(slots=True)
@@ -268,16 +274,16 @@ class ThemeSearchResult:
     """The theme search result object."""
 
     query: str = field(repr=True, kw_only=True)
-    """The lower-cased query."""
+    """:class:`str`: The lower-cased query."""
 
     count: int = field(repr=True, kw_only=True)
-    """The themes count."""
+    """:class:`int`: The themes count."""
 
     themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
-    """The listed themes."""
+    """List[:class:`.DiscoverableTheme`]: The listed themes."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
-    """All of tags that listed themes have."""
+    """List[:class:`str`]: All of tags that listed themes have."""
 
 
 DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'
@@ -290,12 +296,21 @@ class DiscoveryClient:
         '_base',
         'session',
         'state',
+        'user_agent',
     )
 
-    def __init__(self, *, base: str | None = None, session: aiohttp.ClientSession, state: State) -> None:
+    def __init__(
+        self,
+        *,
+        base: str | None = None,
+        session: aiohttp.ClientSession,
+        state: State,
+        user_agent: str = '',
+    ) -> None:
         self._base: str = f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base is None else base.rstrip('/')
         self.session: aiohttp.ClientSession = session
         self.state: State = state
+        self.user_agent: str = user_agent or DEFAULT_DISCOVERY_USER_AGENT
 
     def with_base(self, base: str, /) -> None:
         self._base = base.rstrip('/')
@@ -332,11 +347,43 @@ class DiscoveryClient:
                 )
             return match[0]
 
-    async def _request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
+    def add_headers(
+        self,
+        headers: CIMultiDict[typing.Any],
+        method: str,
+        path: str,
+        /,
+    ) -> utils.MaybeAwaitable[None]:
+        headers['User-Agent'] = self.user_agent
+
+    async def send_request(
+        self,
+        session: aiohttp.ClientSession,
+        method: str,
+        url: str,
+        /,
+        *,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> aiohttp.ClientResponse:
+        return await session.request(
+            method,
+            url,
+            headers=headers,
+            **kwargs,
+        )
+
+    async def raw_request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
         _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
-        headers = {'user-agent': DEFAULT_DISCOVERY_USER_AGENT}
-        headers.update(kwargs.pop('headers', {}))
-        response = await self.session.request(method, self._base + path, headers=headers, **kwargs)
+
+        headers: CIMultiDict[typing.Any] = CIMultiDict(kwargs.pop('headers', {}))
+        tmp = self.add_headers(headers, method, path)
+        if isawaitable(tmp):
+            await tmp
+
+        url = self._base + path
+
+        response = await self.send_request(self.session, method, url, headers=headers, **kwargs)
         if response.status >= 400:
             data = await utils._json_or_text(response)
             raise DiscoverError(response, response.status, data)
@@ -359,7 +406,7 @@ class DiscoveryClient:
         return build_id
 
     async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
-        response = await self._request(method, path, **kwargs)
+        response = await self.raw_request(method, path, **kwargs)
         result = await utils._json_or_text(response)
         _L.debug('received from %s %s: %s', method, path, result)
         response.close()

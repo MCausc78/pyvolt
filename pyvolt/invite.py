@@ -43,10 +43,10 @@ class BaseInvite:
     """Represents a invite on Revolt."""
 
     state: State = field(repr=False, kw_only=True)
-    """State that controls this invite."""
+    """:class:`.State`: State that controls this invite."""
 
     code: str = field(repr=True, kw_only=True)
-    """The invite's code."""
+    """:class:`str`: The invite's code."""
 
     def __hash__(self) -> int:
         return hash(self.code)
@@ -105,59 +105,59 @@ class ServerPublicInvite(BaseInvite):
     """Represents a public invite to server channel."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID this invite points to."""
+    """:class:`str`: The server's ID this invite points to."""
 
     server_name: str = field(repr=True, kw_only=True)
-    """The server's name."""
+    """:class:`str`: The server's name."""
 
     internal_server_icon: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The server's stateless icon."""
+    """Optional[:class:`.StatelessAsset`]: The server's stateless icon."""
 
     internal_server_banner: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The server's stateless banner.."""
+    """Optional[:class:`.StatelessAsset`]: The server's stateless banner.."""
 
     raw_server_flags: int = field(repr=True, kw_only=True)
-    """The server's flags raw value."""
+    """:class:`int`: The server's flags raw value."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The destination channel's ID."""
+    """:class:`str`: The destination channel's ID."""
 
     channel_name: str = field(repr=True, kw_only=True)
-    """The destination channel's name."""
+    """:class:`str`: The destination channel's name."""
 
     channel_description: str | None = field(repr=True, kw_only=True)
-    """The destination channel's description."""
+    """Optional[:class:`str`]: The destination channel's description."""
 
     user_name: str = field(repr=True, kw_only=True)
-    """The user's name who created this invite."""
+    """:class:`str`: The user's name who created this invite."""
 
     internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The user's stateless avatar who created this invite."""
+    """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
-    members_count: int = field(repr=True, kw_only=True)
-    """The count of members in target server."""
+    member_count: int = field(repr=True, kw_only=True)
+    """:class:`int`: The count of members in target server."""
 
     @property
     def server_flags(self) -> ServerFlags:
-        """The server's flags."""
+        """:class:`.ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_server_flags
         return ret
 
     @property
     def server_icon(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The icon of the server."""
-        return self.internal_server_icon and self.internal_server_icon._stateful(self.state, 'icons')
+        """Optional[:class:`.Asset`]: The icon of the server."""
+        return self.internal_server_icon and self.internal_server_icon.attach_state(self.state, 'icons')
 
     @property
     def server_banner(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The banner of the server."""
-        return self.internal_server_banner and self.internal_server_banner._stateful(self.state, 'banners')
+        """Optional[:class:`.Asset`]: The banner of the server."""
+        return self.internal_server_banner and self.internal_server_banner.attach_state(self.state, 'banners')
 
     @property
     def user_avatar(self) -> Asset | None:
-        """Optional[:class:`Asset`]: The user's avatar who created this invite."""
-        return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
+        """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
+        return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self) -> Server:
         """|coro|
@@ -183,24 +183,24 @@ class GroupPublicInvite(BaseInvite):
     """Represents a public invite to group channel."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The destination channel's ID."""
+    """:class:`str`: The destination channel's ID."""
 
     channel_name: str = field(repr=True, kw_only=True)
-    """The destination channel's name."""
+    """:class:`str`: The destination channel's name."""
 
     channel_description: str | None = field(repr=True, kw_only=True)
-    """The destination channel's description."""
+    """Optional[:class:`str`]: The destination channel's description."""
 
     user_name: str = field(repr=True, kw_only=True)
-    """The user's name who created this invite."""
+    """:class:`str`: The user's name who created this invite."""
 
     internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
-    """The user's stateless avatar who created this invite."""
+    """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     @property
     def user_avatar(self) -> Asset | None:
         """Optional[:class:`Asset`]: The user's avatar who created this invite."""
-        return self.internal_user_avatar and self.internal_user_avatar._stateful(self.state, 'avatars')
+        return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self) -> GroupChannel:
         """|coro|
@@ -226,7 +226,7 @@ class UnknownPublicInvite(BaseInvite):
     """Represents a public invite that is not recognized by library yet."""
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
-    """The raw invite data."""
+    """Dict[:class:`str`, Any]: The raw invite data."""
 
 
 @define(slots=True)
@@ -234,7 +234,7 @@ class PrivateBaseInvite(BaseInvite):
     """Represents a private invite on Revolt."""
 
     creator_id: str = field(repr=True, kw_only=True)
-    """The user's ID who created this invite."""
+    """:class:`str`: The user's ID who created this invite."""
 
 
 @define(slots=True)
@@ -242,7 +242,7 @@ class GroupInvite(PrivateBaseInvite):
     """Represents a group invite on Revolt."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The group's ID this invite points to."""
+    """:class:`str`: The group's ID this invite points to."""
 
     async def accept(self) -> GroupChannel:
         """|coro|
@@ -268,10 +268,10 @@ class ServerInvite(PrivateBaseInvite):
     """Represents a server invite on Revolt."""
 
     server_id: str = field(repr=True, kw_only=True)
-    """The server's ID this invite points to."""
+    """:class:`str`: The server's ID this invite points to."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The channel's ID this invite points to."""
+    """:class:`str`: The channel's ID this invite points to."""
 
     async def accept(self) -> Server:
         """|coro|

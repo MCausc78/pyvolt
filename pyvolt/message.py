@@ -63,7 +63,7 @@ class Reply:
     id: :class:`str`
         The ID of the message that being replied to.
     mention: :class:`bool`
-        To mention author of reference message.
+        Whether to mention author of referenced message or not.
     """
 
     __slots__ = ('id', 'mention')
@@ -79,22 +79,24 @@ class Reply:
         }
 
 
-class Interactions:
+class MessageInteractions:
     """Represents information how to guide interactions on the message.
 
     Attributes
     ----------
     reactions: List[:class:`str`]
-        Reactions which should always appear and be distinct.
+        The reactions which should always appear and be distinct.
     restrict_reactions: :class:`bool`
-        Whether reactions should be restricted to the given list. Can only be set to `True` if `reactions` list is of at least length 1. Defaults to `False`.
+        Whether reactions should be restricted to the given list.
+
+        Can only be set to ``True`` if :attr:`.reactions` has at least 1 emoji. Defaults to `False`.
     """
 
     __slots__ = ('reactions', 'restrict_reactions')
 
     def __init__(self, reactions: list[str], restrict_reactions: bool = False) -> None:
-        self.reactions = reactions
-        self.restrict_reactions = restrict_reactions
+        self.reactions: list[str] = reactions
+        self.restrict_reactions: bool = restrict_reactions
 
     def build(self) -> raw.Interactions:
         return {
@@ -115,7 +117,7 @@ class Masquerade:
     color: Optional[:class:`str`]
         Replace the display role color shown on this message. Can be any valid CSS color.
 
-        You must have :attr:`~Permissions.manage_roles` permission to use.
+        You must have :attr:`~Permissions.manage_roles` permission to set this attribute.
     """
 
     __slots__ = ('name', 'avatar', 'color')
@@ -202,10 +204,10 @@ class MessageWebhook:
     """Information about the webhook bundled with Message."""
 
     name: str = field(repr=True, kw_only=True)
-    """The webhook's name (from 1 to 32 characters).."""
+    """:class:`str`: The webhook's name (from 1 to 32 characters).."""
 
     avatar: str | None = field(repr=True, kw_only=True)
-    """The webhook avatar's ID, if any."""
+    """Optional[:class:`str`]: The webhook avatar's ID, if any."""
 
 
 @define(slots=True)
@@ -213,7 +215,7 @@ class BaseMessage(Base):
     """Represents a message in channel on Revolt."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The ID of the channel this message was sent in."""
+    """:class:`str`: The channel's ID this message was sent in."""
 
     def __hash__(self) -> int:
         return hash((self.channel_id, self.id))
@@ -228,7 +230,7 @@ class BaseMessage(Base):
 
     @property
     def channel(self) -> TextableChannel | PartialMessageable:
-        """:class:`TextableChannel`: The channel this message was sent in."""
+        """Union[:class:`.TextableChannel`, :class:`.PartialMessageable`]: The channel this message was sent in."""
 
         cache = self.state.cache
         if not cache:
@@ -296,9 +298,9 @@ class BaseMessage(Base):
 
         Parameters
         ----------
-        content: :class:`UndefinedOr`[:class:`str`]
+        content: UndefinedOr[:class:`str`]
             The new content to replace the message with.
-        embeds: :class:`UndefinedOr`[List[:class:`SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
         Raises
@@ -361,7 +363,7 @@ class BaseMessage(Base):
         mention: bool = True,
         embeds: list[SendableEmbed] | None = None,
         masquerade: Masquerade | None = None,
-        interactions: Interactions | None = None,
+        interactions: MessageInteractions | None = None,
         silent: bool | None = None,
     ) -> Message:
         """|coro|
@@ -444,7 +446,7 @@ class BaseMessage(Base):
         ----------
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        user: Optional[:class:`ULIDOr`[:class:`BaseUser`]]
+        user: Optional[ULIDOr[:class:`BaseUser`]]
             Remove reactions from this user. Requires `ManageMessages` permission if provided.
         remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. Requires `ManageMessages` permission if provided.
@@ -466,25 +468,27 @@ class PartialMessage(BaseMessage):
     """Represents partial message in channel on Revolt."""
 
     content: UndefinedOr[str] = field(repr=True, kw_only=True)
-    """The new message's content."""
+    """UndefinedOr[:class:`str`]: The new message's content."""
 
     edited_at: UndefinedOr[datetime] = field(repr=True, kw_only=True)
-    """When the message was edited."""
+    """UndefinedOr[:class:`~datetime.datetime`]: When the message was edited."""
 
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
-    """The new message's embeds."""
+    """UndefinedOr[List[:class:`.StatelessEmbed`]]: The new message embeds."""
 
     pinned: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """Whether the message was just pinned."""
+    """UndefinedOr[:class:`bool`]: Whether the message was just pinned."""
 
     reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, kw_only=True)
-    """The new message's reactions."""
+    """UndefinedOr[Dict[:class:`str`, Tuple[:class:`str`, ...]]]: The new message's reactions."""
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """:class:`UndefinedOr`[List[:class:`Embed`]]: New message embeds."""
+        """UndefinedOr[List[:class:`.Embed`]]: The new message embeds."""
         return (
-            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
+            UNDEFINED
+            if self.internal_embeds is UNDEFINED
+            else [e.attach_state(self.state) for e in self.internal_embeds]
         )
 
 
@@ -493,13 +497,15 @@ class MessageAppendData(BaseMessage):
     """Appended data to message in channel on Revolt."""
 
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
-    """Appended stateless embeds."""
+    """UndefinedOr[List[:class:`.StatelessEmbed`]]: The stateless embeds that were appended."""
 
     @property
     def embeds(self) -> UndefinedOr[list[Embed]]:
-        """:class:`UndefinedOr`[List[:class:`Embed`]]: Appended embeds."""
+        """UndefinedOr[List[:class:`.Embed`]]: The embeds that were appended."""
         return (
-            UNDEFINED if self.internal_embeds is UNDEFINED else [e._stateful(self.state) for e in self.internal_embeds]
+            UNDEFINED
+            if self.internal_embeds is UNDEFINED
+            else [e.attach_state(self.state) for e in self.internal_embeds]
         )
 
 
@@ -512,9 +518,16 @@ class BaseSystemEvent:
 @define(slots=True, eq=True)
 class TextSystemEvent(BaseSystemEvent):
     content: str = field(repr=True, kw_only=True, eq=True)
-    """The event contents."""
+    """:class:`str`: The event contents."""
 
-    def _stateful(self, message: Message, /) -> TextSystemEvent:
+    def attach_state(self, message: Message, /) -> TextSystemEvent:
+        """:class:`.TextSystemEvent` Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return self
 
     @property
@@ -537,13 +550,13 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that was added."""
+        """:class:`str`: The user's ID that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was added."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
@@ -551,17 +564,24 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that added this user."""
+        """:class:`str`: The user's ID that added this user."""
         if isinstance(self._by, (User, Member)):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that added this user."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> UserAddedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserAddedSystemEvent:
+        """:class:`.UserAddedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserAddedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -586,10 +606,10 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was added."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -609,14 +629,14 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that was added."""
+        """Union[:class:`.User`, class:`Member`]: The user that was added."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'added user')
         return user
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that added this user."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
         state = self.message.state
@@ -636,7 +656,7 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 
     @property
     def by(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that added this user."""
+        """Union[:class:`.User`, class:`Member`]: The user that added this user."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'added user')
@@ -657,13 +677,13 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that was removed."""
+        """:class:`str`: The user's ID that was removed."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was removed."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
@@ -671,17 +691,24 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that removed this user."""
+        """:class:`str`: The user's ID that removed this user."""
         if isinstance(self._by, (User, Member)):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that removed this user."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> UserRemovedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserRemovedSystemEvent:
+        """:class:`.UserRemovedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserRemovedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -706,10 +733,10 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was removed."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -729,14 +756,14 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that was removed."""
+        """Union[:class:`.User`, class:`Member`]: The user that was removed."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'removed user')
         return user
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that removed this user."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
         state = self.message.state
@@ -756,7 +783,7 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 
     @property
     def by(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that removed this user."""
+        """Union[:class:`.User`, class:`Member`]: The user that removed this user."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'remover')
@@ -772,17 +799,24 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that joined this server/group."""
+        """:class:`str`: The user's ID that joined this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that joined this server/group."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that joined this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserJoinedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserJoinedSystemEvent:
+        """:class:`.UserJoinedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserJoinedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -805,7 +839,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
     """The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was added."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -825,7 +859,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that joined this server/group.."""
+        """Union[:class:`.User`, class:`Member`]: The user that joined this server/group.."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'joined user')
@@ -841,17 +875,24 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that left this server/group."""
+        """:class:`str`: The user's ID that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that left this server/group."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserLeftSystemEvent:
+    def attach_state(self, message: Message, /) -> UserLeftSystemEvent:
+        """:class:`.UserLeftSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserLeftSystemEvent(
             message=message,
             internal_user=self._user,
@@ -871,10 +912,10 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that left this server/group."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -894,7 +935,7 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that left this server/group.."""
+        """Union[:class:`.User`, class:`Member`]: The user that left this server/group."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'left user')
@@ -910,17 +951,24 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that was kicked from this server."""
+        """:class:`str`: The user's ID that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was kicked from this server."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserKickedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserKickedSystemEvent:
+        """:class:`.UserKickedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserKickedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -940,10 +988,10 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was kicked from this server."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -963,7 +1011,7 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that was kicked from this server."""
+        """Union[:class:`.User`, class:`Member`]: The user that was kicked from this server."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'kicked user')
@@ -979,17 +1027,24 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
 
     @property
     def user_id(self) -> str:
-        """:class:`str`: The ID of the user that was banned from this server."""
+        """:class:`str`: The user's ID that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was banned from this server."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    def _stateful(self, message: Message) -> UserBannedSystemEvent:
+    def attach_state(self, message: Message, /) -> UserBannedSystemEvent:
+        """:class:`.UserBannedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return UserBannedSystemEvent(
             message=message,
             internal_user=self._user,
@@ -1009,10 +1064,10 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that was banned from this server."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
         state = self.message.state
@@ -1032,7 +1087,7 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
 
     @property
     def user(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that was banned from this server."""
+        """Union[:class:`.User`, class:`Member`]: The user that was banned from this server."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'banned user')
@@ -1042,7 +1097,7 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
 @define(slots=True)
 class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
     name: str = field(repr=True, kw_only=True)
-    """The new name of this group."""
+    """:class:`str`: The new name of this group."""
 
     _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
 
@@ -1056,17 +1111,24 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that renamed this group."""
+        """:class:`str`: The user's ID that renamed this group."""
         if isinstance(self._by, User):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that renamed this group."""
+        """Optional[:class:`.User`]: Tries to get user that renamed this group."""
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message) -> ChannelRenamedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelRenamedSystemEvent:
+        """:class:`.ChannelRenamedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelRenamedSystemEvent(
             message=message,
             name=self.name,
@@ -1087,10 +1149,10 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`: Tries to get user that renamed this group."""
+        """Optional[:class:`.User`: Tries to get user that renamed this group."""
         if isinstance(self._by, User):
             return self._by
         state = self.message.state
@@ -1103,7 +1165,7 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
 
     @property
     def by(self) -> User:
-        """Union[:class:`User`]: The user that renamed this group."""
+        """:class:`.User`: The user that renamed this group."""
         by = self.get_by()
         if not by:
             raise NoData(self.by_id, 'user')
@@ -1123,17 +1185,24 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that changed description of this group."""
+        """:class:`str`: The user's ID that changed description of this group."""
         if isinstance(self._by, User):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that changed description of this group."""
+        """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message) -> ChannelDescriptionChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelDescriptionChangedSystemEvent:
+        """:class:`.ChannelDescriptionChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelDescriptionChangedSystemEvent(
             message=message,
             internal_by=self._by,
@@ -1153,10 +1222,10 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that changed description of this group."""
+        """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
         if isinstance(self._by, User):
             return self._by
         state = self.message.state
@@ -1169,7 +1238,7 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
 
     @property
     def by(self) -> User:
-        """:class:`User`: The user that changed description of this group."""
+        """:class:`.User`: The user that changed description of this group."""
         by = self.get_by()
         if not by:
             raise NoData(self.by_id, 'user')
@@ -1185,17 +1254,24 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that changed icon of this group."""
+        """:class:`str`: The user's ID that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that changed icon of this group."""
+        """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by
 
-    def _stateful(self, message: Message) -> ChannelIconChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelIconChangedSystemEvent:
+        """:class:`.ChannelIconChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelIconChangedSystemEvent(
             message=message,
             internal_by=self._by,
@@ -1218,7 +1294,7 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
     """The message that holds this system event."""
 
     def get_by(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that changed icon of this group."""
+        """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by
         state = self.message.state
@@ -1231,7 +1307,7 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
 
     @property
     def by(self) -> User:
-        """:class:`User`: The user that changed icon of this group."""
+        """:class:`.User`: The user that changed icon of this group."""
         by = self.get_by()
         if not by:
             raise NoData(self.by_id, 'user')
@@ -1253,29 +1329,36 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
 
     @property
     def from_id(self) -> str:
-        """:class:`str`: The ID of the user that was previous owner of this group."""
+        """:class:`str`: The user's ID that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from.id
         return self._from
 
     def get_from(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that was previous owner of this group."""
+        """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from
 
     @property
     def to_id(self) -> str:
-        """:class:`str`: The ID of the user that became owner of this group."""
+        """:class:`str`: The user's ID that became owner of this group."""
         if isinstance(self._from, User):
             return self._from.id
         return self._from
 
     def get_to(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that became owner of this group."""
+        """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
         if isinstance(self._from, User):
             return self._from
 
-    def _stateful(self, message: Message) -> ChannelOwnershipChangedSystemEvent:
+    def attach_state(self, message: Message, /) -> ChannelOwnershipChangedSystemEvent:
+        """:class:`.ChannelOwnershipChangedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return ChannelOwnershipChangedSystemEvent(
             message=message,
             internal_from=self._from,
@@ -1299,10 +1382,10 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_from(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that was previous owner of this group."""
+        """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from
         state = self.message.state
@@ -1315,14 +1398,14 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
 
     @property
     def from_(self) -> User:
-        """:class:`User`: The user that was previous owner of this group."""
+        """:class:`.User`: The user that was previous owner of this group."""
         from_ = self.get_from()
         if not from_:
             raise NoData(self.from_id, 'user')
         return from_
 
     def get_to(self) -> User | None:
-        """Optional[:class:`User`]: Tries to get user that became owner of this group."""
+        """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
         if isinstance(self._to, User):
             return self._to
         state = self.message.state
@@ -1335,7 +1418,7 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
 
     @property
     def to(self) -> User:
-        """:class:`User`: The user that became owner of this group."""
+        """:class:`.User`: The user that became owner of this group."""
         to = self.get_from()
         if not to:
             raise NoData(self.to_id, 'user')
@@ -1345,7 +1428,7 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
 @define(slots=True)
 class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
     pinned_message_id: str = field(repr=True, kw_only=True)
-    """The ID of the message that was pinned."""
+    """:class:`str`: The ID of the message that was pinned."""
 
     _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
@@ -1359,17 +1442,24 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that pinned a message."""
+        """:class:`str`: The user's ID that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that pinned a message."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> MessagePinnedSystemEvent:
+    def attach_state(self, message: Message, /) -> MessagePinnedSystemEvent:
+        """:class:`.MessagePinnedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return MessagePinnedSystemEvent(
             message=message,
             pinned_message_id=self.pinned_message_id,
@@ -1390,10 +1480,10 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that pinned a message."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
         state = self.message.state
@@ -1413,7 +1503,7 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
 
     @property
     def by(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that pinned a message."""
+        """Union[:class:`.User`, class:`Member`]: The user that pinned a message."""
         by = self.get_by()
         if not by:
             raise NoData(self.by_id, 'user')
@@ -1423,7 +1513,7 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
 @define(slots=True)
 class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
     unpinned_message_id: str = field(repr=True, kw_only=True)
-    """The ID of the message that was unpinned."""
+    """:class:`str`: The ID of the message that was unpinned."""
 
     _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
 
@@ -1437,17 +1527,24 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
 
     @property
     def by_id(self) -> str:
-        """:class:`str`: The ID of the user that unpinned a message."""
+        """:class:`str`: The user's ID that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by.id
         return self._by
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that unpinned a message."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
 
-    def _stateful(self, message: Message) -> MessageUnpinnedSystemEvent:
+    def attach_state(self, message: Message, /) -> MessageUnpinnedSystemEvent:
+        """:class:`.MessageUnpinnedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
         return MessageUnpinnedSystemEvent(
             message=message,
             unpinned_message_id=self.unpinned_message_id,
@@ -1458,10 +1555,10 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
 @define(slots=True)
 class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_by(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get user that unpinned a message."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
         state = self.message.state
@@ -1481,7 +1578,7 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
 
     @property
     def by(self) -> User | Member:
-        """Union[:class:`User`, class:`Member`]: The user that unpinned a message."""
+        """Union[:class:`.User`, class:`Member`]: The user that unpinned a message."""
         by = self.get_by()
         if not by:
             raise NoData(self.by_id, 'user')
@@ -1506,6 +1603,7 @@ StatelessSystemEvent = (
     | StatelessUserLeftSystemEvent
     | StatelessUserKickedSystemEvent
     | StatelessUserBannedSystemEvent
+    | StatelessChannelRenamedSystemEvent
     | StatelessChannelDescriptionChangedSystemEvent
     | StatelessChannelIconChangedSystemEvent
     | StatelessChannelOwnershipChangedSystemEvent
@@ -1521,6 +1619,7 @@ SystemEvent = (
     | UserLeftSystemEvent
     | UserKickedSystemEvent
     | UserBannedSystemEvent
+    | ChannelRenamedSystemEvent
     | ChannelDescriptionChangedSystemEvent
     | ChannelIconChangedSystemEvent
     | ChannelOwnershipChangedSystemEvent
@@ -1531,54 +1630,57 @@ SystemEvent = (
 
 @define(slots=True)
 class Message(BaseMessage):
-    """Representation of message in channel on Revolt."""
+    """Represents a message in channel on Revolt."""
 
     nonce: str | None = field(repr=True, kw_only=True)
-    """Unique value generated by client sending this message."""
+    """Optional[:class:`str`]: The unique value generated by client sending this message."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """The ID of the channel this message was sent in."""
+    """:class:`str`: The channel's ID this message was sent in."""
 
     _author: User | Member | str = field(repr=False, kw_only=True, alias='internal_author')
 
     webhook: MessageWebhook | None = field(repr=True, kw_only=True)
-    """The webhook that sent this message."""
+    """Optional[:class:`.MessageWebhook`]: The webhook that sent this message."""
 
     content: str = field(repr=True, kw_only=True)
-    """The message's content."""
+    """:class:`str`: The message's content."""
 
     internal_system_event: StatelessSystemEvent | None = field(repr=True, kw_only=True)
-    """The stateless system event information, occured in this message, if any."""
+    """Optional[:class:`.StatelessSystemEvent`]: The stateless system event information, occured in this message, if any."""
 
     internal_attachments: list[StatelessAsset] = field(repr=True, kw_only=True)
-    """The stateless attachments on this message."""
+    """List[:class:`.StatelessAsset`]: The stateless attachments on this message."""
 
     edited_at: datetime | None = field(repr=True, kw_only=True)
-    """Timestamp at which this message was last edited."""
+    """Optional[:class:`~datetime.datetime`]: Timestamp at which this message was last edited."""
 
     internal_embeds: list[StatelessEmbed] = field(repr=True, kw_only=True)
-    """The attached stateless embeds to this message."""
+    """List[:class:`.StatelessEmbed`]: The attached stateless embeds to this message."""
 
     mention_ids: list[str] = field(repr=True, kw_only=True)
-    """The user's IDs mentioned in this message."""
+    """List[:class:`str`]: The user's IDs mentioned in this message."""
+
+    role_mention_ids: list[str] = field(repr=True, kw_only=True)
+    """List[:class:`str`]: The role's IDs mentioned in this message."""
 
     replies: list[str] = field(repr=True, kw_only=True)
-    """The message's IDs this message is replying to."""
+    """List[:class:`str`]: The message's IDs this message is replying to."""
 
     reactions: dict[str, tuple[str, ...]] = field(repr=True, kw_only=True)
-    """The mapping of emojis to list of user IDs."""
+    """Dict[:class:`str`, Tuple[:class:`str`, ...]]: The mapping of emojis to list of user IDs."""
 
-    interactions: Interactions | None = field(repr=True, kw_only=True)
-    """The information about how this message should be interacted with."""
+    interactions: MessageInteractions | None = field(repr=True, kw_only=True)
+    """Optional[:class:`.MessageInteractions`]: The information about how this message should be interacted with."""
 
     masquerade: Masquerade | None = field(repr=True, kw_only=True)
-    """The name and / or avatar overrides for this message."""
+    """Optional[:class:`.Masquerade`]: The name and / or avatar overrides for this message."""
 
     pinned: bool = field(repr=True, kw_only=True)
-    """Whether the message is pinned."""
+    """:class:`bool`: Whether the message is pinned."""
 
     raw_flags: int = field(repr=True, kw_only=True)
-    """The message's flags raw value."""
+    """:class:`int`: The message's flags raw value."""
 
     def locally_append(self, data: MessageAppendData, /) -> None:
         if data.internal_embeds is not UNDEFINED:
@@ -1606,12 +1708,12 @@ class Message(BaseMessage):
     def locally_update(self, data: PartialMessage, /) -> None:
         """Locally updates message with provided data.
 
-        .. warn::
+        .. warning::
             This is called by library internally to keep cache up to date.
 
         Parameters
         ----------
-        data: :class:`PartialMessage`
+        data: :class:`.PartialMessage`
             The data to update message with.
         """
         if data.content is not UNDEFINED:
@@ -1626,7 +1728,7 @@ class Message(BaseMessage):
             self.reactions = data.reactions
 
     def get_author(self) -> User | Member | None:
-        """Optional[Union[:class:`User`, :class:`Member`]]: Tries to get message author."""
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
 
@@ -1680,26 +1782,26 @@ class Message(BaseMessage):
         if not isinstance(channel, ServerChannel):
             return cache.get_user(
                 self._author,
-                caching.MessageContext(type=caching.ContextType.message, message=self)
+                caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
                 if 'Message.get_author' in state.provide_cache_context_in
                 else caching._UNDEFINED,
             )
         return cache.get_server_member(
             channel.server_id,
             self._author,
-            caching.MessageContext(type=caching.ContextType.message, message=self)
+            caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
             if 'Message.get_author' in state.provide_cache_context_in
             else caching._UNDEFINED,
         )
 
     @property
     def attachments(self) -> list[Asset]:
-        """List[:class:`Asset`]: The attachments on this message."""
-        return [a._stateful(self.state, 'attachments') for a in self.internal_attachments]
+        """List[:class:`.Asset`]: The attachments on this message."""
+        return [a.attach_state(self.state, 'attachments') for a in self.internal_attachments]
 
     @property
     def author(self) -> User | Member:
-        """Union[:class:`User`, :class:`Member`]: The user that sent this message."""
+        """Union[:class:`.User`, :class:`.Member`]: The user that sent this message."""
         author = self.get_author()
         if not author:
             raise NoData(self.author_id, 'message author')
@@ -1707,19 +1809,19 @@ class Message(BaseMessage):
 
     @property
     def author_id(self) -> str:
-        """:class:`str`: The ID of the user or webhook that sent this message."""
+        """:class:`str`: The user's ID or webhook that sent this message."""
         if isinstance(self._author, (User, Member)):
             return self._author.id
         return self._author
 
     @property
     def embeds(self) -> list[Embed]:
-        """List[:class:`Embed`]: The attached embeds to this message."""
-        return [e._stateful(self.state) for e in self.internal_embeds]
+        """List[:class:`.Embed`]: The attached embeds to this message."""
+        return [e.attach_state(self.state) for e in self.internal_embeds]
 
     @property
     def flags(self) -> MessageFlags:
-        """The message's flags."""
+        """:class:`.MessageFlags`: The message's flags."""
         ret = _new_message_flags(MessageFlags)
         ret.value = self.raw_flags
         return ret
@@ -1736,9 +1838,9 @@ class Message(BaseMessage):
 
     @property
     def system_event(self) -> SystemEvent | None:
-        """Optional[:class:`SystemEvent`]: The system event information, occured in this message, if any."""
+        """Optional[:class:`.SystemEvent`]: The system event information, occured in this message, if any."""
         if self.internal_system_event:
-            return self.internal_system_event._stateful(self)
+            return self.internal_system_event.attach_state(self)
 
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message is silent."""
@@ -1747,7 +1849,7 @@ class Message(BaseMessage):
 
 __all__ = (
     'Reply',
-    'Interactions',
+    'MessageInteractions',
     'Masquerade',
     'SendableEmbed',
     'MessageWebhook',

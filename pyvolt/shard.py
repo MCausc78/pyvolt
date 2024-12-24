@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import abc
+from abc import ABC, abstractmethod
 import aiohttp
 import asyncio
 from inspect import isawaitable
@@ -34,7 +34,7 @@ import typing
 from . import utils
 from .core import ULIDOr, resolve_id, __version__ as version
 from .enums import ShardFormat
-from .errors import PyvoltException, ShardError, AuthenticationError, ConnectError
+from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from .state import State
 
 try:
-    import msgpack
+    import msgpack  # type: ignore
 except ImportError:
     _HAS_MSGPACK = False
 else:
@@ -62,8 +62,12 @@ class Reconnect(Exception):
     __slots__ = ()
 
 
-class EventHandler(abc.ABC):
-    @abc.abstractmethod
+class EventHandler(ABC):
+    """A handler for shard events."""
+
+    __slots__ = ()
+
+    @abstractmethod
     def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> utils.MaybeAwaitable[None]:
         """Handles dispatched event.
 
@@ -95,7 +99,7 @@ DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/py
 
 
 class Shard:
-    """Implementation of Revolt WebSocket client.
+    """Implements Revolt WebSocket client.
 
     Attributes
     ----------
@@ -103,11 +107,11 @@ class Shard:
         The base WebSocket URL.
     bot: :class:`bool`
         Whether the token belongs to bot account. Defaults to ``True``.
-    connect_delay: Optional[Union[:class:`float`, :class:`int`]]
+    connect_delay: Optional[:class:`float`]
         The duration in seconds to sleep when reconnecting to WebSocket due to aiohttp errors. Defaults to 2.
     format: :class:`ShardFormat`
         The message format to use when communicating with Revolt WebSocket.
-    handler: Optional[:class:`EventHandler`]
+    handler: Optional[:class:`.EventHandler`]
         The handler that receives events. Defaults to ``None`` if not provided.
     last_ping_at: Optional[:class:`~datetime.datetime`]
         When the shard sent ping.
@@ -160,7 +164,7 @@ class Shard:
         *,
         base: str | None = None,
         bot: bool = True,
-        connect_delay: int | float | None = 2,
+        connect_delay: float | None = 2,
         format: ShardFormat = ShardFormat.json,
         handler: EventHandler | None = None,
         reconnect_on_timeout: bool = True,
@@ -215,7 +219,7 @@ class Shard:
         """
         if self._socket:
             if self._closed:
-                raise ShardError('Already closed')
+                raise ShardClosedError('Already closed')
             self._closed = True
             await self._socket.close(code=1000)
 
@@ -270,7 +274,7 @@ class Shard:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to begin typing in.
         """
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
@@ -283,7 +287,7 @@ class Shard:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextChannel`]
             The channel to end typing in.
         """
         payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
@@ -296,7 +300,7 @@ class Shard:
 
         Parameters
         ----------
-        server: :class:`ULIDOr`[:class:`BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to subscribe to.
         """
         payload: raw.ServerSubscribeEvent = {'type': 'Subscribe', 'server_id': resolve_id(server)}
@@ -325,14 +329,14 @@ class Shard:
             aiohttp.WSMsgType.CLOSING,
         ):
             self._last_close_code = data = self.socket.close_code
-            _L.debug('Websocket closed with %s (closed: %s)', data, self._closed)
+            _L.debug('WebSocket closed with %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
             await asyncio.sleep(0.5)
             raise Reconnect
 
         if message.type is aiohttp.WSMsgType.ERROR:
-            _L.debug('Received invalid websocket payload. Reconnecting.')
+            _L.debug('Received invalid WebSocket payload. Reconnecting.')
             raise Reconnect
 
         if message.type is not aiohttp.WSMsgType.TEXT:
@@ -352,19 +356,21 @@ class Shard:
             message = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
+
         if message.type in (
             aiohttp.WSMsgType.CLOSE,
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
             self._last_close_code = data = self.socket.close_code
-            _L.debug('Websocket closed with %s (closed: %s)', data, self._closed)
+            _L.debug('WebSocket closed with %s (was closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             raise Reconnect
+
         if message.type is aiohttp.WSMsgType.ERROR:
-            _L.debug('Received invalid websocket payload, reconnecting')
+            _L.debug('Received invalid WebSocket payload. Reconnecting.')
             raise Reconnect
 
         if message.type is not aiohttp.WSMsgType.BINARY:
@@ -380,16 +386,43 @@ class Shard:
             _L.debug('Received %s', k)
         return k
 
-    def _headers(self) -> dict[str, str]:
-        return {'user-agent': self.user_agent}
+    def get_headers(self) -> dict[str, str]:
+        """Dict[:class:`str`, :class:`str`]: The headers to use when connecting to WebSocket."""
+        return {'User-Agent': self.user_agent}
 
     async def _heartbeat(self) -> None:
         while True:
             await asyncio.sleep(30.0)
             await self.ping()
 
-    async def connect(self) -> None:
-        await self._connect()
+    async def ws_connect(
+        self, session: aiohttp.ClientSession, url: str, /, *, headers: dict[str, str], params: dict[str, str]
+    ) -> aiohttp.ClientWebSocketResponse:
+        """|coro|
+
+        Start a WebSocket connection.
+
+        Parameters
+        ----------
+        session: :class:`aiohttp.ClientSession`
+            The session to use when connecting.
+        url: :class:`str`
+            The URL to connect to.
+        headers: Dict[:class:`str`, :class:`str`]
+            The HTTP headers.
+        params: Dict[:class:`str`, :class:`str`]
+            The HTTP query string parameters.
+
+        Returns
+        -------
+        :class:`aiohttp.ClientWebSocketResponse`
+            The WebSocket connection.
+        """
+        return await session.ws_connect(
+            url,
+            headers=headers,
+            params=params,
+        )
 
     async def _socket_connect(self) -> aiohttp.ClientWebSocketResponse:
         session = self._session
@@ -413,12 +446,13 @@ class Shard:
         i = 0
         _L.debug('Connecting to %s, format=%s', self.base, self.format)
 
-        headers = self._headers()
+        headers = self.get_headers()
         while True:
             if i >= self.retries:
                 break
             try:
-                return await session.ws_connect(
+                return await self.ws_connect(
+                    session,
                     self.base,
                     headers=headers,
                     params=params,  # type: ignore # Not true
@@ -443,7 +477,11 @@ class Shard:
                     await asyncio.sleep(self.connect_delay)
         raise ConnectError(self.retries, errors)
 
-    async def _connect(self) -> None:
+    async def connect(self) -> None:
+        """|coro|
+
+        Starts the WebSocket lifecycle.
+        """
         if self._socket:
             raise PyvoltException('The connection is already open.')
         while not self._closed:
@@ -468,8 +506,9 @@ class Shard:
                 await self.authenticate()
 
                 message = await self.recv()
-                if message is None or message['type'] != 'Authenticated':
-                    raise AuthenticationError(message)
+                if message['type'] != 'Authenticated':
+                    raise AuthenticationError(message)  # type: ignore
+
                 self.logged_out = False
                 await self._handle(message)
                 message = None

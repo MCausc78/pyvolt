@@ -24,12 +24,14 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
 import asyncio
 import builtins
-from inspect import isawaitable
+from functools import partial
+from inspect import isawaitable, signature
 import logging
 import typing
+
+import aiohttp
 
 from . import cache as caching, utils
 from .cache import Cache, MapCache
@@ -61,7 +63,7 @@ if typing.TYPE_CHECKING:
         AuthifierEvent,
         BaseChannelCreateEvent,
         BaseEvent,
-        BulkMessageDeleteEvent,
+        MessageDeleteBulkEvent,
         ChannelDeleteEvent,
         ChannelStartTypingEvent,
         ChannelStopTypingEvent,
@@ -80,6 +82,7 @@ if typing.TYPE_CHECKING:
         PrivateChannelCreateEvent,
         RawServerRoleUpdateEvent,
         ReadyEvent,
+        ReportCreateEvent,
         ServerChannelCreateEvent,
         ServerCreateEvent,
         ServerDeleteEvent,
@@ -108,7 +111,7 @@ if typing.TYPE_CHECKING:
     )
     from .message import Message
     from .read_state import ReadState
-    from .user_settings import UserSettings
+    from .settings import UserSettings
 
 
 _L = logging.getLogger(__name__)
@@ -156,6 +159,7 @@ class ClientEventHandler(EventHandler):
             'UserPlatformWipe': self.handle_user_platform_wipe,
             'EmojiCreate': self.handle_emoji_create,
             'EmojiDelete': self.handle_emoji_delete,
+            'ReportCreate': self.handle_report_create,
             'ChannelCreate': self.handle_channel_create,
             'ChannelUpdate': self.handle_channel_update,
             'ChannelDelete': self.handle_channel_delete,
@@ -278,6 +282,10 @@ class ClientEventHandler(EventHandler):
 
     def handle_emoji_delete(self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /) -> None:
         event = self._state.parser.parse_emoji_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_report_create(self, shard: Shard, payload: raw.ClientReportCreateEvent, /) -> None:
+        event = self._state.parser.parse_report_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_create(self, shard: Shard, payload: raw.ClientChannelCreateEvent, /) -> None:
@@ -406,7 +414,7 @@ class EventSubscription(typing.Generic[EventT]):
         The client that this subscription is tied to.
     id: :class:`int`
         The ID of the subscription.
-    callback
+    callback: MaybeAwaitableFunc[[EventT], None]
         The callback.
     """
 
@@ -485,13 +493,127 @@ class TemporarySubscription(typing.Generic[EventT]):
         except Exception as exc:
             try:
                 self.future.set_exception(exc)
-            except Exception:
-                _L.exception('Checker function (task: %s) raised an exception', name)
+            except asyncio.InvalidStateError:
+                pass
+            _L.exception('Checker function (task: %s) raised an exception', name)
             return True
 
     def cancel(self) -> None:
         """Cancels the subscription."""
         self.future.cancel()
+        self.client._handlers[self.event][1].pop(self.id, None)
+
+
+class TemporarySubscriptionListIterator(typing.Generic[EventT]):
+    __slots__ = ('subscription',)
+
+    def __init__(self, *, subscription: TemporarySubscriptionList[EventT]) -> None:
+        self.subscription: TemporarySubscriptionList[EventT] = subscription
+
+    async def __anext__(self) -> EventT:
+        subscription = self.subscription
+
+        if subscription.exception is not None:
+            raise subscription.exception
+
+        if subscription.done.is_set() and subscription.queue.empty():
+            raise StopAsyncIteration
+
+        while True:
+            index = await subscription.queue.get()
+
+            if subscription.exception is not None:
+                raise subscription.exception
+
+            if index >= 0:
+                break
+
+        return subscription.result[index]
+
+
+class TemporarySubscriptionList(typing.Generic[EventT]):
+    """Represents a temporary subscription on multiple events."""
+
+    __slots__ = (
+        'client',
+        'id',
+        'event',
+        'done',
+        'check',
+        'result',
+        'exception',
+        'expected',
+        'queue',
+    )
+
+    def __init__(
+        self,
+        *,
+        client: Client,
+        expected: int,
+        id: int,
+        event: type[EventT],
+        check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+    ) -> None:
+        self.client: Client = client
+        self.id: int = id
+        self.event: type[EventT] = event
+        self.done: asyncio.Event = asyncio.Event()
+        self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
+        self.result: list[EventT] = []
+        self.exception: Exception | None = None
+        self.expected: int = expected
+
+        self.queue: asyncio.Queue[int] = asyncio.Queue(expected)
+
+    async def wait(self) -> list[EventT]:
+        if len(self.result) < self.expected:
+            await self.done.wait()
+
+            if self.exception is not None:
+                raise self.exception
+
+            if len(self.result) < self.expected:
+                raise asyncio.TimeoutError('Timed out waiting.')
+
+        return self.result
+
+    def __await__(self) -> Generator[typing.Any, typing.Any, list[EventT]]:
+        return self.wait().__await__()
+
+    def __aiter__(self) -> TemporarySubscriptionListIterator[EventT]:
+        return TemporarySubscriptionListIterator(subscription=self)
+
+    async def _handle(self, arg: EventT, name: str, /) -> bool:
+        if self.exception is not None:
+            pass
+
+        try:
+            can = self.check(arg)
+            if isawaitable(can):
+                can = await can
+
+            if can:
+                if len(self.result) >= self.expected:
+                    self.done.set()
+                else:
+                    self.result.append(arg)
+                    if len(self.result) >= self.expected:
+                        self.done.set()
+                    self.queue.put_nowait(len(self.result) - 1)
+
+            return self.done.is_set()
+        except Exception as exc:
+            _L.exception('Checker function (task: %s) raised an exception', name)
+            self.exception = exc
+            self.done.set()
+            self.queue.put_nowait(len(self.result) - 1)
+            return True
+
+    def cancel(self) -> None:
+        """Cancels the subscription."""
+
+        self.done.set()
         self.client._handlers[self.event][1].pop(self.id, None)
 
 
@@ -568,7 +690,7 @@ class Client:
             type[BaseEvent],
             tuple[
                 dict[int, EventSubscription[BaseEvent]],
-                dict[int, TemporarySubscription[BaseEvent]],
+                dict[int, TemporarySubscription[BaseEvent] | TemporarySubscriptionList[BaseEvent]],
             ],
         ] = {}
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
@@ -631,8 +753,8 @@ class Client:
                     )
                 )
             )
-        self._token = token
-        self.bot = bot
+        self._token: str = token
+        self.bot: bool = bot
         # self._subscribe_methods()
 
     def _get_i(self) -> int:
@@ -666,7 +788,7 @@ class Client:
         """Handles library errors. By default, this logs exception.
 
         .. note::
-            This won't be called if handling `Ready` will raise a exception as it is fatal.
+            This won't be called if handling ``Ready`` will raise a exception as it is fatal.
         """
 
         type = payload['type']
@@ -733,8 +855,8 @@ class Client:
         if handler:
             await self._run_callback(handler, event, name)
 
-        if event.is_cancelled:
-            _L.debug('%s processing was cancelled', event.__class__.__name__)
+        if event.is_canceled:
+            _L.debug('%s processing was canceled', event.__class__.__name__)
         else:
             _L.debug('Processing %s', event.__class__.__name__)
             event.process()
@@ -755,17 +877,44 @@ class Client:
             except Exception:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
-    def dispatch(self, event: BaseEvent) -> asyncio.Task[None]:
+    def dispatch(self, event: BaseEvent, /) -> asyncio.Task[None]:
         """Dispatches a event.
+
+        Examples
+        --------
+
+        Dispatch a event when someone sends silent message: ::
+
+            from attrs import define, field
+            import pyvolt
+
+            # ...
+
+
+            @define(slots=True)
+            class SilentMessageEvent(pyvolt.BaseEvent):
+                message: pyvolt.Message = field(repr=True, kw_only=True)
+
+
+            @client.on(pyvolt.MessageCreateEvent)
+            async def on_message_create(event):
+                message = event.message
+                if message.flags.suppress_notifications:
+                    event = SilentMessageEvent(message=message)
+
+                    # Block until event gets fully handled (run hooks, calling event handlers, cache received data).
+                    await client.dispatch(event)
+
+                    # Note, that `dispatch` returns `asyncio.Task`, as such you may just do `client.dispatch(event)`.
 
         Parameters
         ----------
-        event: :class:`BaseEvent`
+        event: :class:`.BaseEvent`
             The event to dispatch.
 
         Returns
         -------
-        :class:`asyncio.Task`[None]
+        :class:`asyncio.Task`
             The asyncio task.
         """
 
@@ -781,6 +930,7 @@ class Client:
     def subscribe(
         self,
         event: type[EventT],
+        /,
         callback: utils.MaybeAwaitableFunc[[EventT], None],
     ) -> EventSubscription[EventT]:
         """Subscribes to event.
@@ -789,7 +939,7 @@ class Client:
         ----------
         event: Type[EventT]
             The type of the event.
-        callback
+        callback: MaybeAwaitableFunc[[EventT], None]
             The callback for the event.
         """
         sub: EventSubscription[EventT] = EventSubscription(
@@ -806,18 +956,95 @@ class Client:
             self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
         return sub
 
-    def on(
-        self, event: type[EventT]
+    def listen(
+        self, event: type[EventT] | None = None, /
     ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
         EventSubscription[EventT],
     ]:
-        def decorator(
-            handler: utils.MaybeAwaitableFunc[[EventT], None],
-        ) -> EventSubscription[EventT]:
-            return self.subscribe(event, handler)
+        """Register an event listener.
+
+        There is alias called :meth:`on`.
+
+        Examples
+        --------
+
+        Ping Pong: ::
+
+            @client.listen()
+            async def on_message_create(event: pyvolt.MessageCreateEvent):
+                message = event.message
+                if message.content == '!ping':
+                    await message.reply('pong!')
+
+
+            # It returns :class:`EventSubscription`, so you can do ``on_message_create.remove()``
+
+        Parameters
+        ----------
+        event: Optional[Type[EventT]]
+            The event to listen to.
+        """
+
+        def decorator(handler: utils.MaybeAwaitableFunc[[EventT], None], /) -> EventSubscription[EventT]:
+            tmp = event
+
+            if tmp is None:
+                fs = signature(handler)
+
+                has_self_binding = utils.is_inside_class(handler) and 'self' in fs.parameters
+                typ = list(fs.parameters.values())[has_self_binding]
+
+                if typ.annotation is None:
+                    raise TypeError('Cannot use listen() without event annotation type')
+
+                try:
+                    globalns = utils.unwrap_function(handler).__globals__
+                except AttributeError:
+                    globalns = {}
+
+                tmp = utils.evaluate_annotation(typ.annotation, globalns, globalns, {})
+                if has_self_binding:
+                    handler = partial(handler, self)  # type: ignore
+
+            return self.subscribe(tmp, handler)
 
         return decorator
+
+    on = listen
+
+    @typing.overload
+    def wait_for(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: typing.Literal[1] = 1,
+        timeout: float | None = None,
+    ) -> TemporarySubscription[EventT]: ...
+
+    @typing.overload
+    def wait_for(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: typing.Literal[0] = ...,
+        timeout: float | None = None,
+    ) -> typing.NoReturn: ...
+
+    @typing.overload
+    def wait_for(
+        self,
+        event: type[EventT],
+        /,
+        *,
+        check: Callable[[EventT], bool] | None = None,
+        count: int = 1,
+        timeout: float | None = None,
+    ) -> TemporarySubscriptionList[EventT]: ...
 
     def wait_for(
         self,
@@ -825,8 +1052,9 @@ class Client:
         /,
         *,
         check: Callable[[EventT], bool] | None = None,
+        count: int = 1,
         timeout: float | None = None,
-    ) -> TemporarySubscription[EventT]:
+    ) -> TemporarySubscription[EventT] | TemporarySubscriptionList[EventT]:
         """|coro|
 
         Waits for a WebSocket event to be dispatched.
@@ -843,7 +1071,7 @@ class Client:
         This function returns the **first event that meets the requirements**.
 
         Examples
-        ---------
+        --------
 
         Waiting for a user reply: ::
 
@@ -891,17 +1119,37 @@ class Client:
 
         Raises
         -------
+        TypeError
+            If ``count`` parameter was negative or zero.
         asyncio.TimeoutError
             If a timeout is provided and it was reached.
 
         Returns
         --------
-        :class:`TemporarySubscription`[EventT]
+        Union[:class:`TemporarySubscription`, :class:`TemporarySubscriptionList`]
             The subscription. This can be ``await``'ed.
         """
 
-        if not check:
-            check = lambda _: True
+        if count <= 0:
+            raise TypeError('Cannot wait for zero events')
+
+        if check is None:
+            check = lambda _, /: True
+
+        if count > 1:
+            sub = TemporarySubscriptionList(
+                client=self,
+                expected=count,
+                id=self._get_i(),
+                event=event,
+                check=check,
+            )
+
+            try:
+                self._handlers[event][1][sub.id] = sub  # type: ignore
+            except KeyError:
+                self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
+            return sub
 
         future = asyncio.get_running_loop().create_future()
 
@@ -1003,8 +1251,7 @@ class Client:
 
     @property
     def private_channels(self) -> Mapping[str, DMChannel | GroupChannel]:
-        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels.
-        Useful when developing Revolt client."""
+        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels."""
         cache = self._state.cache
         if not cache:
             return {}
@@ -1012,14 +1259,12 @@ class Client:
 
     @property
     def ordered_private_channels_old(self) -> list[DMChannel | GroupChannel]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order.
-        Useful when developing Revolt client."""
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
 
     @property
     def ordered_private_channels(self) -> list[DMChannel | GroupChannel]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order.
-        Useful when developing Revolt client."""
+        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
     def get_channel(self, channel_id: str, /) -> Channel | None:
@@ -1048,7 +1293,7 @@ class Client:
 
         Parameters
         ----------
-        channel: :class:`ULIDOr`[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to fetch.
 
         Raises
@@ -1074,7 +1319,7 @@ class Client:
 
         Returns
         -------
-        :class:`Channel`
+        :class:`.Channel`
             The retrieved channel.
         """
         return await self.http.get_channel(channel_id)
@@ -1089,7 +1334,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`Emoji`]
+        Optional[:class:`.Emoji`]
             The emoji or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1123,7 +1368,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`ReadState`]
+        Optional[:class:`.ReadState`]
             The read state or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1140,7 +1385,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`Server`]
+        Optional[:class:`.Server`]
             The server or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1150,7 +1395,7 @@ class Client:
     async def fetch_server(self, server_id: str, /) -> Server:
         """|coro|
 
-        Retrieves a server from API. This is shortcut to :meth:`HTTPClient.get_server`.
+        Retrieves a server from API. This is shortcut to :meth:`.HTTPClient.get_server`.
 
         Parameters
         ----------
@@ -1159,7 +1404,7 @@ class Client:
 
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The server.
         """
         return await self.http.get_server(server_id)
@@ -1174,7 +1419,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`User`]
+        Optional[:class:`.User`]
             The user or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1200,12 +1445,12 @@ class Client:
 
     @property
     def settings(self) -> UserSettings:
-        """:class:`UserSettings`: The current user settings."""
+        """:class:`.UserSettings`: The current user settings."""
         return self._state.settings
 
     @property
     def system(self) -> User:
-        """:class:`User`: The Revolt sentinel user."""
+        """:class:`.User`: The Revolt sentinel user."""
         return self._state.system
 
     async def start(self) -> None:
@@ -1329,7 +1574,7 @@ class Client:
         def on_authenticated(self, arg: AuthenticatedEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_authifier(self, arg: AuthifierEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_create(self, arg: BaseChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
-        def on_bulk_message_delete(self, arg: BulkMessageDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_delete_bulk(self, arg: MessageDeleteBulkEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_delete(self, arg: ChannelDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_start_typing(self, arg: ChannelStartTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_stop_typing(self, arg: ChannelStopTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
@@ -1349,6 +1594,7 @@ class Client:
         def on_private_channel_create(self, arg: PrivateChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_raw_server_role_update(self, arg: RawServerRoleUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_ready(self, arg: ReadyEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_report_create(self, arg: ReportCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_channel_create(self, arg: ServerChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_create(self, arg: ServerCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_delete(self, arg: ServerDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
@@ -1396,7 +1642,7 @@ class Client:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        recipients: Optional[List[:class:`ULIDOr`[:class:`BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
             The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
@@ -1438,6 +1684,7 @@ class Client:
 __all__ = (
     'EventSubscription',
     'TemporarySubscription',
+    'TemporarySubscriptionList',
     'ClientEventHandler',
     '_private_channel_sort_old',
     '_private_channel_sort_new',

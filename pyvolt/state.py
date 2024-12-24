@@ -28,7 +28,7 @@ import typing
 
 from .core import ZID
 from .parser import Parser
-from .user_settings import UserSettings
+from .settings import UserSettings
 from .user import RelationshipStatus, User
 
 if typing.TYPE_CHECKING:
@@ -81,7 +81,7 @@ class State:
         self._cdn_client: CDNClient | None = None
         self._http: HTTPClient | None = None
         self.parser: Parser = Parser(state=self)
-        self._shard = shard
+        self._shard: Shard | None = shard
         self._me: OwnUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None
         self._settings: UserSettings | None = None

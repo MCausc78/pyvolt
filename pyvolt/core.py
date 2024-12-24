@@ -25,9 +25,9 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from enum import Enum
 import typing
 
-from .enums import Enum
 from .ulid import _ulid_timestamp
 
 
@@ -54,11 +54,11 @@ T = typing.TypeVar('T')
 UndefinedOr = Undefined | T
 
 
-def ulid_timestamp(val: str) -> float:
+def ulid_timestamp(val: str, /) -> float:
     return _ulid_timestamp(val.encode('ascii'))
 
 
-def ulid_time(val: str) -> datetime:
+def ulid_time(val: str, /) -> datetime:
     return datetime.fromtimestamp(ulid_timestamp(val), timezone.utc)
 
 
@@ -70,7 +70,7 @@ U = typing.TypeVar('U', bound='HasID')
 ULIDOr = str | U
 
 
-def resolve_id(resolvable: ULIDOr) -> str:
+def resolve_id(resolvable: ULIDOr[U], /) -> str:
     if isinstance(resolvable, str):
         return resolvable
     return resolvable.id
@@ -79,7 +79,7 @@ def resolve_id(resolvable: ULIDOr) -> str:
 # zero ID
 ZID = '00000000000000000000000000'
 
-__version__: str = '0.7.0'
+__version__: str = '0.8.0'
 
 __all__ = (
     'Undefined',

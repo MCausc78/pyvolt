@@ -91,6 +91,8 @@ from .enums import (
     TwitchContentType,
     BandcampContentType,
     ImageSize,
+    ContentReportReason,
+    UserReportReason,
     MemberRemovalIntention,
     Presence,
     RelationshipStatus,
@@ -114,7 +116,7 @@ from .events import (
     MessageReactEvent,
     MessageUnreactEvent,
     MessageClearReactionEvent,
-    BulkMessageDeleteEvent,
+    MessageDeleteBulkEvent,
     ServerCreateEvent,
     ServerEmojiCreateEvent,
     ServerEmojiDeleteEvent,
@@ -125,6 +127,7 @@ from .events import (
     ServerMemberRemoveEvent,
     RawServerRoleUpdateEvent,
     ServerRoleDeleteEvent,
+    ReportCreateEvent,
     UserUpdateEvent,
     UserRelationshipUpdateEvent,
     UserSettingsUpdateEvent,
@@ -160,7 +163,7 @@ from .invite import (
     Invite,
 )
 from .message import (
-    Interactions,
+    MessageInteractions,
     Masquerade,
     MessageWebhook,
     PartialMessage,
@@ -183,6 +186,17 @@ from .message import (
 )
 from .permissions import PermissionOverride
 from .read_state import ReadState
+from .safety_reports import (
+    CreatedReport,
+    RejectedReport,
+    ResolvedReport,
+    Report,
+    MessageReportedContent,
+    ServerReportedContent,
+    UserReportedContent,
+    ReportedContent,
+)
+
 from .server import (
     Category,
     SystemMessageChannels,
@@ -195,7 +209,7 @@ from .server import (
     Member,
     MemberList,
 )
-from .user_settings import UserSettings
+from .settings import UserSettings
 from .user import (
     UserStatus,
     UserStatusEdit,
@@ -228,7 +242,7 @@ class Parser:
 
     Attributes
     ----------
-    state: :class:`State`
+    state: :class:`.State`
         The state the parser is attached to.
     """
 
@@ -241,6 +255,8 @@ class Parser:
         '_invite_parsers',
         '_message_system_event_parsers',
         '_public_invite_parsers',
+        '_report_parsers',
+        '_reported_content_parsers',
     )
 
     def __init__(self, *, state: State) -> None:
@@ -297,6 +313,16 @@ class Parser:
         self._public_invite_parsers = {
             'Server': self.parse_server_public_invite,
             'Group': self.parse_group_public_invite,
+        }
+        self._report_parsers = {
+            'Created': self.parse_created_report,
+            'Rejected': self.parse_rejected_report,
+            'Resolved': self.parse_resolved_report,
+        }
+        self._reported_content_parsers = {
+            'Message': self.parse_message_reported_content,
+            'Server': self.parse_server_reported_content,
+            'User': self.parse_user_reported_content,
         }
 
     # basic start
@@ -444,8 +470,8 @@ class Parser:
 
     def parse_bulk_message_delete_event(
         self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /
-    ) -> BulkMessageDeleteEvent:
-        return BulkMessageDeleteEvent(
+    ) -> MessageDeleteBulkEvent:
+        return MessageDeleteBulkEvent(
             shard=shard,
             channel_id=payload['channel'],
             message_ids=payload['ids'],
@@ -632,6 +658,29 @@ class Parser:
         """
 
         return self._channel_parsers[payload['channel_type']](payload)
+
+    def parse_created_report(self, payload: raw.CreatedReport, /) -> CreatedReport:
+        """Parses a created report object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The created report payload to parse.
+
+        Returns
+        -------
+        :class:`CreatedReport`
+            The parsed created report object.
+        """
+
+        return CreatedReport(
+            state=self.state,
+            id=payload['_id'],
+            author_id=payload['author_id'],
+            content=self.parse_reported_content(payload['content']),
+            additional_context=payload['additional_context'],
+            notes=payload.get('notes', ''),
+        )
 
     def parse_detached_emoji(self, payload: raw.DetachedEmoji, /) -> DetachedEmoji:
         return DetachedEmoji(
@@ -1057,12 +1106,12 @@ class Parser:
         member = payload.get('member')
         user = payload.get('user')
 
-        if member:
-            if user:
+        if member is not None:
+            if user is not None:
                 author = self.parse_member(member, self.parse_user(user))
             else:
                 author = self.parse_member(member)
-        elif user:
+        elif user is not None:
             author = self.parse_user(user)
         else:
             author = members.get(author_id) or users.get(author_id) or author_id
@@ -1075,13 +1124,14 @@ class Parser:
             nonce=payload.get('nonce'),
             channel_id=payload['channel'],
             internal_author=author,
-            webhook=self.parse_message_webhook(webhook) if webhook else None,
+            webhook=None if webhook is None else self.parse_message_webhook(webhook),
             content=payload.get('content', ''),
-            internal_system_event=self.parse_message_system_event(system, members, users) if system else None,
-            internal_attachments=[self.parse_asset(a) for a in payload.get('attachments', ())],
+            internal_system_event=None if system is None else self.parse_message_system_event(system, members, users),
+            internal_attachments=list(map(self.parse_asset, payload.get('attachments', ()))),
             edited_at=_parse_dt(edited_at) if edited_at else None,
-            internal_embeds=[self.parse_embed(e) for e in payload.get('embeds', ())],
+            internal_embeds=list(map(self.parse_embed, payload.get('embeds', ()))),  # type: ignore
             mention_ids=payload.get('mentions', []),
+            role_mention_ids=payload.get('role_mentions', []),
             replies=payload.get('replies', []),
             reactions={} if reactions is None else {k: tuple(v) for k, v in reactions.items()},
             interactions=(self.parse_message_interactions(interactions) if interactions else None),
@@ -1100,7 +1150,7 @@ class Parser:
                 state=self.state,
                 id=payload['id'],
                 channel_id=payload['channel'],
-                internal_embeds=list(map(self.parse_embed, embeds)) if embeds is not None else UNDEFINED,
+                internal_embeds=UNDEFINED if embeds is None else list(map(self.parse_embed, embeds)),
             ),
             message=None,
         )
@@ -1163,8 +1213,8 @@ class Parser:
     def parse_message_event(self, shard: Shard, payload: raw.ClientMessageEvent, /) -> MessageCreateEvent:
         return MessageCreateEvent(shard=shard, message=self.parse_message(payload))
 
-    def parse_message_interactions(self, payload: raw.Interactions, /) -> Interactions:
-        return Interactions(
+    def parse_message_interactions(self, payload: raw.Interactions, /) -> MessageInteractions:
+        return MessageInteractions(
             reactions=payload.get('reactions', []),
             restrict_reactions=payload.get('restrict_reactions', False),
         )
@@ -1217,6 +1267,25 @@ class Parser:
             message_id=payload['id'],
             emoji=payload['emoji_id'],
             message=None,
+        )
+
+    def parse_message_reported_content(self, payload: raw.MessageReportedContent, /) -> MessageReportedContent:
+        """Parses a message reported content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The message reported content payload to parse.
+
+        Returns
+        -------
+        :class:`MessageReportedContent`
+            The parsed message reported content object.
+        """
+
+        return MessageReportedContent(
+            target_id=payload['id'],
+            reason=ContentReportReason(payload['report_reason']),
         )
 
     def parse_message_system_event(
@@ -1571,10 +1640,112 @@ class Parser:
             voice_states=voice_states,
         )
 
+    def parse_rejected_report(self, payload: raw.RejectedReport, /) -> RejectedReport:
+        """Parses a rejected report object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The rejected report payload to parse.
+
+        Returns
+        -------
+        :class:`RejectedReport`
+            The parsed rejected report object.
+        """
+
+        closed_at = payload.get('closed_at')
+
+        return RejectedReport(
+            state=self.state,
+            id=payload['_id'],
+            author_id=payload['author_id'],
+            content=self.parse_reported_content(payload['content']),
+            additional_context=payload['additional_context'],
+            notes=payload.get('notes', ''),
+            rejection_reason=payload['rejection_reason'],
+            closed_at=None if closed_at is None else _parse_dt(closed_at),
+        )
+
     def parse_relationship(self, payload: raw.Relationship, /) -> Relationship:
         return Relationship(
             id=payload['_id'],
             status=RelationshipStatus(payload['status']),
+        )
+
+    @typing.overload
+    def parse_report(self, payload: raw.CreatedReport, /) -> CreatedReport: ...
+
+    @typing.overload
+    def parse_report(self, payload: raw.RejectedReport, /) -> RejectedReport: ...
+
+    @typing.overload
+    def parse_report(self, payload: raw.ResolvedReport, /) -> ResolvedReport: ...
+
+    def parse_report(self, payload: raw.Report, /) -> Report:
+        """Parses a report object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The report payload to parse.
+
+        Returns
+        -------
+        :class:`Report`
+            The parsed report object.
+        """
+
+        return self._report_parsers[payload['status']](payload)
+
+    def parse_report_create_event(self, shard: Shard, payload: raw.ClientReportCreateEvent, /) -> ReportCreateEvent:
+        """Parses a ReportCreate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ReportCreateEvent`
+            The parsed report create event object.
+        """
+
+        return ReportCreateEvent(
+            shard=shard,
+            report=self.parse_created_report(payload),
+        )
+
+    def parse_reported_content(self, payload: raw.ReportedContent, /) -> ReportedContent:
+        return self._reported_content_parsers[payload['type']](payload)
+
+    def parse_resolved_report(self, payload: raw.ResolvedReport, /) -> ResolvedReport:
+        """Parses a resolved report object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The resolved report payload to parse.
+
+        Returns
+        -------
+        :class:`ResolvedReport`
+            The parsed resolved report object.
+        """
+
+        closed_at = payload.get('closed_at')
+
+        return ResolvedReport(
+            state=self.state,
+            id=payload['_id'],
+            author_id=payload['author_id'],
+            content=self.parse_reported_content(payload['content']),
+            additional_context=payload['additional_context'],
+            notes=payload.get('notes', ''),
+            closed_at=None if closed_at is None else _parse_dt(closed_at),
         )
 
     def parse_response_login(self, payload: raw.a.ResponseLogin, friendly_name: str | None, /) -> LoginResult:
@@ -1908,7 +2079,26 @@ class Parser:
             channel_description=payload.get('channel_description'),
             user_name=payload['user_name'],
             internal_user_avatar=self.parse_asset(user_avatar) if user_avatar else None,
-            members_count=payload['member_count'],
+            member_count=payload['member_count'],
+        )
+
+    def parse_server_reported_content(self, payload: raw.ServerReportedContent, /) -> ServerReportedContent:
+        """Parses a server reported content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The server reported content payload to parse.
+
+        Returns
+        -------
+        :class:`ServerReportedContent`
+            The parsed server reported content object.
+        """
+
+        return ServerReportedContent(
+            target_id=payload['id'],
+            reason=ContentReportReason(payload['report_reason']),
         )
 
     def parse_server_role_delete_event(
@@ -2171,7 +2361,7 @@ class Parser:
 
         return StatelessUserProfile(
             content=payload.get('content'),
-            internal_background=self.parse_asset(background) if background else None,
+            internal_background=None if background is None else self.parse_asset(background),
         )
 
     def parse_user_relationship_event(
@@ -2183,6 +2373,26 @@ class Parser:
             old_user=None,
             new_user=self.parse_user(payload['user']),
             before=None,
+        )
+
+    def parse_user_reported_content(self, payload: raw.UserReportedContent, /) -> UserReportedContent:
+        """Parses a user reported content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user reported content payload to parse.
+
+        Returns
+        -------
+        :class:`UserReportedContent`
+            The parsed user reported content object.
+        """
+
+        return UserReportedContent(
+            target_id=payload['id'],
+            reason=UserReportReason(payload['report_reason']),
+            message_id=payload.get('message_id'),
         )
 
     def parse_user_settings(self, payload: raw.UserSettings, partial: bool, /) -> UserSettings:

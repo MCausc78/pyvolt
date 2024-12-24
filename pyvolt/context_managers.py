@@ -24,34 +24,43 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from attrs import define, field
-from datetime import datetime
+import contextlib
 import typing
 
 
-from .core import ulid_time
-
 if typing.TYPE_CHECKING:
-    from .state import State
+    from .abc import Messageable
+    from .shard import Shard
 
 
-@define(slots=True)
-class Base:
-    state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: The state that controls this entity."""
+class Typing(contextlib.AbstractAsyncContextManager):
+    __slots__ = (
+        'channel_id',
+        'destination',
+        'shard',
+    )
 
-    id: str = field(repr=True, kw_only=True)
-    """:class:`str`: The ID of the entity."""
+    def __init__(self, *, destination: Messageable, shard: Shard) -> None:
+        self.channel_id: str = ''
+        self.destination: Messageable = destination
+        self.shard: Shard = shard
 
-    def __hash__(self) -> int:
-        return hash(self.id)
+    async def __aenter__(self) -> None:
+        if not self.channel_id:
+            self.channel_id = await self.destination.fetch_channel_id()
 
-    def __eq__(self, other: object, /) -> bool:
-        return self is other or isinstance(other, self.__class__) and self.id == other.id
+        await self.shard.begin_typing(self.channel_id)
 
-    @property
-    def created_at(self) -> datetime:
-        return ulid_time(self.id)
+    async def __aexit__(self, exc_type, exc_value, tb, /) -> None:
+        del exc_type
+        del exc_value
+        del tb
+
+        if not self.channel_id:
+            self.channel_id = await self.destination.fetch_channel_id()
+
+        await self.shard.end_typing(self.channel_id)
+        return
 
 
-__all__ = ('Base',)
+__all__ = ('Typing',)
