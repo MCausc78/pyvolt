@@ -34,7 +34,7 @@ import typing
 from . import utils
 from .core import ULIDOr, resolve_id, __version__ as version
 from .enums import ShardFormat
-from .errors import PyvoltError, ShardClosedError, AuthenticationError, ConnectError
+from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
@@ -483,7 +483,7 @@ class Shard:
         Starts the WebSocket lifecycle.
         """
         if self._socket:
-            raise PyvoltError('The connection is already open.')
+            raise PyvoltException('The connection is already open.')
         while not self._closed:
             if self.handler:
                 r = self.handler.before_connect(self)

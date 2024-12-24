@@ -40,7 +40,10 @@ Client
 
 .. autoclass:: Client
     :members:
-    :exclude-members: on
+    :exclude-members: listen, on
+
+    .. automethod:: Client.listen(event=None, /)
+        :decorator:
 
     .. automethod:: Client.on(event, /)
         :decorator:
@@ -202,99 +205,6 @@ Cache
     .. attribute:: library_request
 
         The library needs the object for internal purposes.
-    .. attribute:: ready
-
-        The context relates to :class:`.ReadyEvent` event.
-    .. attribute:: message_ack
-
-        The context relates to :class:`.MessageAckEvent` event.
-    .. attribute:: message_create
-
-        The context relates to :class:`.MessageCreateEvent` event.
-    .. attribute:: message_update
-
-        The context relates to :class:`.MessageUpdateEvent` event.
-    .. attribute:: message_append
-
-        The context relates to :class:`.MessageAppendEvent` event.
-    .. attribute:: message_delete
-
-        The context relates to :class:`.MessageDeleteEvent` event.
-    .. attribute:: message_react
-
-        The context relates to :class:`.MessageReactEvent` event.
-    .. attribute:: message_unreact
-
-        The context relates to :class:`.MessageUnreactEvent` event.
-    .. attribute:: message_clear_reaction
-
-        The context relates to :class:`.MessageClearReactionEvent` event.
-    .. attribute:: message_delete_bulk
-
-        The context relates to :class:`.MessageDeleteBulk` event.
-    .. attribute:: server_create
-
-        The context relates to :class:`.ServerCreateEvent` event.
-    .. attribute:: server_update
-
-        The context relates to :class:`.ServerUpdateEvent` event.
-    .. attribute:: server_delete
-
-        The context relates to :class:`.ServerDeleteEvent` event.
-    .. attribute:: server_member_add
-
-        The context relates to :class:`.ServerMemberJoinEvent` event.
-    .. attribute:: server_member_update
-
-        The context relates to :class:`.ServerMemberUpdateEven` event.
-    .. attribute:: server_member_remove
-
-        The context relates to :class:`.ServerMemberRemoveEvent` event.
-    .. attribute:: server_role_update
-
-        The context relates to :class:`.RawServerRoleUpdateEvent` event.
-    .. attribute:: server_role_delete
-
-        The context relates to :class:`.ServerRoleDeleteEvent` event.
-    .. attribute:: user_update
-
-        The context relates to :class:`.UserUpdateEvent` event.
-    .. attribute:: user_relationship_update
-
-        The context relates to :class:`.UserRelationshipUpdateEvent` event.
-    .. attribute:: user_platform_wipe
-
-        The context relates to :class:`.UserPlatformWipeEvent` event.
-    .. attribute:: emoji_create
-
-        The context relates to :class:`.ServerEmojiCreateEvent` event.
-    .. attribute:: emoji_delete
-
-        The context relates to :class:`.ServerEmojiDeleteEvent` event.
-    .. attribute:: channel_create
-
-        The context relates to :class:`.BaseChannelCreateEvent` event.
-    .. attribute:: channel_update
-
-        The context relates to :class:`.ChannelUpdateEvent` event.
-    .. attribute:: channel_delete
-
-        The context relates to :class:`.ChannelDeleteEvent` event.
-    .. attribute:: channel_group_join
-
-        The context relates to :class:`.GroupRecipientAddEvent` event.
-    .. attribute:: channel_group_leave
-
-        The context relates to :class:`.GroupRecipientRemoveEvent` event.
-    .. attribute:: voice_channel_join
-
-        The context relates to :class:`.VoiceChannelJoinEvent` event.
-    .. attribute:: voice_channel_leave
-
-        The context relates to :class:`.VoiceChannelLeaveEvent` event.
-    .. attribute:: user_voice_state_update
-
-        The context relates to :class:`.UserVoiceStateUpdateEvent` event.
     .. attribute:: emoji
 
         The library asks for object to provide value for ``emoji.get_x()``."""
@@ -316,11 +226,161 @@ Cache
     .. attribute:: webhook
 
         The library asks for object to provide value for ``webhook.get_x()``."""
+    .. attribute:: ready_event
+
+        The context relates to :class:`.ReadyEvent` event.
+    .. attribute:: private_channel_create_event
+
+        The context relates to :class:`.PrivateChannelCreateEvent` event.
+    .. attribute:: server_channel_create_event
+
+        The context relates to :class:`.ServerChannelCreateEvent` event.
+    .. attribute:: channel_update_event
+
+        The context relates to :class:`.ChannelUpdateEvent` event.
+    .. attribute:: channel_delete_event
+
+        The context relates to :class:`.ChannelDeleteEvent` event.
+    .. attribute:: group_recipient_add_event
+
+        The context relates to :class:`.GroupRecipientAddEvent` event.
+    .. attribute:: group_recipient_remove_event
+
+        The context relates to :class:`.GroupRecipientRemoveEvent` event.
+    .. attribute:: channel_start_typing_event
+
+        The context relates to :class:`.ChannelStartTypingEvent` event.
+    .. attribute:: channel_stop_typing_event
+
+        The context relates to :class:`.ChannelStopTypingEvent` event.
+    .. attribute:: message_ack_event
+
+        The context relates to :class:`.MessageAckEvent` event.
+    .. attribute:: message_create_event
+
+        The context relates to :class:`.MessageCreateEvent` event.
+    .. attribute:: message_update_event
+
+        The context relates to :class:`.MessageUpdateEvent` event.
+    .. attribute:: message_append_event
+
+        The context relates to :class:`.MessageAppendEvent` event.
+    .. attribute:: message_delete_event
+
+        The context relates to :class:`.MessageDeleteEvent` event.
+    .. attribute:: message_react_event
+
+        The context relates to :class:`.MessageReactEvent` event.
+    .. attribute:: message_unreact_event
+
+        The context relates to :class:`.MessageUnreactEvent` event.
+    .. attribute:: message_clear_reaction_event
+
+        The context relates to :class:`.MessageClearReactionEvent` event.
+    .. attribute:: message_delete_bulk_event
+
+        The context relates to :class:`.MessageDeleteBulkEvent` event.
+    .. attribute:: server_create_event
+
+        The context relates to :class:`.ServerCreateEvent` event.
+    .. attribute:: server_emoji_create_event
+
+        The context relates to :class:`.ServerEmojiCreateEvent` event.
+    .. attribute:: server_emoji_delete_event
+
+        The context relates to :class:`.ServerEmojiDeleteEvent` event.
+    .. attribute:: server_update_event
+
+        The context relates to :class:`.ServerUpdateEvent` event.
+    .. attribute:: server_delete_event
+
+        The context relates to :class:`.ServerDeleteEvent` event.
+    .. attribute:: server_member_join_event
+
+        The context relates to :class:`.ServerMemberJoinEvent` event.
+    .. attribute:: server_member_update_event
+
+        The context relates to :class:`.ServerMemberUpdateEvent` event.
+    .. attribute:: server_member_remove_event
+
+        The context relates to :class:`.ServerMemberRemoveEvent` event.
+    .. attribute:: server_role_update_event
+
+        The context relates to :class:`.RawServerRoleUpdateEvent` event.
+    .. attribute:: server_role_delete_event
+
+        The context relates to :class:`.ServerRoleDeleteEvent` event.
+    .. attribute:: report_create_event
+
+        The context relates to :class:`.ReportCreateEvent` event.
+    .. attribute:: user_update_event
+
+        The context relates to :class:`.UserUpdateEvent` event.
+    .. attribute:: user_platform_wipe_event
+
+        The context relates to :class:`.UserPlatformWipeEvent` event.
+    .. attribute:: user_relationship_update_event
+
+        The context relates to :class:`.UserRelationshipUpdateEvent` event.
+    .. attribute:: user_settings_update_event
+
+        The context relates to :class:`.UserSettingsUpdateEvent` event.
+    .. attribute:: webhook_create_event
+        
+        The context relates to :class:`.WebhookCreateEvent` event.
+    .. attribute:: webhook_update_event
+        
+        The context relates to :class:`.WebhookUpdateEvent` event.
+    .. attribute:: webhook_delete_event
+        
+        The context relates to :class:`.WebhookDeleteEvent` event.
+    .. attribute:: session_create_event
+        
+        The context relates to :class:`.SessionCreateEvent` event.
+    .. attribute:: session_delete_event
+        
+        The context relates to :class:`.SessionDeleteEvent` event.
+    .. attribute:: session_delete_all_event
+        
+        The context relates to :class:`.SessionDeleteAllEvent` event.
+    .. attribute:: voice_channel_join_event
+
+        The context relates to :class:`.VoiceChannelJoinEvent` event.
+    .. attribute:: voice_channel_leave_event
+
+        The context relates to :class:`.VoiceChannelLeaveEvent` event.
+    .. attribute:: user_voice_state_update_event
+
+        The context relates to :class:`.UserVoiceStateUpdateEvent` event.
+    .. attribute:: authenticated_event
+
+        The context relates to :class:`.AuthenticatedEvent` event.
 
 .. attributetable:: BaseCacheContext
 
 .. autoclass:: BaseCacheContext
     :members:
+
+.. attributetable:: DetachedEmojiCacheContext
+
+.. autoclass:: DetachedEmojiCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: BaseCacheContext
+
+.. autoclass:: BaseCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UndefinedCacheContext
+
+.. autoclass:: UndefinedCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
 
 .. attributetable:: DetachedEmojiCacheContext
 
@@ -353,6 +413,300 @@ Cache
 .. attributetable:: UserCacheContext
 
 .. autoclass:: UserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: PrivateChannelCreateEventCacheContext
+
+.. autoclass:: PrivateChannelCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerChannelCreateEventCacheContext
+
+.. autoclass:: ServerChannelCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelUpdateEventCacheContext
+
+.. autoclass:: ChannelUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelDeleteEventCacheContext
+
+.. autoclass:: ChannelDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: GroupRecipientAddEventCacheContext
+
+.. autoclass:: GroupRecipientAddEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: GroupRecipientRemoveEventCacheContext
+
+.. autoclass:: GroupRecipientRemoveEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelStartTypingEventCacheContext
+
+.. autoclass:: ChannelStartTypingEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ChannelStopTypingEventCacheContext
+
+.. autoclass:: ChannelStopTypingEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageAckEventCacheContext
+
+.. autoclass:: MessageAckEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageCreateEventCacheContext
+
+.. autoclass:: MessageCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageUpdateEventCacheContext
+
+.. autoclass:: MessageUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageAppendEventCacheContext
+
+.. autoclass:: MessageAppendEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageDeleteEventCacheContext
+
+.. autoclass:: MessageDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageReactEventCacheContext
+
+.. autoclass:: MessageReactEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageUnreactEventCacheContext
+
+.. autoclass:: MessageUnreactEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageClearReactionEventCacheContext
+
+.. autoclass:: MessageClearReactionEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: MessageDeleteBulkEventCacheContext
+
+.. autoclass:: MessageDeleteBulkEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerCreateEventCacheContext
+
+.. autoclass:: ServerCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerEmojiCreateEventCacheContext
+
+.. autoclass:: ServerEmojiCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerEmojiDeleteEventCacheContext
+
+.. autoclass:: ServerEmojiDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerUpdateEventCacheContext
+
+.. autoclass:: ServerUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerDeleteEventCacheContext
+
+.. autoclass:: ServerDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerMemberJoinEventCacheContext
+
+.. autoclass:: ServerMemberJoinEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerMemberUpdateEventCacheContext
+
+.. autoclass:: ServerMemberUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerMemberRemoveEventCacheContext
+
+.. autoclass:: ServerMemberRemoveEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: RawServerRoleUpdateEventCacheContext
+
+.. autoclass:: RawServerRoleUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ServerRoleDeleteEventCacheContext
+
+.. autoclass:: ServerRoleDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: ReportCreateEventCacheContext
+
+.. autoclass:: ReportCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserUpdateEventCacheContext
+
+.. autoclass:: UserUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserRelationshipUpdateEventCacheContext
+
+.. autoclass:: UserRelationshipUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserSettingsUpdateEventCacheContext
+
+.. autoclass:: UserSettingsUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserPlatformWipeEventCacheContext
+
+.. autoclass:: UserPlatformWipeEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebhookCreateEventCacheContext
+
+.. autoclass:: WebhookCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebhookUpdateEventCacheContext
+
+.. autoclass:: WebhookUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebhookDeleteEventCacheContext
+
+.. autoclass:: WebhookDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: SessionCreateEventCacheContext
+
+.. autoclass:: SessionCreateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: SessionDeleteEventCacheContext
+
+.. autoclass:: SessionDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: SessionDeleteAllEventCacheContext
+
+.. autoclass:: SessionDeleteAllEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: VoiceChannelJoinEventCacheContext
+
+.. autoclass:: VoiceChannelJoinEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: VoiceChannelLeaveEventCacheContext
+
+.. autoclass:: VoiceChannelLeaveEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: UserVoiceStateUpdateEventCacheContext
+
+.. autoclass:: UserVoiceStateUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. attributetable:: AuthenticatedEventCacheContext
+
+.. autoclass:: AuthenticatedEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

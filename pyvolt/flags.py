@@ -7,18 +7,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing_extensions import Self
 
-
-class _MissingSentinel:
-    __slots__ = ()
-
-    def __bool__(self) -> typing.Literal[False]:
-        return False
-
-    def __repr__(self) -> typing.Literal['...']:
-        return '...'
-
-
-MISSING: typing.Any = _MissingSentinel()
+from .utils import MISSING
 
 BF = typing.TypeVar('BF', bound='BaseFlags')
 

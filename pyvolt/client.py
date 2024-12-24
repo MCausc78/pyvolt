@@ -24,12 +24,14 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-import aiohttp
 import asyncio
 import builtins
-from inspect import isawaitable
+from functools import partial
+from inspect import isawaitable, signature
 import logging
 import typing
+
+import aiohttp
 
 from . import cache as caching, utils
 from .cache import Cache, MapCache
@@ -954,21 +956,23 @@ class Client:
             self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
         return sub
 
-    def on(
-        self, event: type[EventT], /
+    def listen(
+        self, event: type[EventT] | None = None, /
     ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
         EventSubscription[EventT],
     ]:
         """Register an event listener.
 
+        There is alias called :meth:`on`.
+
         Examples
         --------
 
         Ping Pong: ::
 
-            @client.on(pyvolt.MessageCreateEvent)
-            async def on_message_create(event):
+            @client.listen()
+            async def on_message_create(event: pyvolt.MessageCreateEvent):
                 message = event.message
                 if message.content == '!ping':
                     await message.reply('pong!')
@@ -978,17 +982,36 @@ class Client:
 
         Parameters
         ----------
-        event: Type[EventT]
+        event: Optional[Type[EventT]]
             The event to listen to.
-
         """
 
-        def decorator(
-            handler: utils.MaybeAwaitableFunc[[EventT], None],
-        ) -> EventSubscription[EventT]:
-            return self.subscribe(event, handler)
+        def decorator(handler: utils.MaybeAwaitableFunc[[EventT], None], /) -> EventSubscription[EventT]:
+            tmp = event
+
+            if tmp is None:
+                fs = signature(handler)
+
+                has_self_binding = utils.is_inside_class(handler) and 'self' in fs.parameters
+                typ = list(fs.parameters.values())[has_self_binding]
+
+                if typ.annotation is None:
+                    raise TypeError('Cannot use listen() without event annotation type')
+
+                try:
+                    globalns = utils.unwrap_function(handler).__globals__
+                except AttributeError:
+                    globalns = {}
+
+                tmp = utils.evaluate_annotation(typ.annotation, globalns, globalns, {})
+                if has_self_binding:
+                    handler = partial(handler, self)  # type: ignore
+
+            return self.subscribe(tmp, handler)
 
         return decorator
+
+    on = listen
 
     @typing.overload
     def wait_for(  # pyright: ignore[reportOverlappingOverload]
