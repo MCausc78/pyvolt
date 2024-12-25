@@ -317,4 +317,4 @@ CurrentServer._fallback = True
 
 class Signature(inspect.Signature):
     _parameter_cls = Parameter
-    parameters: OrderedDict[str, Parameter]  # type: ignore # make pyright shut up
+    parameters: OrderedDict[str, Parameter]  # type: ignore # make pyright shut up about `error: "parameters" incorrectly overrides property of same name in class "Signature" (reportIncompatibleMethodOverride)`

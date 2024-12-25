@@ -41,6 +41,29 @@ if typing.TYPE_CHECKING:
 
 
 class Bot(Client):
+    """Represents a Revolt bot.
+
+    Parameters
+    ----------
+    command_prefix: Union[MaybeAwaitableFunc[[:class:`.Context`], List[:class:`str`]], List[:class:`str`], :class:`str`]
+        The command's prefix.
+    description: Optional[:class:`str`]
+        The bot's description.
+    owner_id: Optional[:class:`str`]
+        The bot owner's ID.
+    owner_ids: Set[:class:`str`]
+        The bot owner's IDs.
+    self_bot: :class:`bool`
+        Whether the bot should respond only to logged in user.
+    skip_check: Optional[MaybeAwaitableFunc[[:class:`.Context`], :class:`bool`]]
+        A callable that checks whether the command should skipped.
+    strip_after_prefix: :class:`bool`
+        Whether to strip anything after prefix. Setting this to ``True`` allows
+        using ``!    help``. Defaults to ``False``.
+    user_bot: :class:`bool`
+        Whether the bot should respond to everyone, including themselves.
+    """
+
     __slots__ = (
         'all_commands',
         'command_prefix',
@@ -71,6 +94,8 @@ class Bot(Client):
             skip_check = self.user_bot_skip_check
 
         self.all_commands: dict[str, Command] = {}
+        if isinstance(command_prefix, str):
+            command_prefix = [command_prefix]
         self.command_prefix: utils.MaybeAwaitableFunc[[Context[Self]], list[str]] | str | list[str] = command_prefix
         self.description: str = cleandoc(description) if description else ''
         self.owner_id: str | None = options.get('owner_id')
