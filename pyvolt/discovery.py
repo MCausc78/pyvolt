@@ -286,7 +286,7 @@ class ThemeSearchResult:
     """List[:class:`str`]: All of tags that listed themes have."""
 
 
-DISCOVERY_BUILD_ID: str = 'jqoxQhuhArPLb-ipmE4yB'
+DISCOVERY_BUILD_ID: str = '9I_qurZmA2SKF8CAOcQAv'
 
 RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"')
 
@@ -340,12 +340,12 @@ class DiscoveryClient:
             if response.status != 200:
                 data = await utils._json_or_text(response)
                 raise DiscoverError(response, response.status, data)
-            match = RE_DISCOVERY_BUILD_ID.findall(data)
-            if not match:
+            match = RE_DISCOVERY_BUILD_ID.match(data)
+            if match is None:
                 raise InvalidData(
                     f'Unable to find build ID. Please file an issue on https://github.com/MCausc78/pyvolt with following data: {data}'
                 )
-            return match[0]
+            return match.group(1)
 
     def add_headers(
         self,
@@ -374,7 +374,7 @@ class DiscoveryClient:
         )
 
     async def raw_request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
-        _L.debug('sending %s to %s params=%s', method, path, kwargs.get('params'))
+        _L.debug('Sending %s to %s params=%s', method, path, kwargs.get('params'))
 
         headers: CIMultiDict[typing.Any] = CIMultiDict(kwargs.pop('headers', {}))
         tmp = self.add_headers(headers, method, path)
@@ -383,11 +383,23 @@ class DiscoveryClient:
 
         url = self._base + path
 
-        response = await self.send_request(self.session, method, url, headers=headers, **kwargs)
-        if response.status >= 400:
-            data = await utils._json_or_text(response)
-            raise DiscoverError(response, response.status, data)
-        return response
+        for i in range(2):
+            response = await self.send_request(self.session, method, url, headers=headers, **kwargs)
+            if response.status >= 400:
+                data = await utils._json_or_text(response)
+                if (
+                    i == 1
+                    and response.status == 404
+                    and self._base.startswith('https://rvlt.gg/_next/data/')
+                    and isinstance(data, str)
+                ):
+                    match = RE_DISCOVERY_BUILD_ID.match(data)
+                    if match is not None:
+                        self._base = f'https://rvlt.gg/_next/data/{match.group(1)}'
+                    continue
+                raise DiscoverError(response, response.status, data)
+            return response
+        raise RuntimeError('Unreachable code in HTTP handling')
 
     async def use_latest_build_id(self) -> str:
         """|coro|
