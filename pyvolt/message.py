@@ -31,7 +31,7 @@ import typing
 
 from . import cache as caching
 from .base import Base
-from .channel import TextableChannel, ServerChannel, PartialMessageable
+from .channel import BaseServerChannel, ServerChannel, TextableChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
@@ -50,6 +50,7 @@ from .user import BaseUser, User
 if typing.TYPE_CHECKING:
     from . import raw
     from .embed import StatelessEmbed, Embed
+    from .server import Server
     from .state import State
 
 _new_message_flags = MessageFlags.__new__
@@ -242,6 +243,23 @@ class BaseMessage(Base):
             return channel
 
         return PartialMessageable(state=self.state, id=self.channel_id)
+
+    @property
+    def server(self) -> Server | None:
+        """Optional[:class:`.Server`]: The server this message was sent in."""
+
+        cache = self.state.cache
+        if not cache:
+            return None
+
+        channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
+        if channel is None:
+            return None
+
+        if not isinstance(channel, BaseServerChannel):
+            return None
+
+        return cache.get_server(channel.server_id, caching._USER_REQUEST)
 
     async def acknowledge(self) -> None:
         """|coro|

@@ -1349,6 +1349,14 @@ class Client:
         return self._state._me
 
     @property
+    def user(self) -> OwnUser | None:
+        """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in.
+
+        Alias to :attr:`.me`.
+        """
+        return self._state._me
+
+    @property
     def saved_notes(self) -> SavedMessagesChannel | None:
         """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
         return self._state._saved_notes
