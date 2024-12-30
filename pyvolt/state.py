@@ -74,16 +74,13 @@ class State:
         *,
         cache: Cache | None = None,
         provide_cache_context_in: list[ProvideCacheContextIn] | None = None,
-        cdn_client: CDNClient | None = None,
-        http: HTTPClient | None = None,
-        parser: Parser | None = None,
         shard: Shard | None = None,
     ) -> None:
         self._cache: Cache | None = cache
         self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
-        self._cdn_client: CDNClient | None = cdn_client
-        self._http: HTTPClient | None = http
-        self.parser: Parser = parser if parser else Parser(state=self)
+        self._cdn_client: CDNClient | None = None
+        self._http: HTTPClient | None = None
+        self.parser: Parser = Parser(state=self)
         self._shard: Shard | None = shard
         self._me: OwnUser | None = None
         self._saved_notes: SavedMessagesChannel | None = None

@@ -3,6 +3,8 @@ from __future__ import annotations
 import inspect
 import typing
 
+from .utils import MISSING
+
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing_extensions import Self

@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import builtins
 from functools import partial
-from inspect import isawaitable, signature
+from inspect import getmembers, isawaitable, signature
 import logging
 import typing
 
@@ -397,8 +397,8 @@ ClientT = typing.TypeVar('ClientT', bound='Client')
 EventT = typing.TypeVar('EventT', bound='BaseEvent')
 
 
-def _parents_of(type: type[BaseEvent]) -> tuple[type[BaseEvent], ...]:
-    """Returns parents of BaseEvent, including BaseEvent itself."""
+def _parents_of(type: type[BaseEvent], /) -> tuple[type[BaseEvent], ...]:
+    """Tuple[Type[:class:`.BaseEvent`], ...]: Returns parents of BaseEvent, including BaseEvent itself."""
     if type is BaseEvent:
         return (BaseEvent,)
     tmp: typing.Any = type.__mro__[:-1]
@@ -447,6 +447,66 @@ class EventSubscription(typing.Generic[EventT]):
     def remove(self) -> None:
         """Removes the event subscription."""
         self.client._handlers[self.event][0].pop(self.id, None)
+
+
+class EventSubscriptionDescriptor(typing.Generic[EventT]):
+    __slots__ = (
+        '_callbacks',
+        'event',
+        'callback',
+    )
+
+    def __init__(
+        self,
+        *,
+        event: type[EventT],
+        callback: utils.MaybeAwaitableFunc,
+    ) -> None:
+        self._callbacks: dict[int, utils.MaybeAwaitableFunc[[EventT], None]] = {}
+        self.event: type[EventT] = event
+        self.callback: utils.MaybeAwaitableFunc = callback
+
+    def _get_callback(self, client: Client, /) -> utils.MaybeAwaitableFunc[[EventT], None]:
+        client_id = id(client)
+
+        try:
+            return self._callbacks[client_id]
+        except KeyError:
+            callback = self._callbacks[client_id] = partial(self.callback, client)
+            return callback
+
+    def _subscribe(self, client: Client, /) -> EventSubscription[EventT]:
+        callback = self._get_callback(client)
+
+        try:
+            subscriptions = client._handlers[self.event][0]
+        except KeyError:
+            pass
+        else:
+            for subscription in subscriptions.values():
+                if subscription.callback == callback:
+                    return subscription  # type: ignore
+        return client.subscribe(self.event, callback)
+
+    @typing.overload
+    def __get__(self, instance: Client, owner: type[Client], /) -> EventSubscription[EventT]: ...
+
+    @typing.overload
+    def __get__(self, instance: None, owner: type[Client], /) -> EventSubscriptionDescriptor[EventT]: ...
+
+    def __get__(
+        self, instance: Client | None, owner: type[Client], /
+    ) -> EventSubscription[EventT] | EventSubscriptionDescriptor[EventT]:
+        return self if instance is None else self._subscribe(instance)
+
+    def __set__(self, instance: Client, callback: utils.MaybeAwaitableFunc[[EventT], None], /) -> None:
+        client_id = id(instance)
+        old_callback = self._callbacks[client_id]
+        if old_callback is callback:
+            return
+        self._callbacks[client_id] = callback
+        instance.unsubscribe(self.event, old_callback)
+        instance.subscribe(self.event, callback)
 
 
 class TemporarySubscription(typing.Generic[EventT]):
@@ -755,7 +815,10 @@ class Client:
             )
         self._token: str = token
         self.bot: bool = bot
-        # self._subscribe_methods()
+
+        for _, v in getmembers(self.__class__):
+            if isinstance(v, EventSubscriptionDescriptor):
+                v._subscribe(self)
 
     def _get_i(self) -> int:
         self._i += 1
@@ -956,12 +1019,89 @@ class Client:
             self._handlers[event] = ({sub.id: sub}, {})  # type: ignore
         return sub
 
+    def unsubscribe(
+        self,
+        event: type[EventT],
+        callback: utils.MaybeAwaitableFunc[[EventT], None],
+        /,
+    ) -> list[EventSubscription[EventT]]:
+        try:
+            subscriptions = self._handlers[event][0]
+        except KeyError:
+            return []
+        else:
+            removed = []
+            for k, subscription in subscriptions.items():
+                if subscription.callback == callback:
+                    removed.append(k)
+                    break
+
+            ret = []
+            for remove in removed:
+                ret.append(subscriptions.pop(remove))
+            return ret
+
+    @typing.overload
     def listen(
-        self, event: type[EventT] | None = None, /
+        self: None = ...,
+        event: type[EventT] | None = None,
+        /,
+    ) -> Callable[
+        [utils.MaybeAwaitableFunc[[EventT], None]],
+        EventSubscriptionDescriptor[EventT],
+    ]: ...
+
+    @typing.overload
+    def listen(
+        self: type[EventT],
+        event: None = ...,
+        /,
+    ) -> Callable[
+        [utils.MaybeAwaitableFunc[[EventT], None]],
+        EventSubscriptionDescriptor[EventT],
+    ]: ...
+
+    @typing.overload
+    def listen(
+        self: Self,
+        event: type[EventT] | None = None,
+        /,
     ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
         EventSubscription[EventT],
-    ]:
+    ]: ...
+
+    # @typing.overload
+    # def listen(
+    #     self: Self | type[EventT] | None = None,
+    #     event: type[EventT] | None = None,
+    #     /,
+    # ) -> (
+    #     Callable[
+    #         [utils.MaybeAwaitableFunc[[EventT], None]],
+    #         EventSubscriptionDescriptor[EventT],
+    #     ]
+    #     | Callable[
+    #         [utils.MaybeAwaitableFunc[[EventT], None]],
+    #         EventSubscription[EventT],
+    #     ]
+    # ):
+    #     ...
+
+    def listen(
+        self: Self | type[EventT] | None = None,
+        event: type[EventT] | None = None,
+        /,
+    ) -> (
+        Callable[
+            [utils.MaybeAwaitableFunc[[EventT], None]],
+            EventSubscriptionDescriptor[EventT],
+        ]
+        | Callable[
+            [utils.MaybeAwaitableFunc[[EventT], None]],
+            EventSubscription[EventT],
+        ]
+    ):
         """Register an event listener.
 
         There is alias called :meth:`on`.
@@ -985,31 +1125,65 @@ class Client:
         event: Optional[Type[EventT]]
             The event to listen to.
         """
+        if isinstance(self, type) and issubclass(self, BaseEvent):
+            event = self
+            self = None
 
-        def decorator(handler: utils.MaybeAwaitableFunc[[EventT], None], /) -> EventSubscription[EventT]:
-            tmp = event
+        if self is None:
 
-            if tmp is None:
-                fs = signature(handler)
+            def decorator1(
+                callback: utils.MaybeAwaitableFunc[[EventT], None], /
+            ) -> EventSubscriptionDescriptor[EventT]:
+                tmp = event
 
-                has_self_binding = utils.is_inside_class(handler) and 'self' in fs.parameters
-                typ = list(fs.parameters.values())[has_self_binding]
+                if tmp is None:
+                    fs = signature(callback)
 
-                if typ.annotation is None:
-                    raise TypeError('Cannot use listen() without event annotation type')
+                    # has_self_binding = utils.is_inside_class(callback) and 'self' in fs.parameters
+                    # typ = list(fs.parameters.values())[has_self_binding]
+                    typ = list(fs.parameters.values())[1]
 
-                try:
-                    globalns = utils.unwrap_function(handler).__globals__
-                except AttributeError:
-                    globalns = {}
+                    if typ.annotation is None:
+                        raise TypeError('Cannot use listen() without event annotation type')
 
-                tmp = utils.evaluate_annotation(typ.annotation, globalns, globalns, {})
-                if has_self_binding:
-                    handler = partial(handler, self)  # type: ignore
+                    try:
+                        globalns = utils.unwrap_function(callback).__globals__
+                    except AttributeError:
+                        globalns = {}
 
-            return self.subscribe(tmp, handler)
+                    tmp = utils.evaluate_annotation(typ.annotation, globalns, globalns, {})
 
-        return decorator
+                return EventSubscriptionDescriptor(
+                    event=tmp,
+                    callback=callback,  # type: ignore
+                )
+
+            return decorator1
+        else:
+
+            def decorator2(callback: utils.MaybeAwaitableFunc[[EventT], None], /) -> EventSubscription[EventT]:
+                tmp = event
+
+                if tmp is None:
+                    fs = signature(callback)
+
+                    # has_self_binding = utils.is_inside_class(callback) and 'self' in fs.parameters
+                    # typ = list(fs.parameters.values())[has_self_binding]
+                    typ = list(fs.parameters.values())[0]
+
+                    if typ.annotation is None:
+                        raise TypeError('Cannot use listen() without event annotation type')
+
+                    try:
+                        globalns = utils.unwrap_function(callback).__globals__
+                    except AttributeError:
+                        globalns = {}
+
+                    tmp = utils.evaluate_annotation(typ.annotation, globalns, globalns, {})
+
+                return self.subscribe(tmp, callback)  # type: ignore
+
+            return decorator2
 
     on = listen
 
@@ -1681,12 +1855,16 @@ class Client:
         return await self.http.create_server(name, description=description, nsfw=nsfw)
 
 
+listen = Client.listen
+
 __all__ = (
     'EventSubscription',
+    'EventSubscriptionDescriptor',
     'TemporarySubscription',
     'TemporarySubscriptionList',
     'ClientEventHandler',
     '_private_channel_sort_old',
     '_private_channel_sort_new',
     'Client',
+    'listen',
 )

@@ -457,4 +457,13 @@ __all__ = (
     'new_formatter',
     'setup_logging',
     '_UTC',
+    'PY_310',
+    'PY_312',
+    'flatten_literal_params',
+    'normalise_optional_params',
+    'evaluate_annotation',
+    'resolve_annotation',
+    'is_inside_class',
+    '_MissingSentinel',
+    'MISSING',
 )
