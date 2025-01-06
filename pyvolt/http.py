@@ -3946,7 +3946,7 @@ class HTTPClient:
     async def edit_my_user(
         self,
         *,
-        display_name: UndefinedOr[str] = UNDEFINED,
+        display_name: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
@@ -3998,7 +3998,7 @@ class HTTPClient:
         user: ULIDOr[BaseUser],
         /,
         *,
-        display_name: UndefinedOr[str] = UNDEFINED,
+        display_name: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,

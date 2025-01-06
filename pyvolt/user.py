@@ -319,7 +319,7 @@ class BaseUser(Base, Connectable, Messageable):
     async def edit(
         self,
         *,
-        display_name: UndefinedOr[str] = UNDEFINED,
+        display_name: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[str | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
@@ -766,7 +766,7 @@ class OwnUser(User):
     async def edit(
         self,
         *,
-        display_name: UndefinedOr[str] = UNDEFINED,
+        display_name: UndefinedOr[str | None] = UNDEFINED,
         avatar: UndefinedOr[str | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
