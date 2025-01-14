@@ -754,7 +754,7 @@ class UserBadges(BaseFlags, support_kwargs=True):
         This is displayed as amorbus (Amogus with Morbin texture) in Revite,
         and as 'Low resolution troll face' in new client.
         """
-        return 1 << 9
+        return 1 << 10
 
 
 @doc_flags('Wraps up a User Flags flag value.')
