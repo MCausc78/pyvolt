@@ -15,7 +15,7 @@ class User(typing.TypedDict):
     relations: typing_extensions.NotRequired[list[Relationship]]
     badges: typing_extensions.NotRequired[int]
     status: typing_extensions.NotRequired[UserStatus]
-    profile: typing_extensions.NotRequired[UserProfile]
+    # profile: typing_extensions.NotRequired[UserProfile]
     flags: typing_extensions.NotRequired[int]
     privileged: typing_extensions.NotRequired[bool]
     bot: typing_extensions.NotRequired[BotInformation]
@@ -32,6 +32,7 @@ class PartialUser(typing.TypedDict):
     status: typing_extensions.NotRequired[UserStatus]
     # profile: typing_extensions.NotRequired[UserProfile]
     flags: typing_extensions.NotRequired[int]
+    bot: typing_extensions.NotRequired[BotInformation]
     online: typing_extensions.NotRequired[bool]
 
 

@@ -1799,6 +1799,7 @@ class Parser:
                 if avatar
                 else None
             ),
+            creator_id='',
             channel_id=payload['channel_id'],
             raw_permissions=payload['permissions'],
             token=None,
@@ -2462,6 +2463,7 @@ class Parser:
 
         avatar = data.get('avatar')
         status = data.get('status')
+        bot = data.get('bot')
 
         return UserUpdateEvent(
             shard=shard,
@@ -2471,13 +2473,14 @@ class Parser:
                 name=data.get('username', UNDEFINED),
                 discriminator=data.get('discriminator', UNDEFINED),
                 display_name=(None if 'DisplayName' in clear else data.get('display_name') or UNDEFINED),
-                internal_avatar=(None if 'Avatar' in clear else self.parse_asset(avatar) if avatar else UNDEFINED),
+                internal_avatar=None if 'Avatar' in clear else (self.parse_asset(avatar) if avatar else UNDEFINED),
                 raw_badges=data.get('badges', UNDEFINED),
-                status=(self.parse_user_status_edit(status, clear) if status is not None else UNDEFINED),
+                status=UNDEFINED if status is None else self.parse_user_status_edit(status, clear),
                 # internal_profile=(
                 #     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
                 # ),
                 raw_flags=data.get('flags', UNDEFINED),
+                bot=UNDEFINED if bot is None else self.parse_bot_user_info(bot),
                 online=data.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
@@ -2654,6 +2657,7 @@ class Parser:
             id=payload['id'],
             name=payload['name'],
             internal_avatar=self.parse_asset(avatar) if avatar else None,
+            creator_id=payload.get('creator_id', ''),
             channel_id=payload['channel_id'],
             raw_permissions=payload['permissions'],
             token=payload.get('token'),

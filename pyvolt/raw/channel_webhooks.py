@@ -10,6 +10,7 @@ class Webhook(typing.TypedDict):
     id: str
     name: str
     avatar: typing_extensions.NotRequired[File]
+    creator_id: str  # Only available since API v0.7.17
     channel_id: str
     permissions: int
     token: str | None

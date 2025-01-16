@@ -182,7 +182,7 @@ class UserProfileEdit:
     ----------
     content: UndefinedOr[Optional[:class:`str`]]
         The text to use in user profile description.
-    background: UndefinedOr[Optional[:class:`ResolvableResource`]]
+    background: UndefinedOr[Optional[:class:`.ResolvableResource`]]
         The background to use on user's profile.
     """
 
@@ -491,6 +491,9 @@ class PartialUser(BaseUser):
     raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The user's flags raw value."""
 
+    bot: UndefinedOr[BotUserInfo] = field(repr=True, kw_only=True)
+    """UndefinedOr[:class:`.BotUserInfo`]: The information about the bot."""
+
     online: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the user came online."""
 
@@ -676,6 +679,8 @@ class User(DisplayUser):
                 self.status.locally_update(status)
         if data.raw_flags is not UNDEFINED:
             self.raw_flags = data.raw_flags
+        if data.bot is not UNDEFINED:
+            self.bot = data.bot
         if data.online is not UNDEFINED:
             self.online = data.online
 

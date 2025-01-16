@@ -199,8 +199,17 @@ class Webhook(BaseWebhook):
     internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`.StatelessAsset`]: The webhook's stateless avatar."""
 
+    creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`str`: The user's ID who created this webhook.
+    
+    .. warning::
+
+        This is available only since API v0.7.17 and only not from ``GET /webhooks/{webhook.id}`` endpoints.
+        The attribute will be empty string if unavailable.
+    """
+
     channel_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`str`: The channel the webhook belongs to."""
+    """:class:`str`: The channel's ID the webhook in."""
 
     raw_permissions: int = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`int`: The webhook's permissions raw value."""
@@ -212,6 +221,7 @@ class Webhook(BaseWebhook):
         """Locally updates webhook with provided data.
 
         .. warning::
+
             This is called by library internally to keep cache up to date.
 
         Parameters
