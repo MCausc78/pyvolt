@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from datetime import datetime
 
     from . import raw
-    from .channel import TextChannel
+    from .channel import TextableChannel
     from .server import BaseServer
     from .state import State
 
@@ -267,27 +267,27 @@ class Shard:
         await self.send(payload)
         self.last_ping_at = utils.utcnow()
 
-    async def begin_typing(self, channel: ULIDOr[TextChannel], /) -> None:
+    async def begin_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
         """|coro|
 
         Begins typing in a channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel to begin typing in.
         """
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
         await self.send(payload)
 
-    async def end_typing(self, channel: ULIDOr[TextChannel], /) -> None:
+    async def end_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
         """|coro|
 
         Ends typing in a channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel to end typing in.
         """
         payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
@@ -296,7 +296,16 @@ class Shard:
     async def subscribe_to(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
-        Subscribes to a server. After calling this method, you'll receive :class:`UserUpdateEvent`'s.
+        Subscribes user to a server. After calling this method, you will begin
+        receiving :class:`UserUpdateEvent`'s for members of the subscribed server.
+
+        .. note::
+
+            Calling this method has no effect on bot tokens. Additionally:
+            - Server subscriptions automatically expire within 15 minutes.
+            - You may have up only to 5 active subscriptions.
+            - This command should only be sent if application/client is in focus.
+            - You should aim to call this method at most every 10 minutes per server.
 
         Parameters
         ----------

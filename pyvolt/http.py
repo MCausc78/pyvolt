@@ -53,7 +53,6 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
-    TextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
@@ -107,6 +106,7 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
+    from .channel import TextableChannel
     from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
     from .instance import Instance
     from .read_state import ReadState
@@ -1271,7 +1271,7 @@ class HTTPClient:
         await self.request(routes.BOTS_INVITE.compile(bot_id=resolve_id(bot)), json=payload)
 
     # Channels control
-    async def acknowledge_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def acknowledge_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Marks this message as read.
@@ -1283,7 +1283,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
@@ -1696,7 +1696,7 @@ class HTTPClient:
         return list(map(self.state.parser.parse_user, resp))
 
     async def bulk_delete_messages(
-        self, channel: ULIDOr[TextChannel], messages: Sequence[ULIDOr[BaseMessage]], /
+        self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]], /
     ) -> None:
         """|coro|
 
@@ -1706,9 +1706,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        messages: Sequence[ULIDOr[:class:`BaseMessage`]]
+        messages: Sequence[ULIDOr[:class:`.BaseMessage`]]
             The messages to delete.
 
         Raises
@@ -1724,7 +1724,7 @@ class HTTPClient:
             json=payload,
         )
 
-    async def clear_reactions(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def clear_reactions(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Removes all the reactions from the message.
@@ -1733,9 +1733,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
 
         Raises
@@ -1772,7 +1772,7 @@ class HTTPClient:
             )
         )
 
-    async def delete_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def delete_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Deletes the message.
@@ -1780,9 +1780,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
 
         Raises
@@ -1801,7 +1801,7 @@ class HTTPClient:
 
     async def edit_message(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
         content: UndefinedOr[str] = UNDEFINED,
@@ -1813,13 +1813,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
         content: UndefinedOr[:class:`str`]
             The new content to replace the message with.
-        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
         Raises
@@ -1848,14 +1848,14 @@ class HTTPClient:
         )
         return self.state.parser.parse_message(resp)
 
-    async def get_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage]) -> Message:
+    async def get_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> Message:
         """|coro|
 
         Retrieves a message.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
         message: ULIDOr[:class:`BaseMessage`]
             The message.
@@ -1882,7 +1882,7 @@ class HTTPClient:
 
     async def get_messages(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         *,
         limit: int | None = None,
         before: ULIDOr[BaseMessage] | None = None,
@@ -1897,17 +1897,17 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
         limit: Optional[:class:`int`]
             Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
-        before: Optional[ULIDOr[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[ULIDOr[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`MessageSort`]
             The message sort direction.
-        nearby: Optional[ULIDOr[:class:`BaseMessage`]]
+        nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
@@ -1946,7 +1946,7 @@ class HTTPClient:
 
     async def add_reaction_to_message(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         emoji: ResolvableEmoji,
     ) -> None:
@@ -1957,11 +1957,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        emoji: :class:`ResolvableEmoji`
+        emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
 
         Raises
@@ -1981,7 +1981,7 @@ class HTTPClient:
 
     async def search_for_messages(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         query: str | None = None,
         *,
         pinned: bool | None = None,
@@ -2000,7 +2000,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel to search in.
         query: Optional[:class:`str`]
             Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
@@ -2008,11 +2008,11 @@ class HTTPClient:
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
             Maximum number of messages to fetch.
-        before: Optional[ULIDOr[:class:`BaseMessage`]]
+        before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[ULIDOr[:class:`BaseMessage`]]
+        after: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message after which messages should be fetched.
-        sort: Optional[:class:`MessageSort`]
+        sort: Optional[:class:`.MessageSort`]
             Sort used for retrieving.
         populate_users: Optional[:class:`bool`]
             Whether to populate user (and member, if server channel) objects.
@@ -2051,7 +2051,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_messages(resp)
 
-    async def pin_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def pin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Pins a message.
@@ -2059,7 +2059,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
         message: ULIDOr[:class:`BaseMessage`]
             The message.
@@ -2080,7 +2080,7 @@ class HTTPClient:
 
     async def send_message(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         content: str | None = None,
         *,
         nonce: str | None = None,
@@ -2104,7 +2104,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The destination channel.
         content: Optional[:class:`str`]
             The message content.
@@ -2265,7 +2265,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_message(resp)
 
-    async def unpin_message(self, channel: ULIDOr[TextChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def unpin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
         Unpins a message.
@@ -2273,9 +2273,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
 
         Raises
@@ -2294,7 +2294,7 @@ class HTTPClient:
 
     async def remove_reactions_from_message(
         self,
-        channel: ULIDOr[TextChannel],
+        channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
         /,
@@ -2309,13 +2309,13 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
         emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        user: Optional[ULIDOr[:class:`BaseUser`]]
+        user: Optional[ULIDOr[:class:`.BaseUser`]]
             Remove reactions from this user. You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
             Whether to remove all reactions. You must have :attr:`~Permissions.manage_messages` to provide this.
@@ -3113,9 +3113,9 @@ class HTTPClient:
             The member.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
-        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
-        roles: UndefinedOr[Optional[List[:class:`BaseRole`]]]
+        roles: UndefinedOr[Optional[List[ULIDOr[:class:`.BaseRole`]]]]
             The member's new list of roles. This *replaces* the roles.
         timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
@@ -3124,7 +3124,7 @@ class HTTPClient:
             Whether the member should send voice data.
         can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: UndefinedOr[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`.DMChannel`, :class:`.GroupChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]]
             The voice channel to move the member to.
 
         Returns
