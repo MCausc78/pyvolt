@@ -186,8 +186,8 @@ ResolvableResource
 
 .. autofunction:: resolve_resource
 
-Cache
-~~~~~
+EmptyCache
+~~~~~~~~~~
 
 .. attributetable:: EmptyCache
 
@@ -195,11 +195,17 @@ Cache
     :show-inheritance:
     :inherited-members:
 
+MapCache
+~~~~~~~~
+
 .. attributetable:: MapCache
 
 .. autoclass:: MapCache
     :show-inheritance:
     :inherited-members:
+
+CacheContextType
+~~~~~~~~~~~~~~~~
 
 .. class:: CacheContextType
 
@@ -365,10 +371,16 @@ Cache
 
         The context relates to :class:`.AuthenticatedEvent` event.
 
+BaseCacheContext
+~~~~~~~~~~~~~~~~
+
 .. attributetable:: BaseCacheContext
 
 .. autoclass:: BaseCacheContext
     :members:
+
+DetachedEmojiCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: DetachedEmojiCacheContext
 
@@ -377,12 +389,18 @@ Cache
     :members:
     :inherited-members:
 
+BaseCacheContext
+~~~~~~~~~~~~~~~~
+
 .. attributetable:: BaseCacheContext
 
 .. autoclass:: BaseCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+UndefinedCacheContext
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UndefinedCacheContext
 
@@ -725,11 +743,17 @@ Cache
 Events
 ------
 
+BaseEvent
+~~~~~~~~~
+
 .. attributetable:: BaseEvent
 
 .. autoclass:: BaseEvent
     :members:
     :inherited-members:
+
+ShardEvent
+~~~~~~~~~~
 
 .. attributetable:: ShardEvent
 
@@ -743,11 +767,17 @@ Events
     :members:
     :inherited-members:
 
+BaseChannelCreateEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: BaseChannelCreateEvent
 
 .. autoclass:: BaseChannelCreateEvent
     :members:
     :inherited-members:
+
+PrivateChannelCreateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: PrivateChannelCreateEvent
 
@@ -756,12 +786,18 @@ Events
     :members:
     :inherited-members:
 
+ServerChannelCreateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerChannelCreateEvent
 
 .. autoclass:: ServerChannelCreateEvent
     :show-inheritance:
     :members:
     :inherited-members:
+
+ChannelCreateEvent
+~~~~~~~~~~~~~~~~~~
 
 .. class:: ChannelCreateEvent
     A union of private/server channel create events.
@@ -771,11 +807,17 @@ Events
     - :class:`.PrivateChannelCreateEvent`
     - :class:`.ServerChannelCreateEvent`
 
+ChannelUpdateEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelUpdateEvent
 
 .. autoclass:: ChannelUpdateEvent
     :members:
     :inherited-members:
+
+ChannelDeleteEvent
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelDeleteEvent
 
@@ -783,11 +825,17 @@ Events
     :members:
     :inherited-members:
 
+GroupRecipientAddEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: GroupRecipientAddEvent
 
 .. autoclass:: GroupRecipientAddEvent
     :members:
     :inherited-members:
+
+GroupRecipientRemoveEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: GroupRecipientRemoveEvent
 
@@ -795,11 +843,17 @@ Events
     :members:
     :inherited-members:
 
+ChannelStartTypingEvent
+~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelStartTypingEvent
 
 .. autoclass:: ChannelStartTypingEvent
     :members:
     :inherited-members:
+
+ChannelStopTypingEvent
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelStopTypingEvent
 
@@ -807,11 +861,17 @@ Events
     :members:
     :inherited-members:
 
+MessageAckEvent
+~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageAckEvent
 
 .. autoclass:: MessageAckEvent
     :members:
     :inherited-members:
+
+MessageCreateEvent
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageCreateEvent
 
@@ -819,11 +879,17 @@ Events
     :members:
     :inherited-members:
 
+MessageUpdateEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageUpdateEvent
 
 .. autoclass:: MessageUpdateEvent
     :members:
     :inherited-members:
+
+MessageAppendEvent
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageAppendEvent
 
@@ -831,11 +897,17 @@ Events
     :members:
     :inherited-members:
 
+MessageDeleteEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageDeleteEvent
 
 .. autoclass:: MessageDeleteEvent
     :members:
     :inherited-members:
+
+MessageReactEvent
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageReactEvent
 
@@ -843,11 +915,17 @@ Events
     :members:
     :inherited-members:
 
+MessageUnreactEvent
+~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageUnreactEvent
 
 .. autoclass:: MessageUnreactEvent
     :members:
     :inherited-members:
+
+MessageClearReactionEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageClearReactionEvent
 
@@ -855,11 +933,17 @@ Events
     :members:
     :inherited-members:
 
+MessageDeleteBulkEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageDeleteBulkEvent
 
 .. autoclass:: MessageDeleteBulkEvent
     :members:
     :inherited-members:
+
+ServerCreateEvent
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerCreateEvent
 
@@ -867,11 +951,17 @@ Events
     :members:
     :inherited-members:
 
+ServerEmojiCreateEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerEmojiCreateEvent
 
 .. autoclass:: ServerEmojiCreateEvent
     :members:
     :inherited-members:
+
+ServerEmojiDeleteEvent
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerEmojiDeleteEvent
 
@@ -879,11 +969,17 @@ Events
     :members:
     :inherited-members:
 
+ServerUpdateEvent
+~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerUpdateEvent
 
 .. autoclass:: ServerUpdateEvent
     :members:
     :inherited-members:
+
+ServerDeleteEvent
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerDeleteEvent
 
@@ -891,11 +987,17 @@ Events
     :members:
     :inherited-members:
 
+ServerMemberJoinEvent
+~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerMemberJoinEvent
 
 .. autoclass:: ServerMemberJoinEvent
     :members:
     :inherited-members:
+
+ServerMemberUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerMemberUpdateEvent
 
@@ -903,11 +1005,17 @@ Events
     :members:
     :inherited-members:
 
+ServerMemberRemoveEvent
+~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerMemberRemoveEvent
 
 .. autoclass:: ServerMemberRemoveEvent
     :members:
     :inherited-members:
+
+RawServerRoleUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: RawServerRoleUpdateEvent
 
@@ -915,11 +1023,17 @@ Events
     :members:
     :inherited-members:
 
+ServerRoleDeleteEvent
+~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerRoleDeleteEvent
 
 .. autoclass:: ServerRoleDeleteEvent
     :members:
     :inherited-members:
+
+ReportCreateEvent
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ReportCreateEvent
 
@@ -927,11 +1041,17 @@ Events
     :members:
     :inherited-members:
 
+UserUpdateEvent
+~~~~~~~~~~~~~~~
+
 .. attributetable:: UserUpdateEvent
 
 .. autoclass:: UserUpdateEvent
     :members:
     :inherited-members:
+
+UserRelationshipUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserRelationshipUpdateEvent
 
@@ -939,11 +1059,17 @@ Events
     :members:
     :inherited-members:
 
+UserSettingsUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: UserSettingsUpdateEvent
 
 .. autoclass:: UserSettingsUpdateEvent
     :members:
     :inherited-members:
+
+UserPlatformWipeEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserPlatformWipeEvent
 
@@ -951,11 +1077,17 @@ Events
     :members:
     :inherited-members:
 
+WebhookCreateEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: WebhookCreateEvent
 
 .. autoclass:: WebhookCreateEvent
     :members:
     :inherited-members:
+
+WebhookUpdateEvent
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: WebhookUpdateEvent
 
@@ -963,17 +1095,26 @@ Events
     :members:
     :inherited-members:
 
+WebhookDeleteEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: WebhookDeleteEvent
 
 .. autoclass:: WebhookDeleteEvent
     :members:
     :inherited-members:
 
+AuthifierEvent
+~~~~~~~~~~~~~~
+
 .. attributetable:: AuthifierEvent
 
 .. autoclass:: AuthifierEvent
     :members:
     :inherited-members:
+
+SessionCreateEvent
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: SessionCreateEvent
 
@@ -982,12 +1123,18 @@ Events
     :members:
     :inherited-members:
 
+SessionDeleteEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: SessionDeleteEvent
 
 .. autoclass:: SessionDeleteEvent
     :show-inheritance:
     :members:
     :inherited-members:
+
+SessionDeleteAllEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: SessionDeleteAllEvent
 
@@ -996,11 +1143,17 @@ Events
     :members:
     :inherited-members:
 
+LogoutEvent
+~~~~~~~~~~~
+
 .. attributetable:: LogoutEvent
 
 .. autoclass:: LogoutEvent
     :members:
     :inherited-members:
+
+VoiceChannelJoinEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: VoiceChannelJoinEvent
 
@@ -1008,11 +1161,17 @@ Events
     :members:
     :inherited-members:
 
+VoiceChannelLeaveEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: VoiceChannelLeaveEvent
 
 .. autoclass:: VoiceChannelLeaveEvent
     :members:
     :inherited-members:
+
+UserVoiceStateUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserVoiceStateUpdateEvent
 
@@ -1020,17 +1179,26 @@ Events
     :members:
     :inherited-members:
 
+AuthenticatedEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: AuthenticatedEvent
 
 .. autoclass:: AuthenticatedEvent
     :members:
     :inherited-members:
 
+BeforeConnectEvent
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: BeforeConnectEvent
 
 .. autoclass:: BeforeConnectEvent
     :members:
     :inherited-members:
+
+AfterConnectEvent
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: AfterConnectEvent
 
@@ -1915,13 +2083,16 @@ Cache
 Models
 ------
 
-Asset
-~~~~~
+StatelessAsset
+~~~~~~~~~~~~~~
 
 .. attributetable:: StatelessAsset
 
 .. autoclass:: StatelessAsset
     :members:
+
+Asset
+~~~~~
 
 .. attributetable:: Asset
 
@@ -1935,13 +2106,25 @@ Asset
 .. autoclass:: AssetMetadata
     :members:
 
-User
-~~~~
+BaseUser
+~~~~~~~~
 
 .. attributetable:: BaseUser
 
 .. autoclass:: BaseUser
     :members:
+
+BotUserMetadata
+~~~~~~~~~~~~~~~
+
+.. attributetable:: BotUserMetadata
+
+.. autoclass:: BotUserMetadata
+    :members:
+    :inherited-members:
+
+DisplayUser
+~~~~~~~~~~~
 
 .. attributetable:: DisplayUser
 
@@ -1949,17 +2132,27 @@ User
     :members:
     :inherited-members:
 
+PartialUser
+~~~~~~~~~~~
+
 .. attributetable:: PartialUser
 
 .. autoclass:: PartialUser
     :members:
     :inherited-members:
 
+
+User
+~~~~
+
 .. attributetable:: User
 
 .. autoclass:: User
     :members:
     :inherited-members:
+
+OwnUser
+~~~~~~~
 
 .. attributetable:: OwnUser
 
@@ -1968,13 +2161,16 @@ User
     :inherited-members:
     :exclude-members: accept_friend_request, block, deny_friend_request, mutual_friend_ids, mutual_server_ids, mutuals, remove_friend, report, send_friend_request, unblock
 
-Channel
-~~~~~~~
+BaseChannel
+~~~~~~~~~~~
 
 .. attributetable:: BaseChannel
 
 .. autoclass:: BaseChannel
     :members:
+
+PartialChannel
+~~~~~~~~~~~~~~
 
 .. attributetable:: PartialChannel
 
@@ -1982,11 +2178,17 @@ Channel
     :members:
     :inherited-members:
 
+SavedMessagesChannel
+~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: SavedMessagesChannel
 
 .. autoclass:: SavedMessagesChannel
     :members:
     :inherited-members:
+
+DMChannel
+~~~~~~~~~
 
 .. attributetable:: DMChannel
 
@@ -1994,11 +2196,17 @@ Channel
     :members:
     :inherited-members:
 
+GroupChannel
+~~~~~~~~~~~~
+
 .. attributetable:: GroupChannel
 
 .. autoclass:: GroupChannel
     :members:
     :inherited-members:
+
+BaseServerChannel
+~~~~~~~~~~~~~~~~~
 
 .. attributetable:: BaseServerChannel
 
@@ -2006,10 +2214,16 @@ Channel
     :members:
     :inherited-members:
 
+ChannelVoiceMetadata
+~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelVoiceMetadata
 
 .. autoclass:: ChannelVoiceMetadata
     :members:
+
+TextChannel
+~~~~~~~~~~~
 
 .. attributetable:: TextChannel
 
@@ -2017,11 +2231,17 @@ Channel
     :members:
     :inherited-members:
 
+VoiceChannel
+~~~~~~~~~~~~
+
 .. attributetable:: VoiceChannel
 
 .. autoclass:: VoiceChannel
     :members:
     :inherited-members:
+
+PrivateChannel
+~~~~~~~~~~~~~~
 
 .. class:: PrivateChannel
     A union of all channels that do not belong to a server.
@@ -2031,6 +2251,9 @@ Channel
     - :class:`.SavedMessagesChannel`
     - :class:`.DMChannel`
     - :class:`.GroupChannel`
+
+ServerChannel
+~~~~~~~~~~~~~
     
 .. class:: ServerChannel
     A union of all channels that belong to a server.
@@ -2039,6 +2262,9 @@ Channel
 
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
+
+TextableChannel
+~~~~~~~~~~~~~~~
 
 .. class:: TextableChannel
     A union of all channels that can have messages in them.
@@ -2050,6 +2276,9 @@ Channel
     - :class:`.GroupChannel`
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
+
+Channel
+~~~~~~~
 
 .. class:: Channel
     A union of all channels.
@@ -2064,23 +2293,32 @@ Channel
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
 
+ChannelVoiceStateContainer
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelVoiceStateContainer
 
 .. autoclass:: ChannelVoiceStateContainer
     :members:
 
-Embed
-~~~~~
+BaseEmbed
+~~~~~~~~~
 
 .. attributetable:: BaseEmbed
 
 .. autoclass:: BaseEmbed
     :members:
 
+BaseEmbedSpecial
+~~~~~~~~~~~~~~~~
+
 .. attributetable:: BaseEmbedSpecial
 
 .. autoclass:: BaseEmbedSpecial
     :members:
+
+NoneEmbedSpecial
+~~~~~~~~~~~~~~~~
 
 .. attributetable:: NoneEmbedSpecial
 
@@ -2088,11 +2326,17 @@ Embed
     :members:
     :inherited-members:
 
-.. attributetable:: GifEmbedSpecial
+GIFEmbedSpecial
+~~~~~~~~~~~~~~~
 
-.. autoclass:: GifEmbedSpecial
+.. attributetable:: GIFEmbedSpecial
+
+.. autoclass:: GIFEmbedSpecial
     :members:
     :inherited-members:
+
+YouTubeEmbedSpecial
+~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: YouTubeEmbedSpecial
 
@@ -2100,11 +2344,17 @@ Embed
     :members:
     :inherited-members:
 
+LightspeedEmbedSpecial
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: LightspeedEmbedSpecial
 
 .. autoclass:: LightspeedEmbedSpecial
     :members:
     :inherited-members:
+
+TwitchEmbedSpecial
+~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: TwitchEmbedSpecial
 
@@ -2112,11 +2362,17 @@ Embed
     :members:
     :inherited-members:
 
+SpotifyEmbedSpecial
+~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: SpotifyEmbedSpecial
 
 .. autoclass:: SpotifyEmbedSpecial
     :members:
     :inherited-members:
+
+SoundcloudEmbedSpecial
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: SoundcloudEmbedSpecial
 
@@ -2124,11 +2380,17 @@ Embed
     :members:
     :inherited-members:
 
+BandcampEmbedSpecial
+~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: BandcampEmbedSpecial
 
 .. autoclass:: BandcampEmbedSpecial
     :members:
     :inherited-members:
+
+AppleMusicEmbedSpecial
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: AppleMusicEmbedSpecial
 
@@ -2136,11 +2398,17 @@ Embed
     :members:
     :inherited-members:
 
+StreamableEmbedSpecial
+~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StreamableEmbedSpecial
 
 .. autoclass:: StreamableEmbedSpecial
     :members:
     :inherited-members:
+
+ImageEmbed
+~~~~~~~~~~
 
 .. attributetable:: ImageEmbed
 
@@ -2148,11 +2416,17 @@ Embed
     :members:
     :inherited-members:
 
+VideoEmbed
+~~~~~~~~~~
+
 .. attributetable:: VideoEmbed
 
 .. autoclass:: VideoEmbed
     :members:
     :inherited-members:
+
+WebsiteEmbed
+~~~~~~~~~~~~
 
 .. attributetable:: WebsiteEmbed
 
@@ -2160,11 +2434,17 @@ Embed
     :members:
     :inherited-members:
 
+StatelessTextEmbed
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessTextEmbed
 
 .. autoclass:: StatelessTextEmbed
     :members:
     :inherited-members:
+
+TextEmbed
+~~~~~~~~~
 
 .. attributetable:: TextEmbed
 
@@ -2172,11 +2452,17 @@ Embed
     :members:
     :inherited-members:
 
+NoneEmbed
+~~~~~~~~~
+
 .. attributetable:: NoneEmbed
 
 .. autoclass:: NoneEmbed
     :members:
     :inherited-members:
+
+EmbedSpecial
+~~~~~~~~~~~~
 
 .. class:: EmbedSpecial
 
@@ -2184,7 +2470,7 @@ Embed
 
     The following classes are included in this union:
     
-    - :class:`.GifEmbedSpecial`
+    - :class:`.GIFEmbedSpecial`
     - :class:`.YouTubeEmbedSpecial`
     - :class:`.LightspeedEmbedSpecial`
     - :class:`.TwitchEmbedSpecial`
@@ -2193,6 +2479,9 @@ Embed
     - :class:`.BandcampEmbedSpecial`
     - :class:`.AppleMusicEmbedSpecial`
     - :class:`.StreamableEmbedSpecial`
+
+StatelessEmbed
+~~~~~~~~~~~~~~
 
 .. class:: StatelessEmbed
 
@@ -2206,6 +2495,9 @@ Embed
     - :class:`.StatelessTextEmbed`
     - :class:`.NoneEmbed`
 
+Embed
+~~~~~
+
 .. class:: Embed
 
     A union of all embed types.
@@ -2218,8 +2510,8 @@ Embed
     - :class:`.TextEmbed`
     - :class:`.NoneEmbed`
 
-Emoji
-~~~~~
+BaseEmoji
+~~~~~~~~~
 
 .. attributetable:: BaseEmoji
 
@@ -2227,17 +2519,26 @@ Emoji
     :members:
     :inherited-members:
 
+ServerEmoji
+~~~~~~~~~~~
+
 .. attributetable:: ServerEmoji
 
 .. autoclass:: ServerEmoji
     :members:
     :inherited-members:
 
+DetachedEmoji
+~~~~~~~~~~~~~
+
 .. attributetable:: DetachedEmoji
 
 .. autoclass:: DetachedEmoji
     :members:
     :inherited-members:
+
+Emoji
+~~~~~
 
 .. class:: Emoji
     A union of all emoji types.
@@ -2246,6 +2547,9 @@ Emoji
     
     - :class:`.ServerEmoji`
     - :class:`.DetachedEmoji`
+
+ResolvableEmoji
+~~~~~~~~~~~~~~~
 
 .. class:: ResolvableEmoji
     A union of either :class:`.BaseEmoji` or :class:`str`.
@@ -2269,8 +2573,8 @@ ReadState
     :members:
     :inherited-members:
 
-Server
-~~~~~~
+BaseServer
+~~~~~~~~~~
 
 .. attributetable:: BaseServer
 
@@ -2278,17 +2582,26 @@ Server
     :members:
     :inherited-members:
 
+PartialServer
+~~~~~~~~~~~~~
+
 .. attributetable:: PartialServer
 
 .. autoclass:: PartialServer
     :members:
     :inherited-members:
 
+Server
+~~~~~~
+
 .. attributetable:: Server
 
 .. autoclass:: Server
     :members:
     :inherited-members:
+
+Category
+~~~~~~~~
 
 .. attributetable:: Category
 
@@ -2300,8 +2613,8 @@ Server
 .. autoclass:: SystemMessageChannels
     :members:
 
-Member
-~~~~~~
+BaseMember
+~~~~~~~~~~
 
 .. attributetable:: BaseMember
 
@@ -2309,11 +2622,17 @@ Member
     :members:
     :inherited-members:
 
+PartialMember
+~~~~~~~~~~~~~
+
 .. attributetable:: PartialMember
 
 .. autoclass:: PartialMember
     :members:
     :inherited-members:
+
+Member
+~~~~~~
 
 .. attributetable:: Member
 
@@ -2321,18 +2640,24 @@ Member
     :members:
     :inherited-members:
 
+MemberList
+~~~~~~~~~~
+
 .. attributetable:: MemberList
 
 .. autoclass:: MemberList
     :members:
 
-SystemEvent
-~~~~~~~~~~~
+BaseSystemEvent
+~~~~~~~~~~~~~~~
 
 .. attributetable:: BaseSystemEvent
 
 .. autoclass:: BaseSystemEvent
     :members:
+
+TextSystemEvent
+~~~~~~~~~~~~~~~
 
 .. attributetable:: TextSystemEvent
 
@@ -2340,11 +2665,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessUserAddedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserAddedSystemEvent
 
 .. autoclass:: StatelessUserAddedSystemEvent
     :members:
     :inherited-members:
+
+UserAddedSystemEvent
+~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserAddedSystemEvent
 
@@ -2352,11 +2683,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessUserRemovedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserRemovedSystemEvent
 
 .. autoclass:: StatelessUserRemovedSystemEvent
     :members:
     :inherited-members:
+
+UserRemovedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserRemovedSystemEvent
 
@@ -2364,11 +2701,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessUserJoinedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserJoinedSystemEvent
 
 .. autoclass:: StatelessUserJoinedSystemEvent
     :members:
     :inherited-members:
+
+UserJoinedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserJoinedSystemEvent
 
@@ -2376,11 +2719,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessUserLeftSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserLeftSystemEvent
 
 .. autoclass:: StatelessUserLeftSystemEvent
     :members:
     :inherited-members:
+
+UserLeftSystemEvent
+~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserLeftSystemEvent
 
@@ -2388,11 +2737,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessUserKickedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserKickedSystemEvent
 
 .. autoclass:: StatelessUserKickedSystemEvent
     :members:
     :inherited-members:
+
+UserKickedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserKickedSystemEvent
 
@@ -2400,11 +2755,19 @@ SystemEvent
     :members:
     :inherited-members:
 
+
+StatelessUserBannedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessUserBannedSystemEvent
 
 .. autoclass:: StatelessUserBannedSystemEvent
     :members:
     :inherited-members:
+
+
+UserBannedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserBannedSystemEvent
 
@@ -2412,11 +2775,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessChannelRenamedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessChannelRenamedSystemEvent
 
 .. autoclass:: StatelessChannelRenamedSystemEvent
     :members:
     :inherited-members:
+
+ChannelRenamedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelRenamedSystemEvent
 
@@ -2424,11 +2793,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessChannelDescriptionChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessChannelDescriptionChangedSystemEvent
 
 .. autoclass:: StatelessChannelDescriptionChangedSystemEvent
     :members:
     :inherited-members:
+
+ChannelDescriptionChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelDescriptionChangedSystemEvent
 
@@ -2436,11 +2811,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessChannelIconChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessChannelIconChangedSystemEvent
 
 .. autoclass:: StatelessChannelIconChangedSystemEvent
     :members:
     :inherited-members:
+
+ChannelIconChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelIconChangedSystemEvent
 
@@ -2448,11 +2829,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessChannelOwnershipChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessChannelOwnershipChangedSystemEvent
 
 .. autoclass:: StatelessChannelOwnershipChangedSystemEvent
     :members:
     :inherited-members:
+
+ChannelOwnershipChangedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelOwnershipChangedSystemEvent
 
@@ -2460,11 +2847,17 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessMessagePinnedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessMessagePinnedSystemEvent
 
 .. autoclass:: StatelessMessagePinnedSystemEvent
     :members:
     :inherited-members:
+
+MessagePinnedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessagePinnedSystemEvent
 
@@ -2472,17 +2865,26 @@ SystemEvent
     :members:
     :inherited-members:
 
+StatelessMessageUnpinnedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: StatelessMessageUnpinnedSystemEvent
 
 .. autoclass:: StatelessMessageUnpinnedSystemEvent
     :members:
     :inherited-members:
 
+MessageUnpinnedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageUnpinnedSystemEvent
 
 .. autoclass:: MessageUnpinnedSystemEvent
     :members:
     :inherited-members:
+
+StatelessSystemEvent
+~~~~~~~~~~~~~~~~~~~~
 
 .. class:: StatelessSystemEvent
 
@@ -2504,6 +2906,9 @@ SystemEvent
     - :class:`.StatelessMessagePinnedSystemEvent`
     - :class:`.StatelessMessageUnpinnedSystemEvent`
 
+SystemEvent
+~~~~~~~~~~~
+
 .. class:: SystemEvent
 
     A union of all system events that message may hold.
@@ -2524,23 +2929,32 @@ SystemEvent
     - :class:`.MessagePinnedSystemEvent`
     - :class:`.MessageUnpinnedSystemEvent`
 
-Message
-~~~~~~~
+BaseMessage
+~~~~~~~~~~~
 
 .. attributetable:: BaseMessage
 
 .. autoclass:: BaseMessage
     :members:
 
+PartialMessage
+~~~~~~~~~~~~~~
+
 .. attributetable:: PartialMessage
 
 .. autoclass:: PartialMessage
     :members:
 
+MessageAppendData
+~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageAppendData
 
 .. autoclass:: MessageAppendData
     :members:
+
+Message
+~~~~~~~
 
 .. attributetable:: Message
 
@@ -2548,23 +2962,32 @@ Message
     :members:
     :inherited-members:
 
+Reply
+~~~~~
+
 .. attributetable:: Reply
 
 .. autoclass:: Reply
     :members:
+
+MessageInteractions
+~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageInteractions
 
 .. autoclass:: MessageInteractions
     :members:
 
+MessageWebhook
+~~~~~~~~~~~~~~
+
 .. attributetable:: MessageWebhook
 
 .. autoclass:: MessageWebhook
     :members:
 
-Role
-~~~~
+BaseRole
+~~~~~~~~
 
 .. attributetable:: BaseRole
 
@@ -2572,11 +2995,17 @@ Role
     :members:
     :inherited-members:
 
+PartialRole
+~~~~~~~~~~~
+
 .. attributetable:: PartialRole
 
 .. autoclass:: PartialRole
     :members:
     :inherited-members:
+
+Role
+~~~~
 
 .. attributetable:: Role
 
@@ -2584,8 +3013,8 @@ Role
     :members:
     :inherited-members:
 
-Webhook
-~~~~~~~
+BaseWebhook
+~~~~~~~~~~~
 
 .. attributetable:: BaseWebhook
 
@@ -2593,11 +3022,17 @@ Webhook
     :members:
     :inherited-members:
 
+PartialWebhook
+~~~~~~~~~~~~~~
+
 .. attributetable:: PartialWebhook
 
 .. autoclass:: PartialWebhook
     :members:
     :inherited-members:
+
+Webhook
+~~~~~~~
 
 .. attributetable:: Webhook
 
@@ -2605,33 +3040,48 @@ Webhook
     :members:
     :inherited-members:
 
-Settings
-~~~~~~~~
+UserSettings
+~~~~~~~~~~~~
 
 .. attributetable:: UserSettings
 
 .. autoclass:: UserSettings
     :members:
 
+AndroidUserSettings
+~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: AndroidUserSettings
 
 .. autoclass:: AndroidUserSettings
     :members:
+
+ReviteNotificationOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ReviteNotificationOptions
 
 .. autoclass:: ReviteNotificationOptions
     :members:
 
+ReviteThemeVariable
+~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ReviteThemeVariable
 
 .. autoclass:: ReviteThemeVariable
     :members:
 
+ReviteUserSettings
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ReviteUserSettings
 
 .. autoclass:: ReviteUserSettings
     :members:
+
+JoltUserSettings
+~~~~~~~~~~~~~~~~
 
 .. attributetable:: JoltUserSettings
 

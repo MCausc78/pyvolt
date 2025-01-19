@@ -1283,9 +1283,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextChannel`]
+        channel: ULIDOr[:class:`.TextChannel`]
             The channel.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message.
 
         Raises
@@ -1331,7 +1331,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`.BaseChannel`]
             The channel.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
@@ -1393,22 +1393,22 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`.BaseChannel`]
             The channel.
         name: UndefinedOr[:class:`str`]
-            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
-            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
-        owner: UndefinedOr[ULIDOr[:class:`BaseUser`]]
-            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
-        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            The new channel description. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+        owner: UndefinedOr[ULIDOr[:class:`.BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`.GroupChannel`.
+        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         nsfw: UndefinedOr[:class:`bool`]
-            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
         default_permissions: UndefinedOr[None]
-            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+            To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
         Raises
         ------
@@ -1487,13 +1487,13 @@ class HTTPClient:
     async def get_channel(self, channel: ULIDOr[BaseChannel]) -> Channel:
         """|coro|
 
-        Fetch a :class:`Channel` with the specified ID.
+        Fetch a :class:`.Channel` with the specified ID.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`.BaseChannel`]
             The channel to fetch.
 
         Raises
@@ -1519,7 +1519,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Channel`
+        :class:`.Channel`
             The retrieved channel.
         """
         resp: raw.Channel = await self.request(routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)))

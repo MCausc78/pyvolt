@@ -229,6 +229,9 @@ class UnknownPublicInvite(BaseInvite):
     """Dict[:class:`str`, Any]: The raw invite data."""
 
 
+PublicInvite = ServerPublicInvite | GroupPublicInvite | UnknownPublicInvite
+
+
 @define(slots=True)
 class PrivateBaseInvite(BaseInvite):
     """Represents a private invite on Revolt."""
@@ -299,6 +302,7 @@ __all__ = (
     'ServerPublicInvite',
     'GroupPublicInvite',
     'UnknownPublicInvite',
+    'PublicInvite',
     'PrivateBaseInvite',
     'GroupInvite',
     'ServerInvite',

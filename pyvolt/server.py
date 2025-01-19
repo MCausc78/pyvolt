@@ -50,7 +50,7 @@ from .user import (
     UserStatus,
     BaseUser,
     DisplayUser,
-    BotUserInfo,
+    BotUserMetadata,
     User,
 )
 
@@ -1263,8 +1263,8 @@ class BaseMember:
         return False
 
     @property
-    def bot(self) -> BotUserInfo | None:
-        """Optional[:class:`BotUserInfo`]: The information about the bot."""
+    def bot(self) -> BotUserMetadata | None:
+        """Optional[:class:`BotUserMetadata`]: The information about the bot."""
         user = self.get_user()
         if user:
             return user.bot

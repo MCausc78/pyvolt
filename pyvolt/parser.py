@@ -62,7 +62,7 @@ from .embed import (
     EmbedSpecial,
     NoneEmbedSpecial,
     _NONE_EMBED_SPECIAL,
-    GifEmbedSpecial,
+    GIFEmbedSpecial,
     _GIF_EMBED_SPECIAL,
     YouTubeEmbedSpecial,
     LightspeedEmbedSpecial,
@@ -154,10 +154,10 @@ from .instance import (
     Instance,
 )
 from .invite import (
-    BaseInvite,
     ServerPublicInvite,
     GroupPublicInvite,
     UnknownPublicInvite,
+    PublicInvite,
     GroupInvite,
     ServerInvite,
     Invite,
@@ -219,7 +219,7 @@ from .user import (
     Mutuals,
     PartialUser,
     DisplayUser,
-    BotUserInfo,
+    BotUserMetadata,
     User,
     OwnUser,
     UserVoiceState,
@@ -390,6 +390,20 @@ class Parser:
     # internals end
 
     def parse_ban(self, payload: raw.ServerBan, users: dict[str, DisplayUser], /) -> Ban:
+        """Parses a ban object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The ban payload to parse.
+        users: Dict[:class:`str`, :class:`DisplayUser`]
+            The user associated with the ban.
+
+        Returns
+        -------
+        :class:`Ban`
+            The parsed ban object.
+        """
         id = payload['_id']
         user_id = id['user']
 
@@ -407,6 +421,18 @@ class Parser:
         )
 
     def parse_bans(self, payload: raw.BanListResult, /) -> list[Ban]:
+        """Parses a object with bans and associated banned users.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The list payload to parse.
+
+        Returns
+        -------
+        List[:class:`Ban`]
+            The parsed ban objects.
+        """
         banned_users = {bu.id: bu for bu in map(self.parse_display_user, payload['users'])}
         return [self.parse_ban(e, banned_users) for e in payload['bans']]
 
@@ -457,10 +483,36 @@ class Parser:
         """
         return self._parse_bot(payload, self.parse_user(user))
 
-    def parse_bot_user_info(self, payload: raw.BotInformation, /) -> BotUserInfo:
-        return BotUserInfo(owner_id=payload['owner'])
+    def parse_bot_user_metadata(self, payload: raw.BotInformation, /) -> BotUserMetadata:
+        """Parses a bot user metadata.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The bot payload to parse.
+        user: raw.User
+            The user associated with the bot.
+
+        Returns
+        -------
+        :class:`BotUserMetadata`
+            The parsed bot user metadata object.
+        """
+        return BotUserMetadata(owner_id=payload['owner'])
 
     def parse_bots(self, payload: raw.OwnedBotsResponse, /) -> list[Bot]:
+        """Parses a object with bots and associated bot users.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The list payload to parse.
+
+        Returns
+        -------
+        List[:class:`Bot`]
+            The parsed bot objects.
+        """
         bots = payload['bots']
         users = payload['users']
 
@@ -471,6 +523,20 @@ class Parser:
     def parse_bulk_message_delete_event(
         self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /
     ) -> MessageDeleteBulkEvent:
+        """Parses a BulkMessageDelete event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`MessageDeleteBulkEvent`
+            The parsed message bulk delete event object.
+        """
         return MessageDeleteBulkEvent(
             shard=shard,
             channel_id=payload['channel'],
@@ -479,6 +545,19 @@ class Parser:
         )
 
     def parse_category(self, payload: raw.Category, /) -> Category:
+        """Parses a category object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The category payload to parse.
+
+        Returns
+        -------
+        :class:`Category`
+            The parsed category object.
+        """
+
         ret = _new_category(Category)
         ret.id = payload['id']
         ret.title = payload['title']
@@ -486,6 +565,20 @@ class Parser:
         return ret
 
     def parse_channel_ack_event(self, shard: Shard, payload: raw.ClientChannelAckEvent, /) -> MessageAckEvent:
+        """Parses a ChannelAck event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`MessageAckEvent`
+            The parsed message ack event object.
+        """
         return MessageAckEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -494,6 +587,20 @@ class Parser:
         )
 
     def parse_channel_create_event(self, shard: Shard, payload: raw.ClientChannelCreateEvent, /) -> ChannelCreateEvent:
+        """Parses a ChannelCreate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelCreateEvent`
+            The parsed channel create event object.
+        """
         channel = self.parse_channel(payload)
         if isinstance(
             channel,
@@ -504,6 +611,20 @@ class Parser:
             return ServerChannelCreateEvent(shard=shard, channel=channel)
 
     def parse_channel_delete_event(self, shard: Shard, payload: raw.ClientChannelDeleteEvent, /) -> ChannelDeleteEvent:
+        """Parses a ChannelDelete event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelDeleteEvent`
+            The parsed channel delete event object.
+        """
         return ChannelDeleteEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -513,6 +634,20 @@ class Parser:
     def parse_channel_group_join_event(
         self, shard: Shard, payload: raw.ClientChannelGroupJoinEvent, /
     ) -> GroupRecipientAddEvent:
+        """Parses a ChannelGroupJoin event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`GroupRecipientAddEvent`
+            The parsed group recipient add event object.
+        """
         return GroupRecipientAddEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -523,6 +658,20 @@ class Parser:
     def parse_channel_group_leave_event(
         self, shard: Shard, payload: raw.ClientChannelGroupLeaveEvent, /
     ) -> GroupRecipientRemoveEvent:
+        """Parses a ChannelGroupLeave event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`GroupRecipientRemoveEvent`
+            The parsed group recipient remove event object.
+        """
         return GroupRecipientRemoveEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -533,6 +682,20 @@ class Parser:
     def parse_channel_start_typing_event(
         self, shard: Shard, payload: raw.ClientChannelStartTypingEvent, /
     ) -> ChannelStartTypingEvent:
+        """Parses a ChannelStartTyping event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelStartTypingEvent`
+            The parsed channel typing start event object.
+        """
         return ChannelStartTypingEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -542,6 +705,21 @@ class Parser:
     def parse_channel_stop_typing_event(
         self, shard: Shard, payload: raw.ClientChannelStopTypingEvent, /
     ) -> ChannelStopTypingEvent:
+        """Parses a ChannelStopTyping event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ChannelStopTypingEvent`
+            The parsed channel typing stop event object.
+        """
+
         return ChannelStopTypingEvent(
             shard=shard,
             channel_id=payload['id'],
@@ -683,6 +861,19 @@ class Parser:
         )
 
     def parse_detached_emoji(self, payload: raw.DetachedEmoji, /) -> DetachedEmoji:
+        """Parses a detached emoji object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The detached emoji payload to parse.
+
+        Returns
+        -------
+        :class:`DetachedEmoji`
+            The parsed detached emoji object.
+        """
+
         return DetachedEmoji(
             state=self.state,
             id=payload['_id'],
@@ -693,6 +884,18 @@ class Parser:
         )
 
     def parse_disabled_response_login(self, payload: raw.a.DisabledResponseLogin, /) -> AccountDisabled:
+        """Parses a "Account Disabled" login response object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The DM channel payload to parse.
+
+        Returns
+        -------
+        :class:`AccountDisabled`
+            The parsed "Account Disabled" login response object.
+        """
         return AccountDisabled(user_id=payload['user_id'])
 
     def parse_direct_message_channel(self, payload: raw.DirectMessageChannel, /) -> DMChannel:
@@ -865,7 +1068,7 @@ class Parser:
             emoji_id=payload['id'],
         )
 
-    def parse_gif_embed_special(self, _: raw.GIFSpecial, /) -> GifEmbedSpecial:
+    def parse_gif_embed_special(self, _: raw.GIFSpecial, /) -> GIFEmbedSpecial:
         return _GIF_EMBED_SPECIAL
 
     def parse_group_channel(
@@ -1335,7 +1538,7 @@ class Parser:
                 channel_id=payload['channel'],
                 content=content if content is not None else UNDEFINED,
                 edited_at=_parse_dt(edited_at) if edited_at else UNDEFINED,
-                internal_embeds=[self.parse_embed(e) for e in embeds] if embeds is not None else UNDEFINED,
+                internal_embeds=UNDEFINED if embeds is None else list(map(self.parse_embed, embeds)),
                 pinned=False if 'Pinned' in clear else data.get('pinned', UNDEFINED),
                 reactions={k: tuple(v) for k, v in reactions.items()} if reactions is not None else UNDEFINED,
             ),
@@ -1508,7 +1711,7 @@ class Parser:
             # internal_profile=self.parse_user_profile(profile) if profile else None,
             raw_flags=payload.get('flags', 0),
             privileged=privileged or False,
-            bot=self.parse_bot_user_info(bot) if bot else None,
+            bot=self.parse_bot_user_metadata(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
             online=payload['online'],
         )
@@ -1590,7 +1793,19 @@ class Parser:
             description=payload.get('description', ''),
         )
 
-    def parse_public_invite(self, payload: raw.InviteResponse, /) -> BaseInvite:
+    def parse_public_invite(self, payload: raw.InviteResponse, /) -> PublicInvite:
+        """Parses a public invite object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The public invite payload to parse.
+
+        Returns
+        -------
+        :class:`PublicInvite`
+            The parsed public invite object.
+        """
         return self._public_invite_parsers.get(payload['type'], self.parse_unknown_public_invite)(payload)
 
     def parse_ready_event(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> ReadyEvent:
@@ -1668,6 +1883,18 @@ class Parser:
         )
 
     def parse_relationship(self, payload: raw.Relationship, /) -> Relationship:
+        """Parses a relationship object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The relationship payload to parse.
+
+        Returns
+        -------
+        :class:`Relationship`
+            The parsed relationship object.
+        """
         return Relationship(
             id=payload['_id'],
             status=RelationshipStatus(payload['status']),
@@ -1806,6 +2033,23 @@ class Parser:
         )
 
     def parse_role(self, payload: raw.Role, role_id: str, server_id: str, /) -> Role:
+        """Parses a role object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The role payload to parse.
+        role_id: :class:`str`
+            The role's ID.
+        server_id: :class:`str`
+            The server's ID the role belongs to.
+
+
+        Returns
+        -------
+        :class:`Role`
+            The parsed role object.
+        """
         return Role(
             state=self.state,
             id=role_id,
@@ -1913,16 +2157,44 @@ class Parser:
         return self._parse_server(payload, internal_channels)
 
     def parse_server_create_event(
-        self, shard: Shard, d: raw.ClientServerCreateEvent, joined_at: datetime, /
+        self, shard: Shard, payload: raw.ClientServerCreateEvent, joined_at: datetime, /
     ) -> ServerCreateEvent:
+        """Parses a server create event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerCreateEvent`
+            The parsed server create event object.
+        """
         return ServerCreateEvent(
             shard=shard,
             joined_at=joined_at,
-            server=self.parse_server(d['server'], (False, d['channels'])),
-            emojis=[self.parse_server_emoji(e) for e in d['emojis']],
+            server=self.parse_server(payload['server'], (False, payload['channels'])),
+            emojis=list(map(self.parse_server_emoji, payload['emojis'])),
         )
 
     def parse_server_delete_event(self, shard: Shard, payload: raw.ClientServerDeleteEvent, /) -> ServerDeleteEvent:
+        """Parses a server delete event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerDeleteEvent`
+            The parsed server delete event object.
+        """
         return ServerDeleteEvent(
             shard=shard,
             server_id=payload['id'],
@@ -1998,6 +2270,20 @@ class Parser:
     def parse_server_member_leave_event(
         self, shard: Shard, payload: raw.ClientServerMemberLeaveEvent, /
     ) -> ServerMemberRemoveEvent:
+        """Parses a server member remove event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerMemberRemoveEvent`
+            The parsed server member remove event object.
+        """
         return ServerMemberRemoveEvent(
             shard=shard,
             server_id=payload['id'],
@@ -2105,6 +2391,20 @@ class Parser:
     def parse_server_role_delete_event(
         self, shard: Shard, payload: raw.ClientServerRoleDeleteEvent, /
     ) -> ServerRoleDeleteEvent:
+        """Parses a ServerRoleDelete event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerRoleDeleteEvent`
+            The parsed server role delete event object.
+        """
         return ServerRoleDeleteEvent(
             shard=shard,
             server_id=payload['id'],
@@ -2116,6 +2416,20 @@ class Parser:
     def parse_server_role_update_event(
         self, shard: Shard, payload: raw.ClientServerRoleUpdateEvent, /
     ) -> RawServerRoleUpdateEvent:
+        """Parses a ServerRoleUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`RawServerRoleUpdateEvent`
+            The parsed server role create/update event object.
+        """
         data = payload['data']
         clear = payload['clear']
 
@@ -2211,15 +2525,51 @@ class Parser:
         )
 
     def parse_soundcloud_embed_special(self, _: raw.SoundcloudSpecial, /) -> SoundcloudEmbedSpecial:
+        """Parses a Soundcloud embed special content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The Soundcloud embed special content payload to parse.
+
+        Returns
+        -------
+        :class:`SoundcloudEmbedSpecial`
+            The parsed Soundcloud embed special content object.
+        """
         return _SOUNDCLOUD_EMBED_SPECIAL
 
     def parse_spotify_embed_special(self, payload: raw.SpotifySpecial, /) -> SpotifyEmbedSpecial:
+        """Parses a Spotify embed special content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The Spotify embed special content payload to parse.
+
+        Returns
+        -------
+        :class:`SpotifyEmbedSpecial`
+            The parsed Spotify embed special content object.
+        """
         return SpotifyEmbedSpecial(
             content_type=payload['content_type'],
             id=payload['id'],
         )
 
     def parse_streamable_embed_special(self, payload: raw.StreamableSpecial, /) -> StreamableEmbedSpecial:
+        """Parses a Streamable embed special content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The Streamable embed special content payload to parse.
+
+        Returns
+        -------
+        :class:`StreamableEmbedSpecial`
+            The parsed Streamable embed special content object.
+        """
         return StreamableEmbedSpecial(id=payload['id'])
 
     def parse_system_message_channels(self, payload: raw.SystemMessageChannels, /) -> SystemMessageChannels:
@@ -2272,6 +2622,18 @@ class Parser:
         )
 
     def parse_text_embed(self, payload: raw.TextEmbed, /) -> StatelessTextEmbed:
+        """Parses a text embed object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The text embed payload to parse.
+
+        Returns
+        -------
+        :class:`TextEmbed`
+            The parsed text embed object.
+        """
         media = payload.get('media')
 
         return StatelessTextEmbed(
@@ -2284,6 +2646,18 @@ class Parser:
         )
 
     def parse_twitch_embed_special(self, payload: raw.TwitchSpecial, /) -> TwitchEmbedSpecial:
+        """Parses a Twitch embed special content object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The Twitch embed special content payload to parse.
+
+        Returns
+        -------
+        :class:`TwitchEmbedSpecial`
+            The parsed Twitch embed special content object.
+        """
         return TwitchEmbedSpecial(
             content_type=TwitchContentType(payload['content_type']),
             id=payload['id'],
@@ -2326,7 +2700,7 @@ class Parser:
             # internal_profile=self.parse_user_profile(profile) if profile else None,
             raw_flags=payload.get('flags', 0),
             privileged=payload.get('privileged', False),
-            bot=self.parse_bot_user_info(bot) if bot else None,
+            bot=self.parse_bot_user_metadata(bot) if bot else None,
             relationship=RelationshipStatus(payload['relationship']),
             online=payload['online'],
         )
@@ -2358,6 +2732,18 @@ class Parser:
         )
 
     def parse_user_profile(self, payload: raw.UserProfile, /) -> StatelessUserProfile:
+        """Parses a user profile object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user profile payload to parse.
+
+        Returns
+        -------
+        :class:`UserProfile`
+            The parsed user profile object.
+        """
         background = payload.get('background')
 
         return StatelessUserProfile(
@@ -2368,6 +2754,20 @@ class Parser:
     def parse_user_relationship_event(
         self, shard: Shard, payload: raw.ClientUserRelationshipEvent, /
     ) -> UserRelationshipUpdateEvent:
+        """Parses a UserRelationship event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserRelationshipUpdateEvent`
+            The parsed user relationshipe event object.
+        """
         return UserRelationshipUpdateEvent(
             shard=shard,
             current_user_id=payload['id'],
@@ -2397,6 +2797,20 @@ class Parser:
         )
 
     def parse_user_settings(self, payload: raw.UserSettings, partial: bool, /) -> UserSettings:
+        """Parses a user settings object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user settings payload to parse.
+        partial: :class:`bool`
+            Whether the user settings are partial.
+
+        Returns
+        -------
+        :class:`UserSettings`
+            The parsed user settings object.
+        """
         return UserSettings(
             data={k: (s1, s2) for (k, (s1, s2)) in payload.items()},
             state=self.state,
@@ -2427,11 +2841,23 @@ class Parser:
         )
 
     def parse_user_status(self, payload: raw.UserStatus, /) -> UserStatus:
+        """Parses a user status object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The user status payload to parse.
+
+        Returns
+        -------
+        :class:`UserStatus`
+            The parsed user status object.
+        """
         presence = payload.get('presence')
 
         return UserStatus(
             text=payload.get('text'),
-            presence=Presence(presence) if presence else None,
+            presence=None if presence is None else Presence(presence),
         )
 
     def parse_user_status_edit(self, payload: raw.UserStatus, clear: list[raw.FieldsUser], /) -> UserStatusEdit:
@@ -2480,7 +2906,7 @@ class Parser:
                 #     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
                 # ),
                 raw_flags=data.get('flags', UNDEFINED),
-                bot=UNDEFINED if bot is None else self.parse_bot_user_info(bot),
+                bot=UNDEFINED if bot is None else self.parse_bot_user_metadata(bot),
                 online=data.get('online', UNDEFINED),
             ),
             before=None,  # filled on dispatch
@@ -2542,6 +2968,18 @@ class Parser:
         )
 
     def parse_video_embed(self, payload: raw.Video, /) -> VideoEmbed:
+        """Parses a video embed object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The video embed payload to parse.
+
+        Returns
+        -------
+        :class:`VideoEmbed`
+            The parsed video embed object.
+        """
         return VideoEmbed(
             url=payload['url'],
             width=payload['width'],
@@ -2650,6 +3088,18 @@ class Parser:
         return ChannelVoiceMetadata(max_users=payload.get('max_users') or 0)
 
     def parse_webhook(self, payload: raw.Webhook, /) -> Webhook:
+        """Parses a webhook object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The webhook payload to parse.
+
+        Returns
+        -------
+        :class:`Webhook`
+            The parsed webhook object.
+        """
         avatar = payload.get('avatar')
 
         return Webhook(

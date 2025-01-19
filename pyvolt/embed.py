@@ -66,11 +66,11 @@ _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 
 
 @define(slots=True)
-class GifEmbedSpecial(BaseEmbedSpecial):
+class GIFEmbedSpecial(BaseEmbedSpecial):
     """A content hint that embed contains a GIF. Metadata should be used to find video or image to play."""
 
 
-_GIF_EMBED_SPECIAL = GifEmbedSpecial()
+_GIF_EMBED_SPECIAL = GIFEmbedSpecial()
 
 
 @define(slots=True)
@@ -287,7 +287,7 @@ _NONE_EMBED = NoneEmbed()
 
 EmbedSpecial = (
     NoneEmbedSpecial
-    | GifEmbedSpecial
+    | GIFEmbedSpecial
     | YouTubeEmbedSpecial
     | LightspeedEmbedSpecial
     | TwitchEmbedSpecial
@@ -305,7 +305,7 @@ __all__ = (
     'BaseEmbedSpecial',
     'NoneEmbedSpecial',
     '_NONE_EMBED_SPECIAL',
-    'GifEmbedSpecial',
+    'GIFEmbedSpecial',
     '_GIF_EMBED_SPECIAL',
     'YouTubeEmbedSpecial',
     'LightspeedEmbedSpecial',

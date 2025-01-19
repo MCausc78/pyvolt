@@ -491,8 +491,8 @@ class PartialUser(BaseUser):
     raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The user's flags raw value."""
 
-    bot: UndefinedOr[BotUserInfo] = field(repr=True, kw_only=True)
-    """UndefinedOr[:class:`.BotUserInfo`]: The information about the bot."""
+    bot: UndefinedOr[BotUserMetadata] = field(repr=True, kw_only=True)
+    """UndefinedOr[:class:`.BotUserMetadata`]: The information about the bot."""
 
     online: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the user came online."""
@@ -569,22 +569,22 @@ class DisplayUser(BaseUser):
 
 
 @define(slots=True)
-class BotUserInfo:
+class BotUserMetadata:
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns bot."""
 
     def __eq__(self, other: object, /) -> bool:
-        return self is other or isinstance(other, BotUserInfo) and self.owner_id == other.owner_id
+        return self is other or isinstance(other, BotUserMetadata) and self.owner_id == other.owner_id
 
 
 def calculate_user_permissions(
     user_id: str,
     user_relationship: RelationshipStatus,
-    user_bot: BotUserInfo | None,
+    user_bot: BotUserMetadata | None,
     /,
     *,
     perspective_id: str,
-    perspective_bot: BotUserInfo | None,
+    perspective_bot: BotUserMetadata | None,
     perspective_privileged: bool,
 ) -> UserPermissions:
     """Calculates the permissions between two users.
@@ -595,11 +595,11 @@ def calculate_user_permissions(
         The target ID.
     user_relationship: :class:`.RelationshipStatus`
         The relationship between us and target user (:attr:`.User.relationship`).
-    user_bot: Optional[:class:`.BotUserInfo`]
+    user_bot: Optional[:class:`.BotUserMetadata`]
         The bot information about the user (:attr:`.User.bot`), if applicable.
     perspective_id: :class:`str`
         The ID of the current user.
-    perspective_bot: Optional[:class:`.BotUserInfo`]
+    perspective_bot: Optional[:class:`.BotUserMetadata`]
         The bot information about the current user (:attr:`.User.bot`), if applicable.
     perspective_privileged: :class:`bool`
         Whether the current user is privileged (:attr:`.User.privileged`).
@@ -643,8 +643,8 @@ class User(DisplayUser):
     privileged: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user is privileged."""
 
-    bot: BotUserInfo | None = field(repr=True, kw_only=True)
-    """Optional[:class:`.BotUserInfo`]: The information about the bot."""
+    bot: BotUserMetadata | None = field(repr=True, kw_only=True)
+    """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
 
     relationship: RelationshipStatus = field(repr=True, kw_only=True)
     """:class:`.RelationshipStatus`: The current session user's relationship with this user."""
@@ -891,7 +891,7 @@ __all__ = (
     'BaseUser',
     'PartialUser',
     'DisplayUser',
-    'BotUserInfo',
+    'BotUserMetadata',
     'calculate_user_permissions',
     'User',
     'OwnUser',
