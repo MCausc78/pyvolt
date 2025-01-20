@@ -379,26 +379,6 @@ BaseCacheContext
 .. autoclass:: BaseCacheContext
     :members:
 
-DetachedEmojiCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: DetachedEmojiCacheContext
-
-.. autoclass:: DetachedEmojiCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
-BaseCacheContext
-~~~~~~~~~~~~~~~~
-
-.. attributetable:: BaseCacheContext
-
-.. autoclass:: BaseCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 UndefinedCacheContext
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -409,12 +389,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+DetachedEmojiCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: DetachedEmojiCacheContext
 
 .. autoclass:: DetachedEmojiCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageCacheContext
+~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageCacheContext
 
@@ -423,12 +409,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerCacheContext
+~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerCacheContext
 
 .. autoclass:: ServerCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerEmojiCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerEmojiCacheContext
 
@@ -437,12 +429,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+UserCacheContext
+~~~~~~~~~~~~~~~~
+
 .. attributetable:: UserCacheContext
 
 .. autoclass:: UserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+PrivateChannelCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: PrivateChannelCreateEventCacheContext
 
@@ -451,12 +449,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerChannelCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerChannelCreateEventCacheContext
 
 .. autoclass:: ServerChannelCreateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ChannelUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelUpdateEventCacheContext
 
@@ -465,12 +469,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ChannelDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelDeleteEventCacheContext
 
 .. autoclass:: ChannelDeleteEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+GroupRecipientAddEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: GroupRecipientAddEventCacheContext
 
@@ -479,12 +489,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+GroupRecipientRemoveEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: GroupRecipientRemoveEventCacheContext
 
 .. autoclass:: GroupRecipientRemoveEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ChannelStartTypingEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelStartTypingEventCacheContext
 
@@ -493,12 +509,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ChannelStopTypingEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ChannelStopTypingEventCacheContext
 
 .. autoclass:: ChannelStopTypingEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageAckEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageAckEventCacheContext
 
@@ -507,12 +529,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+MessageCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageCreateEventCacheContext
 
 .. autoclass:: MessageCreateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageUpdateEventCacheContext
 
@@ -521,12 +549,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+MessageAppendEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageAppendEventCacheContext
 
 .. autoclass:: MessageAppendEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageDeleteEventCacheContext
 
@@ -535,12 +569,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+MessageReactEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageReactEventCacheContext
 
 .. autoclass:: MessageReactEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageUnreactEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageUnreactEventCacheContext
 
@@ -549,12 +589,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+MessageClearReactionEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: MessageClearReactionEventCacheContext
 
 .. autoclass:: MessageClearReactionEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MessageDeleteBulkEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageDeleteBulkEventCacheContext
 
@@ -563,12 +609,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerCreateEventCacheContext
 
 .. autoclass:: ServerCreateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerEmojiCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerEmojiCreateEventCacheContext
 
@@ -577,12 +629,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerEmojiDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerEmojiDeleteEventCacheContext
 
 .. autoclass:: ServerEmojiDeleteEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerUpdateEventCacheContext
 
@@ -591,12 +649,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerDeleteEventCacheContext
 
 .. autoclass:: ServerDeleteEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerMemberJoinEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerMemberJoinEventCacheContext
 
@@ -605,12 +669,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ServerMemberUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ServerMemberUpdateEventCacheContext
 
 .. autoclass:: ServerMemberUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerMemberRemoveEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerMemberRemoveEventCacheContext
 
@@ -619,12 +689,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+RawServerRoleUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: RawServerRoleUpdateEventCacheContext
 
 .. autoclass:: RawServerRoleUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+ServerRoleDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ServerRoleDeleteEventCacheContext
 
@@ -633,12 +709,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+ReportCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: ReportCreateEventCacheContext
 
 .. autoclass:: ReportCreateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+UserUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserUpdateEventCacheContext
 
@@ -647,12 +729,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+UserRelationshipUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: UserRelationshipUpdateEventCacheContext
 
 .. autoclass:: UserRelationshipUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+UserSettingsUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: UserSettingsUpdateEventCacheContext
 
@@ -661,12 +749,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+UserPlatformWipeEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: UserPlatformWipeEventCacheContext
 
 .. autoclass:: UserPlatformWipeEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+WebhookCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: WebhookCreateEventCacheContext
 
@@ -675,12 +769,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+WebhookUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: WebhookUpdateEventCacheContext
 
 .. autoclass:: WebhookUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+WebhookDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: WebhookDeleteEventCacheContext
 
@@ -689,12 +789,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+SessionCreateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: SessionCreateEventCacheContext
 
 .. autoclass:: SessionCreateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+SessionDeleteEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: SessionDeleteEventCacheContext
 
@@ -703,12 +809,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+SessionDeleteAllEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: SessionDeleteAllEventCacheContext
 
 .. autoclass:: SessionDeleteAllEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+VoiceChannelJoinEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: VoiceChannelJoinEventCacheContext
 
@@ -717,6 +829,9 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+VoiceChannelLeaveEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: VoiceChannelLeaveEventCacheContext
 
 .. autoclass:: VoiceChannelLeaveEventCacheContext
@@ -724,12 +839,18 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
+UserVoiceStateUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. attributetable:: UserVoiceStateUpdateEventCacheContext
 
 .. autoclass:: UserVoiceStateUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+AuthenticatedEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: AuthenticatedEventCacheContext
 
@@ -3087,3 +3208,93 @@ JoltUserSettings
 
 .. autoclass:: JoltUserSettings
     :members:
+
+
+.. _revolt-api-exceptions:
+
+Exceptions
+----------
+
+The following exceptions are thrown by the library.
+
+.. autoexception:: PyvoltException
+    :show-inheritance:
+    :members:
+    :inherited-members:
+    :exclude-members: add_note, with_traceback
+
+.. autoexception:: HTTPException
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: Unauthorized
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: Forbidden
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: NotFound
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: Conflict
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: Ratelimited
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: InternalServerError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: BadGateway
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: ShardError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: ShardClosedError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: AuthenticationError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: ConnectError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: DiscoverError
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: InvalidData
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+.. autoexception:: NoData
+    :show-inheritance:
+    :members:
+    :inherited-members:
+

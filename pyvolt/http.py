@@ -1576,7 +1576,7 @@ class HTTPClient:
             The group name.
         description: Optional[:class:`str`]
             The group description.
-        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`.BaseUser`]]]
             The list of recipients to add to the group. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             Whether this group should be age-restricted.
@@ -1957,7 +1957,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextChannel`]
+        channel: ULIDOr[:class:`.TextableChannel`]
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
@@ -2133,13 +2133,17 @@ class HTTPClient:
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
         mention_everyone: Optional[:class:`bool`]
-            Whether to mention all users who can see the channel.
+            Whether to mention all users who can see the channel. This cannot be mixed with ``mention_online`` parameter.
 
-            User accounts cannot set this to ``True``.
+            .. note::
+
+                User accounts cannot set this to ``True``.
         mention_online: Optional[:class:`bool`]
-            Whether to mention all users who are online and can see the channel.
+            Whether to mention all users who are online and can see the channel. This cannot be mixed with ``mention_everyone`` parameter.
 
-            User accounts cannot set this to ``True``.
+            .. note::
+
+                User accounts cannot set this to ``True``.
 
         Raises
         ------
@@ -4399,25 +4403,35 @@ class HTTPClient:
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
-            The message attachments.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+            The attachments to send the message with.
+
+            To provide this, the webhook must have :attr:`~Permissions.upload_files`.
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`SendableEmbed`]]
-            The message embeds.
-        masquearde: Optional[:class:`.Masquerade`]
+            The embeds to send the message with.
+
+            To provide non-null or non-empty value, the webhook must have :attr:`~Permissions.send_embeds`.
+        masquearde: Optional[:class:`Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`.MessageInteractions`]
+
+            To provide this, the webhook must have :attr:`~Permissions.use_masquerade`.
+
+            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
+
+            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
         mention_everyone: Optional[:class:`bool`]
-            Whether to mention all users who can see the channel.
+            Whether to mention all users who can see the channel. This cannot be mixed with ``mention_online`` parameter.
         mention_online: Optional[:class:`bool`]
-            Whether to mention all users who are online and can see the channel.
+            Whether to mention all users who are online and can see the channel. This cannot be mixed with ``mention_everyone`` parameter.
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The message sent.
         """
         payload: raw.DataMessageSend = {}
