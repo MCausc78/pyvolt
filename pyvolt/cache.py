@@ -1115,7 +1115,7 @@ class Cache(ABC):
         ...
 
     @abstractmethod
-    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> None:
+    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> Server | None:
         """Deletes a server.
 
         Parameters
@@ -1124,6 +1124,11 @@ class Cache(ABC):
             The server's ID.
         ctx: :class:`.BaseCacheContext`
             The context.
+
+        Returns
+        -------
+        Optional[:class:`.Server`]
+            The server removed from the cache, if any.
         """
         ...
 
@@ -1534,7 +1539,7 @@ class EmptyCache(Cache):
     def store_server(self, server: Server, ctx: BaseCacheContext, /) -> None:
         pass
 
-    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> None:
+    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> Server | None:
         pass
 
     ##################
@@ -1896,8 +1901,8 @@ class MapCache(Cache):
             self._server_members[server.id] = {}
         _put1(self._servers, server.id, server, self._servers_max_size)
 
-    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> None:
-        self._servers.pop(server_id, None)
+    def delete_server(self, server_id: str, ctx: BaseCacheContext, /) -> Server | None:
+        return self._servers.pop(server_id, None)
 
     ##################
     # Server Members #

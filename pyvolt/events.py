@@ -1100,6 +1100,9 @@ class ServerCreateEvent(ShardEvent):
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
     """List[:class:`.ServerEmoji`]: The server emojis."""
 
+    voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
+    """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels in the server."""
+
     def process(self) -> bool:
         state = self.shard.state
         cache = state.cache
@@ -1139,6 +1142,9 @@ class ServerCreateEvent(ShardEvent):
 
         for emoji in self.emojis:
             cache.store_emoji(emoji, ctx)
+
+        cache.bulk_store_channel_voice_states({vs.channel_id: vs for vs in self.voice_states}, ctx)
+
         return True
 
 
@@ -1478,7 +1484,13 @@ class ServerMemberRemoveEvent(ShardEvent):
         if is_me:
             cache.delete_server_emojis_of(self.server_id, self.cache_context)
             cache.delete_server_members_of(self.server_id, self.cache_context)
-            cache.delete_server(self.server_id, self.cache_context)
+            server = cache.delete_server(self.server_id, self.cache_context)
+
+            if server is not None:
+                for channel_id in server.internal_channels[1]:
+                    assert isinstance(channel_id, str)
+                    cache.delete_channel_voice_state(channel_id, self.cache_context)
+
         return True
 
 

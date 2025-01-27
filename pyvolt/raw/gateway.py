@@ -137,6 +137,7 @@ class ClientServerCreateEvent(typing.TypedDict):
     server: Server
     channels: list[ServerChannel]
     emojis: list[ServerEmoji]
+    voice_states: list[ChannelVoiceState]
 
 
 class ClientServerUpdateEvent(typing.TypedDict):

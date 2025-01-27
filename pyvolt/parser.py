@@ -3149,6 +3149,7 @@ class Parser:
             joined_at=joined_at,
             server=self.parse_server(payload['server'], (False, payload['channels'])),
             emojis=list(map(self.parse_server_emoji, payload['emojis'])),
+            voice_states=list(map(self.parse_channel_voice_state, payload.get('voice_states', ()))),
         )
 
     def parse_server_delete_event(self, shard: Shard, payload: raw.ClientServerDeleteEvent, /) -> ServerDeleteEvent:
