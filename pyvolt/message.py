@@ -1613,6 +1613,75 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
         return f'{by} unpinned a message from this channel'
 
 
+@define(slots=True)
+class StatelessCallStartedSystemEvent(BaseSystemEvent):
+    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+
+    def __eq__(self, other: object, /) -> bool:
+        return self is other or isinstance(other, StatelessCallStartedSystemEvent) and self.by_id == other.by_id
+
+    @property
+    def by_id(self) -> str:
+        """:class:`str`: The user's ID that started a call."""
+        if isinstance(self._by, User):
+            return self._by.id
+        return self._by
+
+    def get_by(self) -> User | None:
+        """Optional[:class:`.User`]: Tries to get user that started a call."""
+        if isinstance(self._by, User):
+            return self._by
+
+    def attach_state(self, message: Message, /) -> CallStartedSystemEvent:
+        """:class:`.CallStartedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
+        return CallStartedSystemEvent(
+            message=message,
+            internal_by=self._by,
+        )
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} started a call.'
+
+
+@define(slots=True)
+class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
+    message: Message = field(repr=False, kw_only=True, eq=False)
+    """:class:`.Message`: The message that holds this system event."""
+
+    def get_by(self) -> User | None:
+        """Optional[:class:`.User`]: Tries to get user that started call."""
+        if isinstance(self._by, User):
+            return self._by
+        state = self.message.state
+        if not state.cache:
+            return
+        return state.cache.get_user(
+            self._by,
+            caching._UNDEFINED,
+        )
+
+    @property
+    def by(self) -> User:
+        """:class:`.User`: The user that started a call."""
+        by = self.get_by()
+        if not by:
+            raise NoData(self.by_id, 'user')
+        return by
+
+
 StatelessSystemEvent = (
     TextSystemEvent
     | StatelessUserAddedSystemEvent
@@ -1627,6 +1696,7 @@ StatelessSystemEvent = (
     | StatelessChannelOwnershipChangedSystemEvent
     | StatelessMessagePinnedSystemEvent
     | StatelessMessageUnpinnedSystemEvent
+    | StatelessCallStartedSystemEvent
 )
 
 SystemEvent = (
@@ -1643,6 +1713,7 @@ SystemEvent = (
     | ChannelOwnershipChangedSystemEvent
     | MessagePinnedSystemEvent
     | MessageUnpinnedSystemEvent
+    | CallStartedSystemEvent
 )
 
 
@@ -1900,6 +1971,8 @@ __all__ = (
     'MessagePinnedSystemEvent',
     'StatelessMessageUnpinnedSystemEvent',
     'MessageUnpinnedSystemEvent',
+    'StatelessCallStartedSystemEvent',
+    'CallStartedSystemEvent',
     'StatelessSystemEvent',
     'SystemEvent',
     'Message',

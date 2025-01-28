@@ -162,7 +162,7 @@ class StringView:
         return result
 
     def get_quoted_word(self) -> str | None:
-        """Optional[:class:`str`]:"""
+        """Optional[:class:`str`]: Reads a word until whitespace is reached, unless quote there is"""
         current = self.current
         if current is None:
             return None

@@ -181,6 +181,7 @@ from .message import (
     StatelessChannelOwnershipChangedSystemEvent,
     StatelessMessagePinnedSystemEvent,
     StatelessMessageUnpinnedSystemEvent,
+    StatelessCallStartedSystemEvent,
     StatelessSystemEvent,
     Message,
 )
@@ -309,6 +310,7 @@ class Parser:
             'channel_ownership_changed': self.parse_message_channel_ownership_changed_system_event,
             'message_pinned': self.parse_message_message_pinned_system_event,
             'message_unpinned': self.parse_message_message_unpinned_system_event,
+            'call_started': self.parse_message_call_started_system_event,
         }
         self._public_invite_parsers = {
             'Server': self.parse_server_public_invite,
@@ -1825,6 +1827,34 @@ class Parser:
             ),
             message=None,
         )
+
+    def parse_message_call_started_system_event(
+        self,
+        payload: raw.CallStartedSystemMessage,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> StatelessCallStartedSystemEvent:
+        """Parses a "Call Started" message system event object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The message system event payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty for :class:`StatelessCallStartedSystemEvent`.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessCallStartedSystemEvent.by`.
+
+        Returns
+        -------
+        :class:`StatelessCallStartedSystemEvent`
+            The parsed "Call Started" message system event object.
+        """
+
+        by_id = payload['by']
+
+        return StatelessCallStartedSystemEvent(internal_by=users.get(by_id, by_id))
 
     def parse_message_channel_description_changed_system_event(
         self,

@@ -3004,6 +3004,24 @@ MessageUnpinnedSystemEvent
     :members:
     :inherited-members:
 
+StatelessCallStartedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: StatelessCallStartedSystemEvent
+
+.. autoclass:: StatelessCallStartedSystemEvent
+    :members:
+    :inherited-members:
+
+CallStartedSystemEvent
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: CallStartedSystemEvent
+
+.. autoclass:: CallStartedSystemEvent
+    :members:
+    :inherited-members:
+
 StatelessSystemEvent
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -3026,6 +3044,7 @@ StatelessSystemEvent
     - :class:`.StatelessChannelOwnershipChangedSystemEvent`
     - :class:`.StatelessMessagePinnedSystemEvent`
     - :class:`.StatelessMessageUnpinnedSystemEvent`
+    - :class:`.StatelessCallStartedSystemEvent`
 
 SystemEvent
 ~~~~~~~~~~~
@@ -3049,6 +3068,7 @@ SystemEvent
     - :class:`.ChannelOwnershipChangedSystemEvent`
     - :class:`.MessagePinnedSystemEvent`
     - :class:`.MessageUnpinnedSystemEvent`
+    - :class:`.CallStartedSystemEvent`
 
 BaseMessage
 ~~~~~~~~~~~

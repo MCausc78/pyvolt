@@ -122,6 +122,11 @@ class MessageUnpinnedSystemMessage(typing.TypedDict):
     by: str
 
 
+class CallStartedSystemMessage(typing.TypedDict):
+    type: typing.Literal['call_started']
+    by: str
+
+
 SystemMessage = (
     TextSystemMessage
     | UserAddedSystemMessage
@@ -136,6 +141,7 @@ SystemMessage = (
     | ChannelOwnershipChangedSystemMessage
     | MessagePinnedSystemMessage
     | MessageUnpinnedSystemMessage
+    | CallStartedSystemMessage
 )
 
 
