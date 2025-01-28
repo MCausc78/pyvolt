@@ -44,6 +44,7 @@ from .channel import (
     TextChannel,
     ServerChannel,
     Channel,
+    ChannelVoiceStateContainer,
 )
 from .emoji import ServerEmoji
 from .enums import MemberRemovalIntention, RelationshipStatus
@@ -68,7 +69,6 @@ if typing.TYPE_CHECKING:
     import aiohttp
 
     from .authentication import Session
-    from .channel import ChannelVoiceStateContainer
     from .client import Client
     from .flags import UserFlags
     from .message import PartialMessage, MessageAppendData, Message
@@ -2057,6 +2057,86 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
 
 @define(slots=True)
+class VoiceChannelMoveEvent(ShardEvent):
+    """Dispatched when a user is moved from voice channel to another voice channel."""
+
+    event_name: typing.ClassVar[str] = 'voice_channel_move'
+
+    user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The user's ID who was moved between two voice channels."""
+
+    from_: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the user was in."""
+
+    to: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the user is in now."""
+
+    old_container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the previous voice channel the user was in."""
+
+    new_container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
+
+    cache_context: caching.UndefinedCacheContext | caching.VoiceChannelMoveEventCacheContext = field(
+        default=Factory(
+            lambda self: _cast(
+                'typing.Any',
+                caching.VoiceChannelMoveEventCacheContext(
+                    type=caching.CacheContextType.user_voice_state_update_event,
+                    event=self,
+                )
+                if 'VoiceChannelMoveEvent' in self.shard.state.provide_cache_context_in
+                else caching._VOICE_CHANNEL_MOVE_EVENT,
+            ),
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.VoiceChannelMoveEventCacheContext`]: The cache context used."""
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+
+        if not cache:
+            return
+
+        self.old_container = cache.get_channel_voice_state(self.from_, self.cache_context)
+        self.new_container = cache.get_channel_voice_state(self.to, self.cache_context)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if cache is None or self.old_container is None:
+            return False
+
+        if self.new_container is None:
+            state = self.old_container.locally_remove(self.user_id)
+            if state is None:
+                # If we somehow get here then something went wrong
+                return False
+
+            container = ChannelVoiceStateContainer(
+                channel_id=self.to,
+                participants={self.user_id: state},
+            )
+            cache.store_channel_voice_state(container, self.cache_context)
+            self.new_container = container
+        else:
+            state = self.old_container.locally_remove(self.user_id)
+            if state is None:
+                # ditto
+                return False
+
+            self.new_container.locally_add(state)
+            cache.store_channel_voice_state(self.new_container, self.cache_context)
+
+        return True
+
+
+@define(slots=True)
 class UserVoiceStateUpdateEvent(ShardEvent):
     """Dispatched when a user's voice state is updated."""
 
@@ -2199,6 +2279,7 @@ __all__ = (
     'LogoutEvent',
     'VoiceChannelJoinEvent',
     'VoiceChannelLeaveEvent',
+    'VoiceChannelMoveEvent',
     'UserVoiceStateUpdateEvent',
     'AuthenticatedEvent',
     'BeforeConnectEvent',

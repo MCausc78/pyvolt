@@ -143,6 +143,7 @@ from .events import (
     AuthenticatedEvent,
     VoiceChannelJoinEvent,
     VoiceChannelLeaveEvent,
+    VoiceChannelMoveEvent,
     UserVoiceStateUpdateEvent,
 )
 from .instance import (
@@ -4150,6 +4151,33 @@ class Parser:
             user_id=payload['user'],
             container=None,
             state=None,
+        )
+
+    def parse_voice_channel_move_event(
+        self, shard: Shard, payload: raw.ClientVoiceChannelMoveEvent, /
+    ) -> VoiceChannelMoveEvent:
+        """Parses a voice channel move event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`VoiceChannelMoveEvent`
+            The parsed voice channel move event object.
+        """
+
+        return VoiceChannelMoveEvent(
+            shard=shard,
+            user_id=payload['user'],
+            from_=payload['from'],
+            to=payload['to'],
+            old_container=None,
+            new_container=None,
         )
 
     def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:

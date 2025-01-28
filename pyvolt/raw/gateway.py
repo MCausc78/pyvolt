@@ -343,6 +343,17 @@ class ClientVoiceChannelLeaveEvent(typing.TypedDict):
     user: str
 
 
+ClientVoiceChannelMoveEvent = typing.TypedDict(
+    'ClientVoiceChannelMoveEvent',
+    {
+        'type': typing.Literal['VoiceChannelMove'],
+        'user': str,
+        'from': str,
+        'to': str,
+    },
+)
+
+
 class ClientUserVoiceStateUpdateEvent(typing.TypedDict):
     type: typing.Literal['UserVoiceStateUpdate']
     id: str
@@ -394,6 +405,7 @@ ClientEvent = (
     | ClientAuthEvent
     | ClientVoiceChannelJoinEvent
     | ClientVoiceChannelLeaveEvent
+    | ClientVoiceChannelMoveEvent
     | ClientUserVoiceStateUpdateEvent
 )
 

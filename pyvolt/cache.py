@@ -80,6 +80,7 @@ if typing.TYPE_CHECKING:
         SessionDeleteAllEvent,
         VoiceChannelJoinEvent,
         VoiceChannelLeaveEvent,
+        VoiceChannelMoveEvent,
         UserVoiceStateUpdateEvent,
         AuthenticatedEvent,
     )
@@ -144,6 +145,7 @@ class CacheContextType(Enum):
     session_delete_all_event = 'SessionDeleteAllEvent'
     voice_channel_join_event = 'VoiceChannelJoinEvent'
     voice_channel_leave_event = 'VoiceChannelLeaveEvent'
+    voice_channel_move_event = 'VoiceChannelMoveEvent'
     user_voice_state_update_event = 'UserVoiceStateUpdateEvent'
     authenticated_event = 'AuthenticatedEvent'
 
@@ -535,6 +537,14 @@ class VoiceChannelLeaveEventCacheContext(EventCacheContext):
 
 
 @define(slots=True)
+class VoiceChannelMoveEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.VoiceChannelMoveEvent`."""
+
+    event: VoiceChannelMoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.VoiceChannelMoveEvent`: The event involved."""
+
+
+@define(slots=True)
 class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`.UserVoiceStateUpdateEvent`."""
 
@@ -668,6 +678,9 @@ _VOICE_CHANNEL_JOIN_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheC
 )
 _VOICE_CHANNEL_LEAVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.voice_channel_leave_event
+)
+_VOICE_CHANNEL_MOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.voice_channel_move_event,
 )
 _USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_voice_state_update_event
@@ -2060,6 +2073,7 @@ __all__ = (
     'SessionDeleteAllEventCacheContext',
     'VoiceChannelJoinEventCacheContext',
     'VoiceChannelLeaveEventCacheContext',
+    'VoiceChannelMoveEventCacheContext',
     'UserVoiceStateUpdateEventCacheContext',
     'AuthenticatedEventCacheContext',
     '_UNDEFINED',
@@ -2105,6 +2119,7 @@ __all__ = (
     '_SESSION_DELETE_ALL_EVENT',
     '_VOICE_CHANNEL_JOIN_EVENT',
     '_VOICE_CHANNEL_LEAVE_EVENT',
+    '_VOICE_CHANNEL_MOVE_EVENT',
     '_USER_VOICE_STATE_UPDATE_EVENT',
     '_AUTHENTICATED_EVENT',
     'ProvideCacheContextIn',

@@ -107,6 +107,7 @@ if typing.TYPE_CHECKING:
         AfterConnectEvent,
         VoiceChannelJoinEvent,
         VoiceChannelLeaveEvent,
+        VoiceChannelMoveEvent,
         UserVoiceStateUpdateEvent,
     )
     from .message import Message
@@ -174,6 +175,7 @@ class ClientEventHandler(EventHandler):
             'Auth': self.handle_auth,
             'VoiceChannelJoin': self.handle_voice_channel_join,
             'VoiceChannelLeave': self.handle_voice_channel_leave,
+            'VoiceChannelMove': self.handle_voice_channel_move,
             'UserVoiceStateUpdate': self.handle_user_voice_state_update,
         }
 
@@ -342,6 +344,10 @@ class ClientEventHandler(EventHandler):
 
     def handle_voice_channel_leave(self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /) -> None:
         event = self._state.parser.parse_voice_channel_leave_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_voice_channel_move(self, shard: Shard, payload: raw.ClientVoiceChannelMoveEvent, /) -> None:
+        event = self._state.parser.parse_voice_channel_move_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_voice_state_update(self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /) -> None:
@@ -1801,6 +1807,7 @@ class Client:
         def on_after_connect(self, arg: AfterConnectEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_voice_channel_join(self, arg: VoiceChannelJoinEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_voice_channel_leave(self, arg: VoiceChannelLeaveEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_voice_channel_move(self, arg: VoiceChannelMoveEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_user_voice_state_update(self, arg: UserVoiceStateUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
 
     async def create_group(

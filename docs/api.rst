@@ -364,6 +364,9 @@ CacheContextType
     .. attribute:: voice_channel_leave_event
 
         The context relates to :class:`.VoiceChannelLeaveEvent` event.
+    .. attribute:: voice_channel_move_event
+
+        The context relates to :class:`.VoiceChannelMoveEvent` event.
     .. attribute:: user_voice_state_update_event
 
         The context relates to :class:`.UserVoiceStateUpdateEvent` event.
@@ -839,6 +842,16 @@ VoiceChannelLeaveEventCacheContext
     :members:
     :inherited-members:
 
+VoiceChannelMoveEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: VoiceChannelMoveEventCacheContext
+
+.. autoclass:: VoiceChannelMoveEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 UserVoiceStateUpdateEventCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1288,6 +1301,15 @@ VoiceChannelLeaveEvent
 .. attributetable:: VoiceChannelLeaveEvent
 
 .. autoclass:: VoiceChannelLeaveEvent
+    :members:
+    :inherited-members:
+
+VoiceChannelMoveEvent
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: VoiceChannelMoveEvent
+
+.. autoclass:: VoiceChannelMoveEvent
     :members:
     :inherited-members:
 
