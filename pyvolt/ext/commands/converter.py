@@ -32,8 +32,9 @@ import typing
 import pyvolt
 
 from .cache import (
-    MemberConverterQueryNamedCacheContext,
-    MemberConverterQueryIDCacheContext,
+    MemberConverterCacheContext,
+    UserConverterCacheContext,
+    ServerConverterCacheContext,
     MessageConverterCacheContext,
     EmojiConverterCacheContext,
 )
@@ -168,8 +169,13 @@ class MemberConverter(IDConverter[pyvolt.Member]):
     """
 
     async def query_member_named(
-        self, ctx: Context[BotT], server: pyvolt.Server, argument: str, /
-    ) -> pyvolt.Member | None:
+        self,
+        ctx: Context[BotT],
+        cache_context: MemberConverterCacheContext | None,
+        server: pyvolt.Server,
+        argument: str,
+        /,
+    ) -> tuple[MemberConverterCacheContext | None, pyvolt.Member | None]:
         cache = server.state.cache
 
         username, _, discriminator = argument.rpartition('#')
@@ -186,44 +192,64 @@ class MemberConverter(IDConverter[pyvolt.Member]):
             predicate = lambda m, /: m.name == argument or m.global_name == argument or m.nick == argument
 
         members = await server.state.http.query_members_by_name(server, lookup)
+        cache_context = None
         if cache is not None:
-            cache_context = MemberConverterQueryNamedCacheContext(
-                type=pyvolt.CacheContextType.custom,
-                argument=argument,
-                context=ctx,
-                server=server,
+            cache_context = (
+                MemberConverterCacheContext(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server=server,
+                )
+                if cache_context is None
+                else cache_context
             )
             cache.bulk_store_server_members(server.id, {member.id: member for member in members}, cache_context)
+
         for member in members:
             if predicate(member):
-                return member
+                return cache_context, member
 
-        return None
+        return cache_context, None
 
     async def query_member_by_id(
-        self, ctx: Context[BotT], server: pyvolt.Server, user_id: str, /
-    ) -> pyvolt.Member | None:
+        self,
+        ctx: Context[BotT],
+        cache_context: MemberConverterCacheContext | None,
+        server: pyvolt.Server,
+        argument: str,
+        user_id: str,
+        /,
+    ) -> tuple[MemberConverterCacheContext | None, pyvolt.Member | None]:
         cache = server.state.cache
 
         try:
             member = await server.state.http.get_member(server, user_id)
         except pyvolt.HTTPException:
-            return None
+            return cache_context, None
 
         if cache is not None:
-            cache_context = MemberConverterQueryIDCacheContext(
-                type=pyvolt.CacheContextType.custom,
-                context=ctx,
-                server=server,
+            cache_context = (
+                MemberConverterCacheContext(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server=server,
+                )
+                if cache_context is None
+                else cache_context
             )
             cache.store_server_member(member, cache_context)
-        return member
+
+        return cache_context, member
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.Member:
         server = ctx.server
         if server is None:
             raise MemberNotFound(argument=argument)
 
+        cache = ctx.bot.state.cache
+        cache_context = None
         match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
         result = None
         user_id = None
@@ -232,39 +258,54 @@ class MemberConverter(IDConverter[pyvolt.Member]):
             # not a mention...
             result = None
 
-            members = server.members.values()
-            username, _, discriminator = argument.rpartition('#')
-            if not username:
-                discriminator, username = username, discriminator
+            if cache is not None:
+                cache_context = MemberConverterCacheContext(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server=server,
+                )
 
-            if len(discriminator) == 4 and discriminator.isdigit():
-                for member in members:
-                    user = member.get_user()
-                    if user is None:
-                        continue
+                members = cache.get_server_members_mapping_of(server.id, cache_context) or {}
+                username, _, discriminator = argument.rpartition('#')
+                if not username:
+                    discriminator, username = username, discriminator
 
-                    if user.name == username and user.discriminator == discriminator:
-                        result = member
-                        break
-            else:
-                for member in members:
-                    if member.nick == argument:
-                        result = member
-                        break
-                    user = member.get_user()
-                    if user is None:
-                        continue
-                    if user.display_name == argument or user.name == argument:
-                        result = member
+                if len(discriminator) == 4 and discriminator.isdigit():
+                    for member in members.values():
+                        user = member.get_user()
+                        if user is None:
+                            continue
+
+                        if user.name == username and user.discriminator == discriminator:
+                            result = member
+                            break
+                else:
+                    for member in members.values():
+                        if member.nick == argument:
+                            result = member
+                            break
+                        user = member.get_user()
+                        if user is None:
+                            continue
+                        if user.display_name == argument or user.name == argument:
+                            result = member
         else:
             user_id = match.group(1)
-            result = server.get_member(user_id)
+            if cache is not None:
+                cache_context = MemberConverterCacheContext(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server=server,
+                )
+                result = server.get_member(user_id)
 
         if result is None:
             if user_id is None:
-                result = await self.query_member_named(ctx, server, argument)
+                cache_context, result = await self.query_member_named(ctx, cache_context, server, argument)
             else:
-                result = await self.query_member_by_id(ctx, server, user_id)
+                cache_context, result = await self.query_member_by_id(ctx, cache_context, server, argument, user_id)
 
         if result is None:
             raise MemberNotFound(argument=argument)
@@ -288,6 +329,7 @@ class UserConverter(IDConverter[pyvolt.User]):
     """
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.User:
+        cache = ctx.bot.state.cache
         match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
         result = None
 
@@ -300,7 +342,18 @@ class UserConverter(IDConverter[pyvolt.User]):
                 except pyvolt.HTTPException:
                     raise UserNotFound(argument=argument) from None
 
+                if cache is not None:
+                    cache_context = UserConverterCacheContext(
+                        type=pyvolt.CacheContextType.custom,
+                        argument=argument,
+                        context=ctx,
+                    )
+                    cache.store_user(result, cache_context)
+
             return result  # type: ignore
+
+        if cache is None:
+            raise UserNotFound(argument=argument)
 
         username, _, discriminator = argument.rpartition('#')
 
@@ -313,7 +366,8 @@ class UserConverter(IDConverter[pyvolt.User]):
         else:
             predicate = lambda u, /: u.name == argument or u.global_name == argument
 
-        for user in ctx.bot.users.values():
+        users = cache.get_users_mapping()
+        for user in users.values():
             if predicate(user):
                 return user
         raise UserNotFound(argument=argument)
@@ -329,16 +383,22 @@ class ServerConverter(IDConverter[pyvolt.Server]):
     """
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.Server:
+        cache = ctx.bot.state.cache
         match = self._get_id_match(argument)
         result = None
 
         if match is None:
             for server in ctx.bot.servers.values():
                 if server.name == argument:
-                    result = server
-        else:
+                    return server
+        elif cache is not None:
             server_id = match.group(1)
-            result = ctx.bot.get_server(server_id)
+            cache_context = ServerConverterCacheContext(
+                type=pyvolt.CacheContextType.custom,
+                argument=argument,
+                context=ctx,
+            )
+            result = cache.get_server(server_id, cache_context)
 
         if result is None:
             raise ServerNotFound(argument=argument)

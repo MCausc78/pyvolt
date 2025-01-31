@@ -73,6 +73,7 @@ class StringView:
         return self.index >= self.end
 
     def undo(self) -> None:
+        """Undo the previous ``read_*()`` operation."""
         self.index = self.previous
 
     def skip_ws(self) -> bool:
