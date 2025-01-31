@@ -31,7 +31,7 @@ from pyvolt import PyvoltException, utils
 if typing.TYPE_CHECKING:
     from collections.abc import Callable
 
-    from pyvolt import ServerChannel
+    from pyvolt import BaseChannel, BaseServerChannel, ServerChannel
 
     from .bot import Bot
     from .context import Context
@@ -336,9 +336,52 @@ class ChannelNotFound(BadArgument):
         The channel supplied by the caller that was not found.
     """
 
+    __slots__ = ('argument',)
+
     def __init__(self, *, argument: str) -> None:
         self.argument: str = argument
         super().__init__(f'Channel "{argument}" not found.')
+
+
+class InvalidChannelType(BadArgument):
+    """Exception raised when the channel is of invalid type.
+
+    This inherits from :exc:`BadArgument`.
+
+    Attributes
+    -----------
+    argument: :class:`str`
+        The channel supplied by the caller that had invalid type.
+    channel: :class:`BaseChannel`
+        The channel object supplied by the caller that had invalid type.
+
+    """
+
+    __slots__ = ('argument', 'channel')
+
+    def __init__(self, *, argument: str, channel: BaseChannel) -> None:
+        self.argument: str = argument
+        self.channel: BaseChannel = channel
+        super().__init__(f'Channel "{argument}" has invalid type.')
+
+
+class ChannelNotInServer(BadArgument):
+    """Exception raised when the channel does not belong to the current server.
+
+    This inherits from :exc:`BadArgument`.
+
+    Attributes
+    -----------
+    argument: :class:`str`
+        The channel supplied by the caller that didn't belong to the current server.
+    """
+
+    __slots__ = ('argument', 'channel')
+
+    def __init__(self, *, argument: str, channel: BaseServerChannel) -> None:
+        self.argument: str = argument
+        self.channel: BaseServerChannel = channel
+        super().__init__(f'Channel "{argument}" did not belong to the current server.')
 
 
 class CategoryNotFound(BadArgument):
@@ -900,6 +943,8 @@ __all__ = (
     'ChannelIDNotReadable',
     'ChannelNotReadable',
     'ChannelNotFound',
+    'InvalidChannelType',
+    'ChannelNotInServer',
     'CategoryNotFound',
     'BadColorArgument',
     'RoleNotFound',

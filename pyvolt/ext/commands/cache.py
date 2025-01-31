@@ -90,6 +90,35 @@ class MessageConverterCacheContext(CommandsCacheContext):
 
 
 @define(slots=True)
+class BaseServerChannelConverterCacheContext(CommandsCacheContext):
+    """Represents a cache context that was created in :meth:`ServerChannelConverter.convert`, :meth:`TextChannelConverter.convert`, or :meth:`VoiceChannelConverter.convert`."""
+
+    argument: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`str`: The argument."""
+
+    context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`Context`: The context."""
+
+    server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`str`: The server's ID. May be empty."""
+
+
+@define(slots=True)
+class ServerChannelConverterCacheContext(BaseServerChannelConverterCacheContext):
+    """Represents a cache context that was created in :meth:`ServerChannelConverter.convert`."""
+
+
+@define(slots=True)
+class TextChannelConverterCacheContext(BaseServerChannelConverterCacheContext):
+    """Represents a cache context that was created in :meth:`TextChannelConverter.convert`."""
+
+
+@define(slots=True)
+class VoiceChannelConverterCacheContext(BaseServerChannelConverterCacheContext):
+    """Represents a cache context that was created in :meth:`VoiceChannelConverter.convert`."""
+
+
+@define(slots=True)
 class EmojiConverterCacheContext(CommandsCacheContext):
     """Represents a cache context that was created in :meth:`EmojiConverter.convert`."""
 
@@ -106,5 +135,9 @@ __all__ = (
     'UserConverterCacheContext',
     'ServerConverterCacheContext',
     'MessageConverterCacheContext',
+    'BaseServerChannelConverterCacheContext',
+    'ServerChannelConverterCacheContext',
+    'TextChannelConverterCacheContext',
+    'VoiceChannelConverterCacheContext',
     'EmojiConverterCacheContext',
 )

@@ -30,12 +30,16 @@ import types
 import typing
 
 import pyvolt
+from pyvolt import BaseServerChannel
 
 from .cache import (
     MemberConverterCacheContext,
     UserConverterCacheContext,
     ServerConverterCacheContext,
     MessageConverterCacheContext,
+    ServerChannelConverterCacheContext,
+    TextChannelConverterCacheContext,
+    VoiceChannelConverterCacheContext,
     EmojiConverterCacheContext,
 )
 from .errors import (
@@ -47,6 +51,8 @@ from .errors import (
     MessageNotFound,
     ChannelIDNotReadable,
     ChannelNotFound,
+    InvalidChannelType,
+    ChannelNotInServer,
     CategoryNotFound,
     RoleNotFound,
     BadInviteArgument,
@@ -63,6 +69,9 @@ if typing.TYPE_CHECKING:
 
 T = typing.TypeVar('T')
 T_co = typing.TypeVar('T_co', covariant=True)
+
+
+CT = typing.TypeVar('CT', bound=pyvolt.BaseServerChannel)
 
 
 @typing.runtime_checkable
@@ -480,9 +489,215 @@ class MessageConverter(IDConverter[pyvolt.Message]):
             raise ChannelIDNotReadable(argument=channel_id)
 
 
-# TODO: ServerChannelConverter
-# TODO: TextChannelConverter
-# TODO: VoiceChannelConverter
+class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
+    """Converts to a :class:`~pyvolt.ServerChannel`.
+
+    All lookups are via the local server. If in a DM context, then the lookup
+    is done by the global cache.
+
+    The lookup strategy is as follows (in order):
+
+    1. Lookup by ID.
+    2. Lookup by mention.
+    3. Lookup by channel URL.
+    4. Lookup by name.
+    """
+
+    async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.ServerChannel:
+        _, channel = await self._resolve_channel(
+            ctx, argument, ServerChannelConverterCacheContext, pyvolt.BaseServerChannel
+        )
+        if isinstance(channel, pyvolt.ServerChannel):
+            return channel
+        raise InvalidChannelType(argument=argument, channel=channel)
+
+    @staticmethod
+    def _parse_from_url(argument: str, /) -> str:
+        match = RE_CHANNEL_LINK.match(argument)
+        if match is None:
+            return ''
+        return match['channel_id']
+
+    @typing.overload
+    @staticmethod
+    async def _resolve_channel(
+        ctx: Context[BotT],
+        argument: str,
+        cache_context_type: type[ServerChannelConverterCacheContext],
+        type: type[CT],
+        /,
+        *,
+        fetch: bool = True,
+    ) -> tuple[ServerChannelConverterCacheContext | None, BaseServerChannel]: ...
+
+    @typing.overload
+    @staticmethod
+    async def _resolve_channel(
+        ctx: Context[BotT],
+        argument: str,
+        cache_context_type: type[TextChannelConverterCacheContext],
+        type: type[CT],
+        /,
+        *,
+        fetch: bool = True,
+    ) -> tuple[TextChannelConverterCacheContext | None, BaseServerChannel]: ...
+
+    @typing.overload
+    @staticmethod
+    async def _resolve_channel(
+        ctx: Context[BotT],
+        argument: str,
+        cache_context_type: type[VoiceChannelConverterCacheContext],
+        type: type[CT],
+        /,
+        *,
+        fetch: bool = True,
+    ) -> tuple[VoiceChannelConverterCacheContext | None, BaseServerChannel]: ...
+
+    @staticmethod
+    async def _resolve_channel(
+        ctx: Context[BotT],
+        argument: str,
+        cache_context_type: type[ServerChannelConverterCacheContext]
+        | type[TextChannelConverterCacheContext]
+        | type[VoiceChannelConverterCacheContext],
+        type: type[CT],
+        /,
+        *,
+        fetch: bool = True,
+    ) -> tuple[
+        ServerChannelConverterCacheContext
+        | TextChannelConverterCacheContext
+        | VoiceChannelConverterCacheContext
+        | None,
+        BaseServerChannel,
+    ]:
+        bot = ctx.bot
+        cache = bot.state.cache
+
+        match = (
+            IDConverter._get_id_match(argument)
+            or RE_MENTION_CHANNEL.match(argument)
+            or ServerChannelConverter._parse_from_url(argument)
+        )
+
+        result = None
+        server = ctx.server
+
+        cache_context = None
+
+        if match is None:
+            # not a mention
+            if server is None:
+                if cache is None:
+                    raise ChannelNotFound(argument=argument)
+                for channel in cache.get_channels_mapping().values():
+                    if isinstance(channel, type) and channel.name == argument:
+                        return None, channel
+            elif cache is None:
+                # I'm unsure how we can get here...
+                channels = server.channels
+                for channel in channels:
+                    if isinstance(channel, type) and channel.name == argument:
+                        return None, channel
+                raise ChannelNotFound(argument=argument)
+            else:
+                for channel in cache.get_channels_mapping().values():
+                    if isinstance(channel, type) and channel.name == argument:
+                        return None, channel
+        elif cache is None:
+            raise ChannelNotFound(argument=argument)
+        else:
+            if isinstance(match, str):
+                channel_id = match
+            else:
+                channel_id = match.group(1)
+
+            if server is None:
+                cache_context = cache_context_type(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server_id='',
+                )
+                result = cache.get_channel(channel_id, cache_context)
+
+            else:
+                cache_context = cache_context_type(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server_id=server.id,
+                )
+                result = cache.get_channel(channel_id, cache_context)
+                if result is None:
+                    if fetch:
+                        try:
+                            result = await bot.http.get_channel(channel_id)
+                        except pyvolt.Forbidden:
+                            raise ChannelIDNotReadable(argument=argument)
+                        except pyvolt.NotFound:
+                            pass
+                    raise ChannelNotFound(argument=argument)
+
+                if not isinstance(result, pyvolt.ServerChannel):
+                    raise InvalidChannelType(argument=argument, channel=result)
+                if result.server_id != server.id:
+                    raise ChannelNotInServer(argument=argument, channel=result)
+
+        if result is None:
+            raise ChannelNotFound(argument=argument)
+
+        if not isinstance(result, type):
+            raise InvalidChannelType(argument=argument, channel=result)
+
+        return cache_context, result
+
+
+class TextChannelConverter(IDConverter[pyvolt.TextChannel]):
+    """Converts to a :class:`~pyvolt.TextChannel`.
+
+    All lookups are via the local server. If in a DM context, then the lookup
+    is done by the global cache.
+
+    The lookup strategy is as follows (in order):
+
+    1. Lookup by ID.
+    2. Lookup by mention.
+    3. Lookup by channel URL.
+    4. Lookup by name
+    """
+
+    async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.TextChannel:
+        _, channel = await ServerChannelConverter._resolve_channel(
+            ctx, argument, TextChannelConverterCacheContext, pyvolt.TextChannel
+        )
+        if isinstance(channel, pyvolt.TextChannel):
+            return channel
+        raise InvalidChannelType(argument=argument, channel=channel)
+
+
+class VoiceChannelConverter(IDConverter[pyvolt.VoiceChannel]):
+    """Converts to a :class:`~pyvolt.VoiceChannel`.
+
+    All lookups are via the local server. If in a DM context, then the lookup
+    is done by the global cache.
+
+    The lookup strategy is as follows (in order):
+
+    1. Lookup by ID.
+    2. Lookup by mention.
+    3. Lookup by channel URL.
+    4. Lookup by name
+    """
+
+    async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.VoiceChannel:
+        _, channel = await ServerChannelConverter._resolve_channel(
+            ctx, argument, VoiceChannelConverterCacheContext, pyvolt.VoiceChannel
+        )
+        if isinstance(channel, pyvolt.VoiceChannel):
+            return channel
+        raise InvalidChannelType(argument=argument, channel=channel)
 
 
 class CategoryConverter(IDConverter[pyvolt.Category]):
@@ -750,14 +965,14 @@ CONVERTER_MAPPING: dict[type | types.UnionType, typing.Any] = {
     pyvolt.User: UserConverter,
     pyvolt.Message: MessageConverter,
     pyvolt.BaseMessage: BaseMessageConverter,
-    # pyvolt.TextChannel: TextChannelConverter,
+    pyvolt.TextChannel: TextChannelConverter,
     pyvolt.PublicInvite: InviteConverter,
     pyvolt.Server: ServerConverter,
     pyvolt.Role: RoleConverter,
-    # pyvolt.VoiceChannel: VoiceChannelConverter,
+    pyvolt.VoiceChannel: VoiceChannelConverter,
     pyvolt.Emoji: EmojiConverter,
     pyvolt.Category: CategoryConverter,
-    # pyvolt.abc.BaseServer: GuildChannelConverter,
+    pyvolt.ServerChannel: ServerChannelConverter,
 }
 
 
