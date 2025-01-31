@@ -102,5 +102,7 @@ keep-runtime-typing = false
 packages = [
     "pyvolt",
     "pyvolt.raw",
+    "pyvolt.ext",
+    "pyvolt.ext.commands",
 ]
 include-package-data = true
