@@ -96,8 +96,8 @@ class Parameter(inspect.Parameter):
 
     def __init__(
         self,
-        *,
         name: str,
+        *,
         kind: ParamKinds,
         default: typing.Any = EMPTY,
         annotation: typing.Any = EMPTY,

@@ -77,7 +77,7 @@ from .errors import (
     BadGateway,
 )
 from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
-from .invite import BaseInvite, ServerInvite, Invite
+from .invite import BaseInvite, PublicInvite, ServerInvite, Invite
 from .message import (
     Reply,
     MessageInteractions,
@@ -692,7 +692,7 @@ class HTTPClient:
 
             session = self._session
             if callable(session):
-                session = await utils._maybe_coroutine(session, self)
+                session = await utils.maybe_coroutine(session, self)
                 # detect recursion
                 if callable(session):
                     raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
@@ -2650,7 +2650,7 @@ class HTTPClient:
         invite_code = code.code if isinstance(code, BaseInvite) else code
         await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code))
 
-    async def get_invite(self, code: str | BaseInvite, /) -> BaseInvite:
+    async def get_invite(self, code: str | BaseInvite, /) -> PublicInvite:
         """|coro|
 
         Gets an invite.

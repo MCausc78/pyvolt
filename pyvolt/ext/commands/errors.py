@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import typing
 
-from pyvolt import PyvoltException
+from pyvolt import PyvoltException, utils
 
 if typing.TYPE_CHECKING:
     from collections.abc import Callable
@@ -35,6 +35,7 @@ if typing.TYPE_CHECKING:
 
     from .bot import Bot
     from .context import Context
+    from .cooldown import BucketType, Cooldown
     from .core import Parameter
 
 
@@ -202,7 +203,7 @@ class ObjectNotFound(BadArgument):
     Attributes
     -----------
     argument: :class:`str`
-        The argument supplied by the caller that was not matched
+        The argument supplied by the caller that was not matched.
     """
 
     __slots__ = ('argument',)
@@ -286,6 +287,25 @@ class MessageNotFound(BadArgument):
         super().__init__(f'Message "{argument}" not found.')
 
 
+class ChannelIDNotReadable(BadArgument):
+    """Exception raised when the bot does not have permission to read messages
+    in the channel.
+
+    This inherits from :exc:`BadArgument`.
+
+    Attributes
+    -----------
+    argument: :class:`str`
+        The channel supplied by the caller that was not readable.
+    """
+
+    __slots__ = ('argument',)
+
+    def __init__(self, *, argument: str) -> None:
+        self.argument: str = argument
+        super().__init__(f"Can't read messages in <#{argument}>.")
+
+
 class ChannelNotReadable(BadArgument):
     """Exception raised when the bot does not have permission to read messages
     in the channel.
@@ -298,6 +318,8 @@ class ChannelNotReadable(BadArgument):
         The channel supplied by the caller that was not readable.
     """
 
+    __slots__ = ('argument',)
+
     def __init__(self, *, argument: ServerChannel) -> None:
         self.argument: ServerChannel = argument
         super().__init__(f"Can't read messages in {argument.mention}.")
@@ -306,14 +328,28 @@ class ChannelNotReadable(BadArgument):
 class ChannelNotFound(BadArgument):
     """Exception raised when the bot can not find the channel.
 
-    This inherits from :exc:`BadArgument`
-
-    .. versionadded:: 1.5
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
-        The channel supplied by the caller that was not found
+        The channel supplied by the caller that was not found.
+    """
+
+    def __init__(self, *, argument: str) -> None:
+        self.argument: str = argument
+        super().__init__(f'Channel "{argument}" not found.')
+
+
+class CategoryNotFound(BadArgument):
+    """Exception raised when the bot can not find the category.
+
+    This inherits from :exc:`BadArgument`.
+
+    Attributes
+    -----------
+    argument: :class:`str`
+        The category supplied by the caller that was not found.
     """
 
     def __init__(self, *, argument: str) -> None:
@@ -324,7 +360,7 @@ class ChannelNotFound(BadArgument):
 class BadColorArgument(BadArgument):
     """Exception raised when the color is not valid.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
@@ -342,12 +378,12 @@ class BadColorArgument(BadArgument):
 class RoleNotFound(BadArgument):
     """Exception raised when the bot can not find the role.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
-        The role supplied by the caller that was not found
+        The role supplied by the caller that was not found.
     """
 
     __slots__ = ('argument',)
@@ -358,32 +394,32 @@ class RoleNotFound(BadArgument):
 
 
 class BadInviteArgument(BadArgument):
-    """Exception raised when the invite is invalid or expired.
+    """Exception raised when the invite is invalid.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
-        The invite supplied by the caller that was not valid
+        The invite supplied by the caller that was not valid.
     """
 
     __slots__ = ('argument',)
 
     def __init__(self, *, argument: str) -> None:
         self.argument: str = argument
-        super().__init__(f'Invite "{argument}" is invalid or expired.')
+        super().__init__(f'Invite "{argument}" is invalid.')
 
 
 class EmojiNotFound(BadArgument):
     """Exception raised when the bot can not find the emoji.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
-        The emoji supplied by the caller that was not found.
+        The emoji supplied by the caller that was not found..
     """
 
     __slots__ = ('argument',)
@@ -398,14 +434,12 @@ class EmojiNotFound(BadArgument):
 #     """Exception raised when the emoji provided does not match the correct
 #     format.
 
-#     This inherits from :exc:`BadArgument`
-
-#     .. versionadded:: 1.5
+#     This inherits from :exc:`BadArgument`.
 
 #     Attributes
 #     -----------
 #     argument: :class:`str`
-#         The emoji supplied by the caller that did not match the regex
+#         The emoji supplied by the caller that did not match the regex.
 #     """
 
 #     def __init__(self, argument: str) -> None:
@@ -416,12 +450,12 @@ class EmojiNotFound(BadArgument):
 class BadBoolArgument(BadArgument):
     """Exception raised when a boolean argument was not convertable.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
-        The boolean argument supplied by the caller that is not in the predefined list
+        The boolean argument supplied by the caller that is not in the predefined list.
     """
 
     __slots__ = ('argument',)
@@ -485,7 +519,7 @@ class RangeError(BadArgument):
 class DisabledCommand(CommandError):
     """Exception raised when the command being invoked is disabled.
 
-    This inherits from :exc:`CommandError`
+    This inherits from :exc:`CommandError`.
     """
 
     __slots__ = ()
@@ -494,7 +528,7 @@ class DisabledCommand(CommandError):
 class CommandInvokeError(CommandError):
     """Exception raised when the command being invoked raised an exception.
 
-    This inherits from :exc:`CommandError`
+    This inherits from :exc:`CommandError`.
 
     Attributes
     -----------
@@ -510,6 +544,63 @@ class CommandInvokeError(CommandError):
         super().__init__(f'Command raised an exception: {original.__class__.__name__}: {original}')
 
 
+class CommandOnCooldown(CommandError):
+    """Exception raised when the command being invoked is on cooldown.
+
+    This inherits from :exc:`CommandError`
+
+    Attributes
+    -----------
+    cooldown: :class:`~pyvolt.ext.commands.Cooldown`
+        A class with attributes ``rate`` and ``per`` similar to the
+        :func:`.cooldown` decorator.
+    type: :class:`BucketType`
+        The type associated with the cooldown.
+    retry_after: :class:`float`
+        The amount of seconds to wait before you can retry again.
+    """
+
+    __slots__ = (
+        'cooldown',
+        'retry_after',
+        'type',
+    )
+
+    def __init__(self, cooldown: Cooldown, retry_after: float, type: BucketType) -> None:
+        self.cooldown: Cooldown = cooldown
+        self.retry_after: float = retry_after
+        self.type: BucketType = type
+        super().__init__(f'You are on cooldown. Try again in {retry_after:.2f}s')
+
+
+class MaxConcurrencyReached(CommandError):
+    """Exception raised when the command being invoked has reached its maximum concurrency.
+
+    This inherits from :exc:`CommandError`.
+
+    Attributes
+    ------------
+    number: :class:`int`
+        The maximum number of concurrent invokers allowed.
+    per: :class:`.BucketType`
+        The bucket type passed to the :func:`.max_concurrency` decorator.
+    """
+
+    __slots__ = (
+        'number',
+        'per',
+    )
+
+    def __init__(self, *, number: int, per: BucketType) -> None:
+        self.number: int = number
+        self.per: BucketType = per
+        name = per.name
+        suffix = 'per %s' % name if per.name != 'default' else 'globally'
+        plural = '%s times %s' if number > 1 else '%s time %s'
+        fmt = plural % (number, suffix)
+        super().__init__(f'Too many people are using this command. It can only be used {fmt} concurrently.')
+
+
 class CommandNotFound(CommandError):
     """Exception raised when a command is attempted to be invoked
     but no command under that name is found.
@@ -521,6 +612,82 @@ class CommandNotFound(CommandError):
     """
 
     __slots__ = ()
+
+
+class BadUnionArgument(UserInputError):
+    """Exception raised when a :data:`typing.Union` converter fails for all
+    its associated types.
+
+    This inherits from :exc:`UserInputError`.
+
+    Attributes
+    -----------
+    param: :class:`inspect.Parameter`
+        The parameter that failed being converted.
+    converters: Tuple[Type, ``...``]
+        A tuple of converters attempted in conversion, in order of failure.
+    errors: List[:class:`CommandError`]
+        A list of errors that were caught from failing the conversion.
+    """
+
+    __slots__ = (
+        'param',
+        'converters',
+        'errors',
+    )
+
+    def __init__(self, *, param: Parameter, converters: tuple[type, ...], errors: list[CommandError]) -> None:
+        self.param: Parameter = param
+        self.converters: tuple[type, ...] = converters
+        self.errors: list[CommandError] = errors
+
+        def _get_name(x, /):
+            try:
+                return x.__name__
+            except AttributeError:
+                if hasattr(x, '__origin__'):
+                    return repr(x)
+                return x.__class__.__name__
+
+        fmt = utils.human_join(list(map(_get_name, converters)))
+        super().__init__(f'Could not convert "{param.displayed_name or param.name}" into {fmt}.')
+
+
+class BadLiteralArgument(UserInputError):
+    """Exception raised when a :data:`typing.Literal` converter fails for all
+    its associated values.
+
+    This inherits from :exc:`UserInputError`.
+
+    Attributes
+    -----------
+    param: :class:`inspect.Parameter`
+        The parameter that failed being converted.
+    literals: Tuple[Any, ``...``]
+        A tuple of values compared against in conversion, in order of failure.
+    errors: List[:class:`CommandError`]
+        A list of errors that were caught from failing the conversion.
+    argument: :class:`str`
+        The argument's value that failed to be converted. Defaults to an empty string.
+    """
+
+    __slots__ = (
+        'param',
+        'literals',
+        'errors',
+        'argument',
+    )
+
+    def __init__(
+        self, *, param: Parameter, literals: tuple[typing.Any, ...], errors: list[CommandError], argument: str = ''
+    ) -> None:
+        self.param: Parameter = param
+        self.literals: tuple[typing.Any, ...] = literals
+        self.errors: list[CommandError] = errors
+        self.argument: str = argument
+
+        fmt = utils.human_join(list(map(repr, literals)))
+        super().__init__(f'Could not convert "{param.displayed_name or param.name}" into the literal {fmt}.')
 
 
 class ArgumentParsingError(UserInputError):
@@ -590,11 +757,171 @@ class ExpectedClosingQuoteError(ArgumentParsingError):
         super().__init__(f'Expected closing {close_quote}.')
 
 
+class ExtensionError(PyvoltException):
+    """Base exception for extension related errors.
+
+    This inherits from :exc:`~discord.DiscordException`.
+
+    Attributes
+    ------------
+    name: :class:`str`
+        The extension that had an error.
+    """
+
+    __slots__ = ('name',)
+
+    def __init__(self, /, *args: typing.Any, message: str | None = None, name: str) -> None:
+        self.name: str = name
+        message = f'Extension {name!r} had an error.' if message is None else message
+        # clean-up @everyone and @here mentions
+        m = message.replace('@everyone', '@\u200beveryone').replace('@online', '@\u200bonline')
+        super().__init__(m, *args)
+
+
+class ExtensionAlreadyLoaded(ExtensionError):
+    """An exception raised when an extension has already been loaded.
+
+    This inherits from :exc:`ExtensionError`.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *, name: str) -> None:
+        super().__init__(f'Extension {name!r} is already loaded.', name=name)
+
+
+class ExtensionNotLoaded(ExtensionError):
+    """An exception raised when an extension was not loaded.
+
+    This inherits from :exc:`ExtensionError`.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *, name: str) -> None:
+        super().__init__(f'Extension {name!r} has not been loaded.', name=name)
+
+
+class NoEntryPointError(ExtensionError):
+    """An exception raised when an extension does not have a ``setup`` entry point function.
+
+    This inherits from :exc:`ExtensionError`.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *, name: str) -> None:
+        super().__init__(f"Extension {name!r} has no 'setup' function.", name=name)
+
+
+class ExtensionFailed(ExtensionError):
+    """An exception raised when an extension failed to load during execution of the module or ``setup`` entry point.
+
+    This inherits from :exc:`ExtensionError`.
+
+    Attributes
+    -----------
+    name: :class:`str`
+        The extension that had the error.
+    original: :exc:`Exception`
+        The original exception that was raised. You can also get this via
+        the ``__cause__`` attribute.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *, name: str, original: Exception) -> None:
+        self.original: Exception = original
+        msg = f'Extension {name!r} raised an error: {original.__class__.__name__}: {original}'
+        super().__init__(msg, name=name)
+
+
+class ExtensionNotFound(ExtensionError):
+    """An exception raised when an extension is not found.
+
+    This inherits from :exc:`ExtensionError`.
+
+    Attributes
+    -----------
+    name: :class:`str`
+        The extension that had the error.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *, name: str) -> None:
+        msg = f'Extension {name!r} could not be loaded or found.'
+        super().__init__(msg, name=name)
+
+
+class CommandRegistrationError(PyvoltException):
+    """An exception raised when the command can't be added
+    because the name is already taken by a different command.
+
+    This inherits from :exc:`pyvolt.PyvoltException`.
+
+    Attributes
+    ----------
+    name: :class:`str`
+        The command name that had the error.
+    alias_conflict: :class:`bool`
+        Whether the name that conflicts is an alias of the command we try to add.
+    """
+
+    __slots__ = (
+        'name',
+        'alias_conflict',
+    )
+
+    def __init__(self, *, name: str, alias_conflict: bool = False) -> None:
+        self.name: str = name
+        self.alias_conflict: bool = alias_conflict
+        type_ = 'alias' if alias_conflict else 'command'
+        super().__init__(f'The {type_} {name} is already an existing command or alias.')
+
+
 __all__ = (
     'CommandError',
     'UserInputError',
+    'MissingRequiredArgument',
+    'MissingRequiredAttachment',
+    'TooManyArguments',
+    'BadArgument',
+    'CheckFailure',
+    'CheckAnyFailure',
+    'PrivateMessageOnly',
+    'NoPrivateMessage',
+    'NotOwner',
+    'ObjectNotFound',
+    'MemberNotFound',
+    'ServerNotFound',
+    'UserNotFound',
+    'MessageNotFound',
+    'ChannelIDNotReadable',
+    'ChannelNotReadable',
+    'ChannelNotFound',
+    'CategoryNotFound',
+    'BadColorArgument',
+    'RoleNotFound',
+    'BadInviteArgument',
+    'EmojiNotFound',
+    # 'PartialEmojiConversionFailure',
+    'BadBoolArgument',
+    'RangeError',
+    'DisabledCommand',
+    'CommandInvokeError',
+    'CommandNotFound',
+    'BadUnionArgument',
+    'BadLiteralArgument',
     'ArgumentParsingError',
     'UnexpectedQuoteError',
     'InvalidEndOfQuotedStringError',
     'ExpectedClosingQuoteError',
+    'ExtensionError',
+    'ExtensionAlreadyLoaded',
+    'ExtensionNotLoaded',
+    'NoEntryPointError',
+    'ExtensionFailed',
+    'ExtensionNotFound',
+    'CommandRegistrationError',
 )

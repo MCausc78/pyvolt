@@ -36,6 +36,7 @@ import inspect
 import json
 import logging
 import os
+import re
 import sys
 import types
 import typing
@@ -50,7 +51,7 @@ else:
     HAS_ORJSON = True
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Iterable
+    from collections.abc import Awaitable, Callable, Iterable, Sequence
 
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
@@ -79,7 +80,7 @@ else:
     from_json = json.loads
 
 
-async def _maybe_coroutine(f: MaybeAwaitableFunc[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+async def maybe_coroutine(f: MaybeAwaitableFunc[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     value = f(*args, **kwargs)
     if inspect.isawaitable(value):
         return await value
@@ -113,30 +114,49 @@ _TRUE: typing.Literal['true'] = 'true'
 _FALSE: typing.Literal['false'] = 'false'
 
 
-def _bool(b: bool) -> typing.Literal['true', 'false']:
+def _bool(b: bool, /) -> typing.Literal['true', 'false']:
     return _TRUE if b else _FALSE
 
 
-def _decode_bool(
-    b: typing.Literal[
-        '1',
-        'TRUE',
-        'YES',
-        'Yes',
-        'True',
-        'true',
-        'yes',  # true
-        '0',
-        'FALSE',
-        'False',
-        'NO',
-        'No',
-        'false',
-        'no',  # false
-    ]
-    | str,
-) -> bool:
-    return b in ('1', 'TRUE', 'YES', 'Yes', 'True', _TRUE, 'yes')
+_BOOL_FALSE_VALUES: typing.Final[tuple[str, ...]] = (
+    '0',
+    'f',
+    'false',
+    'falsy',
+    'n',
+    'na',
+    'nah',
+    'no',
+    'nop',
+)
+
+_BOOL_TRUE_VALUES: typing.Final[tuple[str, ...]] = (
+    '1',
+    't',
+    'true',
+    'trut',
+    'truth',
+    'y',
+    'ye',
+    'yep',
+    'yeah',
+    'yeh',
+    'yop',
+    'yuh',
+    'yes',
+)
+
+
+def decode_bool(
+    b: str,
+    /,
+) -> bool | None:
+    v = b.casefold()
+    if v in _BOOL_TRUE_VALUES:
+        return True
+    elif v in _BOOL_FALSE_VALUES:
+        return False
+    return None
 
 
 async def _json_or_text(response: aiohttp.ClientResponse) -> typing.Any:
@@ -431,6 +451,42 @@ def unwrap_function(function: Callable[..., typing.Any], /) -> Callable[..., typ
             return function
 
 
+ARG_NAME_SUBREGEX: typing.Final[str] = r'(?:\\?\*){0,2}(?P<name>\w+)'
+ARG_DESCRIPTION_SUBREGEX: typing.Final[str] = r'(?P<description>(?:.|\n)+?(?:\Z|\r?\n(?=[\S\r\n])))'
+ARG_TYPE_SUBREGEX: typing.Final[str] = r'(?:.+)'
+GOOGLE_DOCSTRING_ARG_REGEX: typing.Final[re.Pattern[str]] = re.compile(
+    rf'^{ARG_NAME_SUBREGEX}[ \t]*(?:\({ARG_TYPE_SUBREGEX}\))?[ \t]*:[ \t]*{ARG_DESCRIPTION_SUBREGEX}',
+    re.MULTILINE,
+)
+NUMPY_DOCSTRING_ARG_REGEX: typing.Final[re.Pattern[str]] = re.compile(
+    rf'^{ARG_NAME_SUBREGEX}(?:[ \t]*:)?(?:[ \t]+{ARG_TYPE_SUBREGEX})?[ \t]*\r?\n[ \t]+{ARG_DESCRIPTION_SUBREGEX}',
+    re.MULTILINE,
+)
+PARAMETER_HEADING_REGEX: typing.Final[re.Pattern[str]] = re.compile(r'Parameters?\n---+\n', re.I)
+SPHINX_DOCSTRING_ARG_REGEX: typing.Final[re.Pattern[str]] = re.compile(
+    rf'^:param {ARG_NAME_SUBREGEX}:[ \t]+{ARG_DESCRIPTION_SUBREGEX}',
+    re.MULTILINE,
+)
+
+
+def _is_submodule(parent: str, child: str) -> bool:
+    return parent == child or child.startswith(parent + '.')
+
+
+def human_join(seq: Sequence[str], /, *, delimiter: str = ', ', final: str = 'or') -> str:
+    size = len(seq)
+    if size == 0:
+        return ''
+
+    if size == 1:
+        return seq[0]
+
+    if size == 2:
+        return f'{seq[0]} {final} {seq[1]}'
+
+    return delimiter.join(seq[:-1]) + f' {final} {seq[-1]}'
+
+
 class _MissingSentinel:
     __slots__ = ()
 
@@ -446,10 +502,12 @@ MISSING: typing.Any = _MissingSentinel()
 __all__ = (
     'to_json',
     'from_json',
-    '_maybe_coroutine',
+    'maybe_coroutine',
     'copy_doc',
     '_bool',
-    '_decode_bool',
+    '_BOOL_FALSE_VALUES',
+    '_BOOL_TRUE_VALUES',
+    'decode_bool',
     '_json_or_text',
     'utcnow',
     'is_docker',
@@ -464,6 +522,15 @@ __all__ = (
     'evaluate_annotation',
     'resolve_annotation',
     'is_inside_class',
+    'ARG_NAME_SUBREGEX',
+    'ARG_DESCRIPTION_SUBREGEX',
+    'ARG_TYPE_SUBREGEX',
+    'GOOGLE_DOCSTRING_ARG_REGEX',
+    'NUMPY_DOCSTRING_ARG_REGEX',
+    'PARAMETER_HEADING_REGEX',
+    'SPHINX_DOCSTRING_ARG_REGEX',
+    '_is_submodule',
+    'human_join',
     '_MissingSentinel',
     'MISSING',
 )

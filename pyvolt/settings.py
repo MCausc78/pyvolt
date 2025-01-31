@@ -1191,28 +1191,28 @@ class JoltUserSettings:
             if full:
                 self.low_data_mode: bool | None = None
         else:
-            self.low_data_mode = utils._decode_bool(low_data_mode)
+            self.low_data_mode = bool(utils.decode_bool(low_data_mode))
 
         compact_mode = payload.get('jolt:compact-mode')
         if compact_mode is None:
             if full:
                 self.compact_mode: bool | None = None
         else:
-            self.compact_mode = utils._decode_bool(compact_mode)
+            self.compact_mode = bool(utils.decode_bool(compact_mode))
 
         send_typing_indicators = payload.get('jolt:send-typing-indicators')
         if send_typing_indicators is None:
             if full:
                 self.send_typing_indicators: bool | None = None
         else:
-            self.send_typing_indicators = utils._decode_bool(send_typing_indicators)
+            self.send_typing_indicators = bool(utils.decode_bool(send_typing_indicators))
 
         receive_typing_indicators = payload.get('jolt:receive-typing-indicators')
         if receive_typing_indicators is None:
             if full:
                 self.receive_typing_indicators: bool | None = None
         else:
-            self.receive_typing_indicators = utils._decode_bool(receive_typing_indicators)
+            self.receive_typing_indicators = bool(utils.decode_bool(receive_typing_indicators))
 
     def payload_for(
         self,

@@ -92,6 +92,7 @@ _L = logging.getLogger(__name__)
 
 
 class CacheContextType(Enum):
+    custom = 'CUSTOM'
     undefined = 'UNDEFINED'
     user_request = 'USER_REQUEST'
     library_request = 'LIBRARY_REQUEST'
@@ -1016,7 +1017,7 @@ class Cache(ABC):
 
     @abstractmethod
     def get_emojis_mapping(self) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`.ReadState`]: Retrieves all available read states as mapping."""
+        """Mapping[:class:`str`, :class:`.Emoji`]: Retrieves all available emojis as mapping."""
         ...
 
     @abstractmethod

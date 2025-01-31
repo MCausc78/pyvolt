@@ -436,7 +436,7 @@ class Shard:
     async def _socket_connect(self) -> aiohttp.ClientWebSocketResponse:
         session = self._session
         if callable(session):
-            session = await utils._maybe_coroutine(session, self)
+            session = await utils.maybe_coroutine(session, self)
             # detect recursion
             if callable(session):
                 raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
