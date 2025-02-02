@@ -617,7 +617,7 @@ class Permissions(BaseFlags, support_kwargs=True):
     @classmethod
     def voice(cls) -> Self:
         """:class:`Permissions`: Returns voice-related permissions."""
-        return cls(0b00000000_00000000_00000000_00001111_11000000_00000000_00000000_00000000)
+        return cls(0b00000000_00000000_00000000_00011111_11000000_00000000_00000000_00000000)
 
     # * Misc. permissions
     # % Bits 36 to 52: free area
