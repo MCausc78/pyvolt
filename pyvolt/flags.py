@@ -575,7 +575,7 @@ class Permissions(BaseFlags, support_kwargs=True):
     @classmethod
     def channel(cls) -> Self:
         """:class:`Permissions`: Returns channel-related permissions."""
-        return cls(0b00000000_00000000_00000000_00110000_00111111_11110000_00000000_00000000)
+        return cls(0b00000000_00000000_00000000_01110000_00111111_11110000_00000000_00000000)
 
     # * Voice permissions
 
