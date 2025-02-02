@@ -340,7 +340,7 @@ class DiscoveryClient:
             if response.status != 200:
                 data = await utils._json_or_text(response)
                 raise DiscoverError(response, response.status, data)
-            match = RE_DISCOVERY_BUILD_ID.match(data)
+            match = RE_DISCOVERY_BUILD_ID.search(data)
             if match is None:
                 raise InvalidData(
                     f'Unable to find build ID. Please file an issue on https://github.com/MCausc78/pyvolt with following data: {data}'
@@ -393,7 +393,7 @@ class DiscoveryClient:
                     and self._base.startswith('https://rvlt.gg/_next/data/')
                     and isinstance(data, str)
                 ):
-                    match = RE_DISCOVERY_BUILD_ID.match(data)
+                    match = RE_DISCOVERY_BUILD_ID.search(data)
                     if match is not None:
                         self._base = f'https://rvlt.gg/_next/data/{match.group(1)}'
                     continue
