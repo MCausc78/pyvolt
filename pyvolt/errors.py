@@ -50,7 +50,6 @@ class HTTPException(PyvoltException):
     response: :class:`aiohttp.ClientResponse`
         The response of the failed HTTP request. This is an
         instance of :class:`aiohttp.ClientResponse`.
-
     data: Union[Dict[:class:`str`, Any], Any]
         The data of the error. Could be an empty string.
     status: :class:`int`
@@ -65,6 +64,7 @@ class HTTPException(PyvoltException):
     max: Optional[:class:`int`]
         The maximum count of entities.
         Only applicable when :attr:`~.type` one of following values:
+
         - ``'FileTooLarge'``
         - ``'GroupTooLarge'``
         - ``'TooManyAttachments'``
@@ -99,6 +99,7 @@ class HTTPException(PyvoltException):
         Only applicable when :attr:`~.type` is ``'FeatureDisabled'``.
 
         Possible values:
+
         - ``'features.mass_mentions_enabled'``
     """
 

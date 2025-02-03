@@ -607,22 +607,22 @@ class Bot(Client, GroupMixin[None]):
         if lib is None:
             raise ExtensionNotLoaded(name=name)
 
-        # get the previous module states from sys modules
+        # Get the previous module states from sys modules
         modules = {name: module for name, module in sys.modules.items() if utils._is_submodule(lib.__name__, name)}
 
         try:
-            # Unload and then load the module...
+            # Unload and then load the module
             await self._remove_module_references(lib.__name__)
             await self._call_module_finalizers(lib, name)
             await self.load_extension(name)
         except Exception:
-            # if the load failed, the remnants should have been
+            # If the load failed, the remnants should have been
             # cleaned from the load_extension function call
             # so let's load it from our old compiled library.
             await lib.setup(self)
             self.__extensions[name] = lib
 
-            # revert sys.modules back to normal and raise back to caller
+            # Revert sys.modules back to normal and raise back to caller
             sys.modules.update(modules)
             raise
 

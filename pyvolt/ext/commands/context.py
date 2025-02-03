@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
     from .view import StringView
 
 
-class Context(typing.Generic[BotT]):
+class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
     r"""A invoking context for commands.
 
     These are not created manually, instead they are created via :meth:`Bot.get_context` method.
@@ -57,6 +57,7 @@ class Context(typing.Generic[BotT]):
         'command_failed',
         'current_argument',
         'current_parameter',
+        'event',
         'kwargs',
         'invoked_parents',
         'invoked_subcommand',
@@ -79,6 +80,7 @@ class Context(typing.Generic[BotT]):
         command_failed: bool = False,
         current_argument: str | None = None,
         current_parameter: Parameter | None = None,
+        event: pyvolt.MessageCreateEvent | None = None,
         kwargs: dict[str, typing.Any] | None = None,
         invoked_parents: list[str] | None = None,
         invoked_subcommand: Command[typing.Any, ..., typing.Any] | None = None,
@@ -110,6 +112,7 @@ class Context(typing.Generic[BotT]):
         self.command_failed: bool = command_failed
         self.current_argument: str | None = current_argument
         self.current_parameter: Parameter | None = current_parameter
+        self.event: pyvolt.MessageCreateEvent | None = event
         self.invoked_parents: list[str] = invoked_parents
         self.invoked_subcommand: Command[typing.Any, ..., typing.Any] | None = invoked_subcommand
         self.label: str = label
@@ -141,6 +144,9 @@ class Context(typing.Generic[BotT]):
 
     def get_author(self) -> pyvolt.Member | pyvolt.User | None:
         return self._author
+
+    def get_channel_id(self) -> str:
+        return self.channel.id
 
 
 __all__ = ('Context',)

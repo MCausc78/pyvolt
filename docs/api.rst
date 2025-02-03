@@ -2304,6 +2304,33 @@ OwnUser
     :inherited-members:
     :exclude-members: accept_friend_request, block, deny_friend_request, mutual_friend_ids, mutual_server_ids, mutuals, remove_friend, report, send_friend_request, unblock
 
+BaseBot
+~~~~~~~
+
+.. attributetable:: BaseBot
+
+.. autoclass:: BaseBot
+    :members:
+    :inherited-members:
+
+PublicBot
+~~~~~~~~~
+
+.. attributetable:: PublicBot
+
+.. autoclass:: PublicBot
+    :members:
+    :inherited-members:
+
+Bot
+~~~
+
+.. attributetable:: Bot
+
+.. autoclass:: Bot
+    :members:
+    :inherited-members:
+
 BaseChannel
 ~~~~~~~~~~~
 

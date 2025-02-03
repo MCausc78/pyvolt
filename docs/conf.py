@@ -44,6 +44,9 @@ autodoc_typehints = 'none'
 # maybe consider this?
 # napoleon_attr_annotations = False
 
+# Make tables in Raises section actually work
+napoleon_custom_sections = [('Raises', 'returns_style')]
+
 extlinks = {
     'issue': ('https://github.com/MCausc78/pyvolt/issues/%s', 'GH-%s'),
 }
