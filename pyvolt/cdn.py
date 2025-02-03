@@ -196,7 +196,7 @@ def _get_session() -> aiohttp.ClientSession:
     return _cdn_session
 
 
-Content = bytes | str | bytearray | io.IOBase
+Content = typing.Union[bytes, str, bytearray, io.IOBase]
 
 
 def resolve_content(content: Content, /) -> bytes | io.IOBase:
@@ -348,7 +348,7 @@ class Upload(Resource):
         return await cdn_client.upload(self.tag or tag, form)
 
 
-ResolvableResource = Resource | str | bytes | tuple[str, Content]
+ResolvableResource = typing.Union[Resource, str, bytes, tuple[str, Content]]
 
 
 async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, tag: Tag) -> str:

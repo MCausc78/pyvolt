@@ -834,7 +834,7 @@ class GroupChannel(BaseChannel, Messageable):
         )
 
 
-PrivateChannel = SavedMessagesChannel | DMChannel | GroupChannel
+PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]
 
 
 @define(slots=True)
@@ -1167,9 +1167,9 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
         return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
 
 
-ServerChannel = TextChannel | VoiceChannel
-TextableChannel = SavedMessagesChannel | DMChannel | GroupChannel | TextChannel | VoiceChannel
-Channel = SavedMessagesChannel | DMChannel | GroupChannel | TextChannel | VoiceChannel
+ServerChannel = typing.Union[TextChannel, VoiceChannel]
+TextableChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
+Channel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
 
 
 @define(slots=True)

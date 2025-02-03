@@ -79,17 +79,17 @@ class StreamableSpecial(typing.TypedDict):
     id: str
 
 
-Special = (
-    NoneSpecial
-    | GIFSpecial
-    | YouTubeSpecial
-    | LightspeedSpecial
-    | TwitchSpecial
-    | SpotifySpecial
-    | BandcampSpecial
-    | AppleMusicSpecial
-    | StreamableSpecial
-)
+Special = typing.Union[
+    NoneSpecial,
+    GIFSpecial,
+    YouTubeSpecial,
+    LightspeedSpecial,
+    TwitchSpecial,
+    SpotifySpecial,
+    BandcampSpecial,
+    AppleMusicSpecial,
+    StreamableSpecial,
+]
 
 
 class WebsiteMetadata(typing.TypedDict):
@@ -134,4 +134,4 @@ class NoneEmbed(typing.TypedDict):
     type: typing.Literal['None']
 
 
-Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
+Embed = typing.Union[WebsiteEmbed, ImageEmbed, VideoEmbed, TextEmbed, NoneEmbed]

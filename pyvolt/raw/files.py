@@ -43,4 +43,10 @@ class AudioMetadata(typing.TypedDict):
     type: typing.Literal['Audio']
 
 
-Metadata = FileMetadata | TextMetadata | ImageMetadata | VideoMetadata | AudioMetadata
+Metadata = typing.Union[
+    FileMetadata,
+    TextMetadata,
+    ImageMetadata,
+    VideoMetadata,
+    AudioMetadata,
+]

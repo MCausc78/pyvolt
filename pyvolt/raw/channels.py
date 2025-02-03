@@ -62,9 +62,9 @@ class VoiceChannel(typing.TypedDict):
     nsfw: typing_extensions.NotRequired[bool]
 
 
-PrivateChannel = SavedMessagesChannel | DirectMessageChannel | GroupChannel
-ServerChannel = TextChannel | VoiceChannel
-Channel = PrivateChannel | ServerChannel
+PrivateChannel = typing.Union[SavedMessagesChannel, DirectMessageChannel, GroupChannel]
+ServerChannel = typing.Union[TextChannel, VoiceChannel]
+Channel = typing.Union[PrivateChannel, ServerChannel]
 
 
 class VoiceInformation(typing.TypedDict):

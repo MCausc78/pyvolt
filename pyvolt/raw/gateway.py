@@ -248,13 +248,13 @@ class ClientVoiceChannelCreateEvent(VoiceChannel):
     type: typing.Literal['ChannelCreate']
 
 
-ClientChannelCreateEvent = (
-    ClientSavedMessagesChannelCreateEvent
-    | ClientDirectMessageChannelCreateEvent
-    | ClientGroupChannelCreateEvent
-    | ClientTextChannelCreateEvent
-    | ClientVoiceChannelCreateEvent
-)
+ClientChannelCreateEvent = typing.Union[
+    ClientSavedMessagesChannelCreateEvent,
+    ClientDirectMessageChannelCreateEvent,
+    ClientGroupChannelCreateEvent,
+    ClientTextChannelCreateEvent,
+    ClientVoiceChannelCreateEvent,
+]
 
 
 class ClientChannelUpdateEvent(typing.TypedDict):
@@ -328,7 +328,9 @@ class ClientDeleteAllSessionsAuthEvent(AuthifierDeleteAllSessionsEvent):
     type: typing.Literal['Auth']
 
 
-ClientAuthEvent = ClientCreateSessionAuthEvent | ClientDeleteSessionAuthEvent | ClientDeleteAllSessionsAuthEvent
+ClientAuthEvent = typing.Union[
+    ClientCreateSessionAuthEvent, ClientDeleteSessionAuthEvent, ClientDeleteAllSessionsAuthEvent
+]
 
 
 class ClientVoiceChannelJoinEvent(typing.TypedDict):
@@ -361,53 +363,53 @@ class ClientUserVoiceStateUpdateEvent(typing.TypedDict):
     data: PartialUserVoiceState
 
 
-ClientEvent = (
-    ClientBulkEvent
-    | ClientErrorEvent
-    | ClientAuthenticatedEvent
-    | ClientLogoutEvent
-    | ClientReadyEvent
-    | ClientPongEvent
-    | ClientMessageEvent
-    | ClientMessageUpdateEvent
-    | ClientMessageAppendEvent
-    | ClientMessageDeleteEvent
-    | ClientMessageReactEvent
-    | ClientMessageUnreactEvent
-    | ClientMessageRemoveReactionEvent
-    | ClientBulkMessageDeleteEvent
-    | ClientServerCreateEvent
-    | ClientServerUpdateEvent
-    | ClientServerDeleteEvent
-    | ClientServerMemberUpdateEvent
-    | ClientServerMemberJoinEvent
-    | ClientServerMemberLeaveEvent
-    | ClientServerRoleUpdateEvent
-    | ClientServerRoleDeleteEvent
-    | ClientUserUpdateEvent
-    | ClientUserRelationshipEvent
-    | ClientUserSettingsUpdateEvent
-    | ClientUserPlatformWipeEvent
-    | ClientEmojiCreateEvent
-    | ClientEmojiDeleteEvent
-    | ClientReportCreateEvent
-    | ClientChannelCreateEvent
-    | ClientChannelUpdateEvent
-    | ClientChannelDeleteEvent
-    | ClientChannelGroupJoinEvent
-    | ClientChannelGroupLeaveEvent
-    | ClientChannelStartTypingEvent
-    | ClientChannelStopTypingEvent
-    | ClientChannelAckEvent
-    | ClientWebhookCreateEvent
-    | ClientWebhookUpdateEvent
-    | ClientWebhookDeleteEvent
-    | ClientAuthEvent
-    | ClientVoiceChannelJoinEvent
-    | ClientVoiceChannelLeaveEvent
-    | ClientVoiceChannelMoveEvent
-    | ClientUserVoiceStateUpdateEvent
-)
+ClientEvent = typing.Union[
+    ClientBulkEvent,
+    ClientErrorEvent,
+    ClientAuthenticatedEvent,
+    ClientLogoutEvent,
+    ClientReadyEvent,
+    ClientPongEvent,
+    ClientMessageEvent,
+    ClientMessageUpdateEvent,
+    ClientMessageAppendEvent,
+    ClientMessageDeleteEvent,
+    ClientMessageReactEvent,
+    ClientMessageUnreactEvent,
+    ClientMessageRemoveReactionEvent,
+    ClientBulkMessageDeleteEvent,
+    ClientServerCreateEvent,
+    ClientServerUpdateEvent,
+    ClientServerDeleteEvent,
+    ClientServerMemberUpdateEvent,
+    ClientServerMemberJoinEvent,
+    ClientServerMemberLeaveEvent,
+    ClientServerRoleUpdateEvent,
+    ClientServerRoleDeleteEvent,
+    ClientUserUpdateEvent,
+    ClientUserRelationshipEvent,
+    ClientUserSettingsUpdateEvent,
+    ClientUserPlatformWipeEvent,
+    ClientEmojiCreateEvent,
+    ClientEmojiDeleteEvent,
+    ClientReportCreateEvent,
+    ClientChannelCreateEvent,
+    ClientChannelUpdateEvent,
+    ClientChannelDeleteEvent,
+    ClientChannelGroupJoinEvent,
+    ClientChannelGroupLeaveEvent,
+    ClientChannelStartTypingEvent,
+    ClientChannelStopTypingEvent,
+    ClientChannelAckEvent,
+    ClientWebhookCreateEvent,
+    ClientWebhookUpdateEvent,
+    ClientWebhookDeleteEvent,
+    ClientAuthEvent,
+    ClientVoiceChannelJoinEvent,
+    ClientVoiceChannelLeaveEvent,
+    ClientVoiceChannelMoveEvent,
+    ClientUserVoiceStateUpdateEvent,
+]
 
 
 class ServerAuthenticateEvent(typing.TypedDict):
@@ -435,9 +437,13 @@ class ServerPingEvent(typing.TypedDict):
     data: Ping
 
 
-ServerEvent = (
-    ServerAuthenticateEvent | ServerBeginTypingEvent | ServerEndTypingEvent | ServerSubscribeEvent | ServerPingEvent
-)
+ServerEvent = typing.Union[
+    ServerAuthenticateEvent,
+    ServerBeginTypingEvent,
+    ServerEndTypingEvent,
+    ServerSubscribeEvent,
+    ServerPingEvent,
+]
 
 
 class BonfireConnectionParameters(typing.TypedDict):

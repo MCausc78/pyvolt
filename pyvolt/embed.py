@@ -285,20 +285,20 @@ class NoneEmbed(BaseEmbed):
 
 _NONE_EMBED = NoneEmbed()
 
-EmbedSpecial = (
-    NoneEmbedSpecial
-    | GIFEmbedSpecial
-    | YouTubeEmbedSpecial
-    | LightspeedEmbedSpecial
-    | TwitchEmbedSpecial
-    | SpotifyEmbedSpecial
-    | SoundcloudEmbedSpecial
-    | BandcampEmbedSpecial
-    | AppleMusicEmbedSpecial
-    | StreamableEmbedSpecial
-)
-StatelessEmbed = WebsiteEmbed | ImageEmbed | VideoEmbed | StatelessTextEmbed | NoneEmbed
-Embed = WebsiteEmbed | ImageEmbed | VideoEmbed | TextEmbed | NoneEmbed
+EmbedSpecial = typing.Union[
+    NoneEmbedSpecial,
+    GIFEmbedSpecial,
+    YouTubeEmbedSpecial,
+    LightspeedEmbedSpecial,
+    TwitchEmbedSpecial,
+    SpotifyEmbedSpecial,
+    SoundcloudEmbedSpecial,
+    BandcampEmbedSpecial,
+    AppleMusicEmbedSpecial,
+    StreamableEmbedSpecial,
+]
+StatelessEmbed = typing.Union[WebsiteEmbed, ImageEmbed, VideoEmbed, StatelessTextEmbed, NoneEmbed]
+Embed = typing.Union[WebsiteEmbed, ImageEmbed, VideoEmbed, TextEmbed, NoneEmbed]
 
 __all__ = (
     'BaseEmbed',

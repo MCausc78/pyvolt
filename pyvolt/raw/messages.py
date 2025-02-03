@@ -127,22 +127,22 @@ class CallStartedSystemMessage(typing.TypedDict):
     by: str
 
 
-SystemMessage = (
-    TextSystemMessage
-    | UserAddedSystemMessage
-    | UserRemoveSystemMessage
-    | UserJoinedSystemMessage
-    | UserLeftSystemMessage
-    | UserKickedSystemMessage
-    | UserBannedSystemMessage
-    | ChannelRenamedSystemMessage
-    | ChannelDescriptionChangedSystemMessage
-    | ChannelIconChangedSystemMessage
-    | ChannelOwnershipChangedSystemMessage
-    | MessagePinnedSystemMessage
-    | MessageUnpinnedSystemMessage
-    | CallStartedSystemMessage
-)
+SystemMessage = typing.Union[
+    TextSystemMessage,
+    UserAddedSystemMessage,
+    UserRemoveSystemMessage,
+    UserJoinedSystemMessage,
+    UserLeftSystemMessage,
+    UserKickedSystemMessage,
+    UserBannedSystemMessage,
+    ChannelRenamedSystemMessage,
+    ChannelDescriptionChangedSystemMessage,
+    ChannelIconChangedSystemMessage,
+    ChannelOwnershipChangedSystemMessage,
+    MessagePinnedSystemMessage,
+    MessageUnpinnedSystemMessage,
+    CallStartedSystemMessage,
+]
 
 
 class Masquerade(typing.TypedDict):

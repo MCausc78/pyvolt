@@ -16,7 +16,7 @@ class DataPermissionsValue(typing.TypedDict):
     permissions: int
 
 
-DataPermissionPoly = DataPermissionsValue | DataPermissionsField
+DataPermissionPoly = typing.Union[DataPermissionsValue, DataPermissionsField]
 
 
 class OverrideField(typing.TypedDict):

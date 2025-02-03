@@ -229,7 +229,7 @@ class UnknownPublicInvite(BaseInvite):
     """Dict[:class:`str`, Any]: The raw invite data."""
 
 
-PublicInvite = ServerPublicInvite | GroupPublicInvite | UnknownPublicInvite
+PublicInvite = typing.Union[ServerPublicInvite, GroupPublicInvite, UnknownPublicInvite]
 
 
 @define(slots=True)
@@ -295,7 +295,7 @@ class ServerInvite(PrivateBaseInvite):
         return server  # type: ignore
 
 
-Invite = GroupInvite | ServerInvite
+Invite = typing.Union[GroupInvite, ServerInvite]
 
 __all__ = (
     'BaseInvite',

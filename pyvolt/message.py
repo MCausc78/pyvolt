@@ -1682,39 +1682,39 @@ class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
         return by
 
 
-StatelessSystemEvent = (
-    TextSystemEvent
-    | StatelessUserAddedSystemEvent
-    | StatelessUserRemovedSystemEvent
-    | StatelessUserJoinedSystemEvent
-    | StatelessUserLeftSystemEvent
-    | StatelessUserKickedSystemEvent
-    | StatelessUserBannedSystemEvent
-    | StatelessChannelRenamedSystemEvent
-    | StatelessChannelDescriptionChangedSystemEvent
-    | StatelessChannelIconChangedSystemEvent
-    | StatelessChannelOwnershipChangedSystemEvent
-    | StatelessMessagePinnedSystemEvent
-    | StatelessMessageUnpinnedSystemEvent
-    | StatelessCallStartedSystemEvent
-)
+StatelessSystemEvent = typing.Union[
+    TextSystemEvent,
+    StatelessUserAddedSystemEvent,
+    StatelessUserRemovedSystemEvent,
+    StatelessUserJoinedSystemEvent,
+    StatelessUserLeftSystemEvent,
+    StatelessUserKickedSystemEvent,
+    StatelessUserBannedSystemEvent,
+    StatelessChannelRenamedSystemEvent,
+    StatelessChannelDescriptionChangedSystemEvent,
+    StatelessChannelIconChangedSystemEvent,
+    StatelessChannelOwnershipChangedSystemEvent,
+    StatelessMessagePinnedSystemEvent,
+    StatelessMessageUnpinnedSystemEvent,
+    StatelessCallStartedSystemEvent,
+]
 
-SystemEvent = (
-    TextSystemEvent
-    | UserAddedSystemEvent
-    | UserRemovedSystemEvent
-    | UserJoinedSystemEvent
-    | UserLeftSystemEvent
-    | UserKickedSystemEvent
-    | UserBannedSystemEvent
-    | ChannelRenamedSystemEvent
-    | ChannelDescriptionChangedSystemEvent
-    | ChannelIconChangedSystemEvent
-    | ChannelOwnershipChangedSystemEvent
-    | MessagePinnedSystemEvent
-    | MessageUnpinnedSystemEvent
-    | CallStartedSystemEvent
-)
+SystemEvent = typing.Union[
+    TextSystemEvent,
+    UserAddedSystemEvent,
+    UserRemovedSystemEvent,
+    UserJoinedSystemEvent,
+    UserLeftSystemEvent,
+    UserKickedSystemEvent,
+    UserBannedSystemEvent,
+    ChannelRenamedSystemEvent,
+    ChannelDescriptionChangedSystemEvent,
+    ChannelIconChangedSystemEvent,
+    ChannelOwnershipChangedSystemEvent,
+    MessagePinnedSystemEvent,
+    MessageUnpinnedSystemEvent,
+    CallStartedSystemEvent,
+]
 
 
 @define(slots=True)

@@ -54,7 +54,7 @@ class GroupInviteBotDestination(typing.TypedDict):
     group: str
 
 
-InviteBotDestination = ServerInviteBotDestination | GroupInviteBotDestination
+InviteBotDestination = typing.Union[ServerInviteBotDestination, GroupInviteBotDestination]
 
 
 class OwnedBotsResponse(typing.TypedDict):

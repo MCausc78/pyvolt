@@ -25,7 +25,7 @@ class TotpMFAResponse(typing.TypedDict):
     totp_code: str
 
 
-MFAResponse = PasswordMFAResponse | RecoveryMFAResponse | TotpMFAResponse
+MFAResponse = typing.Union[PasswordMFAResponse, RecoveryMFAResponse, TotpMFAResponse]
 
 
 # >> /models/mfa/totp.rs
@@ -41,7 +41,7 @@ class EnabledTotp(typing.TypedDict):
     status: typing.Literal['Enabled']
 
 
-Totp = DisabledTotp | PendingTotp | EnabledTotp
+Totp = typing.Union[DisabledTotp, PendingTotp, EnabledTotp]
 
 # >> /models/account.rs
 
@@ -61,7 +61,7 @@ class MovingEmailVerification(typing.TypedDict):
     expiry: str
 
 
-EmailVerification = VerifiedEmailVerification | PendingEmailVerification | MovingEmailVerification
+EmailVerification = typing.Union[VerifiedEmailVerification, PendingEmailVerification, MovingEmailVerification]
 
 
 class PasswordReset(typing.TypedDict):
@@ -84,7 +84,7 @@ class DeletedDeletionInfo(typing.TypedDict):
     status: typing.Literal['Deleted']
 
 
-DeletionInfo = WaitingForVerificationDeletionInfo | ScheduledDeletionInfo | DeletedDeletionInfo
+DeletionInfo = typing.Union[WaitingForVerificationDeletionInfo, ScheduledDeletionInfo, DeletedDeletionInfo]
 
 
 class Lockout(typing.TypedDict):
@@ -154,12 +154,12 @@ class AuthifierDeleteAllSessionsEvent(typing.TypedDict):
     exclude_session_id: str | None
 
 
-AuthifierEvent = (
-    AuthifierCreateAccountEvent
-    | AuthifierCreateSessionEvent
-    | AuthifierDeleteSessionEvent
-    | AuthifierDeleteAllSessionsEvent
-)
+AuthifierEvent = typing.Union[
+    AuthifierCreateAccountEvent,
+    AuthifierCreateSessionEvent,
+    AuthifierDeleteSessionEvent,
+    AuthifierDeleteAllSessionsEvent,
+]
 
 # HTTP requests/responses
 
@@ -214,7 +214,7 @@ class WithTicketResponseVerify(typing.TypedDict):
     ticket: MFATicket
 
 
-ResponseVerify = NoTicketResponseVerify | WithTicketResponseVerify
+ResponseVerify = typing.Union[NoTicketResponseVerify, WithTicketResponseVerify]
 
 
 class MultiFactorStatus(typing.TypedDict):
@@ -251,7 +251,7 @@ class MFADataLogin(typing.TypedDict):
     friendly_name: str | None
 
 
-DataLogin = EmailDataLogin | MFADataLogin
+DataLogin = typing.Union[EmailDataLogin, MFADataLogin]
 
 
 class SuccessResponseLogin(Session):
@@ -269,4 +269,4 @@ class DisabledResponseLogin(typing.TypedDict):
     user_id: str
 
 
-ResponseLogin = SuccessResponseLogin | MFAResponseLogin | DisabledResponseLogin
+ResponseLogin = typing.Union[SuccessResponseLogin, MFAResponseLogin, DisabledResponseLogin]

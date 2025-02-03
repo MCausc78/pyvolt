@@ -60,14 +60,14 @@ class _BaseCommand:
 GearT = typing.TypeVar('GearT', bound='Gear | None')
 
 
-Error = (
-    Callable[['GearT', 'ContextT', 'CommandError'], Coroutine[typing.Any, typing.Any, typing.Any]]
-    | Callable[['ContextT', 'CommandError'], Coroutine[typing.Any, typing.Any, typing.Any]]
-)
-Hook = (
-    Callable[['GearT', 'ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]]
-    | Callable[['ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]]
-)
+Error = typing.Union[
+    Callable[['GearT', 'ContextT', 'CommandError'], Coroutine[typing.Any, typing.Any, typing.Any]],
+    Callable[['ContextT', 'CommandError'], Coroutine[typing.Any, typing.Any, typing.Any]],
+]
+Hook = typing.Union[
+    Callable[['GearT', 'ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]],
+    Callable[['ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]],
+]
 UserCheck = Callable[['ContextT'], bool | Coroutine[typing.Any, typing.Any, bool]]
 
 

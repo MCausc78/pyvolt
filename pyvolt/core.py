@@ -51,7 +51,7 @@ UNDEFINED: Undefined = _Sentinel.undefined
 
 
 T = typing.TypeVar('T')
-UndefinedOr = Undefined | T
+UndefinedOr = typing.Union['Undefined', T]
 
 
 def ulid_timestamp(val: str, /) -> float:
@@ -67,7 +67,7 @@ class HasID(typing.Protocol):
 
 
 U = typing.TypeVar('U', bound='HasID')
-ULIDOr = str | U
+ULIDOr = typing.Union[str, U]
 
 
 def resolve_id(resolvable: ULIDOr[U], /) -> str:

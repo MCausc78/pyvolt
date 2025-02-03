@@ -109,7 +109,7 @@ class ServerWithChannels(BaseServer):
     channels: list[ServerChannel]
 
 
-FetchServerResponse = Server | ServerWithChannels
+FetchServerResponse = typing.Union[Server, ServerWithChannels]
 
 
 class DataEditServer(typing.TypedDict):

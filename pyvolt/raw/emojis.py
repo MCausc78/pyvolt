@@ -29,7 +29,7 @@ class DetachedEmojiParent(typing.TypedDict):
     type: typing.Literal['Detached']
 
 
-EmojiParent = ServerEmojiParent | DetachedEmojiParent
+EmojiParent = typing.Union[ServerEmojiParent, DetachedEmojiParent]
 
 
 class DataCreateEmoji(typing.TypedDict):

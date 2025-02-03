@@ -24,6 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+import typing
+
 from attrs import define, field
 
 from .base import Base
@@ -104,8 +106,8 @@ class DetachedEmoji(BaseEmoji):
     """Represents a deleted emoji on Revolt."""
 
 
-Emoji = ServerEmoji | DetachedEmoji
-ResolvableEmoji = BaseEmoji | str
+Emoji = typing.Union[ServerEmoji, DetachedEmoji]
+ResolvableEmoji = typing.Union[BaseEmoji, str]
 
 
 def resolve_emoji(resolvable: ResolvableEmoji, /) -> str:

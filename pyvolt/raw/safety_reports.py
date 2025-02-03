@@ -59,7 +59,7 @@ class UserReportedContent(typing.TypedDict):
     message_id: typing_extensions.NotRequired[str]
 
 
-ReportedContent = MessageReportedContent | ServerReportedContent | UserReportedContent
+ReportedContent = typing.Union[MessageReportedContent, ServerReportedContent, UserReportedContent]
 
 
 class CreatedReport(BaseReport):
@@ -77,7 +77,7 @@ class ResolvedReport(BaseReport):
     closed_at: str | None
 
 
-Report = CreatedReport | RejectedReport | ResolvedReport
+Report = typing.Union[CreatedReport, RejectedReport, ResolvedReport]
 
 
 class DataReportContent(typing.TypedDict):

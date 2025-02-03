@@ -99,7 +99,7 @@ class ResolvedReport(BaseReport):
         return ReportStatus.resolved
 
 
-Report = CreatedReport | RejectedReport | ResolvedReport
+Report = typing.Union[CreatedReport, RejectedReport, ResolvedReport]
 
 
 @define(slots=True)
@@ -152,7 +152,7 @@ class UserReportedContent(BaseReportedContent):
         return ReportedContentType.user
 
 
-ReportedContent = MessageReportedContent | ServerReportedContent | UserReportedContent
+ReportedContent = typing.Union[MessageReportedContent, ServerReportedContent, UserReportedContent]
 
 __all__ = (
     'BaseReport',

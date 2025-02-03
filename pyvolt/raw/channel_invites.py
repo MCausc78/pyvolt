@@ -24,7 +24,7 @@ class GroupInvite(typing.TypedDict):
     channel: str
 
 
-Invite = ServerInvite | GroupInvite
+Invite = typing.Union[ServerInvite, GroupInvite]
 
 
 class ServerInviteResponse(typing.TypedDict):
@@ -53,7 +53,7 @@ class GroupInviteResponse(typing.TypedDict):
     user_avatar: typing_extensions.NotRequired[File]
 
 
-InviteResponse = ServerInviteResponse | GroupInviteResponse
+InviteResponse = typing.Union[ServerInviteResponse, GroupInviteResponse]
 
 
 class ServerInviteJoinResponse(typing.TypedDict):
@@ -68,4 +68,4 @@ class GroupInviteJoinResponse(typing.TypedDict):
     users: list[User]
 
 
-InviteJoinResponse = ServerInviteJoinResponse | GroupInviteJoinResponse
+InviteJoinResponse = typing.Union[ServerInviteJoinResponse, GroupInviteJoinResponse]

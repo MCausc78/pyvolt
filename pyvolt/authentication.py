@@ -215,9 +215,8 @@ class ByTOTP(BaseMFAResponse):
         return {'totp_code': self.code}
 
 
-MFAResponse = ByPassword | ByRecoveryCode | ByTOTP
-
-LoginResult = Session | MFARequired | AccountDisabled
+MFAResponse = typing.Union[ByPassword, ByRecoveryCode, ByTOTP]
+LoginResult = typing.Union[Session, MFARequired, AccountDisabled]
 
 __all__ = (
     'PartialAccount',

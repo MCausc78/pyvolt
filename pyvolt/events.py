@@ -314,7 +314,7 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
         return True
 
 
-ChannelCreateEvent = PrivateChannelCreateEvent | ServerChannelCreateEvent
+ChannelCreateEvent = typing.Union[PrivateChannelCreateEvent, ServerChannelCreateEvent]
 
 
 @define(slots=True)
