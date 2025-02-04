@@ -1605,9 +1605,10 @@ class HTTPClient:
         resp: raw.Channel = await self.request(routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)))
         return self.state.parser.parse_channel(resp)
 
-    async def add_recipient_to_group(
+    async def add_group_recipient(
         self,
         channel: ULIDOr[GroupChannel],
+        /,
         user: ULIDOr[BaseUser],
     ) -> None:
         """|coro|
@@ -1621,9 +1622,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`.GroupChannel`]
             The group.
-        user: ULIDOr[:class:`BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to add.
 
         Raises
@@ -1739,15 +1740,15 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+--------------------------------------------------------------+
-            | Value                 | Reason                                                       |
-            +-----------------------+--------------------------------------------------------------+
-            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.              |
-            +-----------------------+--------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to add the recipient. |
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.                  |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add the recipient.     |
             +-----------------------+------------------------------------------------------------------+
             | ``NotFriends``        | You're not friends with the users you want to create group with. |
-            +-----------------------+--------------------------------------------------------------+
+            +-----------------------+------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1767,7 +1768,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`GroupChannel`
+        :class:`.GroupChannel`
             The new group.
         """
         payload: raw.DataCreateGroup = {'name': name}
@@ -1785,7 +1786,7 @@ class HTTPClient:
             (True, []),
         )
 
-    async def remove_recipient_from_group(
+    async def remove_group_recipient(
         self,
         channel: ULIDOr[GroupChannel],
         user: ULIDOr[BaseUser],
@@ -1799,17 +1800,59 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`.GroupChannel`]
             The group.
-        user: :class:`ULID`[:class:`BaseUser`]
+        user: :class:`ULID`[:class:`.BaseUser`]
             The user to remove.
 
         Raises
         ------
-        :class:`Forbidden`
-            You're not owner of group.
         :class:`HTTPException`
-            Removing the member from group failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+----------------------------------------------+
+            | Value                    | Reason                                       |
+            +--------------------------+----------------------------------------------+
+            | ``CannotRemoveYourself`` | You tried to remove yourself from the group. |
+            +--------------------------+----------------------------------------------+
+            | ``IsBot``                | The current token belongs to bot account.    |
+            +--------------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not own the target group.                                 |
+            +-----------------------+------------------------------------------------------------------+
+            | ``NotFriends``        | You're not friends with the users you want to create group with. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+------------------------------------------------------+
+            | Value          | Reason                                               |
+            +----------------+------------------------------------------------------+
+            | ``NotFound``   | The target group was not found.                      |
+            +----------------+------------------------------------------------------+
+            | ``NotInGroup`` | The recipient you wanted to remove was not in group. |
+            +----------------+------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.CHANNELS_GROUP_REMOVE_MEMBER.compile(
@@ -1818,7 +1861,7 @@ class HTTPClient:
             )
         )
 
-    async def create_invite(self, channel: ULIDOr[GroupChannel | ServerChannel]) -> Invite:
+    async def create_invite(self, channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]]) -> Invite:
         """|coro|
 
         Creates an invite to channel. The destination channel must be a group or server channel.
@@ -1828,19 +1871,57 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
+        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
             The invite destination channel.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to create invite in that channel.
         :class:`HTTPException`
-            Creating invite failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------+
+            | Value                | Reason                                             |
+            +----------------------+----------------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group or server channel. |
+            +----------------------+----------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.          |
+            +----------------------+----------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------+
+            | Value                 | Reason                                                               |
+            +-----------------------+----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create invites in channel. |
+            +-----------------------+----------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Invite`
+        :class:`.Invite`
             The invite that was created.
         """
         resp: raw.Invite = await self.request(routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel)))
@@ -1849,6 +1930,7 @@ class HTTPClient:
     async def get_group_recipients(
         self,
         channel: ULIDOr[GroupChannel],
+        /,
     ) -> list[User]:
         """|coro|
 
@@ -1856,7 +1938,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`GroupChannel`]
+        channel: ULIDOr[:class:`.GroupChannel`]
             The group channel.
 
         Raises

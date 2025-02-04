@@ -699,7 +699,7 @@ class GroupChannel(BaseChannel, Messageable):
         HTTPException
             Adding user to the group failed.
         """
-        return await self.state.http.add_recipient_to_group(self.id, user)
+        return await self.state.http.add_group_recipient(self.id, user)
 
     async def add_bot(
         self,
