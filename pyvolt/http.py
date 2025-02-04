@@ -632,7 +632,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Something went wrong during request.
 
         Returns
@@ -801,7 +801,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Something went wrong during request.
 
         Returns
@@ -850,7 +850,7 @@ class HTTPClient:
 
         Raises
         ------
-        InternalServerError
+        :class:`InternalServerError`
             The internal configuration is invalid.
 
         Returns
@@ -888,7 +888,7 @@ class HTTPClient:
             | ``InvalidUsername``    | The bot's name had forbidden characters/substrings.     |
             +------------------------+---------------------------------------------------------+
             | ``IsBot``              | The current token belongs to bot account.               |
-            +-------------------------------------------+--------------------------------------+
+            +------------------------+---------------------------------------------------------+
             | ``ReachedMaximumBots`` | The current user has too many bots.                     |
             +------------------------+---------------------------------------------------------+
         :class:`Unauthorized`
@@ -943,7 +943,7 @@ class HTTPClient:
             | Value               | Reason                                 |
             +---------------------+----------------------------------------+
             | ``InvalidSession``  | The current bot/user token is invalid. |
-            +--------------------------------------------------------------+
+            +---------------------+----------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1082,7 +1082,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------+-------------------------------------------+
@@ -1098,7 +1098,7 @@ class HTTPClient:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------------------------+--------------------------------------------------------------+
@@ -1133,7 +1133,7 @@ class HTTPClient:
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1173,7 +1173,7 @@ class HTTPClient:
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+--------------------------------------------------------------+
@@ -1181,7 +1181,7 @@ class HTTPClient:
             +--------------+--------------------------------------------------------------+
             | ``NotFound`` | The bot was not found, or the current user does not own bot. |
             +--------------+--------------------------------------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1250,7 +1250,7 @@ class HTTPClient:
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        HTTPException
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +----------------------+------------------------------------------------------+
@@ -1260,7 +1260,7 @@ class HTTPClient:
             +----------------------+------------------------------------------------------+
             | ``IsBot``            | The current token belongs to bot account.            |
             +----------------------+------------------------------------------------------+
-        Forbidden
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+-----------------------------------------------------+
@@ -1274,7 +1274,7 @@ class HTTPClient:
             +-----------------------+-----------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to add bots. |
             +-----------------------+-----------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+-------------------------------------+
@@ -1282,7 +1282,7 @@ class HTTPClient:
             +--------------+-------------------------------------+
             | ``NotFound`` | The bot/group/server was not found. |
             +--------------+-------------------------------------+
-        Conflict
+        :class:`Conflict`
             Possible values for :attr:`~HTTPException.type`:
 
             +---------------------+-------------------------------+
@@ -1292,7 +1292,7 @@ class HTTPClient:
             +---------------------+-------------------------------+
             | ``AlreadyInServer`` | The bot is already in server. |
             +---------------------+-------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1346,7 +1346,7 @@ class HTTPClient:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        HTTPException
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------+-------------------------------------------+
@@ -1354,7 +1354,7 @@ class HTTPClient:
             +-----------+-------------------------------------------+
             | ``IsBot`` | The current token belongs to bot account. |
             +-----------+-------------------------------------------+
-        Forbidden
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+-------------------------------------------------------------+
@@ -1362,7 +1362,7 @@ class HTTPClient:
             +-----------------------+-------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to view the message. |
             +-----------------------+-------------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+----------------------------+
@@ -1395,12 +1395,14 @@ class HTTPClient:
         Raises
         ------
         :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
             +--------------------+-----------------------------------------+
             | Value              | Reason                                  |
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        Forbidden
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+---------------------------------------------------------------------------+
@@ -1408,7 +1410,7 @@ class HTTPClient:
             +-----------------------+---------------------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to view and/or delete the channel. |
             +-----------------------+---------------------------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+----------------------------+
@@ -1416,7 +1418,7 @@ class HTTPClient:
             +--------------+----------------------------+
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1478,7 +1480,7 @@ class HTTPClient:
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------------------------------+------------------------------------------------------+
-            | Value | Reason                                               |
+            | Value                                     | Reason                                               |
             +-------------------------------------------+------------------------------------------------------+
             | ``FailedValidation``                      | The payload was invalid.                             |
             +-------------------------------------------+------------------------------------------------------+
@@ -1488,7 +1490,7 @@ class HTTPClient:
             Possible values for :attr:`~HTTPException.type`:
 
             +------------------------------------------+-----------------------------------------+
-            | Value | Reason                                  |
+            | Value                                    | Reason                                  |
             +------------------------------------------+-----------------------------------------+
             | ``InvalidSession``                       | The current bot/user token is invalid.  |
             +------------------------------------------+-----------------------------------------+
@@ -1496,7 +1498,7 @@ class HTTPClient:
             Possible values for :attr:`~HTTPException.type`:
 
             +---------------------------------------+-------------------------------------------------------------+
-            | Value | Reason                                                      |
+            | Value                                 | Reason                                                      |
             +---------------------------------------+-------------------------------------------------------------+
             | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. |
             +---------------------------------------+-------------------------------------------------------------+
@@ -1506,7 +1508,7 @@ class HTTPClient:
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------------------------+---------------------------------+
-            | Value | Reason                          |
+            | Value                                | Reason                          |
             +--------------------------------------+---------------------------------+
             | ``NotFound``                         | The channel was not found.      |
             +--------------------------------------+---------------------------------+
@@ -1804,9 +1806,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You're not owner of group.
-        HTTPException
+        :class:`HTTPException`
             Removing the member from group failed.
         """
         await self.request(
@@ -1831,9 +1833,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to create invite in that channel.
-        HTTPException
+        :class:`HTTPException`
             Creating invite failed.
 
         Returns
@@ -1859,7 +1861,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Getting group recipients failed.
 
         Returns
@@ -1892,9 +1894,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete the messages.
-        HTTPException
+        :class:`HTTPException`
             Deleting messages failed.
         """
         payload: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
@@ -1927,7 +1929,7 @@ class HTTPClient:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        Forbidden
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+---------------------------------------------------------------------+
@@ -1935,7 +1937,7 @@ class HTTPClient:
             +-----------------------+---------------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to remove all the reactions. |
             +-----------------------+---------------------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+---------------------------------------+
@@ -1943,7 +1945,7 @@ class HTTPClient:
             +--------------+---------------------------------------+
             | ``NotFound`` | The channel or message was not found. |
             +--------------+---------------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1974,9 +1976,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete message.
-        HTTPException
+        :class:`HTTPException`
             Deleting the message failed.
         """
         await self.request(
@@ -2011,9 +2013,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             Tried to suppress a message without permissions or edited a message's content or embed that isn't yours.
-        HTTPException
+        :class:`HTTPException`
             Editing the message failed.
 
         Returns
@@ -2049,9 +2051,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to get message.
-        HTTPException
+        :class:`HTTPException`
             Getting the message failed.
 
         Returns
@@ -2101,9 +2103,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to get channel message history.
-        HTTPException
+        :class:`HTTPException`
             Getting messages failed.
 
         Returns
@@ -2153,9 +2155,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to react to message.
-        HTTPException
+        :class:`HTTPException`
             Reacting to message failed.
         """
         await self.request(
@@ -2206,9 +2208,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to search
-        HTTPException
+        :class:`HTTPException`
             Searching messages failed.
 
         Returns
@@ -2253,9 +2255,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to pin message.
-        HTTPException
+        :class:`HTTPException`
             Pinning the message failed.
         """
         await self.request(
@@ -2483,9 +2485,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to unpin messages.
-        HTTPException
+        :class:`HTTPException`
             Unpinning the message failed.
         """
         await self.request(
@@ -2525,9 +2527,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to remove reactions from message.
-        HTTPException
+        :class:`HTTPException`
             Removing reactions from message failed.
         """
         params: raw.OptionsUnreact = {}
@@ -2566,9 +2568,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to set role permissions on the channel.
-        HTTPException
+        :class:`HTTPException`
             Setting permissions failed.
 
         Returns
@@ -2623,9 +2625,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to set default permissions on the channel.
-        HTTPException
+        :class:`HTTPException`
             Setting permissions failed.
 
         Returns
@@ -2655,7 +2657,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Asking for the token failed.
 
         Returns
@@ -2691,9 +2693,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to create the webhook.
-        HTTPException
+        :class:`HTTPException`
             Creating the webhook failed.
 
         Returns
@@ -2717,9 +2719,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You don't have permissions to get the webhooks.
-        HTTPException
+        :class:`HTTPException`
             Getting channel webhooks failed.
 
         Returns
@@ -2762,9 +2764,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to create emoji.
-        HTTPException
+        :class:`HTTPException`
             Creating the emoji failed.
 
         Returns
@@ -2798,9 +2800,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete emojis.
-        HTTPException
+        :class:`HTTPException`
             Deleting the emoji failed.
         """
         await self.request(routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)))
@@ -2817,7 +2819,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             An error occurred fetching the emoji.
 
         Returns
@@ -2841,9 +2843,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete invite or not creator of that invite.
-        HTTPException
+        :class:`HTTPException`
             Deleting the invite failed.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
@@ -2861,9 +2863,9 @@ class HTTPClient:
 
         Raises
         ------
-        NotFound
+        :class:`NotFound`
             The invite is invalid.
-        HTTPException
+        :class:`HTTPException`
             Getting the invite failed.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
@@ -2888,9 +2890,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You're banned.
-        HTTPException
+        :class:`HTTPException`
             Accepting the invite failed.
 
         Returns
@@ -2985,7 +2987,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Trying to self-report, or reporting the message failed.
         """
         payload: raw.DataReportContent = {
@@ -3016,7 +3018,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             You're trying to self-report, or reporting the server failed.
         """
         payload: raw.DataReportContent = {
@@ -3048,7 +3050,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             You're trying to self-report, or reporting the user failed.
         """
         content: raw.UserReportedContent = {
@@ -3090,9 +3092,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to ban the user.
-        HTTPException
+        :class:`HTTPException`
             Banning the user failed.
         """
         payload: raw.DataBanCreate = {'reason': reason}
@@ -3137,9 +3139,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to unban the user.
-        HTTPException
+        :class:`HTTPException`
             Unbanning the user failed.
         """
         await self.request(
@@ -3221,9 +3223,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to create the channel.
-        HTTPException
+        :class:`HTTPException`
             Creating the channel failed.
         """
 
@@ -3275,9 +3277,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to manage the server.
-        HTTPException
+        :class:`HTTPException`
             Getting the invites failed.
 
         Returns
@@ -3511,9 +3513,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to kick the member.
-        HTTPException
+        :class:`HTTPException`
             Kicking the member failed.
         """
         await self.request(
@@ -3546,9 +3548,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to set role permissions on the server.
-        HTTPException
+        :class:`HTTPException`
             Setting permissions failed.
 
         Returns
@@ -3583,9 +3585,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to set default permissions on the server.
-        HTTPException
+        :class:`HTTPException`
             Setting permissions failed.
 
         Returns
@@ -3617,9 +3619,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to create the role.
-        HTTPException
+        :class:`HTTPException`
             Creating the role failed.
         """
         server_id = resolve_id(server)
@@ -3644,9 +3646,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete the role.
-        HTTPException
+        :class:`HTTPException`
             Deleting the role failed.
         """
         await self.request(routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)))
@@ -3683,9 +3685,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to edit the role.
-        HTTPException
+        :class:`HTTPException`
             Editing the role failed.
 
         Returns
@@ -3741,9 +3743,9 @@ class HTTPClient:
 
         Raises
         ------
-        NotFound
+        :class:`NotFound`
             The role does not exist.
-        HTTPException
+        :class:`HTTPException`
             Getting the role failed.
 
         Returns
@@ -3883,9 +3885,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to edit the server.
-        HTTPException
+        :class:`HTTPException`
             Editing the server failed.
 
         Returns
@@ -4177,7 +4179,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Editing the user failed.
 
         Returns
@@ -4231,7 +4233,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Editing the user failed.
 
         Returns
@@ -4279,7 +4281,7 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permission to access the user's profile.
 
         Returns
@@ -4327,9 +4329,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You been blocked by that user.
-        HTTPException
+        :class:`HTTPException`
             Getting the user failed.
 
         Returns
@@ -4355,7 +4357,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Finding mutual friends/servers failed.
 
         Returns
@@ -4388,7 +4390,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Opening DM failed.
         """
         resp: raw.SavedMessagesChannel | raw.DirectMessageChannel = await self.request(
@@ -4408,7 +4410,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Denying the friend request failed.
         """
         resp: raw.User = await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
@@ -4424,7 +4426,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Removing the user as a friend failed.
         """
         resp: raw.User = await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
@@ -4447,9 +4449,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             Target user have blocked you.
-        HTTPException
+        :class:`HTTPException`
             Sending the friend request failed.
         """
         if discriminator is not None:
@@ -4493,9 +4495,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to delete the webhook.
-        HTTPException
+        :class:`HTTPException`
             Deleting the webhook failed.
         """
         if token is None:
@@ -4535,9 +4537,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to edit the webhook.
-        HTTPException
+        :class:`HTTPException`
             Editing the webhook failed.
 
         Returns
@@ -4715,9 +4717,9 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
+        :class:`Forbidden`
             You do not have permissions to get the webhook.
-        HTTPException
+        :class:`HTTPException`
             Getting the webhook failed.
 
         Returns
@@ -4761,7 +4763,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Changing the account password failed.
         """
         payload: raw.a.DataChangeEmail = {
@@ -4795,7 +4797,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Changing the account password failed.
         """
         payload: raw.a.DataChangePassword = {
@@ -4823,7 +4825,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Confirming the account deletion failed.
         """
         payload: raw.a.DataAccountDeletion = {'token': token}
@@ -4859,7 +4861,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Registering the account failed.
         """
         payload: raw.a.DataCreateAccount = {
@@ -4893,7 +4895,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Requesting the account to be deleted failed.
         """
         await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa)
@@ -4917,7 +4919,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Disabling the account failed.
         """
         await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa)
@@ -4932,7 +4934,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Getting the account data failed.
         """
         resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile())
@@ -4956,7 +4958,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Sending the email failed.
         """
         payload: raw.a.DataPasswordReset = {
@@ -4989,7 +4991,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Resending the verification mail failed.
         """
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
@@ -5013,7 +5015,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Sending the email failed.
         """
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
@@ -5035,7 +5037,7 @@ class HTTPClient:
 
         Raises
         ------
-        HTTPException
+        :class:`HTTPException`
             Verifying the email address failed.
         """
         response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
