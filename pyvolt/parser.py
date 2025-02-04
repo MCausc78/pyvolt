@@ -228,6 +228,7 @@ from .user import (
     UserVoiceState,
     PartialUserVoiceState,
 )
+from .utils import _UTC
 from .webhook import PartialWebhook, Webhook
 
 if typing.TYPE_CHECKING:
@@ -243,8 +244,11 @@ if sys.version_info >= (3, 11):
 else:
     # datetime.fromisoformat in Python 3.10 doesn't parse ISO8601 timestamps, so we have to do it ourselves
     # Example: 2025-02-03T19:39:34.263Z
+
+    _strptime = datetime.strptime
+
     def _parse_dt(date_string: str, /) -> datetime:
-        return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return _strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=_UTC)
 
 
 class Parser:
