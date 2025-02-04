@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime
+import sys
 import typing
 
 from . import discovery
@@ -236,7 +237,14 @@ if typing.TYPE_CHECKING:
 
 _new_category = Category.__new__
 _new_permission_override = PermissionOverride.__new__
-_parse_dt = datetime.fromisoformat
+
+if sys.version_info >= (3, 11):
+    _parse_dt = datetime.fromisoformat
+else:
+    # datetime.fromisoformat in Python 3.10 doesn't parse ISO8601 timestamps, so we have to do it ourselves
+    # Example: 2025-02-03T19:39:34.263Z
+    def _parse_dt(date_string: str, /) -> datetime:
+        return datetime.strptime(date_string, '%Y-%m-%dT%H:%m:%S.%fZ')
 
 
 class Parser:
