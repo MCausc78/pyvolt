@@ -671,7 +671,7 @@ class UserPermissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def invite(cls) -> int:
-        """:class:`bool`: Unknown. This corresponds to ``1<<3``."""
+        """:class:`bool`: Whether the user can invite this user to groups."""
         return 1 << 3
 
 

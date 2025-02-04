@@ -1474,15 +1474,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +------------------------------------------+-----------------------------------------+
-            | Value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        HTTPException
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------------------------------+------------------------------------------------------+
@@ -1492,7 +1484,15 @@ class HTTPClient:
             +-------------------------------------------+------------------------------------------------------+
             | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |
             +-------------------------------------------+------------------------------------------------------+
-        Forbidden
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------------------+-----------------------------------------+
+            | Value | Reason                                  |
+            +------------------------------------------+-----------------------------------------+
+            | ``InvalidSession``                       | The current bot/user token is invalid.  |
+            +------------------------------------------+-----------------------------------------+
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +---------------------------------------+-------------------------------------------------------------+
@@ -1502,7 +1502,7 @@ class HTTPClient:
             +---------------------------------------+-------------------------------------------------------------+
             | ``NotOwner``                          | You do not own the group.                                   |
             +---------------------------------------+-------------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------------------------+---------------------------------+
@@ -1512,7 +1512,7 @@ class HTTPClient:
             +--------------------------------------+---------------------------------+
             | ``NotInGroup``                       | The new owner was not in group. |
             +--------------------------------------+---------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
@@ -1556,7 +1556,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_channel(resp)
 
-    async def get_channel(self, channel: ULIDOr[BaseChannel]) -> Channel:
+    async def get_channel(self, channel: ULIDOr[BaseChannel], /) -> Channel:
         """|coro|
 
         Fetch a :class:`.Channel` with the specified ID.
@@ -1578,7 +1578,7 @@ class HTTPClient:
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        Forbidden
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+-------------------------------------------------------------+
@@ -1586,7 +1586,7 @@ class HTTPClient:
             +-----------------------+-------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
             +-----------------------+-------------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+----------------------------+
@@ -1612,6 +1612,8 @@ class HTTPClient:
 
         Adds another user to the group.
 
+        You must have :attr:`~Permissions.create_invites` to do this.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1624,10 +1626,60 @@ class HTTPClient:
 
         Raises
         ------
-        Forbidden
-            You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        HTTPException
-            Adding user to the group failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------------------+
+            | Value                | Reason                                    |
+            +----------------------+-------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group.          |
+            +----------------------+-------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. |
+            +----------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.              |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add the recipient. |
+            +-----------------------+--------------------------------------------------------------+
+            | ``NotFriends``        | You're not friends with the user you want to add.            |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The channel or user were not found. |
+            +--------------+-------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------+
+            | Value               | Reason                        |
+            +---------------------+-------------------------------+
+            | ``AlreadyInGroup``  | The user is already in group. |
+            +---------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.CHANNELS_GROUP_ADD_MEMBER.compile(channel_id=resolve_id(channel), user_id=resolve_id(user))
@@ -1638,12 +1690,13 @@ class HTTPClient:
         name: str,
         *,
         description: str | None = None,
+        icon: ResolvableResource | None = None,
         recipients: list[ULIDOr[BaseUser]] | None = None,
         nsfw: bool | None = None,
     ) -> GroupChannel:
         """|coro|
 
-        Creates the new group channel.
+        Creates a new group.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1651,18 +1704,64 @@ class HTTPClient:
         Parameters
         ----------
         name: :class:`str`
-            The group name.
+            The group name. Must be between 1 and 32 characters long.
         description: Optional[:class:`str`]
-            The group description.
+            The group description. Can be only up to 1024 characters.
+        icon: Optional[:class:`.ResolvableResource`]
+            The group's icon.
         recipients: Optional[List[ULIDOr[:class:`.BaseUser`]]]
-            The list of recipients to add to the group. You must be friends with these users.
+            The users to create the group with, only up to 49 users. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
-            Whether this group should be age-restricted.
+            To mark the group as NSFW or not.
 
         Raises
         ------
-        HTTPException
-            Creating the group failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------------------+
+            | Value                | Reason                                    |
+            +----------------------+-------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                  |
+            +----------------------+-------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. |
+            +----------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.              |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add the recipient. |
+            +-----------------------+------------------------------------------------------------------+
+            | ``NotFriends``        | You're not friends with the users you want to create group with. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------+
+            | Value        | Reason                           |
+            +--------------+----------------------------------+
+            | ``NotFound`` | One of recipients was not found. |
+            +--------------+----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -1672,8 +1771,10 @@ class HTTPClient:
         payload: raw.DataCreateGroup = {'name': name}
         if description is not None:
             payload['description'] = description
+        if icon is not None:
+            payload['icon'] = await resolve_resource(self.state, icon, tag='icons')
         if recipients is not None:
-            payload['users'] = [resolve_id(recipient) for recipient in recipients]
+            payload['users'] = list(map(resolve_id, recipients))
         if nsfw is not None:
             payload['nsfw'] = nsfw
         resp: raw.GroupChannel = await self.request(routes.CHANNELS_GROUP_CREATE.compile(), json=payload)
@@ -2233,15 +2334,7 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
-        HTTPException
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
@@ -2269,7 +2362,15 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-        Forbidden
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+----------------------------------------------------------+
@@ -2277,7 +2378,7 @@ class HTTPClient:
             +-----------------------+----------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to send messages. |
             +-----------------------+----------------------------------------------------------+
-        NotFound
+        :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+---------------------------------------+
@@ -2285,7 +2386,7 @@ class HTTPClient:
             +--------------+---------------------------------------+
             | ``NotFound`` | The channel/file/reply was not found. |
             +--------------+---------------------------------------+
-        Conflict
+        :class:`Conflict`
             Possible values for :attr:`~HTTPException.type`:
 
             +---------------------+-------------------------------+
@@ -2295,7 +2396,7 @@ class HTTPClient:
             +---------------------+-------------------------------+
             | ``AlreadyInServer`` | The bot is already in server. |
             +---------------------+-------------------------------+
-        InternalServerError
+        :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
             +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
