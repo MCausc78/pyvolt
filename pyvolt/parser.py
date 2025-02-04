@@ -244,7 +244,7 @@ else:
     # datetime.fromisoformat in Python 3.10 doesn't parse ISO8601 timestamps, so we have to do it ourselves
     # Example: 2025-02-03T19:39:34.263Z
     def _parse_dt(date_string: str, /) -> datetime:
-        return datetime.strptime(date_string, '%Y-%m-%dT%H:%m:%S.%fZ')
+        return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
 
 
 class Parser:
