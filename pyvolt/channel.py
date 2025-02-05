@@ -730,7 +730,7 @@ class GroupChannel(BaseChannel, Messageable):
         HTTPException
             Creating invite failed.
         """
-        return await self.state.http.create_invite(self.id)
+        return await self.state.http.create_channel_invite(self.id)
 
     async def leave(self, *, silent: bool | None = None) -> None:
         """|coro|
@@ -923,7 +923,7 @@ class BaseServerChannel(BaseChannel):
         :class:`.Invite`
             The invite that was created.
         """
-        return await self.state.http.create_invite(self.id)
+        return await self.state.http.create_channel_invite(self.id)
 
     async def delete(self) -> None:
         """|coro|

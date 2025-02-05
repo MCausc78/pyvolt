@@ -181,7 +181,7 @@ class Messageable:
             The message embeds.
         masquearde: Optional[:class:`Masquerade`]
             The message masquerade.
-        interactions: Optional[:class:`Interactions`]
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.

@@ -467,27 +467,27 @@ class HTTPClient:
 
     def __init__(
         self,
-        token: str | None = None,
+        token: typing.Optional[str] = None,
         *,
-        base: str | None = None,
+        base: typing.Optional[str] = None,
         bot: bool = True,
-        cookie: str | None = None,
-        max_retries: int | None = None,
+        cookie: typing.Optional[str] = None,
+        max_retries: typing.Optional[int] = None,
         rate_limiter: UndefinedOr[Callable[[HTTPClient], RateLimiter | None] | RateLimiter | None] = UNDEFINED,
         state: State,
         session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
-        user_agent: str | None = None,
+        user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
             base = 'https://api.revolt.chat/0.8'
         self._base: str = base.rstrip('/')
         self.bot: bool = bot
         self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
-        self.cookie: str | None = cookie
+        self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
 
         if rate_limiter is UNDEFINED:
-            self.rate_limiter: RateLimiter | None = DefaultRateLimiter()
+            self.rate_limiter: typing.Optional[RateLimiter] = DefaultRateLimiter()
         elif callable(rate_limiter):
             self.rate_limiter = rate_limiter(self)
         else:
@@ -540,7 +540,7 @@ class HTTPClient:
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[str | None] = UNDEFINED,
         json_body: bool = False,
-        mfa_ticket: str | None = None,
+        mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[str | None] = UNDEFINED,
         user_agent: UndefinedOr[str | None] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
@@ -602,7 +602,7 @@ class HTTPClient:
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[str | None] = UNDEFINED,
         json: UndefinedOr[typing.Any] = UNDEFINED,
-        mfa_ticket: str | None = None,
+        mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[str | None] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
@@ -676,7 +676,7 @@ class HTTPClient:
             if rate_limiter:
                 rate_limit = rate_limiter.fetch_ratelimit_for(route, path)
                 if rate_limit:
-                    blocker: RateLimitBlocker | None = None
+                    blocker: typing.Optional[RateLimitBlocker] = None
                 else:
                     blocker = rate_limiter.fetch_blocker_for(route, path)
                     await blocker.increment()
@@ -768,7 +768,7 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        mfa_ticket: str | None = None,
+        mfa_ticket: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
         token: UndefinedOr[str | None] = UNDEFINED,
@@ -855,7 +855,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Instance`
+        :class:`.Instance`
             The instance.
         """
         resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), token=None)
@@ -921,7 +921,7 @@ class HTTPClient:
             resp['user']['relationship'] = 'None'
         return self.state.parser.parse_bot(resp, resp['user'])
 
-    async def delete_bot(self, bot: ULIDOr[BaseBot]) -> None:
+    async def delete_bot(self, bot: ULIDOr[BaseBot], /) -> None:
         """|coro|
 
         Deletes the bot.
@@ -931,7 +931,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`BaseBot`]
+        bot: ULIDOr[:class:`.BaseBot`]
             The bot to delete.
 
         Raises
@@ -970,7 +970,7 @@ class HTTPClient:
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
-        interactions_url: UndefinedOr[str | None] = UNDEFINED,
+        interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -979,7 +979,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`BaseBot`]
+        bot: ULIDOr[:class:`.BaseBot`]
             The bot to edit.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -990,7 +990,7 @@ class HTTPClient:
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         reset_token: :class:`bool`
-            Whether to reset bot token. The new token can be accessed via ``bot.token``.
+            Whether to reset bot token. The new token can be accessed via :attr:`Bot.token`.
 
         Raises
         ------
@@ -1031,7 +1031,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Bot`
+        :class:`.Bot`
             The updated bot.
         """
         payload: raw.DataEditBot = {}
@@ -1065,7 +1065,7 @@ class HTTPClient:
             resp['user'],
         )
 
-    async def get_bot(self, bot: ULIDOr[BaseBot]) -> Bot:
+    async def get_bot(self, bot: ULIDOr[BaseBot], /) -> Bot:
         """|coro|
 
         Retrieves the bot with the given ID.
@@ -1077,8 +1077,8 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`BaseBot`]
-            The ID of the bot.
+        bot: ULIDOr[:class:`.BaseBot`]
+            The bot to fetch.
 
         Raises
         ------
@@ -1102,14 +1102,14 @@ class HTTPClient:
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------------------------+--------------------------------------------------------------+
-            | Value | Reason                                                       |
+            | Value                                | Reason                                                       |
             +--------------------------------------+--------------------------------------------------------------+
             | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
             +--------------------------------------+--------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Bot`
+        :class:`.Bot`
             The retrieved bot.
         """
         resp: raw.FetchBotResponse = await self.request(routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)))
@@ -1144,13 +1144,13 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`Bot`]
+        List[:class:`.Bot`]
             The owned bots.
         """
         resp: raw.OwnedBotsResponse = await self.request(routes.BOTS_FETCH_OWNED.compile())
         return self.state.parser.parse_bots(resp)
 
-    async def get_public_bot(self, bot: ULIDOr[BaseBot]) -> PublicBot:
+    async def get_public_bot(self, bot: ULIDOr[BaseBot], /) -> PublicBot:
         """|coro|
 
         Retrieves the public bot with the given ID.
@@ -1160,8 +1160,8 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`BaseBot`]
-            The ID of the bot.
+        bot: ULIDOr[:class:`.BaseBot`]
+            The bot to fetch.
 
         Raises
         ------
@@ -1192,7 +1192,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`PublicBot`
+        :class:`.PublicBot`
             The retrieved bot.
         """
         resp: raw.PublicBot = await self.request(routes.BOTS_FETCH_PUBLIC.compile(bot_id=resolve_id(bot)))
@@ -1201,7 +1201,7 @@ class HTTPClient:
     @typing.overload
     async def invite_bot(
         self,
-        bot: ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
         server: ULIDOr[BaseServer],
     ) -> None: ...
@@ -1209,17 +1209,17 @@ class HTTPClient:
     @typing.overload
     async def invite_bot(
         self,
-        bot: ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
         group: ULIDOr[GroupChannel],
     ) -> None: ...
 
     async def invite_bot(
         self,
-        bot: ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
-        server: ULIDOr[BaseServer] | None = None,
-        group: ULIDOr[GroupChannel] | None = None,
+        server: typing.Optional[ULIDOr[BaseServer]] = None,
+        group: typing.Optional[ULIDOr[GroupChannel]] = None,
     ) -> None:
         """|coro|
 
@@ -1233,11 +1233,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
+        bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
             The bot.
-        server: Optional[ULIDOr[:class:`BaseServer`]]
+        server: Optional[ULIDOr[:class:`.BaseServer`]]
             The destination server.
-        group: Optional[ULIDOr[:class:`GroupChannel`]]
+        group: Optional[ULIDOr[:class:`.GroupChannel`]]
             The destination group.
 
         Raises
@@ -1378,7 +1378,7 @@ class HTTPClient:
             )
         )
 
-    async def close_channel(self, channel: ULIDOr[BaseChannel], silent: bool | None = None) -> None:
+    async def close_channel(self, channel: ULIDOr[BaseChannel], silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
@@ -1388,7 +1388,7 @@ class HTTPClient:
         Parameters
         ----------
         channel: ULIDOr[:class:`.BaseChannel`]
-            The channel.
+            The channel to close.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
@@ -1427,14 +1427,14 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        p: raw.OptionsChannelDelete = {}
+        params: raw.OptionsChannelDelete = {}
         if silent is not None:
-            p['leave_silently'] = utils._bool(silent)
+            params['leave_silently'] = utils._bool(silent)
 
         # this endpoint can return NoEffect and its 200 OK for some reason
         await self.request(
             routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
-            params=p,
+            params=params,
         )
 
     async def edit_channel(
@@ -1442,9 +1442,9 @@ class HTTPClient:
         channel: ULIDOr[BaseChannel],
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        description: UndefinedOr[str | None] = UNDEFINED,
+        description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
-        icon: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         nsfw: UndefinedOr[bool] = UNDEFINED,
         archived: UndefinedOr[bool] = UNDEFINED,
         default_permissions: UndefinedOr[None] = UNDEFINED,
@@ -1525,7 +1525,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Channel`
+        :class:`.Channel`
             The newly updated channel.
         """
         payload: raw.DataEditChannel = {}
@@ -1692,10 +1692,10 @@ class HTTPClient:
         self,
         name: str,
         *,
-        description: str | None = None,
-        icon: ResolvableResource | None = None,
+        description: typing.Optional[str] = None,
+        icon: typing.Optional[ResolvableResource] = None,
         recipients: list[ULIDOr[BaseUser]] | None = None,
-        nsfw: bool | None = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> GroupChannel:
         """|coro|
 
@@ -1861,7 +1861,7 @@ class HTTPClient:
             )
         )
 
-    async def create_invite(self, channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]]) -> Invite:
+    async def create_channel_invite(self, channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]]) -> Invite:
         """|coro|
 
         Creates an invite to channel. The destination channel must be a group or server channel.
@@ -1944,11 +1944,49 @@ class HTTPClient:
         Raises
         ------
         :class:`HTTPException`
-            Getting group recipients failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------+
+            | Value                | Reason                           |
+            +----------------------+----------------------------------+
+            | ``InvalidOperation`` | The target channel is not group. |
+            +----------------------+----------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------+
+            | Value                 | Reason                                                    |
+            +-----------------------+-----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the group. |
+            +-----------------------+-----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`User`]
+        List[:class:`.User`]
             The group recipients.
         """
         resp: list[raw.User] = await self.request(
@@ -1958,14 +1996,14 @@ class HTTPClient:
         )
         return list(map(self.state.parser.parse_user, resp))
 
-    async def bulk_delete_messages(
+    async def delete_messages(
         self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]], /
     ) -> None:
         """|coro|
 
-        Delete multiple messages you've sent or one you have permission to delete.
-        You must have :attr:`~Permissions.manage_messages` to do this.
-        Messages must have been sent within the past 1 week.
+        Delete multiple messages.
+
+        You must have :attr:`~Permissions.manage_messages` to do this regardless whether you authored the message or not.
 
         Parameters
         ----------
@@ -1976,10 +2014,47 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to delete the messages.
         :class:`HTTPException`
-            Deleting messages failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-----------------------------------------------------------------------------+
+            | Value                | Reason                                                                      |
+            +----------------------+-----------------------------------------------------------------------------+
+            | ``InvalidOperation`` | One of provided message IDs was invalid or message was at least 1 week old. |
+            +----------------------+-----------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete messages. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         """
         payload: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
         await self.request(
@@ -2046,8 +2121,9 @@ class HTTPClient:
     async def delete_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
         """|coro|
 
-        Deletes the message.
-        You must have :attr:`~Permissions.manage_messages` to do this if message is not your's.
+        Deletes the message in a channel.
+
+        You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
 
         Parameters
         ----------
@@ -2058,10 +2134,38 @@ class HTTPClient:
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to delete message.
-        :class:`HTTPException`
-            Deleting the message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------+
+            | Value                 | Reason                                                        |
+            +-----------------------+---------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete the message. |
+            +-----------------------+---------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The channel or message was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.CHANNELS_MESSAGE_DELETE.compile(
@@ -2155,12 +2259,12 @@ class HTTPClient:
         self,
         channel: ULIDOr[TextableChannel],
         *,
-        limit: int | None = None,
+        limit: typing.Optional[int] = None,
         before: ULIDOr[BaseMessage] | None = None,
         after: ULIDOr[BaseMessage] | None = None,
-        sort: MessageSort | None = None,
+        sort: typing.Optional[MessageSort] = None,
         nearby: ULIDOr[BaseMessage] | None = None,
-        populate_users: bool | None = None,
+        populate_users: typing.Optional[bool] = None,
     ) -> list[Message]:
         """|coro|
 
@@ -2253,14 +2357,14 @@ class HTTPClient:
     async def search_for_messages(
         self,
         channel: ULIDOr[TextableChannel],
-        query: str | None = None,
+        query: typing.Optional[str] = None,
         *,
-        pinned: bool | None = None,
-        limit: int | None = None,
+        pinned: typing.Optional[bool] = None,
+        limit: typing.Optional[int] = None,
         before: ULIDOr[BaseMessage] | None = None,
         after: ULIDOr[BaseMessage] | None = None,
-        sort: MessageSort | None = None,
-        populate_users: bool | None = None,
+        sort: typing.Optional[MessageSort] = None,
+        populate_users: typing.Optional[bool] = None,
     ) -> list[Message]:
         """|coro|
 
@@ -2352,17 +2456,17 @@ class HTTPClient:
     async def send_message(
         self,
         channel: ULIDOr[TextableChannel],
-        content: str | None = None,
+        content: typing.Optional[str] = None,
         *,
-        nonce: str | None = None,
+        nonce: typing.Optional[str] = None,
         attachments: list[ResolvableResource] | None = None,
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
-        masquerade: Masquerade | None = None,
-        interactions: MessageInteractions | None = None,
-        silent: bool | None = None,
-        mention_everyone: bool | None = None,
-        mention_online: bool | None = None,
+        masquerade: typing.Optional[Masquerade] = None,
+        interactions: typing.Optional[MessageInteractions] = None,
+        silent: typing.Optional[bool] = None,
+        mention_everyone: typing.Optional[bool] = None,
+        mention_online: typing.Optional[bool] = None,
     ) -> Message:
         """|coro|
 
@@ -2587,7 +2691,7 @@ class HTTPClient:
         /,
         *,
         user: ULIDOr[BaseUser] | None = None,
-        remove_all: bool | None = None,
+        remove_all: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
 
@@ -2758,7 +2862,7 @@ class HTTPClient:
         /,
         *,
         name: str,
-        avatar: ResolvableResource | None = None,
+        avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
         """|coro|
 
@@ -2824,7 +2928,7 @@ class HTTPClient:
         /,
         *,
         name: str,
-        nsfw: bool | None = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> ServerEmoji:
         """|coro|
 
@@ -3058,7 +3162,7 @@ class HTTPClient:
         message: ULIDOr[BaseMessage],
         reason: ContentReportReason,
         *,
-        additional_context: str | None = None,
+        additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -3089,7 +3193,7 @@ class HTTPClient:
         reason: ContentReportReason,
         /,
         *,
-        additional_context: str | None = None,
+        additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -3120,7 +3224,7 @@ class HTTPClient:
         reason: UserReportReason,
         /,
         *,
-        additional_context: str | None = None,
+        additional_context: typing.Optional[str] = None,
         message_context: ULIDOr[BaseMessage],
     ) -> None:
         """|coro|
@@ -3157,7 +3261,7 @@ class HTTPClient:
         user: str | BaseUser | BaseMember,
         /,
         *,
-        reason: str | None = None,
+        reason: typing.Optional[str] = None,
     ) -> Ban:
         """|coro|
 
@@ -3238,8 +3342,8 @@ class HTTPClient:
         *,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
-        description: str | None = ...,
-        nsfw: bool | None = ...,
+        description: typing.Optional[str] = ...,
+        nsfw: typing.Optional[bool] = ...,
     ) -> TextChannel: ...
 
     @typing.overload
@@ -3250,8 +3354,8 @@ class HTTPClient:
         *,
         type: None = ...,
         name: str,
-        description: str | None = ...,
-        nsfw: bool | None = ...,
+        description: typing.Optional[str] = ...,
+        nsfw: typing.Optional[bool] = ...,
     ) -> TextChannel: ...
 
     @typing.overload
@@ -3262,8 +3366,8 @@ class HTTPClient:
         *,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
-        description: str | None = ...,
-        nsfw: bool | None = ...,
+        description: typing.Optional[str] = ...,
+        nsfw: typing.Optional[bool] = ...,
     ) -> VoiceChannel: ...
 
     @typing.overload
@@ -3274,8 +3378,8 @@ class HTTPClient:
         *,
         type: ChannelType = ...,
         name: str,
-        description: str | None = ...,
-        nsfw: bool | None = ...,
+        description: typing.Optional[str] = ...,
+        nsfw: typing.Optional[bool] = ...,
     ) -> typing.NoReturn: ...
 
     async def create_server_channel(
@@ -3283,10 +3387,10 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         /,
         *,
-        type: ChannelType | None = None,
+        type: typing.Optional[ChannelType] = None,
         name: str,
-        description: str | None = None,
-        nsfw: bool | None = None,
+        description: typing.Optional[str] = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> ServerChannel:
         """|coro|
 
@@ -3525,7 +3629,9 @@ class HTTPClient:
         )
         return self.state.parser.parse_member(resp)
 
-    async def get_members(self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None) -> list[Member]:
+    async def get_members(
+        self, server: ULIDOr[BaseServer], /, *, exclude_offline: typing.Optional[bool] = None
+    ) -> list[Member]:
         """|coro|
 
         Retrieves all server members.
@@ -3553,7 +3659,7 @@ class HTTPClient:
         return self.state.parser.parse_members_with_users(resp)
 
     async def get_member_list(
-        self, server: ULIDOr[BaseServer], /, *, exclude_offline: bool | None = None
+        self, server: ULIDOr[BaseServer], /, *, exclude_offline: typing.Optional[bool] = None
     ) -> MemberList:
         """|coro|
 
@@ -3687,7 +3793,7 @@ class HTTPClient:
             (True, d['channels']),
         )
 
-    async def create_role(self, server: ULIDOr[BaseServer], /, *, name: str, rank: int | None = None) -> Role:
+    async def create_role(self, server: ULIDOr[BaseServer], /, *, name: str, rank: typing.Optional[int] = None) -> Role:
         """|coro|
 
         Creates a new server role.
@@ -3860,7 +3966,9 @@ class HTTPClient:
         """
         await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
 
-    async def create_server(self, name: str, /, *, description: str | None = None, nsfw: bool | None = None) -> Server:
+    async def create_server(
+        self, name: str, /, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+    ) -> Server:
         """|coro|
 
         Create a new server.
@@ -3903,7 +4011,7 @@ class HTTPClient:
         """
         await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
 
-    async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: bool | None = None) -> None:
+    async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
         Leaves the server if not owner otherwise deletes it.
@@ -4029,7 +4137,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         /,
         *,
-        populate_channels: bool | None = None,
+        populate_channels: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
 
@@ -4514,7 +4622,7 @@ class HTTPClient:
         resp: raw.User = await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
         return self.state.parser.parse_user(resp)
 
-    async def send_friend_request(self, username: str, discriminator: str | None = None, /) -> User:
+    async def send_friend_request(self, username: str, discriminator: typing.Optional[str] = None, /) -> User:
         """|coro|
 
         Send a friend request to another user.
@@ -4563,7 +4671,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     # Webhooks control
-    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], /, *, token: str | None = None) -> None:
+    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], /, *, token: typing.Optional[str] = None) -> None:
         """|coro|
 
         Deletes a webhook. If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
@@ -4595,7 +4703,7 @@ class HTTPClient:
         webhook: ULIDOr[BaseWebhook],
         /,
         *,
-        token: str | None = None,
+        token: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         permissions: UndefinedOr[Permissions] = UNDEFINED,
@@ -4661,17 +4769,17 @@ class HTTPClient:
         webhook: ULIDOr[BaseWebhook],
         token: str,
         /,
-        content: str | None = None,
+        content: typing.Optional[str] = None,
         *,
-        nonce: str | None = None,
+        nonce: typing.Optional[str] = None,
         attachments: list[ResolvableResource] | None = None,
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
-        masquerade: Masquerade | None = None,
-        interactions: MessageInteractions | None = None,
-        silent: bool | None = None,
-        mention_everyone: bool | None = None,
-        mention_online: bool | None = None,
+        masquerade: typing.Optional[Masquerade] = None,
+        interactions: typing.Optional[MessageInteractions] = None,
+        silent: typing.Optional[bool] = None,
+        mention_everyone: typing.Optional[bool] = None,
+        mention_online: typing.Optional[bool] = None,
     ) -> Message:
         """|coro|
 
@@ -4780,7 +4888,7 @@ class HTTPClient:
         webhook: ULIDOr[BaseWebhook],
         /,
         *,
-        token: str | None = None,
+        token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
 
@@ -4923,8 +5031,8 @@ class HTTPClient:
         password: str,
         /,
         *,
-        invite: str | None = None,
-        captcha: str | None = None,
+        invite: typing.Optional[str] = None,
+        captcha: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -5023,7 +5131,7 @@ class HTTPClient:
         return self.state.parser.parse_partial_account(resp)
 
     async def confirm_password_reset(
-        self, token: str, /, *, new_password: str, remove_sessions: bool | None = None
+        self, token: str, /, *, new_password: str, remove_sessions: typing.Optional[bool] = None
     ) -> None:
         """|coro|
 
@@ -5058,7 +5166,7 @@ class HTTPClient:
         self,
         *,
         email: str,
-        captcha: str | None = None,
+        captcha: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -5083,7 +5191,7 @@ class HTTPClient:
             json=payload,
         )
 
-    async def send_password_reset(self, *, email: str, captcha: str | None = None) -> None:
+    async def send_password_reset(self, *, email: str, captcha: typing.Optional[str] = None) -> None:
         """|coro|
 
         Send an email to reset account password.
@@ -5251,7 +5359,9 @@ class HTTPClient:
         resp: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
         return list(map(self.state.parser.parse_partial_session, resp))
 
-    async def login_with_email(self, email: str, password: str, /, *, friendly_name: str | None = None) -> LoginResult:
+    async def login_with_email(
+        self, email: str, password: str, /, *, friendly_name: typing.Optional[str] = None
+    ) -> LoginResult:
         """|coro|
 
         Logs in to an account using email and password.
@@ -5284,7 +5394,7 @@ class HTTPClient:
         by: MFAResponse | None,
         /,
         *,
-        friendly_name: str | None = None,
+        friendly_name: typing.Optional[str] = None,
     ) -> Session | AccountDisabled:
         """|coro|
 
@@ -5328,7 +5438,7 @@ class HTTPClient:
         """
         await self.request(routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id)))
 
-    async def revoke_all_sessions(self, *, revoke_self: bool | None = None) -> None:
+    async def revoke_all_sessions(self, *, revoke_self: typing.Optional[bool] = None) -> None:
         """|coro|
 
         Deletes all active sessions, optionally including current one.

@@ -2414,6 +2414,7 @@ PrivateChannel
 ~~~~~~~~~~~~~~
 
 .. class:: PrivateChannel
+    
     A union of all channels that do not belong to a server.
     
     The following classes are included in this union:
@@ -2426,6 +2427,7 @@ ServerChannel
 ~~~~~~~~~~~~~
     
 .. class:: ServerChannel
+
     A union of all channels that belong to a server.
     
     The following classes are included in this union:
@@ -2437,6 +2439,7 @@ TextableChannel
 ~~~~~~~~~~~~~~~
 
 .. class:: TextableChannel
+
     A union of all channels that can have messages in them.
     
     The following classes are included in this union:
@@ -2451,6 +2454,7 @@ Channel
 ~~~~~~~
 
 .. class:: Channel
+
     A union of all channels.
 
     Union types such as this exist to help determine which exact channel type has some field during development.
