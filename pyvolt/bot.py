@@ -72,7 +72,7 @@ class BaseBot(Base):
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
-        interactions_url: UndefinedOr[str | None] = UNDEFINED,
+        interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -150,17 +150,17 @@ class Bot(BaseBot):
     discoverable: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the bot is publicly discoverable."""
 
-    interactions_url: str | None = field(repr=True, kw_only=True)
+    interactions_url: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The URL to send interactions to.
     
     .. note::
         This attribute is reserved.
     """
 
-    terms_of_service_url: str | None = field(repr=True, kw_only=True)
+    terms_of_service_url: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The Terms of Service's URL."""
 
-    privacy_policy_url: str | None = field(repr=True, kw_only=True)
+    privacy_policy_url: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The privacy policy URL."""
 
     raw_flags: int = field(repr=True, kw_only=True)
@@ -184,7 +184,7 @@ class PublicBot(BaseBot):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""
 
-    internal_avatar_id: str | None = field(repr=True, kw_only=True)
+    internal_avatar_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The bot's avatar ID."""
 
     description: str = field(repr=True, kw_only=True)

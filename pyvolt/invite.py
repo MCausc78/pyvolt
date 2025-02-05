@@ -54,7 +54,7 @@ class BaseInvite:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseInvite) and self.code == other.code
 
-    async def accept(self) -> Server | GroupChannel:
+    async def accept(self) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
         Accept this invite.
@@ -110,10 +110,10 @@ class ServerPublicInvite(BaseInvite):
     server_name: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's name."""
 
-    internal_server_icon: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_server_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The server's stateless icon."""
 
-    internal_server_banner: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_server_banner: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The server's stateless banner.."""
 
     raw_server_flags: int = field(repr=True, kw_only=True)
@@ -125,13 +125,13 @@ class ServerPublicInvite(BaseInvite):
     channel_name: str = field(repr=True, kw_only=True)
     """:class:`str`: The destination channel's name."""
 
-    channel_description: str | None = field(repr=True, kw_only=True)
+    channel_description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The destination channel's description."""
 
     user_name: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's name who created this invite."""
 
-    internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_user_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     member_count: int = field(repr=True, kw_only=True)
@@ -145,17 +145,17 @@ class ServerPublicInvite(BaseInvite):
         return ret
 
     @property
-    def server_icon(self) -> Asset | None:
+    def server_icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The icon of the server."""
         return self.internal_server_icon and self.internal_server_icon.attach_state(self.state, 'icons')
 
     @property
-    def server_banner(self) -> Asset | None:
+    def server_banner(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The banner of the server."""
         return self.internal_server_banner and self.internal_server_banner.attach_state(self.state, 'banners')
 
     @property
-    def user_avatar(self) -> Asset | None:
+    def user_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
@@ -188,17 +188,17 @@ class GroupPublicInvite(BaseInvite):
     channel_name: str = field(repr=True, kw_only=True)
     """:class:`str`: The destination channel's name."""
 
-    channel_description: str | None = field(repr=True, kw_only=True)
+    channel_description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The destination channel's description."""
 
     user_name: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's name who created this invite."""
 
-    internal_user_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_user_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     @property
-    def user_avatar(self) -> Asset | None:
+    def user_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 

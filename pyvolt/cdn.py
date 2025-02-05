@@ -55,10 +55,10 @@ class AssetMetadata:
     type: AssetMetadataType = field(repr=True, kw_only=True, eq=True)
     """:class:`.AssetMetadataType`: The metadata's type."""
 
-    width: int | None = field(repr=True, kw_only=True, eq=True)
+    width: typing.Optional[int] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`int`]: The image/video's width, if applicable."""
 
-    height: int | None = field(repr=True, kw_only=True, eq=True)
+    height: typing.Optional[int] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`int`]: The image/video's height, if applicable."""
 
 
@@ -93,16 +93,16 @@ class StatelessAsset:
     reported: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the file was reported."""
 
-    message_id: str | None = field(repr=True, kw_only=True)
+    message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The message's ID the asset is associated with."""
 
-    user_id: str | None = field(repr=True, kw_only=True)
+    user_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The user's ID the asset is associated with."""
 
-    server_id: str | None = field(repr=True, kw_only=True)
+    server_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The server's ID the asset is associated with."""
 
-    object_id: str | None = field(repr=True, kw_only=True)
+    object_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The object's ID the asset is associated with."""
 
     def __hash__(self) -> int:
@@ -183,7 +183,7 @@ class Resource(ABC):
         ...
 
 
-_cdn_session: aiohttp.ClientSession | None = None
+_cdn_session: typing.Optional[aiohttp.ClientSession] = None
 
 DEFAULT_CDN_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
 
@@ -199,7 +199,7 @@ def _get_session() -> aiohttp.ClientSession:
 Content = typing.Union[bytes, str, bytearray, io.IOBase]
 
 
-def resolve_content(content: Content, /) -> bytes | io.IOBase:
+def resolve_content(content: Content, /) -> typing.Union[bytes, io.IOBase]:
     if isinstance(content, bytearray):
         return bytes(content)
     elif isinstance(content, str):
@@ -227,8 +227,8 @@ class Upload(Resource):
         'content',
     )
 
-    def __init__(self, content: Content, *, tag: Tag | None = None, filename: str) -> None:
-        self.tag: Tag | None = tag
+    def __init__(self, content: Content, *, tag: typing.Optional[Tag] = None, filename: str) -> None:
+        self.tag: typing.Optional[Tag] = tag
         self.filename: str = filename
         self.content: Content = resolve_content(content)
 
@@ -401,16 +401,18 @@ class CDNClient:
     def __init__(
         self,
         *,
-        base: str | None = None,
-        session: utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession,
+        base: typing.Optional[str] = None,
+        session: typing.Union[utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession], aiohttp.ClientSession],
         state: State,
-        user_agent: str | None = None,
+        user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
             base = 'https://autumn.revolt.chat'
 
         self._base = base.rstrip('/')
-        self._session: utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
+        self._session: typing.Union[
+            utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession], aiohttp.ClientSession
+        ] = session
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_CDN_USER_AGENT
 

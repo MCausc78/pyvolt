@@ -80,7 +80,7 @@ class YouTubeEmbedSpecial(BaseEmbedSpecial):
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The video ID."""
 
-    timestamp: str | None = field(repr=True, kw_only=True, eq=True)
+    timestamp: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The video timestamp."""
 
 
@@ -143,7 +143,7 @@ class AppleMusicEmbedSpecial(BaseEmbedSpecial):
     album_id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Apple Music album ID."""
 
-    track_id: str | None = field(repr=True, kw_only=True, eq=True)
+    track_id: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The Apple Music track ID."""
 
 
@@ -196,34 +196,34 @@ class VideoEmbed(BaseEmbed):
 class WebsiteEmbed(BaseEmbed):
     """Represents website embed within Revolt message."""
 
-    url: str | None = field(repr=True, kw_only=True, eq=True)
+    url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The direct URL to web page."""
 
-    original_url: str | None = field(repr=True, kw_only=True, eq=True)
+    original_url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The original direct URL."""
 
-    special: EmbedSpecial | None = field(repr=True, kw_only=True, eq=True)
+    special: typing.Optional[EmbedSpecial] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`.EmbedSpecial`]: The remote content."""
 
-    title: str | None = field(repr=True, kw_only=True, eq=True)
+    title: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The title of website."""
 
-    description: str | None = field(repr=True, kw_only=True, eq=True)
+    description: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The description of website."""
 
-    image: ImageEmbed | None = field(repr=True, kw_only=True, eq=True)
+    image: typing.Optional[ImageEmbed] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`.ImageEmbed`]: The embedded image."""
 
-    video: VideoEmbed | None = field(repr=True, kw_only=True, eq=True)
+    video: typing.Optional[VideoEmbed] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`.VideoEmbed`]: The embedded video."""
 
-    site_name: str | None = field(repr=True, kw_only=True, eq=True)
+    site_name: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The site name."""
 
-    icon_url: str | None = field(repr=True, kw_only=True, eq=True)
+    icon_url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The URL to site icon."""
 
-    color: str | None = field(repr=True, kw_only=True, eq=True)
+    color: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The embed's CSS color."""
 
     def attach_state(self, state: State, /) -> Embed:
@@ -234,22 +234,22 @@ class WebsiteEmbed(BaseEmbed):
 class StatelessTextEmbed(BaseEmbed):
     """Represents stateless text embed within Revolt message."""
 
-    icon_url: str | None = field(repr=True, kw_only=True, eq=True)
+    icon_url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The URL to site icon."""
 
-    url: str | None = field(repr=True, kw_only=True, eq=True)
+    url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The direct URL to web page."""
 
-    title: str | None = field(repr=True, kw_only=True, eq=True)
+    title: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The embed's title."""
 
-    description: str | None = field(repr=True, kw_only=True, eq=True)
+    description: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The embed's description."""
 
-    internal_media: StatelessAsset | None = field(repr=True, kw_only=True, eq=True)
+    internal_media: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`.StatelessAsset`]: The stateless embed media."""
 
-    color: str | None = field(repr=True, kw_only=True, eq=True)
+    color: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The embed's CSS color."""
 
     def attach_state(self, state: State, /) -> Embed:
@@ -271,7 +271,7 @@ class TextEmbed(StatelessTextEmbed):
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     @property
-    def media(self) -> Asset | None:
+    def media(self) -> typing.Optional[Asset]:
         """Optional[:class:`Asset`]: The embed media."""
         return self.internal_media.attach_state(self.state, 'attachments') if self.internal_media else None
 
@@ -283,7 +283,7 @@ class NoneEmbed(BaseEmbed):
         return self
 
 
-_NONE_EMBED = NoneEmbed()
+_NONE_EMBED: typing.Final[NoneEmbed] = NoneEmbed()
 
 EmbedSpecial = typing.Union[
     NoneEmbedSpecial,

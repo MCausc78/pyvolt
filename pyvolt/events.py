@@ -279,8 +279,30 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
         channel = self.channel
         cache.store_channel(channel, ctx)
 
-        if isinstance(channel, DMChannel):
+        read_state: typing.Optional[ReadState] = None
+
+        if isinstance(channel, SavedMessagesChannel):
+            read_state = ReadState(
+                state=state,
+                channel_id=channel.id,
+                user_id=channel.user_id,
+                last_acked_message_id=None,
+                mentioned_in=[],
+            )
+        elif isinstance(channel, DMChannel):
+            me = state.me
+            if me is not None:
+                read_state = ReadState(
+                    state=state,
+                    channel_id=channel.id,
+                    user_id=me.id,
+                    last_acked_message_id=None,
+                    mentioned_in=[],
+                )
             cache.store_private_channel_by_user(channel, ctx)
+
+        if read_state is not None:
+            cache.store_read_state(read_state, ctx)
 
         return True
 

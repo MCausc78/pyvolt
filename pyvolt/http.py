@@ -182,7 +182,7 @@ class RateLimiter(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> typing.Optional[RateLimit]:
         """Optional[:class:`.RateLimit`]: Must return ratelimit information, if available."""
         ...
 
@@ -341,7 +341,7 @@ class DefaultRateLimiter(RateLimiter):
         return route.build_ratelimit_key()
 
     @utils.copy_doc(RateLimiter.fetch_ratelimit_for)
-    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimit | None:
+    def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> typing.Optional[RateLimit]:
         if not self._no_expired_ratelimit_remove:
             self.try_remove_expired_ratelimits()
 
@@ -425,7 +425,7 @@ class DefaultRateLimiter(RateLimiter):
             del self._routes_to_bucket[key]
 
 
-def _resolve_member_id(target: str | BaseUser | BaseMember, /) -> str:
+def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
     return ret
 
@@ -473,7 +473,9 @@ class HTTPClient:
         bot: bool = True,
         cookie: typing.Optional[str] = None,
         max_retries: typing.Optional[int] = None,
-        rate_limiter: UndefinedOr[Callable[[HTTPClient], RateLimiter | None] | RateLimiter | None] = UNDEFINED,
+        rate_limiter: UndefinedOr[
+            typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
+        ] = UNDEFINED,
         state: State,
         session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
         user_agent: typing.Optional[str] = None,
@@ -538,11 +540,11 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        cookie: UndefinedOr[str | None] = UNDEFINED,
+        cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
-        token: UndefinedOr[str | None] = UNDEFINED,
-        user_agent: UndefinedOr[str | None] = UNDEFINED,
+        token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
         if accept_json:
             headers['Accept'] = 'application/json'
@@ -600,10 +602,10 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        cookie: UndefinedOr[str | None] = UNDEFINED,
+        cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
-        token: UndefinedOr[str | None] = UNDEFINED,
+        token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> aiohttp.ClientResponse:
@@ -771,7 +773,7 @@ class HTTPClient:
         mfa_ticket: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
-        token: UndefinedOr[str | None] = UNDEFINED,
+        token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> typing.Any:
@@ -2189,20 +2191,62 @@ class HTTPClient:
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
-            The channel.
+            The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
-            The message.
+            The message to edit.
         content: UndefinedOr[:class:`str`]
-            The new content to replace the message with.
+            The new content to replace the message with. Must be between 1 and 2000 characters long.
         embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
+            You must have :attr:`~Permissions.send_embeds` to provide this.
+
         Raises
         ------
-        :class:`Forbidden`
-            Tried to suppress a message without permissions or edited a message's content or embed that isn't yours.
         :class:`HTTPException`
-            Editing the message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                           |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------+
+            | Value                 | Reason                                                   |
+            +-----------------------+----------------------------------------------------------+
+            | ``CannotEditMessage`` | The message you tried to edit isn't yours.               |
+            +-----------------------+----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to send messages. |
+            +-----------------------+----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------------+
+            | Value        | Reason                                  |
+            +--------------+-----------------------------------------+
+            | ``NotFound`` | The channel/message/file was not found. |
+            +--------------+-----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -2260,10 +2304,10 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         *,
         limit: typing.Optional[int] = None,
-        before: ULIDOr[BaseMessage] | None = None,
-        after: ULIDOr[BaseMessage] | None = None,
+        before: typing.Optional[ULIDOr[BaseMessage]] = None,
+        after: typing.Optional[ULIDOr[BaseMessage]] = None,
         sort: typing.Optional[MessageSort] = None,
-        nearby: ULIDOr[BaseMessage] | None = None,
+        nearby: typing.Optional[ULIDOr[BaseMessage]] = None,
         populate_users: typing.Optional[bool] = None,
     ) -> list[Message]:
         """|coro|
@@ -2459,8 +2503,8 @@ class HTTPClient:
         content: typing.Optional[str] = None,
         *,
         nonce: typing.Optional[str] = None,
-        attachments: list[ResolvableResource] | None = None,
-        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
+        attachments: typing.Optional[list[ResolvableResource]] = None,
+        replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
         embeds: list[SendableEmbed] | None = None,
         masquerade: typing.Optional[Masquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
@@ -2765,7 +2809,7 @@ class HTTPClient:
             The updated server channel with new permissions.
         """
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
-        resp: raw.TextChannel | raw.VoiceChannel = await self.request(
+        resp: typing.Union[raw.TextChannel, raw.VoiceChannel] = await self.request(
             routes.CHANNELS_PERMISSIONS_SET.compile(
                 channel_id=resolve_id(channel),
                 role_id=resolve_id(role),
@@ -2793,10 +2837,10 @@ class HTTPClient:
 
     async def set_default_channel_permissions(
         self,
-        channel: ULIDOr[GroupChannel | ServerChannel],
+        channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
         permissions: Permissions | PermissionOverride,
         /,
-    ) -> GroupChannel | ServerChannel:
+    ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
         Sets permissions for the default role in a channel.
@@ -3484,7 +3528,7 @@ class HTTPClient:
         member: str | BaseUser | BaseMember,
         /,
         *,
-        nick: UndefinedOr[str | None] = UNDEFINED,
+        nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
@@ -3848,7 +3892,7 @@ class HTTPClient:
         /,
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        color: UndefinedOr[str | None] = UNDEFINED,
+        color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
         rank: UndefinedOr[int] = UNDEFINED,
     ) -> Role:
@@ -4037,7 +4081,7 @@ class HTTPClient:
         /,
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        description: UndefinedOr[str | None] = UNDEFINED,
+        description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         banner: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         categories: UndefinedOr[list[Category] | None] = UNDEFINED,
@@ -4305,7 +4349,7 @@ class HTTPClient:
         route: routes.CompiledRoute,
         /,
         *,
-        display_name: UndefinedOr[str | None] = UNDEFINED,
+        display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
@@ -4341,8 +4385,8 @@ class HTTPClient:
     async def edit_my_user(
         self,
         *,
-        display_name: UndefinedOr[str | None] = UNDEFINED,
-        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
         badges: UndefinedOr[UserBadges] = UNDEFINED,
@@ -4393,7 +4437,7 @@ class HTTPClient:
         user: ULIDOr[BaseUser],
         /,
         *,
-        display_name: UndefinedOr[str | None] = UNDEFINED,
+        display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,

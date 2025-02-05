@@ -566,7 +566,7 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         self.done: asyncio.Event = asyncio.Event()
         self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
         self.result: list[EventT] = []
-        self.exception: Exception | None = None
+        self.exception: typing.Optional[Exception] = None
         self.expected: int = expected
 
         self.queue: asyncio.Queue[int] = asyncio.Queue(expected)
@@ -625,11 +625,11 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
 _DEFAULT_HANDLERS = ({}, {})
 
 
-def _private_channel_sort_old(channel: DMChannel | GroupChannel, /) -> str:
+def _private_channel_sort_old(channel: typing.Union[DMChannel, GroupChannel], /) -> str:
     return channel.last_message_id or '0'
 
 
-def _private_channel_sort_new(channel: DMChannel | GroupChannel, /) -> str:
+def _private_channel_sort_new(channel: typing.Union[DMChannel, GroupChannel], /) -> str:
     return channel.last_message_id or channel.id
 
 
@@ -653,7 +653,7 @@ class Client:
         *,
         token: str = '',
         bot: bool = True,
-        state: Callable[[Client], State] | State | None = None,
+        state: typing.Optional[typing.Union[Callable[[Client], State], State]] = None,
     ) -> None: ...
 
     @typing.overload
@@ -662,15 +662,17 @@ class Client:
         *,
         token: str = '',
         bot: bool = True,
-        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
-        cdn_base: str | None = None,
-        cdn_client: Callable[[Client, State], CDNClient] | None = None,
-        http_base: str | None = None,
-        http: Callable[[Client, State], HTTPClient] | None = None,
-        parser: Callable[[Client, State], Parser] | None = None,
-        shard: Callable[[Client, State], Shard] | None = None,
-        request_user_settings: list[str] | None = None,
-        websocket_base: str | None = None,
+        cache: typing.Union[
+            Callable[[Client, State], UndefinedOr[typing.Optional[Cache]]], UndefinedOr[typing.Optional[Cache]]
+        ] = UNDEFINED,
+        cdn_base: typing.Optional[str] = None,
+        cdn_client: typing.Optional[Callable[[Client, State], CDNClient]] = None,
+        http_base: typing.Optional[str] = None,
+        http: typing.Optional[Callable[[Client, State], HTTPClient]] = None,
+        parser: typing.Optional[Callable[[Client, State], Parser]] = None,
+        shard: typing.Optional[Callable[[Client, State], Shard]] = None,
+        request_user_settings: typing.Optional[list[str]] = None,
+        websocket_base: typing.Optional[str] = None,
     ) -> None: ...
 
     def __init__(
@@ -678,16 +680,18 @@ class Client:
         *,
         token: str = '',
         bot: bool = True,
-        cache: Callable[[Client, State], UndefinedOr[Cache | None]] | UndefinedOr[Cache | None] = UNDEFINED,
-        cdn_base: str | None = None,
-        cdn_client: Callable[[Client, State], CDNClient] | None = None,
-        http_base: str | None = None,
-        http: Callable[[Client, State], HTTPClient] | None = None,
-        parser: Callable[[Client, State], Parser] | None = None,
-        shard: Callable[[Client, State], Shard] | None = None,
-        state: Callable[[Client], State] | State | None = None,
-        request_user_settings: list[str] | None = None,
-        websocket_base: str | None = None,
+        cache: typing.Union[
+            Callable[[Client, State], UndefinedOr[typing.Optional[Cache]]], UndefinedOr[typing.Optional[Cache]]
+        ] = UNDEFINED,
+        cdn_base: typing.Optional[str] = None,
+        cdn_client: typing.Optional[Callable[[Client, State], CDNClient]] = None,
+        http_base: typing.Optional[str] = None,
+        http: typing.Optional[Callable[[Client, State], HTTPClient]] = None,
+        parser: typing.Optional[Callable[[Client, State], Parser]] = None,
+        shard: typing.Optional[Callable[[Client, State], Shard]] = None,
+        state: typing.Optional[typing.Union[Callable[[Client], State], State, None]] = None,
+        request_user_settings: typing.Optional[list[str]] = None,
+        websocket_base: typing.Optional[str] = None,
     ) -> None:
         self.closed: bool = True
         # {Type[BaseEvent]: List[utils.MaybeAwaitableFunc[[BaseEvent], None]]}
@@ -695,7 +699,7 @@ class Client:
             type[BaseEvent],
             tuple[
                 dict[int, EventSubscription[BaseEvent]],
-                dict[int, TemporarySubscription[BaseEvent] | TemporarySubscriptionList[BaseEvent]],
+                dict[int, typing.Union[TemporarySubscription[BaseEvent], TemporarySubscriptionList[BaseEvent]]],
             ],
         ] = {}
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
@@ -708,7 +712,7 @@ class Client:
                 self._state: State = state(self)
             else:
                 self._state = state
-        else:  # elif any(x is not None for x in (cache, cdn_client, http, parser, shard)):
+        else:
             state = State()
 
             c = None
@@ -771,13 +775,13 @@ class Client:
     async def __aexit__(
         self,
         exc_type: type[BaseException],
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
+        exc_value: typing.Optional[BaseException],
+        traceback: typing.Optional[TracebackType],
         /,
     ) -> None:
         await self.close()
 
-    async def on_user_error(self, event: BaseEvent) -> None:
+    async def on_user_error(self, event: BaseEvent, /) -> None:
         """Handles user errors that came from handlers.
         You can get current exception being raised via :func:`sys.exc_info`.
 
@@ -788,7 +792,7 @@ class Client:
             event.__class__.__name__,
         )
 
-    async def on_library_error(self, _shard: Shard, payload: raw.ClientEvent, exc: Exception, /) -> None:
+    async def on_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, /) -> None:
         """Handles library errors. By default, this logs exception.
 
         .. note::
@@ -847,7 +851,7 @@ class Client:
                 if isawaitable(r):
                     await r
 
-            event_name: str | None = getattr(type, 'event_name', None)
+            event_name: typing.Optional[str] = getattr(type, 'event_name', None)
             if event_name:
                 handler = getattr(self, 'on_' + event_name, None)
                 if handler:
@@ -984,7 +988,7 @@ class Client:
 
     def listen(
         self,
-        event: type[EventT] | None = None,
+        event: typing.Optional[type[EventT]] = None,
         /,
     ) -> Callable[
         [utils.MaybeAwaitableFunc[[EventT], None]],
@@ -1044,9 +1048,9 @@ class Client:
         event: type[EventT],
         /,
         *,
-        check: Callable[[EventT], bool] | None = None,
+        check: typing.Optional[Callable[[EventT], bool]] = None,
         count: typing.Literal[1] = 1,
-        timeout: float | None = None,
+        timeout: typing.Optional[float] = None,
     ) -> TemporarySubscription[EventT]: ...
 
     @typing.overload
@@ -1055,9 +1059,9 @@ class Client:
         event: type[EventT],
         /,
         *,
-        check: Callable[[EventT], bool] | None = None,
+        check: typing.Optional[Callable[[EventT], bool]] = None,
         count: typing.Literal[0] = ...,
-        timeout: float | None = None,
+        timeout: typing.Optional[float] = None,
     ) -> typing.NoReturn: ...
 
     @typing.overload
@@ -1066,9 +1070,9 @@ class Client:
         event: type[EventT],
         /,
         *,
-        check: Callable[[EventT], bool] | None = None,
+        check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
-        timeout: float | None = None,
+        timeout: typing.Optional[float] = None,
     ) -> TemporarySubscriptionList[EventT]: ...
 
     def wait_for(
@@ -1078,8 +1082,8 @@ class Client:
         *,
         check: Callable[[EventT], bool] | None = None,
         count: int = 1,
-        timeout: float | None = None,
-    ) -> TemporarySubscription[EventT] | TemporarySubscriptionList[EventT]:
+        timeout: typing.Optional[float] = None,
+    ) -> typing.Union[TemporarySubscription[EventT], TemporarySubscriptionList[EventT]]:
         """|coro|
 
         Waits for a WebSocket event to be dispatched.
@@ -1248,12 +1252,12 @@ class Client:
             return 0
 
     @property
-    def me(self) -> OwnUser | None:
+    def me(self) -> typing.Optional[OwnUser]:
         """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in."""
         return self._state._me
 
     @property
-    def user(self) -> OwnUser | None:
+    def user(self) -> typing.Optional[OwnUser]:
         """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in.
 
         Alias to :attr:`.me`.
@@ -1261,7 +1265,7 @@ class Client:
         return self._state._me
 
     @property
-    def saved_notes(self) -> SavedMessagesChannel | None:
+    def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
         """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
         return self._state._saved_notes
 
@@ -1336,7 +1340,7 @@ class Client:
         return result
 
     @property
-    def private_channels(self) -> Mapping[str, DMChannel | GroupChannel]:
+    def private_channels(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
         """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels."""
         cache = self._state.cache
         if not cache:
@@ -1344,12 +1348,12 @@ class Client:
         return cache.get_private_channels_mapping()
 
     @property
-    def ordered_private_channels_old(self) -> list[DMChannel | GroupChannel]:
+    def ordered_private_channels_old(self) -> list[typing.Union[DMChannel, GroupChannel]]:
         """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
 
     @property
-    def ordered_private_channels(self) -> list[DMChannel | GroupChannel]:
+    def ordered_private_channels(self) -> list[typing.Union[DMChannel, GroupChannel]]:
         """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
@@ -1567,7 +1571,7 @@ class Client:
         token: str = '',
         *,
         bot: UndefinedOr[bool] = UNDEFINED,
-        log_handler: UndefinedOr[logging.Handler | None] = UNDEFINED,
+        log_handler: UndefinedOr[typing.Optional[logging.Handler]] = UNDEFINED,
         log_formatter: UndefinedOr[logging.Formatter] = UNDEFINED,
         log_level: UndefinedOr[int] = UNDEFINED,
         root_logger: bool = False,

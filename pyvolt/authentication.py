@@ -67,7 +67,7 @@ class MFATicket:
     authorised: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this ticket is authorised (can be used to log a user in)."""
 
-    last_totp_code: str | None = field(repr=True, kw_only=True)
+    last_totp_code: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The TOTP code at time of ticket creation."""
 
     def __hash__(self) -> int:
@@ -118,7 +118,7 @@ class Session(PartialSession):
     token: str = field(repr=True, kw_only=True)
     """:class:`str`: The session token."""
 
-    subscription: WebPushSubscription | None = field(repr=True, kw_only=True)
+    subscription: typing.Optional[WebPushSubscription] = field(repr=True, kw_only=True)
     """Optional[:class:`.WebPushSubscription`]: The Web Push subscription associated with this session."""
 
 
@@ -134,9 +134,9 @@ class MFARequired:
 
     # internals
     state: State = field(repr=True, kw_only=True)
-    internal_friendly_name: str | None = field(repr=True, kw_only=True)
+    internal_friendly_name: typing.Optional[str] = field(repr=True, kw_only=True)
 
-    async def use_recovery_code(self, code: str, /) -> Session | AccountDisabled:
+    async def use_recovery_code(self, code: str, /) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
         Login to an account.
@@ -145,7 +145,7 @@ class MFARequired:
             self.ticket, ByRecoveryCode(code), friendly_name=self.internal_friendly_name
         )
 
-    async def use_totp(self, code: str, /) -> Session | AccountDisabled:
+    async def use_totp(self, code: str, /) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
         Login to an account.
