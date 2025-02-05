@@ -2186,7 +2186,7 @@ class HTTPClient:
     ) -> Message:
         """|coro|
 
-        Edits the message that you've previously sent.
+        Edits a message in channel.
 
         Parameters
         ----------
