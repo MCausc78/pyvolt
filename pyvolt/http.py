@@ -1804,7 +1804,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.GroupChannel`]
             The group.
-        user: :class:`ULID`[:class:`.BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to remove.
 
         Raises
@@ -2206,13 +2206,13 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | Value                  | Reason                                                                                                             |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``FailedValidation``   | The payload was invalid.                                                                                           |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            +------------------------+----------------------------+
+            | Value                  | Reason                     |
+            +------------------------+----------------------------+
+            | ``FailedValidation``   | The payload was invalid.   |
+            +------------------------+----------------------------+
+            | ``PayloadTooLarge``    | The message was too large. |
+            +------------------------+----------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2242,11 +2242,11 @@ class HTTPClient:
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                                | Populated attributes                                                |
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -2254,10 +2254,12 @@ class HTTPClient:
             The newly edited message.
         """
         payload: raw.DataEditMessage = {}
+
         if content is not UNDEFINED:
             payload['content'] = content
         if embeds is not UNDEFINED:
             payload['embeds'] = [await embed.build(self.state) for embed in embeds]
+
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_EDIT.compile(
                 channel_id=resolve_id(channel),
@@ -2275,16 +2277,44 @@ class HTTPClient:
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
-            The channel.
+            The channel the message is in.
         message: ULIDOr[:class:`BaseMessage`]
-            The message.
+            The message to retrieve.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to get message.
-        :class:`HTTPException`
-            Getting the message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------------+
+            | Value        | Reason                                  |
+            +--------------+-----------------------------------------+
+            | ``NotFound`` | The channel/message/file was not found. |
+            +--------------+-----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------

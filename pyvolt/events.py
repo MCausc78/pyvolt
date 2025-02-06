@@ -264,7 +264,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
         state = self.shard.state
         cache = state.cache
 
-        if not cache:
+        if cache is None:
             return False
 
         ctx = (
@@ -320,9 +320,10 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
         state = self.shard.state
         cache = state.cache
 
-        if not cache:
+        if cache is None:
             return False
 
+        channel = self.channel
         ctx = (
             caching.ServerChannelCreateEventCacheContext(
                 type=caching.CacheContextType.server_channel_create_event,
@@ -332,7 +333,24 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
             else caching._SERVER_CHANNEL_CREATE_EVENT
         )
 
+        read_state: typing.Optional[ReadState] = None
+
+        if isinstance(channel, TextChannel) and channel.last_message_id is None:
+            me = state.me
+            if me is not None:
+                read_state = ReadState(
+                    state=state,
+                    channel_id=channel.id,
+                    user_id=me.id,
+                    last_acked_message_id=None,
+                    mentioned_in=[],
+                )
+
         cache.store_channel(self.channel, ctx)
+
+        if read_state is not None:
+            cache.store_read_state(read_state, ctx)
+
         return True
 
 

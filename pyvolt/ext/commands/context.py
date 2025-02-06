@@ -124,6 +124,9 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
         self.subcommand_passed: str | None = subcommand_passed
         self.view: StringView = view
 
+    def _get_state(self) -> pyvolt.State:
+        return self.bot.state
+
     @property
     def author(self) -> pyvolt.Member | pyvolt.User:
         if self._author is None:

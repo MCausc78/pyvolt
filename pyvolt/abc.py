@@ -45,6 +45,9 @@ class Messageable:
 
     state: State
 
+    def _get_state(self) -> State:
+        return self.state
+
     async def fetch_channel_id(self) -> str:
         """:class:`str`: Retrieves the channel's ID."""
         return self.get_channel_id()
@@ -66,7 +69,8 @@ class Messageable:
         Optional[:class:`Message`]
             The message or ``None`` if not found.
         """
-        cache = self.state.cache
+        state = self._get_state()
+        cache = state.cache
         if not cache:
             return
         return cache.get_message(self.get_channel_id(), message_id, caching._USER_REQUEST)
@@ -81,13 +85,15 @@ class Messageable:
 
     async def begin_typing(self) -> None:
         """Begins typing in channel, until :meth:`end_typing` is called."""
+        state = self._get_state()
         channel_id = await self.fetch_channel_id()
-        return await self.state.shard.begin_typing(channel_id)
+        return await state.shard.begin_typing(channel_id)
 
     async def end_typing(self) -> None:
         """Ends typing in channel."""
+        state = self._get_state()
         channel_id = await self.fetch_channel_id()
-        await self.state.shard.end_typing(channel_id)
+        await state.shard.end_typing(channel_id)
 
     async def search(
         self,
@@ -137,9 +143,10 @@ class Messageable:
             The messages matched.
         """
 
+        state = self._get_state()
         channel_id = await self.fetch_channel_id()
 
-        return await self.state.http.search_for_messages(
+        return await state.http.search_for_messages(
             channel_id,
             query=query,
             pinned=pinned,
@@ -199,9 +206,10 @@ class Messageable:
             The message that was sent.
         """
 
+        state = self._get_state()
         channel_id = await self.fetch_channel_id()
 
-        return await self.state.http.send_message(
+        return await state.http.send_message(
             channel_id,
             content,
             nonce=nonce,
@@ -218,7 +226,7 @@ class Messageable:
 
         return Typing(
             destination=self,
-            shard=self.state.shard,
+            shard=self._get_state().shard,
         )
 
 
