@@ -872,6 +872,14 @@ AuthenticatedEventCacheContext
     :members:
     :inherited-members:
 
+Parser
+~~~~~~~
+
+.. attributetable:: Parser
+
+.. autoclass:: Parser
+    :members:
+
 .. _revolt-api-events:
 
 Events
@@ -934,7 +942,7 @@ ChannelCreateEvent
 ~~~~~~~~~~~~~~~~~~
 
 .. class:: ChannelCreateEvent
-    
+
     A union of private/server channel create events.
     
     The following classes are included in this union:
