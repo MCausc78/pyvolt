@@ -2702,7 +2702,7 @@ class HTTPClient:
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
-        embeds: list[SendableEmbed] | None = None,
+        embeds: typing.Optional[list[SendableEmbed]] = None,
         masquerade: typing.Optional[Masquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
         silent: typing.Optional[bool] = None,
@@ -2715,8 +2715,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do this.
-        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do this.
+        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
 
         Parameters
         ----------
