@@ -934,6 +934,7 @@ ChannelCreateEvent
 ~~~~~~~~~~~~~~~~~~
 
 .. class:: ChannelCreateEvent
+    
     A union of private/server channel create events.
     
     The following classes are included in this union:
@@ -2715,6 +2716,7 @@ Emoji
 ~~~~~
 
 .. class:: Emoji
+
     A union of all emoji types.
 
     The following classes are included in this union:
@@ -2726,6 +2728,7 @@ ResolvableEmoji
 ~~~~~~~~~~~~~~~
 
 .. class:: ResolvableEmoji
+
     A union of either :class:`.BaseEmoji` or :class:`str`.
 
 .. autofunction:: resolve_emoji
