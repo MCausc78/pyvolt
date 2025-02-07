@@ -45,11 +45,11 @@ class State:
 
     Attributes
     ----------
-    provide_cache_context_in: List[:class:`ProvideCacheContextIn`]
+    provide_cache_context_in: List[:class:`.ProvideCacheContextIn`]
         The methods/properties that do provide cache context.
-    parser: :class:`Parser`
+    parser: :class:`.Parser`
         The parser.
-    system: :class:`User`
+    system: :class:`.User`
         The Revolt#0000 sentinel user.
     voice_url: :class:`str`
         The URL to voice server.
@@ -72,19 +72,19 @@ class State:
     def __init__(
         self,
         *,
-        cache: Cache | None = None,
-        provide_cache_context_in: list[ProvideCacheContextIn] | None = None,
-        shard: Shard | None = None,
+        cache: typing.Optional[Cache] = None,
+        provide_cache_context_in: typing.Optional[list[ProvideCacheContextIn]] = None,
+        shard: typing.Optional[Shard] = None,
     ) -> None:
         self._cache: Cache | None = cache
         self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
-        self._cdn_client: CDNClient | None = None
-        self._http: HTTPClient | None = None
+        self._cdn_client: typing.Optional[CDNClient] = None
+        self._http: typing.Optional[HTTPClient] = None
         self.parser: Parser = Parser(state=self)
-        self._shard: Shard | None = shard
-        self._me: OwnUser | None = None
-        self._saved_notes: SavedMessagesChannel | None = None
-        self._settings: UserSettings | None = None
+        self._shard: typing.Optional[Shard] = shard
+        self._me: typing.Optional[OwnUser] = None
+        self._saved_notes: typing.Optional[SavedMessagesChannel] = None
+        self._settings: typing.Optional[UserSettings] = None
         self.system = User(
             state=self,
             id=ZID,
@@ -105,11 +105,11 @@ class State:
     def setup(
         self,
         *,
-        cache: Cache | None = None,
-        cdn_client: CDNClient | None = None,
-        http: HTTPClient | None = None,
-        parser: Parser | None = None,
-        shard: Shard | None = None,
+        cache: typing.Optional[Cache] = None,
+        cdn_client: typing.Optional[CDNClient] = None,
+        http: typing.Optional[HTTPClient] = None,
+        parser: typing.Optional[Parser] = None,
+        shard: typing.Optional[Shard] = None,
     ) -> State:
         if cache:
             self._cache = cache
@@ -124,38 +124,42 @@ class State:
         return self
 
     @property
-    def cache(self) -> Cache | None:
+    def cache(self) -> typing.Optional[Cache]:
+        """Optional[:class:`.Cache`]: The cache attacted to this state."""
         return self._cache
 
     @property
     def cdn_client(self) -> CDNClient:
+        """:class:`.CDNClient`: The CDN client attached to this state."""
         assert self._cdn_client, 'State has no CDN client attached'
         return self._cdn_client
 
     @property
     def http(self) -> HTTPClient:
+        """:class:`.HTTPClient`: The HTTP client attached to this state."""
         assert self._http, 'State has no HTTP client attached'
         return self._http
 
     @property
     def shard(self) -> Shard:
+        """:class:`.Shard`: The shard attached to this state."""
         assert self._shard, 'State has no shard attached'
         return self._shard
 
     @property
-    def me(self) -> OwnUser | None:
-        """Optional[:class:`OwnUser`]: The currently logged in user."""
+    def me(self) -> typing.Optional[OwnUser]:
+        """Optional[:class:`.OwnUser`]: The currently logged in user."""
         # assert self._me, "State has no current user attached"
         return self._me
 
     @property
-    def saved_notes(self) -> SavedMessagesChannel | None:
-        """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
+    def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
+        """Optional[:class:`.SavedMessagesChannel`]: The Saved Notes channel."""
         return self._saved_notes
 
     @property
     def settings(self) -> UserSettings:
-        """:class:`UserSettings`: The current user settings."""
+        """:class:`.UserSettings`: The current user settings."""
         if self._settings:
             return self._settings
         self._settings = UserSettings(data={}, state=self, mocked=True, partial=True)
