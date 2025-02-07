@@ -74,16 +74,16 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
     def __init__(
         self,
         *,
-        args: list[typing.Any] | None = None,
+        args: typing.Optional[list[typing.Any]] = None,
         bot: BotT,
-        command: Command[typing.Any, ..., typing.Any] | None = None,
+        command: typing.Optional[Command[typing.Any, ..., typing.Any]] = None,
         command_failed: bool = False,
-        current_argument: str | None = None,
-        current_parameter: Parameter | None = None,
-        event: pyvolt.MessageCreateEvent | None = None,
-        kwargs: dict[str, typing.Any] | None = None,
-        invoked_parents: list[str] | None = None,
-        invoked_subcommand: Command[typing.Any, ..., typing.Any] | None = None,
+        current_argument: typing.Optional[str] = None,
+        current_parameter: typing.Optional[Parameter] = None,
+        event: typing.Optional[pyvolt.MessageCreateEvent] = None,
+        kwargs: typing.Optional[dict[str, typing.Any]] = None,
+        invoked_parents: typing.Optional[list[str]] = None,
+        invoked_subcommand: typing.Optional[Command[typing.Any, ..., typing.Any]] = None,
         label: str = '',
         message: pyvolt.Message,
         shard: pyvolt.Shard,
@@ -104,31 +104,31 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
             invoked_parents = []
 
         self.args: list[typing.Any] = args
-        self._author: pyvolt.Member | pyvolt.User | None = message.get_author()
+        self._author: typing.Optional[typing.Union[pyvolt.Member, pyvolt.User]] = message.get_author()
         self.author_id: str = message.author_id
         self.bot: BotT = bot
-        self.channel: pyvolt.TextableChannel | pyvolt.PartialMessageable = channel
-        self.command: Command | None = command
+        self.channel: typing.Union[pyvolt.TextableChannel, pyvolt.PartialMessageable] = channel
+        self.command: typing.Optional[Command[typing.Any, ..., typing.Any]] = command
         self.command_failed: bool = command_failed
-        self.current_argument: str | None = current_argument
-        self.current_parameter: Parameter | None = current_parameter
+        self.current_argument: typing.Optional[str] = current_argument
+        self.current_parameter: typing.Optional[Parameter] = current_parameter
         self.event: pyvolt.MessageCreateEvent | None = event
         self.invoked_parents: list[str] = invoked_parents
-        self.invoked_subcommand: Command[typing.Any, ..., typing.Any] | None = invoked_subcommand
+        self.invoked_subcommand: typing.Optional[Command[typing.Any, ..., typing.Any]] = invoked_subcommand
         self.label: str = label
-        self.me: pyvolt.Member | pyvolt.OwnUser = server.get_member(me.id) or me if server else me
+        self.me: typing.Union[pyvolt.Member, pyvolt.OwnUser] = server.get_member(me.id) or me if server else me
         self.message: pyvolt.Message = message
         self.prefix: str = ''
-        self.server: pyvolt.Server | None = server
+        self.server: typing.Optional[pyvolt.Server] = server
         self.shard: pyvolt.Shard = shard
-        self.subcommand_passed: str | None = subcommand_passed
+        self.subcommand_passed: typing.Optional[str] = subcommand_passed
         self.view: StringView = view
 
     def _get_state(self) -> pyvolt.State:
         return self.bot.state
 
     @property
-    def author(self) -> pyvolt.Member | pyvolt.User:
+    def author(self) -> typing.Union[pyvolt.Member, pyvolt.User]:
         if self._author is None:
             raise pyvolt.NoData(self.author_id, 'message author')
         return self._author
@@ -138,14 +138,14 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
         return self.channel.id
 
     @property
-    def gear(self) -> Gear | None:
+    def gear(self) -> typing.Optional[Gear]:
         """Optional[:class:`.Gear`]: Returns the gear associated with this context's command. None if it does not exist."""
 
         if self.command is None:
             return None
         return self.command.gear
 
-    def get_author(self) -> pyvolt.Member | pyvolt.User | None:
+    def get_author(self) -> typing.Optional[typing.Union[pyvolt.Member, pyvolt.User]]:
         return self._author
 
     def get_channel_id(self) -> str:

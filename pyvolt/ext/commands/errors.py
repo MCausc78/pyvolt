@@ -51,7 +51,7 @@ class CommandError(PyvoltException):
 
     __slots__ = ()
 
-    def __init__(self, *args: typing.Any, message: str | None = None) -> None:
+    def __init__(self, *args: typing.Any, message: typing.Optional[str] = None) -> None:
         if message is not None:
             super().__init__(message, *args)
         else:
@@ -168,7 +168,7 @@ class PrivateMessageOnly(CheckFailure):
 
     __slots__ = ()
 
-    def __init__(self, *, message: str | None = None) -> None:
+    def __init__(self, *, message: typing.Optional[str] = None) -> None:
         super().__init__(message or 'This command can only be used in private messages.')
 
 
@@ -181,7 +181,7 @@ class NoPrivateMessage(CheckFailure):
 
     __slots__ = ()
 
-    def __init__(self, *, message: str | None = None) -> None:
+    def __init__(self, *, message: typing.Optional[str] = None) -> None:
         super().__init__(message or 'This command cannot be used in private messages.')
 
 
@@ -532,13 +532,13 @@ class RangeError(BadArgument):
     def __init__(
         self,
         *,
-        value: int | float | str,
-        minimum: int | float | None,
-        maximum: int | float | None,
+        value: typing.Union[int, float, str],
+        minimum: typing.Optional[typing.Union[float, int]],
+        maximum: typing.Optional[typing.Union[float, int]],
     ) -> None:
-        self.value: int | float | str = value
-        self.minimum: int | float | None = minimum
-        self.maximum: int | float | None = maximum
+        self.value: typing.Union[int, float, str] = value
+        self.minimum: typing.Optional[typing.Union[float, int]] = minimum
+        self.maximum: typing.Optional[typing.Union[float, int]] = maximum
 
         label: str = ''
         if minimum is None and maximum is not None:
@@ -813,7 +813,7 @@ class ExtensionError(PyvoltException):
 
     __slots__ = ('name',)
 
-    def __init__(self, /, *args: typing.Any, message: str | None = None, name: str) -> None:
+    def __init__(self, /, *args: typing.Any, message: typing.Optional[str] = None, name: str) -> None:
         self.name: str = name
         message = f'Extension {name!r} had an error.' if message is None else message
         # clean-up @everyone and @here mentions

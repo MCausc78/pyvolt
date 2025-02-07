@@ -366,13 +366,13 @@ class ChannelUpdateEvent(ShardEvent):
     channel: PartialChannel = field(repr=True, kw_only=True)
     """:class:`.PartialChannel`: The fields that were updated."""
 
-    before: Channel | None = field(repr=True, kw_only=True)
+    before: typing.Optional[Channel] = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The channel as it was before being updated, if available."""
 
-    after: Channel | None = field(repr=True, kw_only=True)
+    after: typing.Optional[Channel] = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The channel as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ChannelUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ChannelUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -422,10 +422,10 @@ class ChannelDeleteEvent(ShardEvent):
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID that got deleted or hidden."""
 
-    channel: Channel | None = field(repr=True, kw_only=True)
+    channel: typing.Optional[Channel] = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The deleted channel object, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ChannelDeleteEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ChannelDeleteEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -485,10 +485,10 @@ class GroupRecipientAddEvent(ShardEvent):
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who was added to the group."""
 
-    group: GroupChannel | None = field(repr=True, kw_only=True)
+    group: typing.Optional[GroupChannel] = field(repr=True, kw_only=True)
     """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had no recipient), if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.GroupRecipientAddEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.GroupRecipientAddEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -543,10 +543,10 @@ class GroupRecipientRemoveEvent(ShardEvent):
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who was removed from the group."""
 
-    group: GroupChannel | None = field(repr=True, kw_only=True)
+    group: typing.Optional[GroupChannel] = field(repr=True, kw_only=True)
     """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.GroupRecipientRemoveEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.GroupRecipientRemoveEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -743,13 +743,13 @@ class MessageUpdateEvent(ShardEvent):
     message: PartialMessage = field(repr=True, kw_only=True)
     """:class:`.PartialMessage`: The fields that were updated."""
 
-    before: Message | None = field(repr=True, kw_only=True)
+    before: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
-    after: Message | None = field(repr=True, kw_only=True)
+    after: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -800,10 +800,10 @@ class MessageAppendEvent(ShardEvent):
     data: MessageAppendData = field(repr=True, kw_only=True)
     """:class:`.MessageAppendData`: The data that got appended to message."""
 
-    message: Message | None = field(repr=True, kw_only=True)
+    message: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageAppendEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageAppendEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -853,10 +853,10 @@ class MessageDeleteEvent(ShardEvent):
     message_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The deleted message's ID."""
 
-    message: Message | None = field(repr=True, kw_only=True)
+    message: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The deleted message object, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageDeleteEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageDeleteEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -910,10 +910,10 @@ class MessageReactEvent(ShardEvent):
     emoji: str = field(repr=True, kw_only=True)
     """:class:`str`: The emoji that was reacted with. May be either ULID or Unicode emoji."""
 
-    message: Message | None = field(repr=True, kw_only=True)
+    message: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageReactEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageReactEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -968,10 +968,10 @@ class MessageUnreactEvent(ShardEvent):
     emoji: str = field(repr=True, kw_only=True)
     """:class:`str`: The emoji that was reacted with before. May be either ULID or Unicode emoji."""
 
-    message: Message | None = field(repr=True, kw_only=True)
+    message: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageUnreactEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageUnreactEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1023,10 +1023,10 @@ class MessageClearReactionEvent(ShardEvent):
     emoji: str = field(repr=True, kw_only=True)
     """:class:`str`: The emoji whose reactions were removed. May be either ULID or Unicode emoji."""
 
-    message: Message | None = field(repr=True, kw_only=True)
+    message: typing.Optional[Message] = field(repr=True, kw_only=True)
     """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageClearReactionEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageClearReactionEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1082,7 +1082,7 @@ class MessageDeleteBulkEvent(ShardEvent):
     not guaranteed to be here.
     """
 
-    cache_context: caching.UndefinedCacheContext | caching.MessageDeleteBulkEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageDeleteBulkEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1223,16 +1223,16 @@ class ServerEmojiDeleteEvent(ShardEvent):
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
 
-    server_id: str | None = field(repr=True, kw_only=True)
+    server_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID where emoji got deleted from."""
 
     emoji_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The deleted emoji's ID."""
 
-    emoji: ServerEmoji | None = field(repr=True, kw_only=True)
+    emoji: typing.Optional[ServerEmoji] = field(repr=True, kw_only=True)
     """Optional[:class:`.ServerEmoji`]: The deleted emoji object, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerEmojiDeleteEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerEmojiDeleteEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1279,13 +1279,13 @@ class ServerUpdateEvent(ShardEvent):
     server: PartialServer = field(repr=True, kw_only=True)
     """:class:`.PartialServer`: The fields that were updated."""
 
-    before: Server | None = field(repr=True, kw_only=True)
+    before: typing.Optional[Server] = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server as it was before being updated, if available."""
 
-    after: Server | None = field(repr=True, kw_only=True)
+    after: typing.Optional[Server] = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1335,10 +1335,10 @@ class ServerDeleteEvent(ShardEvent):
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The deleted server's ID."""
 
-    server: Server | None = field(repr=True, kw_only=True)
+    server: typing.Optional[Server] = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The deleted server object, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerDeleteEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerDeleteEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1420,13 +1420,13 @@ class ServerMemberUpdateEvent(ShardEvent):
     member: PartialMember = field(repr=True, kw_only=True)
     """:class:`.PartialMember`: The fields that were updated."""
 
-    before: Member | None = field(repr=True, kw_only=True)
+    before: typing.Optional[Member] = field(repr=True, kw_only=True)
     """Optional[:class:`.Member`]: The member as it was before being updated, if available."""
 
-    after: Member | None = field(repr=True, kw_only=True)
+    after: typing.Optional[Member] = field(repr=True, kw_only=True)
     """Optional[:class:`.Member`]: The member as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerMemberUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerMemberUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1479,13 +1479,13 @@ class ServerMemberRemoveEvent(ShardEvent):
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The removed user's ID."""
 
-    member: Member | None = field(repr=True, kw_only=True)
+    member: typing.Optional[Member] = field(repr=True, kw_only=True)
     """Optional[:class:`.Member`]: The removed member object, if available."""
 
     reason: MemberRemovalIntention = field(repr=True, kw_only=True)
     """:class:`.MemberRemovalIntention`: The reason why member was removed."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerMemberRemoveEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerMemberRemoveEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1543,16 +1543,16 @@ class RawServerRoleUpdateEvent(ShardEvent):
     role: PartialRole = field(repr=True, kw_only=True)
     """:class:`.PartialRole`: The fields that got updated."""
 
-    old_role: Role | None = field(repr=True, kw_only=True)
+    old_role: typing.Optional[Role] = field(repr=True, kw_only=True)
     """Optional[:class:`.Role`]: The role as it was before being updated, if available."""
 
-    new_role: Role | None = field(repr=True, kw_only=True)
+    new_role: typing.Optional[Role] = field(repr=True, kw_only=True)
     """Optional[:class:`.Role`]: The role as it was created or updated, if available."""
 
-    server: Server | None = field(repr=True, kw_only=True)
+    server: typing.Optional[Server] = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server the role got created or updated in."""
 
-    cache_context: caching.UndefinedCacheContext | caching.RawServerRoleUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.RawServerRoleUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1612,13 +1612,13 @@ class ServerRoleDeleteEvent(ShardEvent):
     role_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The deleted role's ID."""
 
-    server: Server | None = field(repr=True, kw_only=True)
+    server: typing.Optional[Server] = field(repr=True, kw_only=True)
     """Optional[:class:`.Server`]: The server the role was deleted from, if available."""
 
-    role: Role | None = field(repr=True, kw_only=True)
+    role: typing.Optional[Role] = field(repr=True, kw_only=True)
     """Optional[:class:`.Role`]: The deleted role object, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.ServerRoleDeleteEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerRoleDeleteEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1680,13 +1680,13 @@ class UserUpdateEvent(ShardEvent):
     user: PartialUser = field(repr=True, kw_only=True)
     """:class:`.PartialUser`: The fields that were updated."""
 
-    before: User | None = field(repr=True, kw_only=True)
+    before: typing.Optional[User] = field(repr=True, kw_only=True)
     """:class:`.User`: The user as it was before being updated, if available."""
 
-    after: User | None = field(repr=True, kw_only=True)
+    after: typing.Optional[User] = field(repr=True, kw_only=True)
     """:class:`.User`: The user as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.UserUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1736,16 +1736,16 @@ class UserRelationshipUpdateEvent(ShardEvent):
     current_user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The current user ID."""
 
-    old_user: User | None = field(repr=True, kw_only=True)
+    old_user: typing.Optional[User] = field(repr=True, kw_only=True)
     """Optional[:class:`.User`]: The user as it was before being updated, if available."""
 
     new_user: User = field(repr=True, kw_only=True)
     """:class:`.User`: The user as it was updated."""
 
-    before: RelationshipStatus | None = field(repr=True, kw_only=True)
+    before: typing.Optional[RelationshipStatus] = field(repr=True, kw_only=True)
     """Optional[:class:`.RelationshipStatus`]: The old relationship found in cache."""
 
-    cache_context: caching.UndefinedCacheContext | caching.UserRelationshipUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserRelationshipUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1853,13 +1853,13 @@ class UserPlatformWipeEvent(ShardEvent):
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The user's flags raw value, explaining reason of the wipe."""
 
-    before: User | None = field(repr=True, kw_only=True)
+    before: typing.Optional[User] = field(repr=True, kw_only=True)
     """Optional[:class:`.User`]: The user as it would exist before, if available."""
 
-    after: User | None = field(repr=True, kw_only=True)
+    after: typing.Optional[User] = field(repr=True, kw_only=True)
     """Optional[:class:`.User`]: The wiped user, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.UserPlatformWipeEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserPlatformWipeEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -1941,7 +1941,7 @@ class WebhookDeleteEvent(ShardEvent):
     webhook_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The deleted webhook's ID."""
 
-    webhook: Webhook | None = field(repr=True, kw_only=True)
+    webhook: typing.Optional[Webhook] = field(repr=True, kw_only=True)
     """Optional[:class:`.Webhook`]: The deleted webhook object, if available."""
 
 
@@ -1984,7 +1984,7 @@ class SessionDeleteAllEvent(AuthifierEvent):
     current_user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The connected user's ID."""
 
-    exclude_session_id: str | None = field(repr=True, kw_only=True)
+    exclude_session_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The session's ID that is excluded from deletion, if any."""
 
 
@@ -2048,13 +2048,13 @@ class VoiceChannelLeaveEvent(ShardEvent):
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID that left the voice channel."""
 
-    container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
 
-    state: UserVoiceState | None = field(repr=True, kw_only=True)
+    state: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
     """Optional[:class:`.UserVoiceState`]: The user's voice state."""
 
-    cache_context: caching.UndefinedCacheContext | caching.VoiceChannelLeaveEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.VoiceChannelLeaveEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -2111,13 +2111,13 @@ class VoiceChannelMoveEvent(ShardEvent):
     to: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID the user is in now."""
 
-    old_container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    old_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the previous voice channel the user was in."""
 
-    new_container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    new_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
 
-    cache_context: caching.UndefinedCacheContext | caching.VoiceChannelMoveEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.VoiceChannelMoveEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',
@@ -2185,19 +2185,19 @@ class UserVoiceStateUpdateEvent(ShardEvent):
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID the user's voice state is in."""
 
-    container: ChannelVoiceStateContainer | None = field(repr=True, kw_only=True)
+    container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
 
     state: PartialUserVoiceState = field(repr=True, kw_only=True)
     """:class:`.PartialUserVoiceState`: The fields that were updated."""
 
-    before: UserVoiceState | None = field(repr=True, kw_only=True)
+    before: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
     """Optional[:class:`.UserVoiceState`]: The user's voice state as it was before being updated, if available."""
 
-    after: UserVoiceState | None = field(repr=True, kw_only=True)
+    after: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
     """Optional[:class:`.UserVoiceState`]: The user's voice state as it was updated, if available."""
 
-    cache_context: caching.UndefinedCacheContext | caching.UserVoiceStateUpdateEventCacheContext = field(
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserVoiceStateUpdateEventCacheContext] = field(
         default=Factory(
             lambda self: _cast(
                 'typing.Any',

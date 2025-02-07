@@ -279,12 +279,12 @@ class Gear(metaclass=GearMeta):
         return [(name, getattr(self, method_name)) for name, method_name in self.__gear_listeners__]
 
     @classmethod
-    def _get_overridden_method(cls, method: FuncT, /) -> FuncT | None:
+    def _get_overridden_method(cls, method: FuncT, /) -> typing.Optional[FuncT]:
         """Return None if the method is not overridden. Otherwise returns the overridden method."""
         return getattr(method.__func__, '__gear_special_method__', method)  # type: ignore
 
     @classmethod
-    def listener(cls, to: type[pyvolt.BaseEvent] | None = None) -> Callable[[FuncT], FuncT]:
+    def listener(cls, to: typing.Optional[type[pyvolt.BaseEvent]] = None) -> Callable[[FuncT], FuncT]:
         """A decorator that marks a function as a listener.
 
         This is the gear equivalent of :meth:`.Bot.listen`.
@@ -297,7 +297,7 @@ class Gear(metaclass=GearMeta):
 
         Raises
         --------
-        TypeError
+        :class:`TypeError`
             The event was not passed.
         """
 

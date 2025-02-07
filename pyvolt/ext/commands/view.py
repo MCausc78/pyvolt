@@ -24,6 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+import typing
+
 from .errors import UnexpectedQuoteError, InvalidEndOfQuotedStringError, ExpectedClosingQuoteError
 
 # map from opening quotes to closing quotes
@@ -64,7 +66,7 @@ class StringView:
         self.previous: int = 0
 
     @property
-    def current(self) -> str | None:
+    def current(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: Returns the character at current position."""
         return None if self.eof else self.buffer[self.index]
 
@@ -134,7 +136,7 @@ class StringView:
         self.index += n
         return result
 
-    def get(self) -> str | None:
+    def get(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: Read 1 char from buffer."""
         try:
             result = self.buffer[self.index + 1]
@@ -162,7 +164,7 @@ class StringView:
         self.index += pos
         return result
 
-    def get_quoted_word(self) -> str | None:
+    def get_quoted_word(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: Reads a word until whitespace is reached, unless quote there is"""
         current = self.current
         if current is None:

@@ -48,7 +48,7 @@ class MessagesAndUsersBulkMessageResponse(typing.TypedDict):
     members: typing_extensions.NotRequired[list[Member]]
 
 
-BulkMessageResponse = list[Message] | MessagesAndUsersBulkMessageResponse
+BulkMessageResponse = typing.Union[list[Message], MessagesAndUsersBulkMessageResponse]
 
 
 class TextSystemMessage(typing.TypedDict):

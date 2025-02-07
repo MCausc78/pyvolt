@@ -108,9 +108,9 @@ class Converter(typing.Protocol[T_co]):
 
         Raises
         -------
-        CommandError
+        :class:`CommandError`
             A generic exception occurred when converting the argument.
-        BadArgument
+        :class:`BadArgument`
             The converter failed to convert the argument.
         """
         raise NotImplementedError('Derived classes need to implement this.')
@@ -136,7 +136,7 @@ RE_EMOJI: typing.Final[re.Pattern[str]] = re.compile(r':([0-9A-Z]{26}):')
 
 class IDConverter(Converter[T_co]):
     @staticmethod
-    def _get_id_match(argument: str, /) -> re.Match[str] | None:
+    def _get_id_match(argument: str, /) -> typing.Optional[re.Match[str]]:
         return RE_ID.match(argument)
 
 
@@ -180,11 +180,11 @@ class MemberConverter(IDConverter[pyvolt.Member]):
     async def query_member_named(
         self,
         ctx: Context[BotT],
-        cache_context: MemberConverterCacheContext | None,
+        cache_context: typing.Optional[MemberConverterCacheContext],
         server: pyvolt.Server,
         argument: str,
         /,
-    ) -> tuple[MemberConverterCacheContext | None, pyvolt.Member | None]:
+    ) -> tuple[typing.Optional[MemberConverterCacheContext], typing.Optional[pyvolt.Member]]:
         cache = server.state.cache
 
         username, _, discriminator = argument.rpartition('#')
@@ -224,12 +224,12 @@ class MemberConverter(IDConverter[pyvolt.Member]):
     async def query_member_by_id(
         self,
         ctx: Context[BotT],
-        cache_context: MemberConverterCacheContext | None,
+        cache_context: typing.Optional[MemberConverterCacheContext],
         server: pyvolt.Server,
         argument: str,
         user_id: str,
         /,
-    ) -> tuple[MemberConverterCacheContext | None, pyvolt.Member | None]:
+    ) -> tuple[typing.Optional[MemberConverterCacheContext], typing.Optional[pyvolt.Member]]:
         cache = server.state.cache
 
         try:
@@ -528,7 +528,7 @@ class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
         /,
         *,
         fetch: bool = True,
-    ) -> tuple[ServerChannelConverterCacheContext | None, BaseServerChannel]: ...
+    ) -> tuple[typing.Optional[ServerChannelConverterCacheContext], BaseServerChannel]: ...
 
     @typing.overload
     @staticmethod
@@ -540,7 +540,7 @@ class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
         /,
         *,
         fetch: bool = True,
-    ) -> tuple[TextChannelConverterCacheContext | None, BaseServerChannel]: ...
+    ) -> tuple[typing.Optional[TextChannelConverterCacheContext], BaseServerChannel]: ...
 
     @typing.overload
     @staticmethod
@@ -552,24 +552,27 @@ class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
         /,
         *,
         fetch: bool = True,
-    ) -> tuple[VoiceChannelConverterCacheContext | None, BaseServerChannel]: ...
+    ) -> tuple[typing.Optional[VoiceChannelConverterCacheContext], BaseServerChannel]: ...
 
     @staticmethod
     async def _resolve_channel(
         ctx: Context[BotT],
         argument: str,
-        cache_context_type: type[ServerChannelConverterCacheContext]
-        | type[TextChannelConverterCacheContext]
-        | type[VoiceChannelConverterCacheContext],
+        cache_context_type: typing.Union[
+            type[ServerChannelConverterCacheContext],
+            type[TextChannelConverterCacheContext],
+            type[VoiceChannelConverterCacheContext],
+        ],
         type: type[CT],
         /,
         *,
         fetch: bool = True,
     ) -> tuple[
-        ServerChannelConverterCacheContext
-        | TextChannelConverterCacheContext
-        | VoiceChannelConverterCacheContext
-        | None,
+        typing.Optional[
+            typing.Union[
+                ServerChannelConverterCacheContext, TextChannelConverterCacheContext, VoiceChannelConverterCacheContext
+            ]
+        ],
         BaseServerChannel,
     ]:
         bot = ctx.bot
@@ -913,7 +916,7 @@ class Greedy(list[T]):
         converter = getattr(self.converter, '__name__', repr(self.converter))
         return f'Greedy[{converter}]'
 
-    def __class_getitem__(cls, params: tuple[T] | T, /) -> Greedy[T]:  # type: ignore
+    def __class_getitem__(cls, params: typing.Union[tuple[T], T], /) -> Greedy[T]:  # type: ignore
         if not isinstance(params, tuple):
             params = (params,)
         if len(params) != 1:
@@ -959,7 +962,7 @@ def is_generic_type(tp: typing.Any, /, *, _GenericAlias: type = _GenericAlias) -
     return isinstance(tp, type) and issubclass(tp, typing.Generic) or isinstance(tp, _GenericAlias)
 
 
-CONVERTER_MAPPING: dict[type | types.UnionType, typing.Any] = {
+CONVERTER_MAPPING: dict[typing.Any, typing.Any] = {
     pyvolt.Base: BaseConverter,
     pyvolt.Member: MemberConverter,
     pyvolt.User: UserConverter,
@@ -976,7 +979,9 @@ CONVERTER_MAPPING: dict[type | types.UnionType, typing.Any] = {
 }
 
 
-async def _actual_conversion(ctx: Context[BotT], converter: typing.Any, argument: str, param: InspectParameter, /):
+async def _actual_conversion(
+    ctx: Context[BotT], converter: typing.Any, argument: str, param: InspectParameter, /
+) -> typing.Any:
     if converter is bool:
         return _convert_to_bool(argument)
 
@@ -1016,7 +1021,7 @@ async def _actual_conversion(ctx: Context[BotT], converter: typing.Any, argument
 
 @typing.overload
 async def run_converters(
-    ctx: Context[BotT], converter: type[Converter[T]] | Converter[T], argument: str, param: Parameter, /
+    ctx: Context[BotT], converter: typing.Union[type[Converter[T]], Converter[T]], argument: str, param: Parameter, /
 ) -> T: ...
 
 
@@ -1046,7 +1051,7 @@ async def run_converters(ctx: Context[BotT], converter: typing.Any, argument: st
 
     Raises
     -------
-    CommandError
+    :class:`CommandError`
         The converter failed to convert.
 
     Returns

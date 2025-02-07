@@ -69,12 +69,12 @@ class CreatedReport(BaseReport):
 class RejectedReport(BaseReport):
     status: typing.Literal['Rejected']
     rejection_reason: str
-    closed_at: str | None
+    closed_at: typing.Optional[str]
 
 
 class ResolvedReport(BaseReport):
     status: typing.Literal['Resolved']
-    closed_at: str | None
+    closed_at: typing.Optional[str]
 
 
 Report = typing.Union[CreatedReport, RejectedReport, ResolvedReport]

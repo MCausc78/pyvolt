@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Mapping
     from typing_extensions import Self
 
-    from ._types import BotT, ContextT, UserCheck
+    from ._types import ContextT, UserCheck
     from .core import Command
     from .gear import Gear
 
@@ -97,9 +97,9 @@ class Bot(Client, GroupMixin[None]):
 
     def __init__(
         self,
-        command_prefix: utils.MaybeAwaitableFunc[[Context[Self]], list[str]] | str | list[str],
+        command_prefix: typing.Union[utils.MaybeAwaitableFunc[[Context[Self]], list[str]], str, list[str]],
         *,
-        description: str | None = None,
+        description: typing.Optional[str] = None,
         self_bot: bool = False,
         strip_after_prefix: bool = False,
         user_bot: bool = False,
@@ -122,12 +122,14 @@ class Bot(Client, GroupMixin[None]):
         self.__extensions: dict[str, types.ModuleType] = {}
         self._checks: list[UserCheck] = []
         self._check_once: list[UserCheck] = []
-        self._before_invoke: Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]] | None = None
-        self._after_invoke: Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]] | None = None
+        self._before_invoke: typing.Optional[Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]] = None
+        self._after_invoke: typing.Optional[Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]] = None
 
-        self.command_prefix: utils.MaybeAwaitableFunc[[Context[Self]], list[str]] | str | list[str] = command_prefix
+        self.command_prefix: typing.Union[utils.MaybeAwaitableFunc[[Context[Self]], list[str]], str, list[str]] = (
+            command_prefix
+        )
         self.description: str = cleandoc(description) if description else ''
-        self.owner_id: str | None = options.get('owner_id')
+        self.owner_id: typing.Optional[str] = options.get('owner_id')
         self.owner_ids: set[str] = options.pop('owner_ids', set())
         self.skip_check: utils.MaybeAwaitableFunc[[Context[Self]], bool] = skip_check
         self.strip_after_prefix: bool = strip_after_prefix
@@ -210,7 +212,7 @@ class Bot(Client, GroupMixin[None]):
         This is the non-decorator interface to :meth:`.check`
         and :meth:`.check_once`.
 
-        .. seealso:: The :func:`~discord.ext.commands.check` decorator
+        .. seealso:: The :func:`~pyvolt.ext.commands.check` decorator
 
         Parameters
         -----------
@@ -287,7 +289,7 @@ class Bot(Client, GroupMixin[None]):
         self.add_check(func, call_once=True)
         return func
 
-    async def can_run(self, ctx: Context[BotT], /, *, call_once: bool = False) -> bool:
+    async def can_run(self, ctx: Context[Self], /, *, call_once: bool = False) -> bool:
         data = self._check_once if call_once else self._checks
 
         if len(data) == 0:
@@ -328,11 +330,11 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         -------
-        TypeError
+        :class:`TypeError`
             The gear does not inherit from :class:`.Gear`.
-        CommandError
+        :class:`CommandError`
             An error happened during loading.
-        ClientException
+        :class:`ClientException`
             A gear with the same name is already loaded.
         """
 
@@ -348,7 +350,7 @@ class Bot(Client, GroupMixin[None]):
         gear = await gear._inject(self)
         self.__gears[gear_name] = gear
 
-    def get_gear(self, name: str, /) -> Gear | None:
+    def get_gear(self, name: str, /) -> typing.Optional[Gear]:
         """Gets the gear instance requested.
 
         If the gear is not found, ``None`` is returned instead.
@@ -371,7 +373,7 @@ class Bot(Client, GroupMixin[None]):
         self,
         name: str,
         /,
-    ) -> Gear | None:
+    ) -> typing.Optional[Gear]:
         """|coro|
 
         Removes a gear from the bot and returns it.
@@ -389,7 +391,7 @@ class Bot(Client, GroupMixin[None]):
         Returns
         -------
         Optional[:class:`.Gear`]
-             The gear that was removed. ``None`` if not found.
+            The gear that was removed. ``None`` if not found.
         """
 
         gear = self.__gears.pop(name, None)
@@ -447,7 +449,7 @@ class Bot(Client, GroupMixin[None]):
                 if utils._is_submodule(name, module):
                     del sys.modules[module]
 
-    async def _load_from_module_spec(self, spec: ModuleSpec, key: str) -> None:
+    async def _load_from_module_spec(self, spec: ModuleSpec, key: str, /) -> None:
         # precondition: key not in self.__extensions
         lib = module_from_spec(spec)
         sys.modules[key] = lib
@@ -473,13 +475,13 @@ class Bot(Client, GroupMixin[None]):
         else:
             self.__extensions[key] = lib
 
-    def _resolve_name(self, name: str, package: str | None, /) -> str:
+    def _resolve_name(self, name: str, package: typing.Optional[str], /) -> str:
         try:
             return resolve_name(name, package)
         except ImportError:
             raise ExtensionNotFound(name=name)
 
-    async def load_extension(self, name: str, *, package: str | None = None) -> None:
+    async def load_extension(self, name: str, *, package: typing.Optional[str] = None) -> None:
         """|coro|
 
         Loads an extension.
@@ -504,15 +506,15 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         --------
-        ExtensionNotFound
+        :class:`ExtensionNotFound`
             The extension could not be imported.
             This is also raised if the name of the extension could not
             be resolved using the provided ``package`` parameter.
-        ExtensionAlreadyLoaded
+        :class:`ExtensionAlreadyLoaded`
             The extension is already loaded.
-        NoEntryPointError
+        :class:`NoEntryPointError`
             The extension does not have a setup function.
-        ExtensionFailed
+        :class:`ExtensionFailed`
             The extension or its setup function had an execution error.
         """
 
@@ -526,7 +528,7 @@ class Bot(Client, GroupMixin[None]):
 
         await self._load_from_module_spec(spec, name)
 
-    async def unload_extension(self, name: str, *, package: str | None = None) -> None:
+    async def unload_extension(self, name: str, *, package: typing.Optional[str] = None) -> None:
         """|coro|
 
         Unloads an extension.
@@ -552,10 +554,10 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         -------
-        ExtensionNotFound
+        :class:`ExtensionNotFound`
             The name of the extension could not
             be resolved using the provided ``package`` parameter.
-        ExtensionNotLoaded
+        :class:`ExtensionNotLoaded`
             The extension was not loaded.
         """
 
@@ -567,7 +569,7 @@ class Bot(Client, GroupMixin[None]):
         await self._remove_module_references(lib.__name__)
         await self._call_module_finalizers(lib, name)
 
-    async def reload_extension(self, name: str, *, package: str | None = None) -> None:
+    async def reload_extension(self, name: str, *, package: typing.Optional[str] = None) -> None:
         """|coro|
 
         Atomically reloads an extension.
@@ -590,15 +592,15 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         -------
-        ExtensionNotLoaded
+        :class:`ExtensionNotLoaded`
             The extension was not loaded.
-        ExtensionNotFound
+        :class:`ExtensionNotFound`
             The extension could not be imported.
             This is also raised if the name of the extension could not
             be resolved using the provided ``package`` parameter.
-        NoEntryPointError
+        :class:`NoEntryPointError`
             The extension does not have a setup function.
-        ExtensionFailed
+        :class:`ExtensionFailed`
             The extension setup function had an execution error.
         """
 

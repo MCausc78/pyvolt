@@ -54,7 +54,7 @@ class BucketType(Enum):
     category = 5
     role = 6
 
-    def get_key(self, msg: pyvolt.Message | Context[typing.Any], /) -> typing.Any:
+    def get_key(self, msg: typing.Union[pyvolt.Message, Context[typing.Any]], /) -> typing.Any:
         if self is BucketType.user:
             return msg.author.id
         elif self is BucketType.guild:
@@ -91,14 +91,9 @@ class BucketType(Enum):
                 except IndexError:
                     return server.id
                 return top_role.id
+            return msg.channel.id
 
-            # we return the channel id of a private-channel as there are only roles in guilds
-            # and that yields the same result as for a guild with only the @everyone role
-            # NOTE: PrivateChannel doesn't actually have an id attribute but we assume we are
-            # receiving a DMChannel or GroupChannel which inherit from PrivateChannel and do
-            return (msg.channel if isinstance(msg.channel, PrivateChannel) else msg.author.top_role).id  # type: ignore
-
-    def __call__(self, msg: pyvolt.Message | Context[typing.Any], /) -> typing.Any:
+    def __call__(self, msg: typing.Union[pyvolt.Message, Context[typing.Any]], /) -> typing.Any:
         return self.get_key(msg)
 
 
@@ -112,14 +107,14 @@ class CooldownMapping(typing.Generic[T_contra]):
     def __init__(
         self,
         *,
-        original: Cooldown | None,
+        original: typing.Optional[Cooldown],
         type: Callable[[T_contra], typing.Any],
     ) -> None:
         if not callable(type):
             raise TypeError('Cooldown type must be a BucketType or callable')
 
         self._cache: dict[typing.Any, Cooldown] = {}
-        self._cooldown: Cooldown | None = original
+        self._cooldown: typing.Optional[Cooldown] = original
         self._type: Callable[[T_contra], typing.Any] = type
 
     def copy(self) -> CooldownMapping[T_contra]:
@@ -142,7 +137,7 @@ class CooldownMapping(typing.Generic[T_contra]):
     def _bucket_key(self, msg: T_contra) -> typing.Any:
         return self._type(msg)
 
-    def _verify_cache_integrity(self, current: float | None = None, /) -> None:
+    def _verify_cache_integrity(self, current: typing.Optional[float] = None, /) -> None:
         # we want to delete all cache objects that haven't been used
         # in a cooldown window. e.g. if we have a  command that has a
         # cooldown of 60s and it has not been used in 60s then that key should be deleted
@@ -151,10 +146,10 @@ class CooldownMapping(typing.Generic[T_contra]):
         for k in dead_keys:
             del self._cache[k]
 
-    def create_bucket(self, message: T_contra, /) -> Cooldown | None:
+    def create_bucket(self, message: T_contra, /) -> typing.Optional[Cooldown]:
         return self._cooldown.copy()  # type: ignore
 
-    def get_bucket(self, message: T_contra, current: float | None = None) -> Cooldown | None:
+    def get_bucket(self, message: T_contra, current: typing.Optional[float] = None) -> typing.Optional[Cooldown]:
         if self._type is BucketType.default:
             return self._cooldown
 
@@ -169,7 +164,9 @@ class CooldownMapping(typing.Generic[T_contra]):
 
         return bucket
 
-    def update_rate_limit(self, message: T_contra, current: float | None = None, tokens: int = 1) -> float | None:
+    def update_rate_limit(
+        self, message: T_contra, current: typing.Optional[float] = None, tokens: int = 1
+    ) -> typing.Optional[float]:
         bucket = self.get_bucket(message, current)
         if bucket is None:
             return None
@@ -182,11 +179,11 @@ class DynamicCooldownMapping(CooldownMapping[T_contra]):
     def __init__(
         self,
         *,
-        factory: Callable[[T_contra], Cooldown | None],
+        factory: Callable[[T_contra], typing.Optional[Cooldown]],
         type: Callable[[T_contra], typing.Any],
     ) -> None:
         super().__init__(original=None, type=type)
-        self._factory: Callable[[T_contra], Cooldown | None] = factory
+        self._factory: Callable[[T_contra], typing.Optional[Cooldown]] = factory
 
     def copy(self) -> DynamicCooldownMapping[T_contra]:
         ret = DynamicCooldownMapping(factory=self._factory, type=self._type)
@@ -197,7 +194,7 @@ class DynamicCooldownMapping(CooldownMapping[T_contra]):
     def valid(self) -> bool:
         return True
 
-    def create_bucket(self, message: T_contra, /) -> Cooldown | None:
+    def create_bucket(self, message: T_contra, /) -> typing.Optional[Cooldown]:
         return self._factory(message)
 
 
@@ -282,10 +279,10 @@ class MaxConcurrency:
     def __repr__(self) -> str:
         return f'<MaxConcurrency per={self.per!r} number={self.number} wait={self.wait}>'
 
-    def get_key(self, message: pyvolt.Message | Context[typing.Any], /) -> typing.Any:
+    def get_key(self, message: typing.Union[pyvolt.Message, Context[typing.Any]], /) -> typing.Any:
         return self.per.get_key(message)
 
-    async def acquire(self, message: pyvolt.Message | Context[typing.Any], /) -> None:
+    async def acquire(self, message: typing.Union[pyvolt.Message, Context[typing.Any]], /) -> None:
         key = self.get_key(message)
 
         try:
@@ -297,7 +294,7 @@ class MaxConcurrency:
         if not acquired:
             raise MaxConcurrencyReached(number=self.number, per=self.per)
 
-    async def release(self, message: pyvolt.Message | Context[typing.Any], /) -> None:
+    async def release(self, message: typing.Union[pyvolt.Message, Context[typing.Any]], /) -> None:
         # Technically there's no reason for this function to be async
         # But it might be more useful in the future
         key = self.get_key(message)
@@ -334,7 +331,7 @@ class Cooldown:
         self._tokens: int = self.rate
         self._last: float = 0.0
 
-    def get_tokens(self, current: float | None = None) -> int:
+    def get_tokens(self, current: typing.Optional[float] = None) -> int:
         """Returns the number of available tokens before rate limiting is applied.
 
         Parameters
@@ -358,7 +355,7 @@ class Cooldown:
             tokens = self.rate
         return tokens
 
-    def get_retry_after(self, current: float | None = None) -> float:
+    def get_retry_after(self, current: typing.Optional[float] = None) -> float:
         """Returns the time in seconds until the cooldown will be reset.
 
         Parameters
@@ -380,7 +377,7 @@ class Cooldown:
 
         return 0.0
 
-    def update_rate_limit(self, current: float | None = None, *, tokens: int = 1) -> float | None:
+    def update_rate_limit(self, current: typing.Optional[float] = None, *, tokens: int = 1) -> typing.Optional[float]:
         """Updates the cooldown rate limit.
 
         Parameters

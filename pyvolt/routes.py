@@ -143,11 +143,11 @@ CHANNELS_MESSAGE_CLEAR_REACTIONS: typing.Final[Route] = Route(
 CHANNELS_MESSAGE_DELETE: typing.Final[Route] = Route(DELETE, '/channels/{channel_id}/messages/{message_id}')
 CHANNELS_MESSAGE_EDIT: typing.Final[Route] = Route(PATCH, '/channels/{channel_id}/messages/{message_id}')
 CHANNELS_MESSAGE_FETCH: typing.Final[Route] = Route(GET, '/channels/{channel_id}/messages/{message_id}')
+CHANNELS_MESSAGE_PIN: typing.Final[Route] = Route(POST, '/channels/{channel_id}/messages/{message_id}/pin')
 CHANNELS_MESSAGE_QUERY: typing.Final[Route] = Route(GET, '/channels/{channel_id}/messages')
 CHANNELS_MESSAGE_REACT: typing.Final[Route] = Route(
     PUT, '/channels/{channel_id}/messages/{message_id}/reactions/{emoji}'
 )
-CHANNELS_MESSAGE_PIN: typing.Final[Route] = Route(POST, '/channels/{channel_id}/messages/{message_id}/pin')
 CHANNELS_MESSAGE_SEND: typing.Final[Route] = Route(
     POST, '/channels/{channel_id}/messages', ratelimit_key_template='messaging/{channel_id}'
 )
@@ -305,12 +305,12 @@ __all__ = (
     'CHANNELS_MESSAGE_DELETE',
     'CHANNELS_MESSAGE_EDIT',
     'CHANNELS_MESSAGE_FETCH',
+    'CHANNELS_MESSAGE_PIN',
     'CHANNELS_MESSAGE_QUERY',
     'CHANNELS_MESSAGE_REACT',
-    'CHANNELS_MESSAGE_PIN',
+    'CHANNELS_MESSAGE_SEARCH',
     'CHANNELS_MESSAGE_SEND',
     'CHANNELS_MESSAGE_UNPIN',
-    'CHANNELS_MESSAGE_SEARCH',
     'CHANNELS_MESSAGE_UNREACT',
     'CHANNELS_PERMISSIONS_SET',
     'CHANNELS_PERMISSIONS_SET_DEFAULT',

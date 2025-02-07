@@ -171,12 +171,12 @@ class Parameter(inspect.Parameter):
         return self.annotation
 
     @property
-    def description(self) -> str | None:
+    def description(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The description of this parameter."""
         return self._description if self._description is not EMPTY else None
 
     @property
-    def displayed_default(self) -> str | None:
+    def displayed_default(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The displayed default in :class:`Command.signature`."""
         if self._displayed_default is not EMPTY:
             return self._displayed_default
@@ -190,7 +190,7 @@ class Parameter(inspect.Parameter):
         return str(self.default)
 
     @property
-    def displayed_name(self) -> str | None:
+    def displayed_name(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The name that is displayed to the user."""
         return self._displayed_name if self._displayed_name is not EMPTY else None
 
@@ -288,14 +288,14 @@ An alias for :func:`parameter`.
 Author = parameter(
     default=attrgetter('author'),
     displayed_default='<you>',
-    converter=Member | User,
+    converter=typing.Union[Member, User],
 )
 Author._fallback = True
 
 CurrentChannel = parameter(
     default=attrgetter('channel'),
     displayed_default='<this channel>',
-    converter=SavedMessagesChannel | DMChannel | GroupChannel | TextChannel | VoiceChannel,
+    converter=typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel],
 )
 CurrentChannel._fallback = True
 

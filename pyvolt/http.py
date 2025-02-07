@@ -124,7 +124,7 @@ if typing.TYPE_CHECKING:
     from .webhook import BaseWebhook, Webhook
 
 
-DEFAULT_HTTP_USER_AGENT = f'pyvolt API client (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_HTTP_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {version})'
 
 
 _L = logging.getLogger(__name__)
@@ -1481,41 +1481,41 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------------------------------+------------------------------------------------------+
-            | Value                                     | Reason                                               |
-            +-------------------------------------------+------------------------------------------------------+
-            | ``FailedValidation``                      | The payload was invalid.                             |
-            +-------------------------------------------+------------------------------------------------------+
-            | ``InvalidOperation``                      | The target channel was not group/text/voice channel. |
-            +-------------------------------------------+------------------------------------------------------+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+            | ``InvalidOperation`` | The target channel was not group/text/voice channel. |
+            +----------------------+------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------------------------------+-----------------------------------------+
-            | Value                                    | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +---------------------------------------+-------------------------------------------------------------+
-            | Value                                 | Reason                                                      |
-            +---------------------------------------+-------------------------------------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. |
-            +---------------------------------------+-------------------------------------------------------------+
-            | ``NotOwner``                          | You do not own the group.                                   |
-            +---------------------------------------+-------------------------------------------------------------+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit the channel. |
+            +-----------------------+-------------------------------------------------------------+
+            | ``NotOwner``          | You do not own the group.                                   |
+            +-----------------------+-------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------------------------+---------------------------------+
-            | Value                                | Reason                          |
-            +--------------------------------------+---------------------------------+
-            | ``NotFound``                         | The channel was not found.      |
-            +--------------------------------------+---------------------------------+
-            | ``NotInGroup``                       | The new owner was not in group. |
-            +--------------------------------------+---------------------------------+
+            +----------------+---------------------------------+
+            | Value          | Reason                          |
+            +----------------+---------------------------------+
+            | ``NotFound``   | The channel was not found.      |
+            +----------------+---------------------------------+
+            | ``NotInGroup`` | The new owner was not in group. |
+            +----------------+---------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2302,11 +2302,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+-----------------------------------------+
-            | Value        | Reason                                  |
-            +--------------+-----------------------------------------+
-            | ``NotFound`` | The channel/message/file was not found. |
-            +--------------+-----------------------------------------+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2329,6 +2329,70 @@ class HTTPClient:
         )
         return self.state.parser.parse_message(resp)
 
+    async def pin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+        """|coro|
+
+        Pins a message.
+
+        You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.TextableChannel`]
+            The channel the message is in.
+        message: ULIDOr[:class:`BaseMessage`]
+            The message to pin.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+---------------------------------+
+            | Value             | Reason                          |
+            +-------------------+---------------------------------+
+            | ``AlreadyPinned`` | The message was already pinned. |
+            +-------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to pin the message. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.request(
+            routes.CHANNELS_MESSAGE_PIN.compile(
+                channel_id=resolve_id(channel),
+                message_id=resolve_id(message),
+            )
+        )
+
     async def get_messages(
         self,
         channel: ULIDOr[TextableChannel],
@@ -2342,38 +2406,75 @@ class HTTPClient:
     ) -> list[Message]:
         """|coro|
 
-        Get multiple messages from the channel.
+        Retrieve message history of a textable channel.
+
+        You must have :attr:`~Permissions.read_message_history` to do this.
 
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
-            The channel.
+            The channel to retrieve messages from.
         limit: Optional[:class:`int`]
-            Maximum number of messages to get. For getting nearby messages, this is ``(limit + 1)``.
+            The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
+
+            If ``nearby`` is provided, then this is ``(limit + 1)``.
         before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message after which messages should be fetched.
-        sort: Optional[:class:`MessageSort`]
-            The message sort direction.
+        sort: Optional[:class:`.MessageSort`]
+            The message sort direction. Defaults to :attr:`.MessageSort.latest`
         nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
-            The message to search around. Specifying ``nearby`` ignores ``before``, ``after`` and ``sort``. It will also take half of limit rounded as the limits to each side. It also fetches the message ID specified.
+            The message to search around.
+
+            Providing this parameter will discrd ``before``, ``after`` and ``sort`` parameters.
+
+            It will also take half of limit rounded as the limits to each side. It also fetches the message specified.
         populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to get channel message history.
-        :class:`HTTPException`
-            Getting messages failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------+
+            | Value                 | Reason                                                              |
+            +-----------------------+---------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to read the message history. |
+            +-----------------------+---------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`Message`]
+        List[:class:`.Message`]
             The messages retrieved.
         """
         params: raw.OptionsQueryMessages = {}
+
         if limit is not None:
             params['limit'] = limit
         if before is not None:
@@ -2402,23 +2503,63 @@ class HTTPClient:
         """|coro|
 
         React to a given message.
+
         You must have :attr:`~Permissions.react` to do this.
 
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
-            The channel.
+            The channel the message was sent in.
         message: ULIDOr[:class:`.BaseMessage`]
-            The message.
+            The message to react to.
         emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to react to message.
         :class:`HTTPException`
-            Reacting to message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                        |
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                                                                                 |
+            |                      | - The message has too many reactions.                                                                         |
+            |                      | - If :attr:`MessageInteractions.restrict_reactions` is ``True``, then the emoji provided was not whitelisted. |
+            |                      | - The provided emoji was invalid.                                                                             |
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------+
+            | Value                 | Reason                                           |
+            +-----------------------+--------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to react. |
+            +-----------------------+--------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------------------+
+            | Value        | Reason                                          |
+            +--------------+-------------------------------------------------+
+            | ``NotFound`` | The channel/message/custom emoji was not found. |
+            +--------------+-------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.CHANNELS_MESSAGE_REACT.compile(
@@ -2435,14 +2576,19 @@ class HTTPClient:
         *,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
-        before: ULIDOr[BaseMessage] | None = None,
-        after: ULIDOr[BaseMessage] | None = None,
+        before: typing.Optional[ULIDOr[BaseMessage]] = None,
+        after: typing.Optional[ULIDOr[BaseMessage]] = None,
         sort: typing.Optional[MessageSort] = None,
         populate_users: typing.Optional[bool] = None,
     ) -> list[Message]:
         """|coro|
 
         Searches for messages.
+
+        For ``query`` and ``pinned``, only one parameter can be provided, otherwise a :class:`HTTPException` will
+        be thrown with ``InvalidOperation`` type.
+
+        You must have :attr:`~Permissions.read_message_history` to do this.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2452,30 +2598,78 @@ class HTTPClient:
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel to search in.
         query: Optional[:class:`str`]
-            Full-text search query. See `MongoDB documentation <https://docs.mongodb.com/manual/text-search/#-text-operator>`_ for more information.
+            The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
-            Maximum number of messages to fetch.
+            The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
+
+            If ``nearby`` is provided, then this is ``(limit + 1)``.
         before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message after which messages should be fetched.
         sort: Optional[:class:`.MessageSort`]
-            Sort used for retrieving.
-        populate_users: Optional[:class:`bool`]
+            The message sort direction. Defaults to :attr:`.MessageSort.latest`
+        nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
+            The message to search around.
+
+            Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
+
+            It will also take half of limit rounded as the limits to each side. It also fetches the message specified.
+        populate_users: :class:`bool`
             Whether to populate user (and member, if server channel) objects.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to search
         :class:`HTTPException`
-            Searching messages failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------------------------------------------------+
+            | Value                | Reason                                                                  |
+            +----------------------+-------------------------------------------------------------------------+
+            | ``FailedValidation`` | One of ``before``, ``after`` or ``nearby`` parameters were invalid IDs. |
+            +----------------------+-------------------------------------------------------------------------+
+            | ``InvalidOperation`` | You provided both ``query`` and ``pinned`` parameters.                  |
+            +----------------------+-------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.                               |
+            +----------------------+-------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to search messages. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`Message`]
+        List[:class:`.Message`]
             The messages matched.
         """
         payload: raw.DataMessageSearch = {}
@@ -2499,33 +2693,6 @@ class HTTPClient:
             json=payload,
         )
         return self.state.parser.parse_messages(resp)
-
-    async def pin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
-        """|coro|
-
-        Pins a message.
-        You must have :attr:`~Permissions.manage_messages` to do this.
-
-        Parameters
-        ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
-            The channel.
-        message: ULIDOr[:class:`BaseMessage`]
-            The message.
-
-        Raises
-        ------
-        :class:`Forbidden`
-            You do not have permissions to pin message.
-        :class:`HTTPException`
-            Pinning the message failed.
-        """
-        await self.request(
-            routes.CHANNELS_MESSAGE_PIN.compile(
-                channel_id=resolve_id(channel),
-                message_id=resolve_id(message),
-            )
-        )
 
     async def send_message(
         self,
@@ -2559,23 +2726,23 @@ class HTTPClient:
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`ResolvableResource`]]
+        attachments: Optional[List[:class:`.ResolvableResource`]]
             The attachments to send the message with.
 
             You must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`SendableEmbed`]]
+        embeds: Optional[List[:class:`.SendableEmbed`]]
             The embeds to send the message with.
 
-            You must have :attr:`~Permissions.send_embeds` to provide non-null or non-empty value.
-        masquearde: Optional[:class:`Masquerade`]
+            You must have :attr:`~Permissions.send_embeds` to provide this.
+        masquearde: Optional[:class:`.Masquerade`]
             The message masquerade.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
-        interactions: Optional[:class:`MessageInteractions`]
+        interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
             If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
@@ -2745,10 +2912,46 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to unpin messages.
         :class:`HTTPException`
-            Unpinning the message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------+-----------------------------+
+            | Value         | Reason                      |
+            +---------------+-----------------------------+
+            | ``NotPinned`` | The message was not pinned. |
+            +---------------+-----------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to unpin the message. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.CHANNELS_MESSAGE_PIN.compile(
@@ -2762,15 +2965,15 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
-        /,
         *,
-        user: ULIDOr[BaseUser] | None = None,
+        user: typing.Optional[ULIDOr[BaseUser]] = None,
         remove_all: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
 
         Remove your own, someone else's or all of a given reaction.
-        You must have :attr:`~Permissions.manage_messages` to do this if changing other's reactions.
+
+        You must have :attr:`~Permissions.react` to do this.
 
         Parameters
         ----------
@@ -2778,19 +2981,53 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        emoji: :class:`ResolvableEmoji`
+        emoji: :class:`.ResolvableEmoji`
             The emoji to remove.
         user: Optional[ULIDOr[:class:`.BaseUser`]]
-            Remove reactions from this user. You must have :attr:`~Permissions.manage_messages` to provide this.
+            The user to remove reactions from.
+
+            You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
-            Whether to remove all reactions. You must have :attr:`~Permissions.manage_messages` to provide this.
+            Whether to remove all reactions.
+
+            You must have :attr:`~Permissions.manage_messages` to provide this.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to remove reactions from message.
-        :class:`HTTPException`
-            Removing reactions from message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to remove reaction. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | One of these:                      |
+            |              | - The channel was not found.       |
+            |              | - The message was not found.       |
+            |              | - The user provided did not react. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         params: raw.OptionsUnreact = {}
         if user is not None:
@@ -2817,25 +3054,70 @@ class HTTPClient:
     ) -> ServerChannel:
         """|coro|
 
-        Sets permissions for the specified role in a channel. Channel must be a :class:`ServerChannel`.
+        Sets permissions for the specified role in a channel.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        The provided channel must be a :class:`.ServerChannel`.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`ServerChannel`]
+        channel: ULIDOr[:class:`.ServerChannel`]
             The channel.
-        role: ULIDOr[:class:`BaseRole`]
+        role: ULIDOr[:class:`.BaseRole`]
             The role.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to set role permissions on the channel.
         :class:`HTTPException`
-            Setting permissions failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | The provided channel was not server channel. |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to remove reaction.                           |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------+
+            | Value        | Reason                                 |
+            +--------------+----------------------------------------+
+            | ``NotFound`` | The channel/server/role was not found. |
+            +--------------+----------------------------------------+
+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`ServerChannel`
+        :class:`.ServerChannel`
             The updated server channel with new permissions.
         """
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
@@ -2846,8 +3128,8 @@ class HTTPClient:
             ),
             json=payload,
         )
-        r = self.state.parser.parse_channel(resp)
-        return r
+        ret = self.state.parser.parse_channel(resp)
+        return ret
 
     @typing.overload
     async def set_default_channel_permissions(
@@ -2873,22 +3155,69 @@ class HTTPClient:
     ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
-        Sets permissions for the default role in a channel.
-        Channel must be a :class:`GroupChannel`, or :class:`ServerChannel`.
+        Sets default permissions for everyone in a channel.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Channel must be a :class:`GroupChannel`, or :class:`.ServerChannel`.
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
-            The channel.
-        permissions: Union[:class:`Permissions`, :class:`PermissionOverride`]
-            The new permissions. Should be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
+        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
+            The channel to set default permissions in.
+        permissions: Union[:class:`.Permissions`, :class:`.PermissionOverride`]
+            The new permissions. Must be :class:`.Permissions` for groups and :class:`.PermissionOverride` for server channels.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to set default permissions on the channel.
         :class:`HTTPException`
-            Setting permissions failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------------+
+            | Value                | Reason                                                   |
+            +----------------------+----------------------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                            |
+            |                      | - You provided :class:`.PermissionOverride` for group.   |
+            |                      | - You provided :class:`.Permissions` for server channel. |
+            |                      | - The provided channel was not group/server channel.     |
+            +----------------------+----------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to remove reaction.                           |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -2905,35 +3234,91 @@ class HTTPClient:
         r = self.state.parser.parse_channel(resp)
         return r  # type: ignore
 
-    async def join_call(self, channel: ULIDOr[DMChannel | GroupChannel | VoiceChannel]) -> str:
+    async def join_call(self, channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]]) -> str:
         """|coro|
 
         Asks the voice server for a token to join the call.
 
+        You must have :attr:`~Permissions.connect` to do this.
+
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`VoiceChannel`]]
-            The channel.
+        channel: ULIDOr[Union[:class:`.DMChannel`, :class:`.GroupChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]
+            The channel to join a call in.
+
+            If current instance uses legacy voice server (determined by
+            whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``), then
+            a channel with type of :attr:`~ChannelType.text` cannot be passed and
+            will raise :class:`HTTPException` with ``CannotJoinCall`` type.
 
         Raises
         ------
         :class:`HTTPException`
-            Asking for the token failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                                            |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``      | The current user was already connected to this voice channel.                                                                     |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyInVoiceChannel`` | The current user was already connected to other voice channel.                                                                    |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``        | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | ???. Only applicable to instances using Livekit                                                                                   |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``       | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------+
+            | Value                            | Reason                                                 |
+            +----------------------------------+--------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to join a call. |
+            +----------------------------------+--------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
         :class:`str`
-            Token for authenticating with the voice server.
+            The token for authenticating with the voice server.
         """
-        d: raw.CreateVoiceUserResponse = await self.request(
+        resp: raw.CreateVoiceUserResponse = await self.request(
             routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
         )
-        return d['token']
+        return resp['token']
 
     async def create_webhook(
         self,
-        channel: ULIDOr[GroupChannel | TextChannel],
-        /,
+        channel: ULIDOr[typing.Union[GroupChannel, TextChannel]],
         *,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
@@ -2942,25 +3327,63 @@ class HTTPClient:
 
         Creates a webhook which 3rd party platforms can use to send.
 
+        You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`TextChannel`]]
+        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]
             The channel to create webhook in.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
-        avatar: Optional[:class:`ResolvableResource`]
+        avatar: Optional[:class:`.ResolvableResource`]
             The webhook avatar.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to create the webhook.
         :class:`HTTPException`
-            Creating the webhook failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                               |
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
+            +---------------------------+--------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------+
+            | Value                            | Reason                                                      |
+            +----------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to create a webhook. |
+            +----------------------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The channel/file was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Webhook`
+        :class:`.Webhook`
             The created webhook.
         """
         payload: raw.CreateWebhookBody = {'name': name}
@@ -2972,17 +3395,55 @@ class HTTPClient:
         )
         return self.state.parser.parse_webhook(resp)
 
-    async def get_channel_webhooks(self, channel: ULIDOr[ServerChannel], /) -> list[Webhook]:
+    async def get_channel_webhooks(self, channel: ULIDOr[ServerChannel]) -> list[Webhook]:
         """|coro|
 
-        Gets the list of webhooks from this channel.
+        Retrieves all webhooks in a channel.
+
+        You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
         Raises
         ------
-        :class:`Forbidden`
-            You don't have permissions to get the webhooks.
         :class:`HTTPException`
-            Getting channel webhooks failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                               |
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
+            +---------------------------+--------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to view webhooks that belong to this channel. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------

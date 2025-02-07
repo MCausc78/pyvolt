@@ -86,6 +86,9 @@ class InstanceFeaturesConfig:
     voice: InstanceVoiceFeature = field(repr=True, kw_only=True)
     """:class:`.InstanceVoiceFeature`: The configuration for Vortex or Livekit (voice server service)."""
 
+    livekit_voice: bool = field(repr=True, kw_only=True)
+    """:class:`bool`: Whether this instance uses Livekit instead of Voso/Vortex."""
+
 
 # Sample build object (own instance):
 # "build": {

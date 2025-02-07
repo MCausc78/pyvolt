@@ -69,7 +69,7 @@ class ClientReadyEvent(typing.TypedDict):
     channel_unreads: typing_extensions.NotRequired[list[ChannelUnread]]
 
 
-Ping = list[int] | int
+Ping = typing.Union[list[int], int]
 
 
 class ClientPongEvent(typing.TypedDict):
@@ -191,7 +191,7 @@ class ClientUserUpdateEvent(typing.TypedDict):
     id: str
     data: PartialUser
     clear: list[FieldsUser]
-    event_id: str | None
+    event_id: typing.Optional[str]
 
 
 class ClientUserRelationshipEvent(typing.TypedDict):

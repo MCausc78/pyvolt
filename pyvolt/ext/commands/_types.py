@@ -57,7 +57,7 @@ class _BaseCommand:
     __slots__ = ()
 
 
-GearT = typing.TypeVar('GearT', bound='Gear | None')
+GearT = typing.TypeVar('GearT', bound='typing.Optional[Gear]')
 
 
 Error = typing.Union[
@@ -68,7 +68,7 @@ Hook = typing.Union[
     Callable[['GearT', 'ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]],
     Callable[['ContextT'], Coroutine[typing.Any, typing.Any, typing.Any]],
 ]
-UserCheck = Callable[['ContextT'], bool | Coroutine[typing.Any, typing.Any, bool]]
+UserCheck = Callable[['ContextT'], typing.Union[bool, Coroutine[typing.Any, typing.Any, bool]]]
 
 
 class Check(typing.Protocol[ContextT_co]):  # type: ignore # TypeVar is expected to be invariant

@@ -41,7 +41,7 @@ class AndroidUserSettings(typing.TypedDict):
 
 
 # Revite User Settings
-ReviteChangelogEntryID = typing.Literal[1, 2, 3] | int
+ReviteChangelogEntryID = typing.Union[typing.Literal[1, 2, 3], int]
 
 
 class ReviteChangelog(typing.TypedDict):

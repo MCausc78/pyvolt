@@ -51,7 +51,7 @@ def get_signature_parameters(
     globalns: dict[str, typing.Any],
     /,
     *,
-    skip_parameters: int | None = None,
+    skip_parameters: typing.Optional[int] = None,
 ) -> dict[str, Parameter]:
     signature = Signature.from_callable(function)
     params: dict[str, Parameter] = {}
@@ -113,7 +113,7 @@ def _fold_text(input: str, /) -> str:
 
 def extract_descriptions_from_docstring(
     function: Callable[..., typing.Any], params: dict[str, Parameter], /
-) -> str | None:
+) -> typing.Optional[str]:
     docstring = inspect.getdoc(function)
 
     if docstring is None:
@@ -148,9 +148,9 @@ def extract_descriptions_from_docstring(
 
 def wrap_callback(
     coro: Callable[P, Coroutine[typing.Any, typing.Any, T]], /
-) -> Callable[P, Coroutine[typing.Any, typing.Any, T | None]]:
+) -> Callable[P, Coroutine[typing.Any, typing.Any, typing.Optional[T]]]:
     @wraps(coro)
-    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> T | None:
+    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> typing.Optional[T]:
         try:
             ret = await coro(*args, **kwargs)
         except CommandError:
@@ -169,9 +169,9 @@ def hooked_wrapped_callback(
     ctx: Context[BotT],
     coro: Callable[P, Coroutine[typing.Any, typing.Any, T]],
     /,
-) -> Callable[P, Coroutine[typing.Any, typing.Any, T | None]]:
+) -> Callable[P, Coroutine[typing.Any, typing.Any, typing.Optional[T]]]:
     @wraps(coro)
-    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> T | None:
+    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> typing.Optional[T]:
         try:
             ret = await coro(*args, **kwargs)
         except CommandError:
@@ -350,8 +350,10 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
     def __init__(
         self,
-        func: Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]]
-        | Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+        func: typing.Union[
+            Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+            Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+        ],
         /,
         **kwargs: typing.Any,
     ) -> None:
@@ -372,12 +374,12 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         else:
             help_doc = extract_descriptions_from_docstring(func, self.params)
 
-        self.help: str | None = help_doc
+        self.help: typing.Optional[str] = help_doc
 
-        self.brief: str | None = kwargs.get('brief')
-        self.usage: str | None = kwargs.get('usage')
+        self.brief: typing.Optional[str] = kwargs.get('brief')
+        self.usage: typing.Optional[str] = kwargs.get('usage')
         self.rest_is_raw: bool = kwargs.get('rest_is_raw', False)
-        self.aliases: list[str] | tuple[str] = kwargs.get('aliases', [])
+        self.aliases: typing.Union[list[str], tuple[str]] = kwargs.get('aliases', [])
         self.extras: dict[typing.Any, typing.Any] = kwargs.get('extras', {})
 
         if not isinstance(self.aliases, (list, tuple)):
@@ -412,7 +414,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         except AttributeError:
             max_concurrency = kwargs.get('max_concurrency')
 
-        self._max_concurrency: MaxConcurrency | None = max_concurrency
+        self._max_concurrency: typing.Optional[MaxConcurrency] = max_concurrency
 
         self.require_var_positional: bool = kwargs.get('require_var_positional', False)
         self.ignore_extra: bool = kwargs.get('ignore_extra', True)
@@ -420,10 +422,10 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         self._gear: GearT = None  # type: ignore # This breaks every other pyright release
 
         # Bandaid for the fact that sometimes parent can be the bot instance
-        parent: GroupMixin[typing.Any] | None = kwargs.get('parent')
-        self.parent: GroupMixin[typing.Any] | None = parent if isinstance(parent, _BaseCommand) else None
+        parent: typing.Optional[GroupMixin[typing.Any]] = kwargs.get('parent')
+        self.parent: typing.Optional[GroupMixin[typing.Any]] = parent if isinstance(parent, _BaseCommand) else None
 
-        self._before_invoke: Hook | None = None
+        self._before_invoke: typing.Optional[Hook] = None
         try:
             before_invoke = func.__before_invoke__  # type: ignore
         except AttributeError:
@@ -431,7 +433,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         else:
             self.before_invoke(before_invoke)
 
-        self._after_invoke: Hook | None = None
+        self._after_invoke: typing.Optional[Hook] = None
         try:
             after_invoke = func.__after_invoke__  # type: ignore
         except AttributeError:
@@ -450,17 +452,20 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     @property
     def callback(
         self,
-    ) -> (
-        Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]]
-        | Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]]
-    ):
+    ) -> typing.Union[
+        Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+        Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+    ]:
         return self._callback
 
     @callback.setter
     def callback(
         self,
-        function: Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]]
-        | Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+        function: typing.Union[
+            Callable[typing.Concatenate[GearT, Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+            Callable[typing.Concatenate[Context[typing.Any], P], Coroutine[typing.Any, typing.Any, T]],
+        ],
+        /,
     ) -> None:
         self._callback = function
         unwrap = pyvolt.utils.unwrap_function(function)
@@ -711,7 +716,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         return self.params.copy()
 
     @property
-    def cooldown(self) -> Cooldown | None:
+    def cooldown(self) -> typing.Optional[Cooldown]:
         """Optional[:class:`~pyvolt.ext.commands.Cooldown`]: The cooldown of a command when invoked
         or ``None`` if the command doesn't have a registered cooldown.
         """
@@ -752,7 +757,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         return entries
 
     @property
-    def root_parent(self) -> Group[typing.Any, ..., typing.Any] | None:
+    def root_parent(self) -> typing.Optional[Group[typing.Any, ..., typing.Any]]:
         """Optional[:class:`Group`]: Retrieves the root parent of this command.
 
         If the command has no parents then it returns ``None``.
@@ -1005,7 +1010,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         self._after_invoke = coro
         return coro
 
-    def _is_typing_optional(self, annotation: type[T | None], /) -> bool:
+    def _is_typing_optional(self, annotation: type[typing.Optional[T]], /) -> bool:
         return getattr(annotation, '__origin__', None) is typing.Union and type(None) in annotation.__args__  # type: ignore
 
     @property
@@ -1211,7 +1216,7 @@ class GroupMixin(typing.Generic[GearT]):
                 raise CommandRegistrationError(name=alias, alias_conflict=True)
             self.all_commands[alias] = command
 
-    def remove_command(self, name: str, /) -> Command[GearT, ..., typing.Any] | None:
+    def remove_command(self, name: str, /) -> typing.Optional[Command[GearT, ..., typing.Any]]:
         """Remove a :class:`.Command` from the internal list
         of commands.
 
@@ -1261,7 +1266,7 @@ class GroupMixin(typing.Generic[GearT]):
             if isinstance(command, GroupMixin):
                 yield from command.walk_commands()
 
-    def get_command(self, name: str, /) -> Command[GearT, ..., typing.Any] | None:
+    def get_command(self, name: str, /) -> typing.Optional[Command[GearT, ..., typing.Any]]:
         """Get a :class:`.Command` from the internal list
         of commands.
 
@@ -1310,8 +1315,10 @@ class GroupMixin(typing.Generic[GearT]):
         **kwargs: typing.Any,
     ) -> Callable[
         [
-            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]]
-            | Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]]
+            typing.Union[
+                Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+                Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+            ]
         ],
         Command[GearT, P, T],
     ]: ...
@@ -1325,8 +1332,10 @@ class GroupMixin(typing.Generic[GearT]):
         **kwargs: typing.Any,
     ) -> Callable[
         [
-            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]]
-            | Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]]
+            typing.Union[
+                Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+                Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+            ],
         ],
         CommandT,
     ]: ...
@@ -1335,7 +1344,7 @@ class GroupMixin(typing.Generic[GearT]):
         self,
         name: str = MISSING,
         *args: typing.Any,
-        cls: type[Command[typing.Any, ..., typing.Any]] | None = None,
+        cls: typing.Optional[type[Command[typing.Any, ..., typing.Any]]] = None,
         **kwargs: typing.Any,
     ) -> typing.Any:
         """A shortcut decorator that invokes :func:`~pyvolt.ext.commands.command` and adds it to
@@ -1364,8 +1373,10 @@ class GroupMixin(typing.Generic[GearT]):
         **kwargs: typing.Any,
     ) -> Callable[
         [
-            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]]
-            | Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]]
+            typing.Union[
+                Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+                Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+            ]
         ],
         GroupT,
     ]: ...
@@ -1379,8 +1390,10 @@ class GroupMixin(typing.Generic[GearT]):
         **kwargs: typing.Any,
     ) -> Callable[
         [
-            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]]
-            | Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]]
+            typing.Union[
+                Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+                Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, T]],
+            ],
         ],
         Group[GearT, P, T],
     ]: ...
@@ -1389,7 +1402,7 @@ class GroupMixin(typing.Generic[GearT]):
         self,
         name: str = MISSING,
         *args: typing.Any,
-        cls: type[Group[typing.Any, ..., typing.Any]] | None = None,
+        cls: typing.Optional[type[Group[typing.Any, ..., typing.Any]]] = None,
         **kwargs: typing.Any,
     ) -> typing.Any:
         """A shortcut decorator that invokes :func:`.group` and adds it to
@@ -1556,28 +1569,30 @@ if typing.TYPE_CHECKING:
 
 @typing.overload
 def command(
-    name: str | None = None,
+    name: typing.Optional[str] = None,
     **attrs: typing.Any,
 ) -> _CommandDecorator: ...
 
 
 @typing.overload
 def command(
-    name: str | None = None,
-    cls: type[CommandT] | None = ...,  # type: ignore
+    name: typing.Optional[str] = None,
+    cls: typing.Optional[type[CommandT]] = ...,  # type: ignore
     **attrs: typing.Any,
 ) -> Callable[
     [
-        Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]]
-        | Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]]  # type: ignore
+        typing.Union[
+            Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]],
+            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]],  # type: ignore
+        ],
     ],
     CommandT,
 ]: ...
 
 
 def command(
-    name: str | None = None,
-    cls: type[Command[typing.Any, ..., typing.Any]] | None = None,
+    name: typing.Optional[str] = None,
+    cls: typing.Optional[type[Command[typing.Any, ..., typing.Any]]] = None,
     **attrs: typing.Any,
 ) -> typing.Any:
     """A decorator that transforms a function into a :class:`.Command`
@@ -1622,28 +1637,30 @@ def command(
 
 @typing.overload
 def group(
-    name: str | None = ...,
+    name: typing.Optional[str] = ...,
     **attrs: typing.Any,
 ) -> _GroupDecorator: ...
 
 
 @typing.overload
 def group(
-    name: str | None = ...,
-    cls: type[GroupT] | None = None,
+    name: typing.Optional[str] = ...,
+    cls: typing.Optional[type[GroupT]] = None,
     **attrs: typing.Any,
 ) -> Callable[
     [
-        Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]]  # type: ignore
-        | Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]]
+        typing.Union[
+            Callable[typing.Concatenate[GearT, ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]],  # type: ignore
+            Callable[typing.Concatenate[ContextT, P], Coroutine[typing.Any, typing.Any, typing.Any]],
+        ],
     ],
     GroupT,
 ]: ...
 
 
 def group(
-    name: str | None = None,
-    cls: type[Group[typing.Any, ..., typing.Any]] | None = None,
+    name: typing.Optional[str] = None,
+    cls: typing.Optional[type[Group[typing.Any, ..., typing.Any]]] = None,
     **attrs: typing.Any,
 ) -> typing.Any:
     """A decorator that transforms a function into a :class:`.Group`.

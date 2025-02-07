@@ -13,7 +13,7 @@ class Webhook(typing.TypedDict):
     creator_id: str  # Only available since API v0.7.17
     channel_id: str
     permissions: int
-    token: str | None
+    token: typing.Optional[str]
 
 
 class PartialWebhook(typing.TypedDict):
@@ -24,7 +24,7 @@ class PartialWebhook(typing.TypedDict):
 
 class MessageWebhook(typing.TypedDict):
     name: str
-    avatar: str | None
+    avatar: typing.Optional[str]
 
 
 class DataEditWebhook(typing.TypedDict):
@@ -37,7 +37,7 @@ class DataEditWebhook(typing.TypedDict):
 class ResponseWebhook(typing.TypedDict):
     id: str
     name: str
-    avatar: str | None
+    avatar: typing.Optional[str]
     channel_id: str
     permissions: int
 
@@ -47,4 +47,4 @@ FieldsWebhook = typing.Literal['Avatar']
 
 class CreateWebhookBody(typing.TypedDict):
     name: str
-    avatar: typing_extensions.NotRequired[str | None]
+    avatar: typing_extensions.NotRequired[typing.Optional[str]]

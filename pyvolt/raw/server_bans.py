@@ -7,18 +7,18 @@ from .server_members import MemberCompositeKey
 
 class ServerBan(typing.TypedDict):
     _id: MemberCompositeKey
-    reason: str | None
+    reason: typing.Optional[str]
 
 
 class DataBanCreate(typing.TypedDict):
-    reason: typing_extensions.NotRequired[str | None]
+    reason: typing_extensions.NotRequired[typing.Optional[str]]
 
 
 class BannedUser(typing.TypedDict):
     _id: str
     username: str
     discriminator: str
-    avatar: File | None
+    avatar: typing.Optional[File]
 
 
 class BanListResult(typing.TypedDict):

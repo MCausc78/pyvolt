@@ -1556,10 +1556,14 @@ class Parser:
         :class:`InstanceFeaturesConfig`
             The parsed instance features config object.
         """
+
+        livekit: bool
         try:
             voice: raw.VoiceFeature = payload['livekit']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            livekit = True
         except KeyError:
             voice = payload['voso']
+            livekit = False
 
         return InstanceFeaturesConfig(
             captcha=self.parse_instance_captcha_feature(payload['captcha']),
@@ -1568,6 +1572,7 @@ class Parser:
             autumn=self.parse_instance_generic_feature(payload['autumn']),
             january=self.parse_instance_generic_feature(payload['january']),
             voice=self.parse_instance_voice_feature(voice),
+            livekit_voice=livekit,
         )
 
     def parse_instance_generic_feature(self, payload: raw.Feature, /) -> InstanceGenericFeature:

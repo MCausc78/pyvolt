@@ -82,13 +82,13 @@ class SystemMessageChannels(typing.TypedDict):
 
 class DataCreateServer(typing.TypedDict):
     name: str
-    description: typing_extensions.NotRequired[str | None]
+    description: typing_extensions.NotRequired[typing.Optional[str]]
     nsfw: typing_extensions.NotRequired[bool]
 
 
 class DataCreateRole(typing.TypedDict):
     name: str
-    rank: typing_extensions.NotRequired[int | None]
+    rank: typing_extensions.NotRequired[typing.Optional[int]]
 
 
 class NewRoleResponse(typing.TypedDict):

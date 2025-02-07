@@ -68,7 +68,7 @@ Channel = typing.Union[PrivateChannel, ServerChannel]
 
 
 class VoiceInformation(typing.TypedDict):
-    max_users: int | None
+    max_users: typing.Optional[int]
 
 
 class PartialChannel(typing.TypedDict):
@@ -99,10 +99,10 @@ class DataEditChannel(typing.TypedDict):
 
 class DataCreateGroup(typing.TypedDict):
     name: str
-    description: typing_extensions.NotRequired[str | None]
-    icon: typing_extensions.NotRequired[str | None]
+    description: typing_extensions.NotRequired[typing.Optional[str]]
+    icon: typing_extensions.NotRequired[typing.Optional[str]]
     users: typing_extensions.NotRequired[list[str]]
-    nsfw: typing_extensions.NotRequired[bool | None]
+    nsfw: typing_extensions.NotRequired[typing.Optional[bool]]
 
 
 LegacyServerChannelType = typing.Literal['Text', 'Voice']
@@ -111,12 +111,12 @@ LegacyServerChannelType = typing.Literal['Text', 'Voice']
 class DataCreateServerChannel(typing.TypedDict):
     type: typing_extensions.NotRequired[LegacyServerChannelType]
     name: str
-    description: typing_extensions.NotRequired[str | None]
+    description: typing_extensions.NotRequired[typing.Optional[str]]
     nsfw: typing_extensions.NotRequired[bool]
 
 
 class DataDefaultChannelPermissions(typing.TypedDict):
-    permissions: Override | int
+    permissions: typing.Union[Override, int]
 
 
 class DataSetRolePermissions(typing.TypedDict):

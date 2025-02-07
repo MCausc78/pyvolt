@@ -89,7 +89,7 @@ DeletionInfo = typing.Union[WaitingForVerificationDeletionInfo, ScheduledDeletio
 
 class Lockout(typing.TypedDict):
     attempts: int
-    expiry: str | None
+    expiry: typing.Optional[str]
 
 
 class Account(typing.TypedDict):
@@ -98,9 +98,9 @@ class Account(typing.TypedDict):
     email_normalised: str
     disabled: bool
     verification: EmailVerification
-    password_reset: PasswordReset | None
-    deletion: DeletionInfo | None
-    lockout: Lockout | None
+    password_reset: typing.Optional[PasswordReset]
+    deletion: typing.Optional[DeletionInfo]
+    lockout: typing.Optional[Lockout]
     mfa: MultiFactorAuthentication
 
 
@@ -128,7 +128,7 @@ class MFATicket(typing.TypedDict):
     token: str
     validated: bool
     authorised: bool
-    last_totp_code: str | None
+    last_totp_code: typing.Optional[str]
 
 
 # >> /events/mod.rs
@@ -151,7 +151,7 @@ class AuthifierDeleteSessionEvent(typing.TypedDict):
 class AuthifierDeleteAllSessionsEvent(typing.TypedDict):
     event_type: typing.Literal['DeleteAllSessions']
     user_id: str
-    exclude_session_id: str | None
+    exclude_session_id: typing.Optional[str]
 
 
 AuthifierEvent = typing.Union[
@@ -181,8 +181,8 @@ class DataAccountDeletion(typing.TypedDict):
 class DataCreateAccount(typing.TypedDict):
     email: str
     password: str
-    invite: str | None
-    captcha: str | None
+    invite: typing.Optional[str]
+    captcha: typing.Optional[str]
 
 
 class AccountInfo(typing.TypedDict):
@@ -193,17 +193,17 @@ class AccountInfo(typing.TypedDict):
 class DataPasswordReset(typing.TypedDict):
     token: str
     password: str
-    remove_sessions: typing_extensions.NotRequired[bool | None]
+    remove_sessions: typing_extensions.NotRequired[typing.Optional[bool]]
 
 
 class DataResendVerification(typing.TypedDict):
     email: str
-    captcha: str | None
+    captcha: typing.Optional[str]
 
 
 class DataSendPasswordReset(typing.TypedDict):
     email: str
-    captcha: str | None
+    captcha: typing.Optional[str]
 
 
 class NoTicketResponseVerify(typing.TypedDict):
@@ -242,13 +242,13 @@ class SessionInfo(typing.TypedDict):
 class EmailDataLogin(typing.TypedDict):
     email: str
     password: str
-    friendly_name: str | None
+    friendly_name: typing.Optional[str]
 
 
 class MFADataLogin(typing.TypedDict):
     mfa_ticket: str
-    mfa_response: MFAResponse | None
-    friendly_name: str | None
+    mfa_response: typing.Optional[MFAResponse]
+    friendly_name: typing.Optional[str]
 
 
 DataLogin = typing.Union[EmailDataLogin, MFADataLogin]

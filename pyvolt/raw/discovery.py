@@ -16,7 +16,7 @@ DiscoverableServerActivity = typing.Literal['high', 'medium', 'low', 'no']
 class DiscoverableServer(typing.TypedDict):
     _id: str
     name: str
-    description: str | None
+    description: typing.Optional[str]
     icon: typing_extensions.NotRequired[File]
     banner: typing_extensions.NotRequired[File]
     flags: typing_extensions.NotRequired[int]
