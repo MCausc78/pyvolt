@@ -2524,6 +2524,7 @@ class HTTPClient:
             | Value                | Reason                                                                                                        |
             +----------------------+---------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation`` | One of these:                                                                                                 |
+            |                      |                                                                                                               |
             |                      | - The message has too many reactions.                                                                         |
             |                      | - If :attr:`MessageInteractions.restrict_reactions` is ``True``, then the emoji provided was not whitelisted. |
             |                      | - The provided emoji was invalid.                                                                             |
@@ -3016,6 +3017,7 @@ class HTTPClient:
             | Value        | Reason                             |
             +--------------+------------------------------------+
             | ``NotFound`` | One of these:                      |
+            |              |                                    |
             |              | - The channel was not found.       |
             |              | - The message was not found.       |
             |              | - The user provided did not react. |
@@ -3047,7 +3049,6 @@ class HTTPClient:
         self,
         channel: ULIDOr[ServerChannel],
         role: ULIDOr[BaseRole],
-        /,
         *,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
@@ -3136,7 +3137,6 @@ class HTTPClient:
         self,
         channel: ULIDOr[GroupChannel],
         permissions: Permissions,
-        /,
     ) -> GroupChannel: ...
 
     @typing.overload
@@ -3144,14 +3144,12 @@ class HTTPClient:
         self,
         channel: ULIDOr[ServerChannel],
         permissions: PermissionOverride,
-        /,
     ) -> ServerChannel: ...
 
     async def set_default_channel_permissions(
         self,
         channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
-        permissions: Permissions | PermissionOverride,
-        /,
+        permissions: typing.Union[Permissions, PermissionOverride],
     ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
@@ -3177,6 +3175,7 @@ class HTTPClient:
             | Value                | Reason                                                   |
             +----------------------+----------------------------------------------------------+
             | ``InvalidOperation`` | One of these:                                            |
+            |                      |                                                          |
             |                      | - You provided :class:`.PermissionOverride` for group.   |
             |                      | - You provided :class:`.Permissions` for server channel. |
             |                      | - The provided channel was not group/server channel.     |
@@ -3447,7 +3446,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`Webhook`]
+        List[:class:`.Webhook`]
             The webhooks for this channel.
         """
         resp: list[raw.Webhook] = await self.request(
@@ -3456,92 +3455,186 @@ class HTTPClient:
         return list(map(self.state.parser.parse_webhook, resp))
 
     # Customization control (emojis)
-    async def create_emoji(
+    async def create_server_emoji(
         self,
         server: ULIDOr[BaseServer],
-        data: ResolvableResource,
-        /,
         *,
         name: str,
         nsfw: typing.Optional[bool] = None,
+        image: ResolvableResource,
     ) -> ServerEmoji:
         """|coro|
 
-        Create an emoji on the server.
+        Creates an emoji in server.
+
+        You must have :attr:`~Permissions.manage_customization` to do this.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        data: :class:`ResolvableResource`
-            The emoji data.
         name: :class:`str`
-            The emoji name. Must be at least 2 characters.
+            The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
         nsfw: Optional[:class:`bool`]
-            To mark the emoji as NSFW or not.
+            Whether the emoji is NSFW or not. Defaults to ``False``.
+        image: :class:`.ResolvableResource`
+            The emoji data.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to create emoji.
         :class:`HTTPException`
-            Creating the emoji failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------+
+            | Value                | Reason                                                  |
+            +----------------------+---------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                |
+            +----------------------+---------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.               |
+            +----------------------+---------------------------------------------------------+
+            | ``TooManyEmoji``     | You provided more embeds than allowed on this instance. |
+            +----------------------+---------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create emoji in server. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/file was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`ServerEmoji`
+        :class:`.ServerEmoji`
             The created emoji.
         """
         payload: raw.DataCreateEmoji = {
             'name': name,
-            'parent': {'type': 'Server', 'id': resolve_id(server)},
+            'parent': {
+                'type': 'Server',
+                'id': resolve_id(server),
+            },
         }
+
         if nsfw is not None:
             payload['nsfw'] = nsfw
+
+        attachment_id = await resolve_resource(self.state, image, tag='emojis')
+
         resp: raw.ServerEmoji = await self.request(
-            routes.CUSTOMISATION_EMOJI_CREATE.compile(
-                attachment_id=await resolve_resource(self.state, data, tag='emojis')
-            ),
+            routes.CUSTOMISATION_EMOJI_CREATE.compile(attachment_id=attachment_id),
             json=payload,
         )
         return self.state.parser.parse_server_emoji(resp)
 
-    async def delete_emoji(self, emoji: ULIDOr[ServerEmoji], /) -> None:
+    async def delete_emoji(self, emoji: ULIDOr[ServerEmoji]) -> None:
         """|coro|
 
         Deletes a emoji.
 
+        You must have :attr:`~Permissions.manage_customization` to do this if you do not own
+        the emoji, unless it was detached (already deleted).
+
+        .. note::
+            If deleting detached emoji, this will successfully return.
+
         Parameters
         ----------
-        emoji: ULIDOr[:class:`ServerEmoji`]
+        emoji: ULIDOr[:class:`.ServerEmoji`]
             The emoji to delete.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to delete emojis.
         :class:`HTTPException`
-            Deleting the emoji failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------+
+            | Value                | Reason                                                  |
+            +----------------------+---------------------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account.               |
+            +----------------------+---------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-----------------------------------------------------------+
+            | Value                            | Reason                                                    |
+            +----------------------------------+-----------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to delete a emoji. |
+            +----------------------------------+-----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The emoji/server was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)))
 
-    async def get_emoji(self, emoji: ULIDOr[BaseEmoji], /) -> Emoji:
+    async def get_emoji(self, emoji: ULIDOr[BaseEmoji]) -> Emoji:
         """|coro|
 
         Retrieves a custom emoji.
 
         Parameters
         ----------
-        emoji: ULIDOr[:class:`BaseEmoji`]
-            The emoji.
+        emoji: ULIDOr[:class:`.BaseEmoji`]
+            The emoji to retrieve.
 
         Raises
         ------
-        :class:`HTTPException`
-            An error occurred fetching the emoji.
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------+
+            | Value        | Reason                   |
+            +--------------+--------------------------+
+            | ``NotFound`` | The emoji was not found. |
+            +--------------+--------------------------+
 
         Returns
         -------
