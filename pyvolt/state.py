@@ -160,9 +160,13 @@ class State:
     @property
     def settings(self) -> UserSettings:
         """:class:`.UserSettings`: The current user settings."""
-        if self._settings:
-            return self._settings
-        self._settings = UserSettings(data={}, state=self, mocked=True, partial=True)
+        if self._settings is None:
+            self._settings = UserSettings(
+                data={},
+                state=self,
+                mocked=True,
+                partial=True,
+            )
         return self._settings
 
 
