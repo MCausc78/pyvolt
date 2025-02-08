@@ -2737,7 +2737,7 @@ ResolvableEmoji
 
 .. class:: ResolvableEmoji
 
-    A union of either :class:`.BaseEmoji` or :class:`str`.
+    A union of either :class:`.BaseEmoji` or :class:`str` (which is either unicode emoji or emoji ID).
 
 .. autofunction:: resolve_emoji
 
