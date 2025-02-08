@@ -1080,7 +1080,7 @@ class Server(BaseServer):
 
     def permissions_for(
         self,
-        member: Member,
+        member: typing.Union[Member, User],
         /,
         *,
         safe: bool = True,
@@ -1091,7 +1091,7 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        member: :class:`.Member`
+        member: Union[:class:`.Member`, :class:`.User`]
             The member to calculate permissions for.
         safe: :class:`bool`
             Whether to raise exception or not if role is missing in cache.
@@ -1113,6 +1113,9 @@ class Server(BaseServer):
 
         if with_ownership and member.id == self.owner_id:
             return Permissions.all()
+
+        if isinstance(member, User):
+            return calculate_server_permissions([], None, default_permissions=self.default_permissions)
 
         return calculate_server_permissions(
             sort_member_roles(member.roles, safe=safe, server_roles=self.roles),

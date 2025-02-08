@@ -166,7 +166,7 @@ from .invite import (
 )
 from .message import (
     MessageInteractions,
-    Masquerade,
+    MessageMasquerade,
     MessageWebhook,
     PartialMessage,
     MessageAppendData,
@@ -2046,7 +2046,7 @@ class Parser:
             restrict_reactions=payload.get('restrict_reactions', False),
         )
 
-    def parse_message_masquerade(self, payload: raw.Masquerade, /) -> Masquerade:
+    def parse_message_masquerade(self, payload: raw.Masquerade, /) -> MessageMasquerade:
         """Parses a message masquerade object.
 
         Parameters
@@ -2056,11 +2056,11 @@ class Parser:
 
         Returns
         -------
-        :class:`Masquerade`
+        :class:`MessageMasquerade`
             The parsed message masquerade object.
         """
 
-        return Masquerade(name=payload.get('name'), avatar=payload.get('avatar'), color=payload.get('colour'))
+        return MessageMasquerade(name=payload.get('name'), avatar=payload.get('avatar'), color=payload.get('colour'))
 
     def parse_message_message_pinned_system_event(
         self,

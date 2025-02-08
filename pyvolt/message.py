@@ -106,33 +106,34 @@ class MessageInteractions:
         }
 
 
-class Masquerade:
-    """Represents a override of name and/or avatar.
+class MessageMasquerade:
+    """Represents overrides of name and/or avatar on message.
 
     Attributes
     ----------
     name: Optional[:class:`str`]
-        Replace the display name shown on this message.
+        The name to replace the display name on message with. Must be between 1 and 32 characters long.
     avatar: Optional[:class:`str`]
-        Replace the avatar shown on this message (URL to image file).
+        The image URL to replace the displayed avatar on message with.
     color: Optional[:class:`str`]
-        Replace the display role color shown on this message. Can be any valid CSS color.
+        The CSS color to replace display role color shown on message.
+        This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
 
-        You must have :attr:`~Permissions.manage_roles` permission to set this attribute.
+        You (or webhook) must have :attr:`~Permissions.manage_roles` permission to set this attribute.
     """
 
     __slots__ = ('name', 'avatar', 'color')
 
     def __init__(
         self,
-        name: str | None = None,
-        avatar: str | None = None,
+        name: typing.Optional[str] = None,
+        avatar: typing.Optional[str] = None,
         *,
-        color: str | None = None,
+        color: typing.Optional[str] = None,
     ) -> None:
-        self.name: str | None = name
-        self.avatar: str | None = avatar
-        self.color: str | None = color
+        self.name: typing.Optional[str] = name
+        self.avatar: typing.Optional[str] = avatar
+        self.color: typing.Optional[str] = color
 
     def build(self) -> raw.Masquerade:
         payload: raw.Masquerade = {}
@@ -155,33 +156,33 @@ class SendableEmbed:
     url: Optional[:class:`str`]
         The embed URL.
     title: Optional[:class:`str`]
-        The title of the embed.
+        The embed's title.
     description: Optional[:class:`str`]
-        The description of the embed.
-    media: Optional[:class:`ResolvableResource`]
+        The embed's description.
+    media: Optional[:class:`.ResolvableResource`]
         The file inside the embed.
     color: Optional[:class:`str`]
-        The embed color. This can be any valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
+        The embed color. This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
     """
 
     __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'color')
 
     def __init__(
         self,
-        title: str | None = None,
-        description: str | None = None,
+        title: typing.Optional[str] = None,
+        description: typing.Optional[str] = None,
         *,
-        icon_url: str | None = None,
-        url: str | None = None,
-        media: ResolvableResource | None = None,
-        color: str | None = None,
+        icon_url: typing.Optional[str] = None,
+        url: typing.Optional[str] = None,
+        media: typing.Optional[ResolvableResource] = None,
+        color: typing.Optional[str] = None,
     ) -> None:
-        self.icon_url: str | None = icon_url
-        self.url: str | None = url
-        self.title: str | None = title
-        self.description: str | None = description
-        self.media: ResolvableResource | None = media
-        self.color: str | None = color
+        self.icon_url: typing.Optional[str] = icon_url
+        self.url: typing.Optional[str] = url
+        self.title: typing.Optional[str] = title
+        self.description: typing.Optional[str] = description
+        self.media: typing.Optional[ResolvableResource] = media
+        self.color: typing.Optional[str] = color
 
     async def build(self, state: State, /) -> raw.SendableEmbed:
         payload: raw.SendableEmbed = {}
@@ -205,9 +206,9 @@ class MessageWebhook:
     """Information about the webhook bundled with Message."""
 
     name: str = field(repr=True, kw_only=True)
-    """:class:`str`: The webhook's name (from 1 to 32 characters).."""
+    """:class:`str`: The webhook's name. Can be between 1 to 32 characters."""
 
-    avatar: str | None = field(repr=True, kw_only=True)
+    avatar: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The webhook avatar's ID, if any."""
 
 
@@ -230,7 +231,7 @@ class BaseMessage(Base):
         )
 
     @property
-    def channel(self) -> TextableChannel | PartialMessageable:
+    def channel(self) -> typing.Union[TextableChannel, PartialMessageable]:
         """Union[:class:`.TextableChannel`, :class:`.PartialMessageable`]: The channel this message was sent in."""
 
         cache = self.state.cache
@@ -245,7 +246,7 @@ class BaseMessage(Base):
         return PartialMessageable(state=self.state, id=self.channel_id)
 
     @property
-    def server(self) -> Server | None:
+    def server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server this message was sent in."""
 
         cache = self.state.cache
@@ -266,41 +267,140 @@ class BaseMessage(Base):
 
         Marks this message as read.
 
+        You must have :attr:`~Permissions.view_channel` to do this.
+
+        There is an alias for this called :meth:`~.ack`.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
         Raises
         ------
-        Forbidden
-            You do not have permissions to see that message.
-        HTTPException
-            Acknowledging message failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the message. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
         """
         return await self.state.http.acknowledge_message(self.channel_id, self.id)
 
     async def ack(self) -> None:
         """|coro|
 
-        Alias to :meth:`.acknowledge`.
+        Marks this message as read.
+
+        This is an alias for :meth:`~.acknowledge`.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to see that message.
-        HTTPException
-            Acknowledging message failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the message. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
         """
         return await self.acknowledge()
 
     async def delete(self) -> None:
         """|coro|
 
-        Deletes the message.
-        You must have :attr:`~Permissions.manage_messages` to do this if message is not your's.
+        Deletes the message in a channel.
+
+        You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to delete message.
-        HTTPException
-            Deleting the message failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------+
+            | Value                 | Reason                                                        |
+            +-----------------------+---------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete the message. |
+            +-----------------------+---------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The channel or message was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.delete_message(self.channel_id, self.id)
 
@@ -312,41 +412,121 @@ class BaseMessage(Base):
     ) -> Message:
         """|coro|
 
-        Edits the message that you've previously sent.
+        Edits the message.
 
         Parameters
         ----------
         content: UndefinedOr[:class:`str`]
-            The new content to replace the message with.
-        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
+            The new content to replace the message with. Must be between 1 and 2000 characters long.
+        embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
+
+            You must have :attr:`~Permissions.send_embeds` to provide this.
 
         Raises
         ------
-        Forbidden
-            Tried to suppress a message without permissions or edited a message's content or embed that isn't yours.
-        HTTPException
-            Editing the message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+----------------------------+
+            | Value                  | Reason                     |
+            +------------------------+----------------------------+
+            | ``FailedValidation``   | The payload was invalid.   |
+            +------------------------+----------------------------+
+            | ``PayloadTooLarge``    | The message was too large. |
+            +------------------------+----------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------+
+            | Value                 | Reason                                                   |
+            +-----------------------+----------------------------------------------------------+
+            | ``CannotEditMessage`` | The message you tried to edit isn't yours.               |
+            +-----------------------+----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to send messages. |
+            +-----------------------+----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------------+
+            | Value        | Reason                                  |
+            +--------------+-----------------------------------------+
+            | ``NotFound`` | The channel/message/file was not found. |
+            +--------------+-----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The newly edited message.
         """
+
         return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
 
     async def pin(self) -> None:
         """|coro|
 
-        Pins a message.
-        You must have `ManageMessages` permission.
+        Pins the message.
+
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to pin messages.
-        HTTPException
-            Pinning the message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+---------------------------------+
+            | Value             | Reason                          |
+            +-------------------+---------------------------------+
+            | ``AlreadyPinned`` | The message was already pinned. |
+            +-------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to pin the message. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.pin_message(self.channel_id, self.id)
 
@@ -356,126 +536,393 @@ class BaseMessage(Base):
     ) -> None:
         """|coro|
 
-        Reacts to the message with given emoji.
+        React to this message.
+
+        You must have :attr:`~Permissions.react` to do this.
 
         Parameters
         ----------
-        emoji: :class:`emojis.ResolvableEmoji`
+        emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to react to message.
-        HTTPException
-            Reacting to message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                        |
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                                                                                 |
+            |                      |                                                                                                               |
+            |                      | - The message has too many reactions.                                                                         |
+            |                      | - If :attr:`MessageInteractions.restrict_reactions` is ``True``, then the emoji provided was not whitelisted. |
+            |                      | - The provided emoji was invalid.                                                                             |
+            +----------------------+---------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------+
+            | Value                 | Reason                                           |
+            +-----------------------+--------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to react. |
+            +-----------------------+--------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------------------+
+            | Value        | Reason                                          |
+            +--------------+-------------------------------------------------+
+            | ``NotFound`` | The channel/message/custom emoji was not found. |
+            +--------------+-------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.add_reaction_to_message(self.channel_id, self.id, emoji)
 
     async def reply(
         self,
-        content: str | None = None,
+        content: typing.Optional[str] = None,
         *,
-        idempotency_key: str | None = None,
-        attachments: list[ResolvableResource] | None = None,
+        nonce: typing.Optional[str] = None,
+        attachments: typing.Optional[list[ResolvableResource]] = None,
+        embeds: typing.Optional[list[SendableEmbed]] = None,
+        masquerade: typing.Optional[MessageMasquerade] = None,
+        interactions: typing.Optional[MessageInteractions] = None,
+        silent: typing.Optional[bool] = None,
+        mention_everyone: typing.Optional[bool] = None,
+        mention_online: typing.Optional[bool] = None,
         mention: bool = True,
-        embeds: list[SendableEmbed] | None = None,
-        masquerade: Masquerade | None = None,
-        interactions: MessageInteractions | None = None,
-        silent: bool | None = None,
     ) -> Message:
         """|coro|
 
         Replies to this message.
-        You must have `SendMessages` permission.
 
-        Returns
-        -------
-        :class:`Message`
-            The message sent.
+        You must have :attr:`~Permissions.send_messages` to do this.
+
+        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
+
+        Parameters
+        ----------
+        content: Optional[:class:`str`]
+            The message content.
+        nonce: Optional[:class:`str`]
+            The message nonce.
+        attachments: Optional[List[:class:`.ResolvableResource`]]
+            The attachments to send the message with.
+
+            You must have :attr:`~Permissions.upload_files` to provide this.
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+            The message replies.
+        embeds: Optional[List[:class:`.SendableEmbed`]]
+            The embeds to send the message with.
+
+            You must have :attr:`~Permissions.send_embeds` to provide this.
+        masquearde: Optional[:class:`.Masquerade`]
+            The message masquerade.
+
+            You must have :attr:`~Permissions.use_masquerade` to provide this.
+
+            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+        interactions: Optional[:class:`.MessageInteractions`]
+            The message interactions.
+
+            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
+        silent: Optional[:class:`bool`]
+            Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel. This cannot be mixed with ``mention_online`` parameter.
+
+            .. note::
+
+                User accounts cannot set this to ``True``.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel. This cannot be mixed with ``mention_everyone`` parameter.
+
+            .. note::
+
+                User accounts cannot set this to ``True``.
+        mention: :class:`bool`
+            Whether to mention author of message you're replying to.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to send messages.
-        HTTPException
-            Sending the message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``       | The message was empty.                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                           |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``              | The current token belongs to bot account.                                                                          |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``           | The current token belongs to user account.                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                       |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------+
+            | Value                 | Reason                                                   |
+            +-----------------------+----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to send messages. |
+            +-----------------------+----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The channel/file/reply was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                     |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Message`
+            The message that was sent.
         """
         return await self.state.http.send_message(
             self.channel_id,
-            content,
-            nonce=idempotency_key,
+            content=content,
+            nonce=nonce,
             attachments=attachments,
-            replies=[Reply(id=self.id, mention=mention)],
+            replies=[Reply(self.id, mention=mention)],
             embeds=embeds,
             masquerade=masquerade,
             interactions=interactions,
             silent=silent,
+            mention_everyone=mention_everyone,
+            mention_online=mention_online,
         )
 
     async def report(
         self,
         reason: ContentReportReason,
         *,
-        additional_context: str | None = None,
+        additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
-        Report a piece of content to the moderation team.
+        Report a message to the instance moderation team.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        reason: :class:`.ContentReportReason`
+            The reason for reporting.
+        additional_context: Optional[:class:`str`]
+            The additional context for moderation team. Can be only up to 1000 characters.
+
         Raises
         ------
-        HTTPException
-            Trying to self-report, or reporting the message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+---------------------------------------+
+            | Value                    | Reason                                |
+            +--------------------------+---------------------------------------+
+            | ``CannotReportYourself`` | You tried to report your own message. |
+            +--------------------------+---------------------------------------+
+            | ``FailedValidation``     | The payload was invalid.              |
+            +--------------------------+---------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The message was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.report_message(self.id, reason, additional_context=additional_context)
 
     async def unpin(self) -> None:
         """|coro|
 
-        Unpins a message.
-        You must have `ManageMessages` permission.
+        Unpins the message.
+
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to unpin messages.
-        HTTPException
-            Unpinning the message failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------+-----------------------------+
+            | Value         | Reason                      |
+            +---------------+-----------------------------+
+            | ``NotPinned`` | The message was not pinned. |
+            +---------------+-----------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to unpin the message. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.unpin_message(self.channel_id, self.id)
 
     async def unreact(
         self,
         emoji: ResolvableEmoji,
         *,
-        user: ULIDOr[BaseUser] | None = None,
-        remove_all: bool | None = None,
+        user: typing.Optional[ULIDOr[BaseUser]] = None,
+        remove_all: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
 
         Remove your own, someone else's or all of a given reaction.
-        Requires `ManageMessages` permission if changing other's reactions.
+
+        You must have :attr:`~Permissions.react` to do this.
 
         Parameters
         ----------
-        emoji: :class:`ResolvableEmoji`
+        emoji: :class:`.ResolvableEmoji`
             The emoji to remove.
-        user: Optional[ULIDOr[:class:`BaseUser`]]
-            Remove reactions from this user. Requires `ManageMessages` permission if provided.
+        user: Optional[ULIDOr[:class:`.BaseUser`]]
+            The user to remove reactions from.
+
+            You must have :attr:`~Permissions.manage_messages` to provide this.
         remove_all: Optional[:class:`bool`]
-            Whether to remove all reactions. Requires `ManageMessages` permission if provided.
+            Whether to remove all reactions.
+
+            You must have :attr:`~Permissions.manage_messages` to provide this.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to remove reactions from message.
-        HTTPException
-            Removing reactions from message failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to remove reaction. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | One of these:                      |
+            |              |                                    |
+            |              | - The channel was not found.       |
+            |              | - The message was not found.       |
+            |              | - The user provided did not react. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.remove_reactions_from_message(
             self.channel_id, self.id, emoji, user=user, remove_all=remove_all
         )
@@ -556,7 +1003,7 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class StatelessUserAddedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -573,12 +1020,12 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     @property
     def by_id(self) -> str:
@@ -587,7 +1034,7 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -626,7 +1073,7 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -646,14 +1093,14 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that was added."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'added user')
         return user
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -673,7 +1120,7 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
         )
 
     @property
-    def by(self) -> User | Member:
+    def by(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that added this user."""
         user = self.get_user()
         if not user:
@@ -683,7 +1130,7 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 
 @define(slots=True)
 class StatelessUserRemovedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -700,12 +1147,12 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
         if isinstance(self._user, (User, Member)):
             return self._user
 
-    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     @property
     def by_id(self) -> str:
@@ -714,7 +1161,7 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -753,7 +1200,7 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -773,14 +1220,14 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that was removed."""
         user = self.get_user()
         if not user:
             raise NoData(self.user_id, 'removed user')
         return user
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -800,7 +1247,7 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
         )
 
     @property
-    def by(self) -> User | Member:
+    def by(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that removed this user."""
         user = self.get_user()
         if not user:
@@ -810,7 +1257,7 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 
 @define(slots=True)
 class StatelessUserJoinedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserJoinedSystemEvent) and self.user_id == other.user_id
@@ -822,7 +1269,7 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that joined this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -856,7 +1303,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
     message: Message = field(repr=False, kw_only=True)
     """The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -876,7 +1323,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that joined this server/group.."""
         user = self.get_user()
         if not user:
@@ -886,7 +1333,7 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
 
 @define(slots=True)
 class StatelessUserLeftSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserLeftSystemEvent) and self.user_id == other.user_id
@@ -898,7 +1345,7 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -932,7 +1379,7 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -952,7 +1399,7 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that left this server/group."""
         user = self.get_user()
         if not user:
@@ -962,7 +1409,7 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 
 @define(slots=True)
 class StatelessUserKickedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserKickedSystemEvent) and self.user_id == other.user_id
@@ -974,7 +1421,7 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -1008,7 +1455,7 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -1028,7 +1475,7 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that was kicked from this server."""
         user = self.get_user()
         if not user:
@@ -1038,7 +1485,7 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 
 @define(slots=True)
 class StatelessUserBannedSystemEvent(BaseSystemEvent):
-    _user: User | Member | str = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserBannedSystemEvent) and self.user_id == other.user_id
@@ -1050,7 +1497,7 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
             return self._user.id
         return self._user
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -1084,7 +1531,7 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> User | Member | None:
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
@@ -1104,7 +1551,7 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
         )
 
     @property
-    def user(self) -> User | Member:
+    def user(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that was banned from this server."""
         user = self.get_user()
         if not user:
@@ -1117,7 +1564,7 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The new name of this group."""
 
-    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1134,7 +1581,7 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that renamed this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1169,7 +1616,7 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`: Tries to get user that renamed this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1192,7 +1639,7 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
-    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1208,7 +1655,7 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1242,7 +1689,7 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1265,7 +1712,7 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
 
 @define(slots=True)
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
-    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessChannelIconChangedSystemEvent) and self.by_id == other.by_id
@@ -1277,7 +1724,7 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1311,7 +1758,7 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """The message that holds this system event."""
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by
@@ -1334,8 +1781,8 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
-    _from: User | str = field(repr=False, kw_only=True, alias='internal_from')
-    _to: User | str = field(repr=False, kw_only=True, alias='internal_to')
+    _from: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_from')
+    _to: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_to')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1352,7 +1799,7 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             return self._from.id
         return self._from
 
-    def get_from(self) -> User | None:
+    def get_from(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from
@@ -1364,7 +1811,7 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             return self._from.id
         return self._from
 
-    def get_to(self) -> User | None:
+    def get_to(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
         if isinstance(self._from, User):
             return self._from
@@ -1402,7 +1849,7 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_from(self) -> User | None:
+    def get_from(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from
@@ -1422,7 +1869,7 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
             raise NoData(self.from_id, 'user')
         return from_
 
-    def get_to(self) -> User | None:
+    def get_to(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
         if isinstance(self._to, User):
             return self._to
@@ -1448,7 +1895,7 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
     pinned_message_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the message that was pinned."""
 
-    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1465,7 +1912,7 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -1500,7 +1947,7 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -1520,7 +1967,7 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
         )
 
     @property
-    def by(self) -> User | Member:
+    def by(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that pinned a message."""
         by = self.get_by()
         if not by:
@@ -1533,7 +1980,7 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
     unpinned_message_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the message that was unpinned."""
 
-    _by: User | Member | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1550,7 +1997,7 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -1575,7 +2022,7 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_by(self) -> User | Member | None:
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
@@ -1595,7 +2042,7 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
         )
 
     @property
-    def by(self) -> User | Member:
+    def by(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, class:`Member`]: The user that unpinned a message."""
         by = self.get_by()
         if not by:
@@ -1615,7 +2062,7 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
 
 @define(slots=True)
 class StatelessCallStartedSystemEvent(BaseSystemEvent):
-    _by: User | str = field(repr=False, kw_only=True, alias='internal_by')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessCallStartedSystemEvent) and self.by_id == other.by_id
@@ -1627,7 +2074,7 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that started a call."""
         if isinstance(self._by, User):
             return self._by
@@ -1661,7 +2108,7 @@ class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_by(self) -> User | None:
+    def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that started call."""
         if isinstance(self._by, User):
             return self._by
@@ -1721,27 +2168,27 @@ SystemEvent = typing.Union[
 class Message(BaseMessage):
     """Represents a message in channel on Revolt."""
 
-    nonce: str | None = field(repr=True, kw_only=True)
+    nonce: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The unique value generated by client sending this message."""
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID this message was sent in."""
 
-    _author: User | Member | str = field(repr=False, kw_only=True, alias='internal_author')
+    _author: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_author')
 
-    webhook: MessageWebhook | None = field(repr=True, kw_only=True)
+    webhook: typing.Optional[MessageWebhook] = field(repr=True, kw_only=True)
     """Optional[:class:`.MessageWebhook`]: The webhook that sent this message."""
 
     content: str = field(repr=True, kw_only=True)
     """:class:`str`: The message's content."""
 
-    internal_system_event: StatelessSystemEvent | None = field(repr=True, kw_only=True)
+    internal_system_event: typing.Optional[StatelessSystemEvent] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessSystemEvent`]: The stateless system event information, occured in this message, if any."""
 
     internal_attachments: list[StatelessAsset] = field(repr=True, kw_only=True)
     """List[:class:`.StatelessAsset`]: The stateless attachments on this message."""
 
-    edited_at: datetime | None = field(repr=True, kw_only=True)
+    edited_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: Timestamp at which this message was last edited."""
 
     internal_embeds: list[StatelessEmbed] = field(repr=True, kw_only=True)
@@ -1759,11 +2206,11 @@ class Message(BaseMessage):
     reactions: dict[str, tuple[str, ...]] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Tuple[:class:`str`, ...]]: The mapping of emojis to list of user IDs."""
 
-    interactions: MessageInteractions | None = field(repr=True, kw_only=True)
+    interactions: typing.Optional[MessageInteractions] = field(repr=True, kw_only=True)
     """Optional[:class:`.MessageInteractions`]: The information about how this message should be interacted with."""
 
-    masquerade: Masquerade | None = field(repr=True, kw_only=True)
-    """Optional[:class:`.Masquerade`]: The name and / or avatar overrides for this message."""
+    masquerade: typing.Optional[MessageMasquerade] = field(repr=True, kw_only=True)
+    """Optional[:class:`.MessageMasquerade`]: The name and / or avatar overrides for this message."""
 
     pinned: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the message is pinned."""
@@ -1816,7 +2263,7 @@ class Message(BaseMessage):
         if data.reactions is not UNDEFINED:
             self.reactions = data.reactions
 
-    def get_author(self) -> User | Member | None:
+    def get_author(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get message author."""
         if isinstance(self._author, (User, Member)):
             return self._author
@@ -1889,7 +2336,7 @@ class Message(BaseMessage):
         return [a.attach_state(self.state, 'attachments') for a in self.internal_attachments]
 
     @property
-    def author(self) -> User | Member:
+    def author(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, :class:`.Member`]: The user that sent this message."""
         author = self.get_author()
         if not author:
@@ -1926,20 +2373,22 @@ class Message(BaseMessage):
         return system_event.system_content
 
     @property
-    def system_event(self) -> SystemEvent | None:
+    def system_event(self) -> typing.Optional[SystemEvent]:
         """Optional[:class:`.SystemEvent`]: The system event information, occured in this message, if any."""
         if self.internal_system_event:
             return self.internal_system_event.attach_state(self)
 
     def is_silent(self) -> bool:
-        """:class:`bool`: Whether the message is silent."""
+        """:class:`bool`: Whether the message suppresses push notifications."""
         return self.flags.suppress_notifications
 
+
+Masquerade: typing.TypeAlias = MessageMasquerade
 
 __all__ = (
     'Reply',
     'MessageInteractions',
-    'Masquerade',
+    'MessageMasquerade',
     'SendableEmbed',
     'MessageWebhook',
     'BaseMessage',
@@ -1976,4 +2425,6 @@ __all__ = (
     'StatelessSystemEvent',
     'SystemEvent',
     'Message',
+    # backwards compatibilty
+    'Masquerade',
 )

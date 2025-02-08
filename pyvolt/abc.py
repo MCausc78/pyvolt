@@ -328,16 +328,6 @@ class Messageable:
             +--------------+---------------------------------------+
             | ``NotFound`` | The channel/file/reply was not found. |
             +--------------+---------------------------------------+
-        :class:`Conflict`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------+-------------------------------+
-            | Value               | Reason                        |
-            +---------------------+-------------------------------+
-            | ``AlreadyInGroup``  | The bot is already in group.  |
-            +---------------------+-------------------------------+
-            | ``AlreadyInServer`` | The bot is already in server. |
-            +---------------------+-------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -351,7 +341,7 @@ class Messageable:
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The message that was sent.
         """
 

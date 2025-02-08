@@ -80,8 +80,8 @@ from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
 from .invite import BaseInvite, PublicInvite, ServerInvite, Invite
 from .message import (
     Reply,
+    MessageMasquerade,
     MessageInteractions,
-    Masquerade,
     SendableEmbed,
     BaseMessage,
     Message,
@@ -2266,7 +2266,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The newly edited message.
         """
         payload: raw.DataEditMessage = {}
@@ -2720,7 +2720,7 @@ class HTTPClient:
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
         embeds: typing.Optional[list[SendableEmbed]] = None,
-        masquerade: typing.Optional[Masquerade] = None,
+        masquerade: typing.Optional[MessageMasquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
         silent: typing.Optional[bool] = None,
         mention_everyone: typing.Optional[bool] = None,
@@ -2832,16 +2832,6 @@ class HTTPClient:
             +--------------+---------------------------------------+
             | ``NotFound`` | The channel/file/reply was not found. |
             +--------------+---------------------------------------+
-        :class:`Conflict`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------+-------------------------------+
-            | Value               | Reason                        |
-            +---------------------+-------------------------------+
-            | ``AlreadyInGroup``  | The bot is already in group.  |
-            +---------------------+-------------------------------+
-            | ``AlreadyInServer`` | The bot is already in server. |
-            +---------------------+-------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2855,7 +2845,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The message that was sent.
         """
         payload: raw.DataMessageSend = {}
@@ -2918,6 +2908,7 @@ class HTTPClient:
         """|coro|
 
         Unpins a message.
+
         You must have :attr:`~Permissions.manage_messages` to do this.
 
         Parameters
@@ -5215,7 +5206,7 @@ class HTTPClient:
 
     async def edit_user_settings(
         self,
-        partial: dict[str, str] = {},
+        partial: dict[str, str],
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
     ) -> None:
         """|coro|
@@ -5813,7 +5804,7 @@ class HTTPClient:
         attachments: list[ResolvableResource] | None = None,
         replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
         embeds: list[SendableEmbed] | None = None,
-        masquerade: typing.Optional[Masquerade] = None,
+        masquerade: typing.Optional[MessageMasquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
         silent: typing.Optional[bool] = None,
         mention_everyone: typing.Optional[bool] = None,
@@ -5843,7 +5834,7 @@ class HTTPClient:
             The embeds to send the message with.
 
             To provide non-null or non-empty value, the webhook must have :attr:`~Permissions.send_embeds`.
-        masquearde: Optional[:class:`Masquerade`]
+        masquearde: Optional[:class:`MessageMasquerade`]
             The message masquerade.
 
             To provide this, the webhook must have :attr:`~Permissions.use_masquerade`.

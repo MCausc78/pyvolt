@@ -2693,6 +2693,12 @@ Embed
     - :class:`.TextEmbed`
     - :class:`.NoneEmbed`
 
+SendableEmbed
+~~~~~~~~~~~~~
+
+.. autoclass:: SendableEmbed
+    :members:
+
 BaseEmoji
 ~~~~~~~~~
 
@@ -3173,6 +3179,14 @@ Reply
 .. attributetable:: Reply
 
 .. autoclass:: Reply
+    :members:
+
+MessageMasquerade
+~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageMasquerade
+
+.. autoclass:: MessageMasquerade
     :members:
 
 MessageInteractions
