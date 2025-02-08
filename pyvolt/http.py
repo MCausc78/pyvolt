@@ -477,14 +477,16 @@ class HTTPClient:
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
         state: State,
-        session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession,
+        session: typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession], aiohttp.ClientSession],
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
             base = 'https://api.revolt.chat/0.8'
         self._base: str = base.rstrip('/')
         self.bot: bool = bot
-        self._session: utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession] | aiohttp.ClientSession = session
+        self._session: typing.Union[
+            utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession], aiohttp.ClientSession
+        ] = session
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
 
@@ -739,18 +741,24 @@ class HTTPClient:
                 elif response.status == 429:
                     if retries < self.max_retries:
                         data = await utils._json_or_text(response)
+
                         if isinstance(data, dict):
-                            retry_after: float = data['retry_after'] / 1000.0
+                            # Special case here
+                            ignoring = data.get('type') == 'DiscriminatorChangeRatelimited'
+                            retry_after: float = data.get('retry_after', 0) / 1000.0
                         else:
+                            ignoring = False
                             retry_after = 1
-                        _L.debug(
-                            'Ratelimited on %s %s, retrying in %.3f seconds',
-                            method,
-                            url,
-                            retry_after,
-                        )
-                        await asyncio.sleep(retry_after)
-                        continue
+
+                        if not ignoring:
+                            _L.debug(
+                                'Ratelimited on %s %s, retrying in %.3f seconds',
+                                method,
+                                url,
+                                retry_after,
+                            )
+                            await asyncio.sleep(retry_after)
+                            continue
 
                 data = await utils._json_or_text(response)
                 if isinstance(data, dict) and isinstance(data.get('error'), dict):
@@ -901,6 +909,14 @@ class HTTPClient:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+--------------------------------------------------------------+
+            | Value             | Reason                                                       |
+            +-------------------+--------------------------------------------------------------+
+            | ``UsernameTaken`` | The bot user name was taken.                                 |
+            +-------------------+--------------------------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3743,7 +3759,6 @@ class HTTPClient:
         code: Union[:class:`str`, :class:`BaseInvite`]
             The invite code.
 
-
         Raises
         ------
         :class:`HTTPException`
@@ -3767,17 +3782,13 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+--------------------------------------------------------------+
-            | Value                 | Reason                                                       |
-            +-----------------------+--------------------------------------------------------------+
-            | ``Banned``            | You're banned from server.                                   |
-            +-----------------------+--------------------------------------------------------------+
-            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.              |
-            +-----------------------+--------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to add the recipient. |
-            +-----------------------+--------------------------------------------------------------+
-            | ``NotFriends``        | You're not friends with the user you want to add.            |
-            +-----------------------+--------------------------------------------------------------+
+            +-----------------------+-------------------------------------------------+
+            | Value                 | Reason                                          |
+            +-----------------------+-------------------------------------------------+
+            | ``Banned``            | You're banned from server.                      |
+            +-----------------------+-------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients. |
+            +-----------------------+-------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3818,9 +3829,11 @@ class HTTPClient:
                 (False, resp['channels']),
             )
         elif resp['type'] == 'Group':
+            recipients = list(map(self.state.parser.parse_user, resp['users']))
+
             return self.state.parser.parse_group_channel(
                 resp['channel'],
-                (False, list(map(self.state.parser.parse_user, resp['users']))),
+                (False, recipients),
             )
         else:
             raise NotImplementedError(resp)
@@ -3829,16 +3842,61 @@ class HTTPClient:
     async def complete_onboarding(self, username: str, /) -> OwnUser:
         """|coro|
 
-        Set a new username, complete onboarding and allow a user to start using Revolt.
+        Complete onboarding by setting up an username, and allow connections to WebSocket.
 
         Parameters
         ----------
         username: :class:`str`
-            The username to use.
+            The username to use. Must be between 2 and 32 characters and not contain whitespace characters.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------+
+            | Value                | Reason                   |
+            +----------------------+--------------------------+
+            | ``FailedValidation`` | The payload was invalid. |
+            +----------------------+--------------------------+
+            | ``InvalidUsername``  | The username is invalid. |
+            +----------------------+--------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------+
+            | Value                 | Reason                                          |
+            +-----------------------+-------------------------------------------------+
+            | ``AlreadyOnboarded``  | You already completed onboarding.
+            +-----------------------+-------------------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------+
+            | Value             | Reason                  |
+            +-------------------+-------------------------+
+            | ``UsernameTaken`` | The username was taken. |
+            +-------------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`OwnUser`
+        :class:`.OwnUser`
             The updated user.
         """
         payload: raw.DataOnboard = {'username': username}
@@ -3848,8 +3906,25 @@ class HTTPClient:
     async def onboarding_status(self) -> bool:
         """|coro|
 
-        Whether the current account requires onboarding or whether you can continue to send requests as usual.
-        You may skip calling this if you're restoring an existing session.
+        Determines whether the current session requires to complete onboarding.
+
+        You may skip calling this if you're restoring from an existing session.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the onboarding is completed.
         """
         d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile())
         return d['onboarding']
@@ -3859,6 +3934,34 @@ class HTTPClient:
         """|coro|
 
         Create a new Web Push subscription. If an subscription already exists on this session, it will be removed.
+
+        Parameters
+        ----------
+        endpoint: :class:`str`
+            The HTTP `endpoint <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint>`_ associated with push subscription.
+        p256dh: :class:`str`
+            The `Elliptic curve Diffie–Hellman public key on the P-256 curve <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/getKey#p256dh>`_.
+        auth: :class:`str`
+            The `authentication secret <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/getKey#auth>`_.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.WebPushSubscription = {
             'endpoint': endpoint,
@@ -3874,6 +3977,25 @@ class HTTPClient:
         """|coro|
 
         Remove the Web Push subscription associated with the current session.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
         await self.request(routes.PUSH_UNSUBSCRIBE.compile())
 
@@ -3890,15 +4012,56 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Report a piece of content to the moderation team.
+        Report a message to the instance moderation team.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        message: ULIDOr[:class:`.BaseMessage`]
+            The message to report.
+        reason: :class:`.ContentReportReason`
+            The reason for reporting.
+        additional_context: Optional[:class:`str`]
+            The additional context for moderation team. Can be only up to 1000 characters.
+
         Raises
         ------
         :class:`HTTPException`
-            Trying to self-report, or reporting the message failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+---------------------------------------+
+            | Value                    | Reason                                |
+            +--------------------------+---------------------------------------+
+            | ``CannotReportYourself`` | You tried to report your own message. |
+            +--------------------------+---------------------------------------+
+            | ``FailedValidation``     | The payload was invalid.              |
+            +--------------------------+---------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The message was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         payload: raw.DataReportContent = {
             'content': {
@@ -3915,21 +4078,61 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         reason: ContentReportReason,
-        /,
         *,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
-        Report a piece of content to the moderation team.
+        Report a server to the instance moderation team.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to report.
+        reason: :class:`.ContentReportReason`
+            The reason for reporting.
+        additional_context: Optional[:class:`str`]
+            The additional context for moderation team. Can be only up to 1000 characters.
+
         Raises
         ------
         :class:`HTTPException`
-            You're trying to self-report, or reporting the server failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+---------------------------------------+
+            | Value                    | Reason                                |
+            +--------------------------+---------------------------------------+
+            | ``CannotReportYourself`` | You tried to report your own server. |
+            +--------------------------+--------------------------------------+
+            | ``FailedValidation``     | The payload was invalid.             |
+            +--------------------------+--------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         payload: raw.DataReportContent = {
             'content': {
@@ -3946,22 +4149,64 @@ class HTTPClient:
         self,
         user: ULIDOr[BaseUser],
         reason: UserReportReason,
-        /,
         *,
         additional_context: typing.Optional[str] = None,
-        message_context: ULIDOr[BaseMessage],
+        message_context: typing.Optional[ULIDOr[BaseMessage]] = None,
     ) -> None:
         """|coro|
 
-        Report a piece of content to the moderation team.
+        Report an user to the instance moderation team.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to report.
+        reason: :class:`.UserReportReason`
+            The reason for reporting user.
+        additional_context: Optional[:class:`str`]
+            The additional context for moderation team. Can be only up to 1000 characters.
+        message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
+            The message context.
+
         Raises
         ------
         :class:`HTTPException`
-            You're trying to self-report, or reporting the user failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+-------------------------------+
+            | Value                    | Reason                        |
+            +--------------------------+-------------------------------+
+            | ``CannotReportYourself`` | You tried to report yourself. |
+            +--------------------------+-------------------------------+
+            | ``FailedValidation``     | The payload was invalid.      |
+            +--------------------------+-------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The user/message was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         content: raw.UserReportedContent = {
             'type': 'User',
@@ -4891,15 +5136,41 @@ class HTTPClient:
         )
 
     # Sync control
-    async def get_user_settings(self, keys: list[str] = [], /) -> UserSettings:
+    async def get_user_settings(self, keys: typing.Optional[list[str]] = None) -> UserSettings:
         """|coro|
 
-        Get user settings from server filtered by keys.
+        Retrieve user settings.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        keys: Optional[List[:class:`str`]]
+            The keys of user settings to retrieve. To retrieve all user settings, pass ``None`` or empty list.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         # Sync endpoints aren't meant to be used with bot accounts
+        if keys is None:
+            keys = []
         payload: raw.OptionsFetchSettings = {'keys': keys}
         resp: raw.UserSettings = await self.request(routes.SYNC_GET_SETTINGS.compile(), json=payload)
         return self.state.parser.parse_user_settings(
@@ -4910,14 +5181,33 @@ class HTTPClient:
     async def get_read_states(self) -> list[ReadState]:
         """|coro|
 
-        Get information about unread state on channels.
+        Retrieves read states for all channels the current user in.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        List[:class:`ReadState`]
+        List[:class:`.ReadState`]
             The channel read states.
         """
         resp: list[raw.ChannelUnread] = await self.request(routes.SYNC_GET_UNREADS.compile())
@@ -4925,17 +5215,41 @@ class HTTPClient:
 
     async def edit_user_settings(
         self,
-        dict_settings: dict[str, str] = {},
-        edited_at: datetime | int | None = None,
-        /,
-        **kwargs: str,
+        partial: dict[str, str] = {},
+        edited_at: typing.Optional[typing.Union[datetime, int]] = None,
     ) -> None:
         """|coro|
 
-        Modify current user settings.
+        Edits the current user settings.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        partial: Dict[:class:`str`, :class:`str`]
+            The dict to merge into the current user settings.
+        edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
+            The revision.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
         params: raw.OptionsSetSettings = {}
@@ -4946,7 +5260,7 @@ class HTTPClient:
             params['timestamp'] = edited_at
 
         payload: dict[str, str] = {}
-        for k, v in (dict_settings | kwargs).items():
+        for k, v in partial.items():
             if isinstance(v, str):
                 payload[k] = v
             else:

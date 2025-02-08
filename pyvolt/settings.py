@@ -98,7 +98,7 @@ class UserSettings:
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} data={self.data!r} mocked={self.mocked!r} partial={self.partial!r}>'
 
-    def _parse(self, *, partial: UserSettings | None) -> None:
+    def _parse(self, *, partial: typing.Optional[UserSettings]) -> None:
         if partial:
             if isinstance(self._android, AndroidUserSettings) and 'android' in partial.data:
                 android_payload: raw.AndroidUserSettings = utils.from_json(partial['android'])
@@ -109,17 +109,17 @@ class UserSettings:
                 self._jolt.locally_update(partial, full=False)
         else:
             try:
-                self._android: AndroidUserSettings | Exception = AndroidUserSettings(self)
+                self._android: typing.Union[AndroidUserSettings, Exception] = AndroidUserSettings(self)
             except Exception as exc:
                 self._android = exc
 
             try:
-                self._revite: ReviteUserSettings | Exception = ReviteUserSettings(self)
+                self._revite: typing.Union[ReviteUserSettings, Exception] = ReviteUserSettings(self)
             except Exception as exc:
                 self._revite = exc
 
             try:
-                self._jolt: JoltUserSettings | Exception = JoltUserSettings(self)
+                self._jolt: typing.Union[JoltUserSettings, Exception] = JoltUserSettings(self)
             except Exception as exc:
                 self._jolt = exc
 
@@ -179,7 +179,7 @@ class UserSettings:
     def __getitem__(self, key: str) -> str:
         return self.data[key][1]
 
-    def get(self, key: str, default: D = None) -> str | D:
+    def get(self, key: str, default: D = None) -> typing.Union[str, D]:
         """Union[:class:`str`, D]: Get a user setting."""
         if key in self.data:
             return self.data[key][1]
@@ -187,19 +187,43 @@ class UserSettings:
 
     async def edit(
         self,
-        dict_settings: dict[str, str] = {},
-        edited_at: datetime | int | None = None,
-        /,
-        **kwargs: str,
+        partial: dict[str, str],
+        edited_at: typing.Optional[typing.Union[datetime, int]] = None,
     ) -> None:
         """|coro|
 
-        Modify current user settings.
+        Edits the current user settings.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        partial: Dict[:class:`str`, :class:`str`]
+            The dict to merge into the current user settings.
+        edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
+            The revision.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.edit_user_settings(dict_settings, edited_at, **kwargs)
+        return await self.state.http.edit_user_settings(partial=partial, edited_at=edited_at)
 
 
 class AndroidUserSettings:
@@ -242,24 +266,24 @@ class AndroidUserSettings:
         theme = payload.get('theme')
 
         if theme:
-            self._theme: AndroidTheme | None = AndroidTheme(theme)
+            self._theme: typing.Optional[AndroidTheme] = AndroidTheme(theme)
         else:
             self._theme = None
 
-        self._color_overrides: dict[str, int] | None = payload.get('colourOverrides')
+        self._color_overrides: typing.Optional[dict[str, int]] = payload.get('colourOverrides')
         reply_style = payload.get('messageReplyStyle')
 
         if reply_style:
-            self._reply_style: AndroidMessageReplyStyle | None = AndroidMessageReplyStyle(reply_style)
+            self._reply_style: typing.Optional[AndroidMessageReplyStyle] = AndroidMessageReplyStyle(reply_style)
         else:
             self._reply_style = None
 
-        self._avatar_radius: int | None = payload.get('avatarRadius')
+        self._avatar_radius: typing.Optional[int] = payload.get('avatarRadius')
 
         special_embed_settings = payload.get('specialEmbedSettings')
 
         if special_embed_settings:
-            self._special_embed_settings_payload: raw.AndroidUserSettingsSpecialEmbedSettings | None = (
+            self._special_embed_settings_payload: typing.Optional[raw.AndroidUserSettingsSpecialEmbedSettings] = (
                 special_embed_settings
             )
         else:
@@ -308,14 +332,14 @@ class AndroidUserSettings:
         self,
         *,
         initial_payload: UndefinedOr[raw.AndroidUserSettings] = UNDEFINED,
-        theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
-        color_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
-        reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
-        avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
+        theme: UndefinedOr[typing.Optional[AndroidTheme]] = UNDEFINED,
+        color_overrides: UndefinedOr[typing.Optional[dict[str, int]]] = UNDEFINED,
+        reply_style: UndefinedOr[typing.Optional[AndroidMessageReplyStyle]] = UNDEFINED,
+        avatar_radius: UndefinedOr[typing.Optional[typing.Union[AndroidProfilePictureShape, int]]] = UNDEFINED,
         embed_youtube: UndefinedOr[bool] = UNDEFINED,
         embed_apple_music: UndefinedOr[bool] = UNDEFINED,
         initial_special_embed_settings_payload: UndefinedOr[
-            raw.AndroidUserSettingsSpecialEmbedSettings | None
+            typing.Optional[raw.AndroidUserSettingsSpecialEmbedSettings]
         ] = UNDEFINED,
     ) -> raw.AndroidUserSettings:
         """Builds a payload for Android user settings. You must pass it as JSON string to :meth:`HTTPClient.edit_user_settings`, like so:
@@ -323,7 +347,7 @@ class AndroidUserSettings:
         .. code-block:: python3
 
             payload = settings.payload_for(theme=AndroidTheme.material_you)
-            await http.edit_user_settings(android=json.loads(payload))
+            await http.edit_user_settings(android=json.dumps(payload))
 
         Parameters
         ----------
@@ -377,7 +401,7 @@ class AndroidUserSettings:
                 payload['avatarRadius'] = avatar_radius
 
         if initial_special_embed_settings_payload is UNDEFINED:
-            special_embed_settings_payload: raw.AndroidUserSettingsSpecialEmbedSettings | None = (
+            special_embed_settings_payload: typing.Optional[raw.AndroidUserSettingsSpecialEmbedSettings] = (
                 self._special_embed_settings_payload
             )
         elif initial_special_embed_settings_payload is None:
@@ -405,15 +429,15 @@ class AndroidUserSettings:
     async def edit(
         self,
         *,
-        edited_at: datetime | int | None = None,
-        theme: UndefinedOr[AndroidTheme | None] = UNDEFINED,
-        color_overrides: UndefinedOr[dict[str, int] | None] = UNDEFINED,
-        reply_style: UndefinedOr[AndroidMessageReplyStyle | None] = UNDEFINED,
-        avatar_radius: UndefinedOr[AndroidProfilePictureShape | int | None] = UNDEFINED,
+        edited_at: typing.Optional[typing.Union[datetime, int]] = None,
+        theme: UndefinedOr[typing.Optional[AndroidTheme]] = UNDEFINED,
+        color_overrides: UndefinedOr[typing.Optional[dict[str, int]]] = UNDEFINED,
+        reply_style: UndefinedOr[typing.Optional[AndroidMessageReplyStyle]] = UNDEFINED,
+        avatar_radius: UndefinedOr[typing.Optional[typing.Union[AndroidProfilePictureShape, int]]] = UNDEFINED,
         embed_youtube: UndefinedOr[bool] = UNDEFINED,
         embed_apple_music: UndefinedOr[bool] = UNDEFINED,
         initial_special_embed_settings_payload: UndefinedOr[
-            raw.AndroidUserSettingsSpecialEmbedSettings | None
+            typing.Optional[raw.AndroidUserSettingsSpecialEmbedSettings]
         ] = UNDEFINED,
     ) -> None:
         """|coro|
@@ -422,8 +446,8 @@ class AndroidUserSettings:
 
         Parameters
         ----------
-        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
-            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
+        edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
+            External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
             The new theme.  Could be ``None`` to remove it from internal object.
         color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
@@ -438,6 +462,25 @@ class AndroidUserSettings:
             Whether to render special YouTube embeds.
         embed_apple_music: UndefinedOr[:class:`bool`]
             Whether to render special Apple Music embeds.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         payload = self.payload_for(
             theme=theme,
@@ -529,7 +572,7 @@ class ReviteUserSettings:
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} last_viewed_changelog_entry={self.last_viewed_changelog_entry!r} language={self.language!r} notification_options={self._notification_options!r} ordering={self.ordering!r} emoji_pack={self.emoji_pack!r} seasonal={self.seasonal!r} transparent={self.transparent!r} ligatures={self.ligatures!r} base_theme={self.base_theme!r} custom_css={self.custom_css!r} font={self.font!r} monofont={self.monofont!r} theme_overrides={self.theme_overrides!r}>'
 
-    def get_language(self) -> Language | None:
+    def get_language(self) -> typing.Optional[Language]:
         """Optional[:class:`.Language`]: The current language."""
         return self._language
 
@@ -538,7 +581,7 @@ class ReviteUserSettings:
         """:class:`.Language`: The current language. Defaults to :attr:`.Language.english_simplified` if language is undefined."""
         return self._language or Language.english
 
-    def get_notification_options(self) -> ReviteNotificationOptions | None:
+    def get_notification_options(self) -> typing.Optional[ReviteNotificationOptions]:
         """Optional[:class:`.ReviteNotificationOptions`]: The notification options."""
         return self._notification_options
 
@@ -552,7 +595,7 @@ class ReviteUserSettings:
         """List[:class:`str`]: The server ordering."""
         return self._ordering or []
 
-    def get_emoji_pack(self) -> ReviteEmojiPack | None:
+    def get_emoji_pack(self) -> typing.Optional[ReviteEmojiPack]:
         """Optional[:class:`.ReviteEmojiPack`]: Gets the current emoji pack."""
         return self._appearance_emoji_pack
 
@@ -577,7 +620,7 @@ class ReviteUserSettings:
         """
         return self.ligatures is not False
 
-    def get_base_theme(self) -> ReviteBaseTheme | None:
+    def get_base_theme(self) -> typing.Optional[ReviteBaseTheme]:
         """Optional[:class:`.ReviteBaseTheme`]: The current base theme."""
         return self._appearance_theme_base
 
@@ -587,11 +630,11 @@ class ReviteUserSettings:
         return self._appearance_theme_base or ReviteBaseTheme.dark
 
     @property
-    def custom_css(self) -> str | None:
+    def custom_css(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The custom CSS string."""
         return self._appearance_theme_css
 
-    def get_font(self) -> ReviteFont | None:
+    def get_font(self) -> typing.Optional[ReviteFont]:
         """Optional[:class:`.ReviteFont`]: The current Revite font."""
         return self._appearance_theme_font
 
@@ -600,7 +643,7 @@ class ReviteUserSettings:
         """:class:`.ReviteFont`: The current Revite font. Defaults to :attr:`.ReviteFont.open_sans` if font is undefined."""
         return self._appearance_theme_font or ReviteFont.open_sans
 
-    def get_monofont(self) -> ReviteMonoFont | None:
+    def get_monofont(self) -> typing.Optional[ReviteMonoFont]:
         """Optional[:class:`.ReviteMonoFont`]: The current Revite monospace font."""
         return self._appearance_theme_monofont
 
@@ -609,7 +652,7 @@ class ReviteUserSettings:
         """:class:`.ReviteMonoFont`: The current Revite monospace font. Defaults to :attr:`.ReviteMonoFont.fira_code` if monofont is undefined."""
         return self._appearance_theme_monofont or ReviteMonoFont.fira_code
 
-    def get_theme_overrides(self) -> dict[ReviteThemeVariable, str] | None:
+    def get_theme_overrides(self) -> typing.Optional[dict[ReviteThemeVariable, str]]:
         """Optional[Dict[:class:`.ReviteThemeVariable`, :class:`str`]]: The theme overrides."""
         return self._appearance_theme_overrides
 
@@ -619,37 +662,41 @@ class ReviteUserSettings:
         return self._appearance_theme_overrides or {}
 
     def _on_changelog(self, changelog: raw.ReviteChangelog, /) -> None:
-        self._changelog_payload: raw.ReviteChangelog | None = changelog
-        self.last_viewed_changelog_entry: ReviteChangelogEntry | None = ReviteChangelogEntry(changelog['viewed'])
+        self._changelog_payload: typing.Optional[raw.ReviteChangelog] = changelog
+        self.last_viewed_changelog_entry: typing.Optional[ReviteChangelogEntry] = ReviteChangelogEntry(
+            changelog['viewed']
+        )
 
     def _on_locale(self, locale: raw.ReviteLocaleOptions, /) -> None:
-        self._locale_payload: raw.ReviteLocaleOptions | None = locale
-        self._language: Language | None = Language(locale['lang'])
+        self._locale_payload: typing.Optional[raw.ReviteLocaleOptions] = locale
+        self._language: typing.Optional[Language] = Language(locale['lang'])
 
     def _on_notifications(self, notifications: raw.ReviteNotificationOptions, /) -> None:
-        self._notifications_payload: raw.ReviteNotificationOptions | None = notifications
-        self._notification_options: ReviteNotificationOptions | None = ReviteNotificationOptions(notifications)
+        self._notifications_payload: typing.Optional[raw.ReviteNotificationOptions] = notifications
+        self._notification_options: typing.Optional[ReviteNotificationOptions] = ReviteNotificationOptions(
+            notifications
+        )
 
     def _on_ordering(self, ordering: raw.ReviteOrdering, /) -> None:
-        self._ordering_payload: raw.ReviteOrdering | None = ordering
-        self._ordering: list[str] | None = ordering['servers']
+        self._ordering_payload: typing.Optional[raw.ReviteOrdering] = ordering
+        self._ordering: typing.Optional[list[str]] = ordering['servers']
 
     def _on_appearance(self, appearance: raw.ReviteAppearanceSettings, /) -> None:
-        self._appearance_payload: raw.ReviteAppearanceSettings | None = appearance
+        self._appearance_payload: typing.Optional[raw.ReviteAppearanceSettings] = appearance
 
         appearance_emoji_pack = appearance.get('appearance:emoji')
         if appearance_emoji_pack:
-            self._appearance_emoji_pack: ReviteEmojiPack | None = ReviteEmojiPack(appearance_emoji_pack)
+            self._appearance_emoji_pack: typing.Optional[ReviteEmojiPack] = ReviteEmojiPack(appearance_emoji_pack)
         else:
             self._appearance_emoji_pack = None
 
-        self.seasonal: bool | None = appearance.get('appearance:seasonal')
-        self.transparent: bool | None = appearance.get('appearance:transparency')
+        self.seasonal: typing.Optional[bool] = appearance.get('appearance:seasonal')
+        self.transparent: typing.Optional[bool] = appearance.get('appearance:transparency')
 
     def _on_theme(self, theme: raw.ReviteThemeSettings, /) -> None:
-        self._theme_payload: raw.ReviteThemeSettings | None = theme
+        self._theme_payload: typing.Optional[raw.ReviteThemeSettings] = theme
 
-        self.ligatures: bool | None = theme.get('appearance:ligatures')
+        self.ligatures: typing.Optional[bool] = theme.get('appearance:ligatures')
 
         base_theme = theme.get('appearance:theme:base')
 
@@ -661,19 +708,19 @@ class ReviteUserSettings:
 
         font = theme.get('appearance:theme:font')
         if font:
-            self._appearance_theme_font: ReviteFont | None = ReviteFont(font)
+            self._appearance_theme_font: typing.Optional[ReviteFont] = ReviteFont(font)
         else:
             self._appearance_theme_font = None
 
         # Deprecated by base theme
-        # self._appearance_theme_light: bool | None = theme.get('appearance:theme:light')
+        # self._appearance_theme_light: typing.Optional[bool] = theme.get('appearance:theme:light')
 
         monofont = theme.get('appearance:theme:monoFont')
         if monofont:
-            self._appearance_theme_monofont: ReviteMonoFont | None = ReviteMonoFont(monofont)
+            self._appearance_theme_monofont: typing.Optional[ReviteMonoFont] = ReviteMonoFont(monofont)
         else:
             self._appearance_theme_monofont = None
-        self._appearance_theme_overrides: dict[ReviteThemeVariable, str] | None = theme.get(
+        self._appearance_theme_overrides: typing.Optional[dict[ReviteThemeVariable, str]] = theme.get(
             'appearance:theme:overrides'
         )
 
@@ -750,7 +797,7 @@ class ReviteUserSettings:
         self,
         *,
         initial_changelog_payload: UndefinedOr[raw.ReviteChangelog] = UNDEFINED,
-        last_viewed_changelog_entry: UndefinedOr[ReviteChangelogEntry | int] = UNDEFINED,
+        last_viewed_changelog_entry: UndefinedOr[typing.Union[ReviteChangelogEntry, int]] = UNDEFINED,
         initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
         initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions] = UNDEFINED,
@@ -761,16 +808,16 @@ class ReviteUserSettings:
         initial_ordering_payload: UndefinedOr[raw.ReviteOrdering] = UNDEFINED,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
         initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings] = UNDEFINED,
-        emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
-        seasonal: UndefinedOr[bool | None] = UNDEFINED,
-        transparent: UndefinedOr[bool | None] = UNDEFINED,
+        emoji_pack: UndefinedOr[typing.Optional[ReviteEmojiPack]] = UNDEFINED,
+        seasonal: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        transparent: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings] = UNDEFINED,
-        ligatures: UndefinedOr[bool | None] = UNDEFINED,
-        base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
-        custom_css: UndefinedOr[str | None] = UNDEFINED,
-        font: UndefinedOr[ReviteFont | None] = UNDEFINED,
-        monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
-        overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
+        ligatures: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        base_theme: UndefinedOr[typing.Optional[ReviteBaseTheme]] = UNDEFINED,
+        custom_css: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        font: UndefinedOr[typing.Optional[ReviteFont]] = UNDEFINED,
+        monofont: UndefinedOr[typing.Optional[ReviteMonoFont]] = UNDEFINED,
+        overrides: UndefinedOr[typing.Optional[dict[ReviteThemeVariable, str]]] = UNDEFINED,
     ) -> raw.ReviteUserSettingsPayload:
         """Builds a payload for Revite user settings. You must pass it as first argument to :meth:`.HTTPClient.edit_user_settings`, like so:
 
@@ -1010,9 +1057,9 @@ class ReviteUserSettings:
     async def edit(
         self,
         *,
-        edited_at: datetime | int | None = None,
+        edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         initial_changelog_payload: UndefinedOr[raw.ReviteChangelog] = UNDEFINED,
-        last_viewed_changelog_entry: UndefinedOr[ReviteChangelogEntry | int] = UNDEFINED,
+        last_viewed_changelog_entry: UndefinedOr[typing.Union[ReviteChangelogEntry, int]] = UNDEFINED,
         initial_locale_payload: UndefinedOr[raw.ReviteLocaleOptions] = UNDEFINED,
         language: UndefinedOr[Language] = UNDEFINED,
         initial_notifications_payload: UndefinedOr[raw.ReviteNotificationOptions] = UNDEFINED,
@@ -1023,16 +1070,16 @@ class ReviteUserSettings:
         initial_ordering_payload: UndefinedOr[raw.ReviteOrdering] = UNDEFINED,
         ordering: UndefinedOr[list[ULIDOr[BaseServer]]] = UNDEFINED,
         initial_appearance_payload: UndefinedOr[raw.ReviteAppearanceSettings] = UNDEFINED,
-        emoji_pack: UndefinedOr[ReviteEmojiPack | None] = UNDEFINED,
-        seasonal: UndefinedOr[bool | None] = UNDEFINED,
-        transparent: UndefinedOr[bool | None] = UNDEFINED,
+        emoji_pack: UndefinedOr[typing.Optional[ReviteEmojiPack]] = UNDEFINED,
+        seasonal: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        transparent: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         initial_theme_payload: UndefinedOr[raw.ReviteThemeSettings] = UNDEFINED,
-        ligatures: UndefinedOr[bool | None] = UNDEFINED,
-        base_theme: UndefinedOr[ReviteBaseTheme | None] = UNDEFINED,
-        custom_css: UndefinedOr[str | None] = UNDEFINED,
-        font: UndefinedOr[ReviteFont | None] = UNDEFINED,
-        monofont: UndefinedOr[ReviteMonoFont | None] = UNDEFINED,
-        overrides: UndefinedOr[dict[ReviteThemeVariable, str] | None] = UNDEFINED,
+        ligatures: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        base_theme: UndefinedOr[typing.Optional[ReviteBaseTheme]] = UNDEFINED,
+        custom_css: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        font: UndefinedOr[typing.Optional[ReviteFont]] = UNDEFINED,
+        monofont: UndefinedOr[typing.Optional[ReviteMonoFont]] = UNDEFINED,
+        overrides: UndefinedOr[typing.Optional[dict[ReviteThemeVariable, str]]] = UNDEFINED,
     ) -> None:
         """|coro|
 
@@ -1040,8 +1087,8 @@ class ReviteUserSettings:
 
         Parameters
         ----------
-        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
-            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
+        edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
+            External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         initial_changelog_payload: UndefinedOr[raw.ReviteChangelog]
             The initial ``changelog`` payload.
         last_viewed_changelog_entry: UndefinedOr[Union[:class:`.ReviteChangelogEntry`, :class:`int`]]
@@ -1094,6 +1141,25 @@ class ReviteUserSettings:
         overrides: UndefinedOr[Optional[Dict[:class:`.ReviteThemeVariable`, :class:`str`]]]
             The theme overrides.
             Passing ``None`` denotes ``theme.appearance:theme:overrides`` removal in internal object.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
         payload: raw.ReviteUserSettingsPayload = self.payload_for(
@@ -1189,28 +1255,28 @@ class JoltUserSettings:
         low_data_mode = payload.get('jolt:low-data-mode')
         if low_data_mode is None:
             if full:
-                self.low_data_mode: bool | None = None
+                self.low_data_mode: typing.Optional[bool] = None
         else:
             self.low_data_mode = bool(utils.decode_bool(low_data_mode))
 
         compact_mode = payload.get('jolt:compact-mode')
         if compact_mode is None:
             if full:
-                self.compact_mode: bool | None = None
+                self.compact_mode: typing.Optional[bool] = None
         else:
             self.compact_mode = bool(utils.decode_bool(compact_mode))
 
         send_typing_indicators = payload.get('jolt:send-typing-indicators')
         if send_typing_indicators is None:
             if full:
-                self.send_typing_indicators: bool | None = None
+                self.send_typing_indicators: typing.Optional[bool] = None
         else:
             self.send_typing_indicators = bool(utils.decode_bool(send_typing_indicators))
 
         receive_typing_indicators = payload.get('jolt:receive-typing-indicators')
         if receive_typing_indicators is None:
             if full:
-                self.receive_typing_indicators: bool | None = None
+                self.receive_typing_indicators: typing.Optional[bool] = None
         else:
             self.receive_typing_indicators = bool(utils.decode_bool(receive_typing_indicators))
 
@@ -1222,7 +1288,7 @@ class JoltUserSettings:
         send_typing_indicators: UndefinedOr[bool] = UNDEFINED,
         receive_typing_indicators: UndefinedOr[bool] = UNDEFINED,
     ) -> raw.JoltUserSettings:
-        """Builds a payload for Jolt user settings. You must pass it as first argument to :meth:`HTTPClient.edit_user_settings`, like so:
+        """Builds a payload for Jolt user settings. You must pass it as first argument to :meth:`.HTTPClient.edit_user_settings`, like so:
 
         .. code-block:: python3
 
@@ -1259,7 +1325,7 @@ class JoltUserSettings:
     async def edit(
         self,
         *,
-        edited_at: datetime | int | None = None,
+        edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         low_data_mode: UndefinedOr[bool] = UNDEFINED,
         compact_mode: UndefinedOr[bool] = UNDEFINED,
         send_typing_indicators: UndefinedOr[bool] = UNDEFINED,
@@ -1271,7 +1337,7 @@ class JoltUserSettings:
 
         Parameters
         ----------
-        edited_at: Optional[Union[:class:`datetime`, :class:`int`]]
+        edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         low_data_mode: UndefinedOr[:class:`bool`]
             Whether Jolt should NOT load images and fetch users if not found in cache.
@@ -1281,6 +1347,25 @@ class JoltUserSettings:
             Whether to send typing indicators when writing messages.
         receive_typing_indicators: UndefinedOr[:class:`bool`]
             Whether to show typing indicators ('<user> is typing...').
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         payload = self.payload_for(
             low_data_mode=low_data_mode,
