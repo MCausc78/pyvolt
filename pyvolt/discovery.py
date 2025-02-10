@@ -61,13 +61,13 @@ class DiscoverableServer(BaseServer):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's name."""
 
-    description: str | None = field(repr=True, kw_only=True)
+    description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The server's description."""
 
-    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless server icon."""
 
-    internal_banner: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_banner: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless server banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
@@ -90,7 +90,7 @@ class DiscoverableServer(BaseServer):
         return ret
 
     @property
-    def icon(self) -> Asset | None:
+    def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The server's icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
@@ -100,7 +100,7 @@ class DiscoverableServer(BaseServer):
         return self.id
 
     @property
-    def banner(self) -> Asset | None:
+    def banner(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The server's banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
@@ -119,7 +119,7 @@ class DiscoverableBot(BaseBot):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""
 
-    internal_avatar: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless bot's avatar."""
 
     internal_profile: StatelessUserProfile = field(repr=True, kw_only=True)
@@ -135,7 +135,7 @@ class DiscoverableBot(BaseBot):
     """:class:`.BotUsage`: How frequently is bot being used."""
 
     @property
-    def avatar(self) -> Asset | None:
+    def avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The bot's avatar."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
@@ -185,7 +185,7 @@ class DiscoverableTheme:
     version: str = field(repr=True, kw_only=True)
     """:class:`str`: The theme version."""
 
-    custom_css: str | None = field(repr=True, kw_only=True)
+    custom_css: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The theme CSS string."""
 
     def __hash__(self) -> int:
@@ -302,7 +302,7 @@ class DiscoveryClient:
     def __init__(
         self,
         *,
-        base: str | None = None,
+        base: typing.Optional[str] = None,
         session: aiohttp.ClientSession,
         state: State,
         user_agent: str = '',
