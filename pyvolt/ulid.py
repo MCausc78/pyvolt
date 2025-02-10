@@ -137,11 +137,11 @@ _LUT = [
 ]
 
 
-def _ulid_timestamp(v: bytes) -> float:
+def _ulid_timestamp(v: bytes, /) -> float:
     return int.from_bytes(_ulid_decode_timestamp(v)[:6], byteorder='big') / 1000
 
 
-def _ulid_decode_timestamp(v: bytes) -> bytes:
+def _ulid_decode_timestamp(v: bytes, /) -> bytes:
     return bytes(
         [
             ((_LUT[v[0]] << 5) | _LUT[v[1]]) & 0xFF,
