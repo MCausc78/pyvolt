@@ -27,7 +27,7 @@ class flag(typing.Generic[BF]):
     )
 
     def __init__(self, *, inverted: bool = False, use_any: bool = False, alias: bool = False) -> None:
-        self.__doc__: str | None = None
+        self.__doc__: typing.Optional[str] = None
         self._func: Callable[[BF], int] = MISSING
         self._parent: type[BF] = MISSING
         self.name: str = ''
@@ -48,7 +48,7 @@ class flag(typing.Generic[BF]):
     @typing.overload
     def __get__(self, instance: BF, owner: type[BF], /) -> bool: ...
 
-    def __get__(self, instance: BF | None, owner: type[BF], /) -> bool | Self:
+    def __get__(self, instance: typing.Optional[BF], owner: type[BF], /) -> typing.Union[bool, Self]:
         if instance is None:
             return self
         else:
@@ -57,16 +57,16 @@ class flag(typing.Generic[BF]):
     def __set__(self, instance: BF, value: bool, /) -> None:
         instance._set(self, value)
 
-    def __and__(self, other: BF | flag[BF] | int, /) -> BF:
+    def __and__(self, other: typing.Union[BF, flag[BF], int], /) -> BF:
         return self._parent(self.value) & other
 
     def __int___(self) -> int:
         return self.value
 
-    def __or__(self, other: BF | flag[BF] | int, /) -> BF:
+    def __or__(self, other: typing.Union[BF, flag[BF], int], /) -> BF:
         return self._parent(self.value) | other
 
-    def __xor__(self, other: BF | flag[BF] | int, /) -> BF:
+    def __xor__(self, other: typing.Union[BF, flag[BF], int], /) -> BF:
         return self._parent(self.value) ^ other
 
     def __int__(self) -> int:
@@ -236,7 +236,7 @@ class BaseFlags:
         """Copies the flag value."""
         return self.__class__(self.value)
 
-    def _value_of(self, other: flag[Self] | Self | int, /) -> int:
+    def _value_of(self, other: typing.Union[Self, flag[Self], int], /) -> int:
         if isinstance(other, int):
             return other
         elif isinstance(other, (flag, self.__class__)):
@@ -244,19 +244,19 @@ class BaseFlags:
         else:
             raise TypeError(f'cannot get {other.__class__.__name__} value')
 
-    def is_subset(self, other: Self | flag[Self] | int, /) -> bool:
+    def is_subset(self, other: typing.Union[Self, flag[Self], int], /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or fewer flags as other."""
         return (self.value & self._value_of(other)) == self.value
 
-    def is_superset(self, other: Self | flag[Self] | int, /) -> bool:
+    def is_superset(self, other: typing.Union[Self, flag[Self], int], /) -> bool:
         """:class:`bool`: Returns ``True`` if self has the same or more flags as other."""
         return (self.value | self._value_of(other)) == self.value
 
-    def is_strict_subset(self, other: Self | flag[Self] | int, /) -> bool:
+    def is_strict_subset(self, other: typing.Union[Self, flag[Self], int], /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict subset of those on self."""
         return self.is_subset(other) and self != other
 
-    def is_strict_superset(self, other: Self | flag[Self] | int, /) -> bool:
+    def is_strict_superset(self, other: typing.Union[Self, flag[Self], int], /) -> bool:
         """:class:`bool`: Returns ``True`` if the flags on other are a strict superset of those on self."""
         return self.is_superset(other) and self != other
 
@@ -265,20 +265,20 @@ class BaseFlags:
     __lt__ = is_strict_subset
     __gt__ = is_strict_superset
 
-    def __and__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __and__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         return self.__class__(self.value & self._value_of(other))
 
     def __bool__(self) -> bool:
         return self.value != self.NONE_VALUE
 
-    def __contains__(self, other: Self | flag[Self] | int, /) -> bool:
+    def __contains__(self, other: typing.Union[Self, flag[Self], int], /) -> bool:
         ov = self._value_of(other)
         return (self.value & ov) == ov
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, self.__class__) and self.value == other.value
 
-    def __iand__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __iand__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         self.value &= self._value_of(other)
         return self
 
@@ -290,21 +290,21 @@ class BaseFlags:
         max_value = -1 + (1 << max_bits)
         return self.from_value(self.value ^ max_value)
 
-    def __ior__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __ior__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         self.value |= self._value_of(other)
         return self
 
-    def __ixor__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __ixor__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         self.value ^= self._value_of(other)
         return self
 
     def __ne__(self, other: object, /) -> bool:
         return not self.__eq__(other)
 
-    def __or__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __or__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         return self.__class__(self.value | self._value_of(other))
 
-    def __xor__(self, other: Self | flag[Self] | int, /) -> Self:
+    def __xor__(self, other: typing.Union[Self, flag[Self], int], /) -> Self:
         return self.__class__(self.value ^ self._value_of(other))
 
 
@@ -312,7 +312,7 @@ def doc_flags(
     intro: str,
     /,
     *,
-    added_in: str | None = None,
+    added_in: typing.Optional[str] = None,
 ) -> Callable[[type[BF]], type[BF]]:
     """Document flag classes.
 
@@ -624,15 +624,15 @@ class Permissions(BaseFlags, support_kwargs=True):
     # % Bits 53 to 64: do not use
 
 
-ALLOW_PERMISSIONS_IN_TIMEOUT = Permissions(
+ALLOW_PERMISSIONS_IN_TIMEOUT: typing.Final[Permissions] = Permissions(
     view_channel=True,
     read_message_history=True,
 )
-VIEW_ONLY_PERMISSIONS = Permissions(
+VIEW_ONLY_PERMISSIONS: typing.Final[Permissions] = Permissions(
     view_channel=True,
     read_message_history=True,
 )
-DEFAULT_PERMISSIONS = VIEW_ONLY_PERMISSIONS | Permissions(
+DEFAULT_PERMISSIONS: typing.Final[Permissions] = VIEW_ONLY_PERMISSIONS | Permissions(
     send_messages=True,
     create_invites=True,
     send_embeds=True,
@@ -641,9 +641,9 @@ DEFAULT_PERMISSIONS = VIEW_ONLY_PERMISSIONS | Permissions(
     speak=True,
     listen=True,
 )
-DEFAULT_SAVED_MESSAGES_PERMISSIONS = Permissions.all()
-DEFAULT_DM_PERMISSIONS = DEFAULT_PERMISSIONS | Permissions(manage_channels=True, react=True)
-DEFAULT_SERVER_PERMISSIONS = DEFAULT_PERMISSIONS | Permissions(
+DEFAULT_SAVED_MESSAGES_PERMISSIONS: typing.Final[Permissions] = Permissions.all()
+DEFAULT_DM_PERMISSIONS: typing.Final[Permissions] = DEFAULT_PERMISSIONS | Permissions(manage_channels=True, react=True)
+DEFAULT_SERVER_PERMISSIONS: typing.Final[Permissions] = DEFAULT_PERMISSIONS | Permissions(
     react=True,
     change_nickname=True,
     change_avatar=True,
