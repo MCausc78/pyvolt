@@ -116,22 +116,22 @@ class Converter(typing.Protocol[T_co]):
         raise NotImplementedError('Derived classes need to implement this.')
 
 
-RE_ID: typing.Final[re.Pattern[str]] = re.compile(r'([0-9A-Z]{26})$')
-RE_MENTION_ANY: typing.Final[re.Pattern[str]] = re.compile(r'<[ru:]?:?[@#][!&]?([0-9A-Z]{26})>')
-RE_MENTION_CHANNEL: typing.Final[re.Pattern[str]] = re.compile(r'<c?#([0-9A-Z]{26})>')
-RE_MENTION_ROLE: typing.Final[re.Pattern[str]] = re.compile(r'<r?@&?([0-9A-Z]{26})>')
-RE_MENTION_USER: typing.Final[re.Pattern[str]] = re.compile(r'<u?@!?([0-9A-Z]{26})>')
+RE_ID: typing.Final[re.Pattern[str]] = re.compile(r'([0-9A-HJKMNP-TV-Z]{26})$')
+RE_MENTION_ANY: typing.Final[re.Pattern[str]] = re.compile(r'<[ru:]?:?[@#][!&]?([0-9A-HJKMNP-TV-Z]{26})>')
+RE_MENTION_CHANNEL: typing.Final[re.Pattern[str]] = re.compile(r'<c?#([0-9A-HJKMNP-TV-Z]{26})>')
+RE_MENTION_ROLE: typing.Final[re.Pattern[str]] = re.compile(r'<r?@&?([0-9A-HJKMNP-TV-Z]{26})>')
+RE_MENTION_USER: typing.Final[re.Pattern[str]] = re.compile(r'<u?@!?([0-9A-HJKMNP-TV-Z]{26})>')
 RE_ID_PAIR: typing.Final[re.Pattern[str]] = re.compile(
-    r'(?:(?P<first_id>[0-9A-Z]{26})[ -:])?(?P<second_id>[0-9A-Z]{26})$'
+    r'(?:(?P<first_id>[0-9A-HJKMNP-TV-Z]{26})[ -:])?(?P<second_id>[0-9A-HJKMNP-TV-Z]{26})$'
 )
 
 RE_CHANNEL_LINK: typing.Final[re.Pattern[str]] = re.compile(
-    r'(https?:)?(\/\/)?((beta|ap[ip])\.)?revolu?t\.chat(\/ap[ip])?(\/(guild|server)s?/(?P<server_id>(@?me|[0-9A-Z]{26})))?\/channels?\/(?P<channel_id>[0-9A-Z]{26})'
+    r'(https?:)?(\/\/)?((beta|ap[ip])\.)?revolu?t\.chat(\/ap[ip])?(\/(guild|server)s?/(?P<server_id>(@?me|[0-9A-HJKMNP-TV-Z]{26})))?\/channels?\/(?P<channel_id>[0-9A-HJKMNP-TV-Z]{26})'
 )
 RE_MESSAGE_LINK: typing.Final[re.Pattern[str]] = re.compile(
-    r'(https?:)?(\/\/)?((beta|ap[ip])\.)?revolu?t\.chat(\/ap[ip])?(\/(guild|server)s?/(?P<server_id>(@?me|[0-9A-Z]{26})))?\/channels?\/(?P<channel_id>[0-9A-Z]{26})(\/messages?)?\/(?P<message_id>[0-9A-Z]{26})'
+    r'(https?:)?(\/\/)?((beta|ap[ip])\.)?revolu?t\.chat(\/ap[ip])?(\/(guild|server)s?/(?P<server_id>(@?me|[0-9A-HJKMNP-TV-Z]{26})))?\/channels?\/(?P<channel_id>[0-9A-HJKMNP-TV-Z]{26})(\/messages?)?\/(?P<message_id>[0-9A-HJKMNP-TV-Z]{26})'
 )
-RE_EMOJI: typing.Final[re.Pattern[str]] = re.compile(r':([0-9A-Z]{26}):')
+RE_EMOJI: typing.Final[re.Pattern[str]] = re.compile(r':([0-9A-HJKMNP-TV-Z]{26}):')
 
 
 class IDConverter(Converter[T_co]):
@@ -259,7 +259,7 @@ class MemberConverter(IDConverter[pyvolt.Member]):
 
         cache = ctx.bot.state.cache
         cache_context = None
-        match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
+        match = self._get_id_match(argument) or RE_MENTION_USER.match(argument)
         result = None
         user_id = None
 
@@ -339,7 +339,7 @@ class UserConverter(IDConverter[pyvolt.User]):
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.User:
         cache = ctx.bot.state.cache
-        match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
+        match = self._get_id_match(argument) or RE_MENTION_USER.match(argument)
         result = None
 
         if match is not None:

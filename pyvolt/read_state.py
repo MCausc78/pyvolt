@@ -43,7 +43,7 @@ class ReadState:
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID the read state belongs to."""
 
-    last_acked_message_id: str | None = field(repr=True, kw_only=True)
+    last_acked_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last acknowledged message's ID. It *may* not point to an existing or valid message."""
 
     mentioned_in: list[str] = field(repr=True, kw_only=True)

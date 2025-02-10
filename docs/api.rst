@@ -3326,6 +3326,11 @@ The following exceptions are thrown by the library.
     :members:
     :inherited-members:
 
+.. autoexception:: NoEffect
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 .. autoexception:: Unauthorized
     :show-inheritance:
     :members:

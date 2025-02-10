@@ -47,7 +47,7 @@ class BaseReport(Base):
     content: ReportedContent = field(repr=True, kw_only=True)
     """:class:`.ReportedContent`: The reported content."""
 
-    additional_context: str | None = field(repr=True, kw_only=True)
+    additional_context: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The additional context included in report."""
 
     notes: str = field(repr=True, kw_only=True)
@@ -77,7 +77,7 @@ class RejectedReport(BaseReport):
     rejection_reason: str = field(repr=True, kw_only=True)
     """:class:`str`: The reason why this report was rejected."""
 
-    closed_at: datetime | None = field(repr=True, kw_only=True)
+    closed_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: When the report was closed."""
 
     @property
@@ -90,7 +90,7 @@ class RejectedReport(BaseReport):
 class ResolvedReport(BaseReport):
     """Represents a resolved report on Revolt."""
 
-    closed_at: datetime | None = field(repr=True, kw_only=True)
+    closed_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: When the report was closed."""
 
     @property
@@ -143,7 +143,7 @@ class UserReportedContent(BaseReportedContent):
     reason: UserReportReason = field(repr=True, kw_only=True)
     """:class:`.UserReportReason`: The reason why user was reported."""
 
-    message_id: str | None = field(repr=True, kw_only=True)
+    message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The message's ID with report context."""
 
     @property

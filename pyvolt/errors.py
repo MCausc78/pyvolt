@@ -105,14 +105,14 @@ class HTTPException(PyvoltException):
 
     # response: Response
     # type: str
-    # retry_after: float | None
-    # error: str | None
-    # max: int | None
-    # permission: str | None
-    # operation: str | None
-    # collection: str | None
-    # location: str | None
-    # with_: str | None
+    # retry_after: typing.Optional[float]
+    # error: typing.Optional[str]
+    # max: typing.Optional[int]
+    # permission: typing.Optional[str]
+    # operation: typing.Optional[str]
+    # collection: typing.Optional[str]
+    # location: typing.Optional[str]
+    # with_: typing.Optional[str]
 
     __slots__ = (
         'response',
@@ -132,27 +132,27 @@ class HTTPException(PyvoltException):
     def __init__(
         self,
         response: Response,
-        data: dict[str, typing.Any] | str,
+        data: typing.Union[dict[str, typing.Any], str],
         /,
     ) -> None:
         self.response: Response = response
-        self.data: dict[str, typing.Any] | str = data
+        self.data: typing.Union[dict[str, typing.Any], str] = data
         self.status: int = response.status
 
         errors = []
 
         if isinstance(data, str):
             self.type: str = 'NonJSON'
-            self.retry_after: float | None = None
-            self.error: str | None = data
+            self.retry_after: typing.Optional[float] = None
+            self.error: typing.Optional[str] = data
             errors.append(data)
-            self.max: int | None = None
-            self.permission: str | None = None
-            self.operation: str | None = None
-            self.collection: str | None = None
-            self.location: str | None = None
-            self.with_: str | None = None
-            self.feature: str | None = None
+            self.max: typing.Optional[int] = None
+            self.permission: typing.Optional[str] = None
+            self.operation: typing.Optional[str] = None
+            self.collection: typing.Optional[str] = None
+            self.location: typing.Optional[str] = None
+            self.with_: typing.Optional[str] = None
+            self.feature: typing.Optional[str] = None
         else:
             self.type = data.get('type', 'Unknown')
 
@@ -195,6 +195,22 @@ class HTTPException(PyvoltException):
         super().__init__(
             f'{self.type} (raw={data})' if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n"
         )
+
+
+class NoEffect(PyvoltException):
+    """HTTP exception that corresponds to HTTP 200 status code.
+
+    This exists because Revolt API returns 200 with error body for some reason.
+    """
+
+    __slots__ = ('data',)
+
+    def __init__(
+        self,
+        data: dict[str, typing.Any],
+        /,
+    ) -> None:
+        self.data: dict[str, typing.Any] = data
 
 
 class Unauthorized(HTTPException):
@@ -335,6 +351,7 @@ class NoData(PyvoltException):
 __all__ = (
     'PyvoltException',
     'HTTPException',
+    'NoEffect',
     'Unauthorized',
     'Forbidden',
     'NotFound',

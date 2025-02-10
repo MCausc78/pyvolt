@@ -888,6 +888,7 @@ class BaseMessage(Base):
         ------
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
+
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+

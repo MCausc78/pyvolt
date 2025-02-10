@@ -87,7 +87,7 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
         label: str = '',
         message: pyvolt.Message,
         shard: pyvolt.Shard,
-        subcommand_passed: str | None = None,
+        subcommand_passed: typing.Optional[str] = None,
         view: StringView,
     ) -> None:
         channel = message.channel
@@ -112,7 +112,7 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
         self.command_failed: bool = command_failed
         self.current_argument: typing.Optional[str] = current_argument
         self.current_parameter: typing.Optional[Parameter] = current_parameter
-        self.event: pyvolt.MessageCreateEvent | None = event
+        self.event: typing.Optional[pyvolt.MessageCreateEvent] = event
         self.invoked_parents: list[str] = invoked_parents
         self.invoked_subcommand: typing.Optional[Command[typing.Any, ..., typing.Any]] = invoked_subcommand
         self.label: str = label

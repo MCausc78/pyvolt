@@ -68,6 +68,7 @@ from .core import (
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .errors import (
     HTTPException,
+    NoEffect,
     Unauthorized,
     Forbidden,
     NotFound,
@@ -912,11 +913,11 @@ class HTTPClient:
         :class:`Conflict`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------+--------------------------------------------------------------+
-            | Value             | Reason                                                       |
-            +-------------------+--------------------------------------------------------------+
-            | ``UsernameTaken`` | The bot user name was taken.                                 |
-            +-------------------+--------------------------------------------------------------+
+            +-------------------+------------------------------+
+            | Value             | Reason                       |
+            +-------------------+------------------------------+
+            | ``UsernameTaken`` | The bot user name was taken. |
+            +-------------------+------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1244,7 +1245,7 @@ class HTTPClient:
         Invites a bot to a server or group.
         **Specifying both ``server`` and ``group`` parameters (or no parameters at all) will lead to an exception.**
 
-        If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.invite_others` is required.
+        If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1340,7 +1341,7 @@ class HTTPClient:
     async def acknowledge_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
-        Marks this message as read.
+        Marks a message as read.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
@@ -2014,9 +2015,7 @@ class HTTPClient:
         )
         return list(map(self.state.parser.parse_user, resp))
 
-    async def delete_messages(
-        self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]], /
-    ) -> None:
+    async def delete_messages(self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]]) -> None:
         """|coro|
 
         Delete multiple messages.
@@ -2080,7 +2079,7 @@ class HTTPClient:
             json=payload,
         )
 
-    async def clear_reactions(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def clear_reactions(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Removes all the reactions from the message.
@@ -2136,7 +2135,7 @@ class HTTPClient:
             )
         )
 
-    async def delete_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def delete_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Deletes the message in a channel.
@@ -2733,7 +2732,7 @@ class HTTPClient:
         You must have :attr:`~Permissions.send_messages` to do this.
 
         If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
-        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
+        If message mentions any roles, you must :attr:`~Permissions.mention_roles` to do that.
 
         Parameters
         ----------
@@ -2753,8 +2752,8 @@ class HTTPClient:
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.Masquerade`]
-            The message masquerade.
+        masquearde: Optional[:class:`.MessagesMasquerade`]
+            The masquerade for the message.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
@@ -2904,7 +2903,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_message(resp)
 
-    async def unpin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage], /) -> None:
+    async def unpin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
         """|coro|
 
         Unpins a message.
@@ -3004,6 +3003,7 @@ class HTTPClient:
         ------
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
+
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
@@ -3408,6 +3408,11 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.ServerChannel`]
+            The channel to retrieve webhooks from.
+
         Raises
         ------
         :class:`HTTPException`
@@ -3582,11 +3587,11 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------+---------------------------------------------------------+
-            | Value     | Reason                                                  |
-            +-----------+---------------------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account.               |
-            +-----------+---------------------------------------------------------+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3830,7 +3835,7 @@ class HTTPClient:
             raise NotImplementedError(resp)
 
     # Onboarding control
-    async def complete_onboarding(self, username: str, /) -> OwnUser:
+    async def complete_onboarding(self, username: str) -> OwnUser:
         """|coro|
 
         Complete onboarding by setting up an username, and allow connections to WebSocket.
@@ -3863,11 +3868,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------+
-            | Value                 | Reason                                          |
-            +-----------------------+-------------------------------------------------+
-            | ``AlreadyOnboarded``  | You already completed onboarding.
-            +-----------------------+-------------------------------------------------+
+            +----------------------+-------------------------------------------------+
+            | Value                | Reason                                          |
+            +----------------------+-------------------------------------------------+
+            | ``AlreadyOnboarded`` | You already completed onboarding.               |
+            +----------------------+-------------------------------------------------+
         :class:`Conflict`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5133,7 +5138,7 @@ class HTTPClient:
         Retrieve user settings.
 
         .. note::
-            This can only be used by non-bot accounts.
+            This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
@@ -5175,7 +5180,7 @@ class HTTPClient:
         Retrieves read states for all channels the current user in.
 
         .. note::
-            This can only be used by non-bot accounts.
+            This is not supposed to be used by bot accounts.
 
         Raises
         ------
@@ -5214,7 +5219,7 @@ class HTTPClient:
         Edits the current user settings.
 
         .. note::
-            This can only be used by non-bot accounts.
+            This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
@@ -5260,7 +5265,7 @@ class HTTPClient:
         await self.request(routes.SYNC_SET_SETTINGS.compile(), json=payload, params=params)
 
     # Users control
-    async def accept_friend_request(self, user: ULIDOr[BaseUser], /) -> User:
+    async def accept_friend_request(self, user: ULIDOr[BaseUser]) -> User:
         """|coro|
 
         Accept another user's friend request.
@@ -5270,39 +5275,129 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`BaseUser`]
-            The user to friend with.
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to accept friend request from.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                                    |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | ``TooManyPendingFriendRequests`` | You sent too many outgoing friend requests.                                               |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | ``IsBot``                        | Either the current user or user you tried to accept friend request from are bot accounts. |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+        :class:`NoEffect`
+            You tried to accept friend request from yourself.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+--------------------------------------------------------------------+
+            | Value            | Reason                                                             |
+            +------------------+--------------------------------------------------------------------+
+            | ``BlockedOther`` | The user you tried to accept friend request from have blocked you. |
+            +------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+---------------------------------------------------------------------------+
+            | Value                  | Reason                                                                    |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``AlreadyFriends``     | You're already friends with user you tried to accept friend request from. |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``AlreadySentRequest`` | You already sent friend request to this user.                             |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``Blocked``            | You have blocked the user you tried to send friend request from.          |
+            +------------------------+---------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`User`
-            The friended user.
+        :class:`.User`
+            The user you accepted friend request from.
         """
         resp: raw.User = await self.request(routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user)))
+        if resp.get('type') == 'NoEffect':
+            raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
     async def block_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
-        Block another user.
+        Blocks an user.
 
         .. note::
-            This can only be used by non-bot accounts.
+            This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
         user: ULIDOr[:class:`BaseUser`]
             The user to block.
 
+        Raises
+        ------
+        :class:`NoEffect`
+            You tried to block yourself or someone that you already had blocked.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        :class:`User`
+        :class:`.User`
             The blocked user.
         """
         resp: raw.User = await self.request(routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user)))
         return self.state.parser.parse_user(resp)
 
-    async def change_username(self, username: str, /, *, current_password: str) -> OwnUser:
+    async def change_username(self, *, username: str, current_password: str) -> OwnUser:
         """|coro|
 
         Change your username.
@@ -5313,13 +5408,58 @@ class HTTPClient:
         Parameters
         ----------
         username: :class:`str`
-            The new username.
+            The new username. Must be between 2 and 32 characters and not contain whitespace characters.
         current_password: :class:`str`
-            The current account password.
+            The current account password. Must be between 8 and 1024 characters.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidCredentials`` | The provided password was invalid.     |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------+
+            | Value             | Reason                  |
+            +-------------------+-------------------------+
+            | ``UsernameTaken`` | The username was taken. |
+            +-------------------+-------------------------+
+        :class:`Ratelimited`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------------+-------------------------------------+
+            | Value                              | Reason                              |
+            +------------------------------------+-------------------------------------+
+            | ``DiscriminatorChangeRatelimited`` | You was changing username too fast. |
+            +------------------------------------+-------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`OwnUser`
+        :class:`.OwnUser`
             The newly updated user.
         """
         payload: raw.DataChangeUsername = {'username': username, 'password': current_password}
@@ -5423,7 +5563,7 @@ class HTTPClient:
         /,
         *,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
-        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
         badges: UndefinedOr[UserBadges] = UNDEFINED,
@@ -5473,14 +5613,33 @@ class HTTPClient:
 
     async def get_private_channels(
         self,
-    ) -> list[SavedMessagesChannel | DMChannel | GroupChannel]:
+    ) -> list[typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]]:
         """|coro|
 
-        Get all DMs and groups conversations.
+        Retrieves all opened DMs, groups the current user in, and "Saved Notes" channel.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[Union[:class:`SavedMessagesChannel`, :class:`DMChannel`, :class:`GroupChannel`]]
+        List[Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`, :class:`.GroupChannel`]]
             The private channels.
         """
         resp: list[raw.SavedMessagesChannel | raw.DirectMessageChannel | raw.GroupChannel] = await self.request(
