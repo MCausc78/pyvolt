@@ -1373,7 +1373,10 @@ class Parser:
     def parse_group_channel(
         self,
         payload: raw.GroupChannel,
-        recipients: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]]),
+        recipients: typing.Union[
+            tuple[typing.Literal[True], list[str]],
+            tuple[typing.Literal[False], list[User]],
+        ],
         /,
     ) -> GroupChannel:
         """Parses a group channel object.
@@ -1665,7 +1668,7 @@ class Parser:
     def parse_member(
         self,
         payload: raw.Member,
-        user: User | None = None,
+        user: typing.Optional[User] = None,
         users: dict[str, User] = {},
         /,
     ) -> Member:
@@ -2522,13 +2525,17 @@ class Parser:
             return [self.parse_message(e, members_mapping, users_mapping) for e in payload['messages']]
         raise RuntimeError('Unreachable')
 
-    def parse_mfa_response_login(self, payload: raw.a.MFAResponseLogin, friendly_name: str | None, /) -> MFARequired:
+    def parse_mfa_response_login(
+        self, payload: raw.a.MFAResponseLogin, friendly_name: typing.Optional[str], /
+    ) -> MFARequired:
         """Parses a "MFA required" login response object.
 
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The login response payload to parse.
+        friendly_name: Optional[:class:`str`]
+            The user-friendly name of client.
 
         Returns
         -------
@@ -2982,13 +2989,15 @@ class Parser:
             closed_at=None if closed_at is None else _parse_dt(closed_at),
         )
 
-    def parse_response_login(self, payload: raw.a.ResponseLogin, friendly_name: str | None, /) -> LoginResult:
+    def parse_response_login(self, payload: raw.a.ResponseLogin, friendly_name: typing.Optional[str], /) -> LoginResult:
         """Parses a login response object.
 
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The login response payload to parse.
+        friendly_name: Optional[:class:`str`]
+            The user-friendly name of client.
 
         Returns
         -------
@@ -3102,7 +3111,10 @@ class Parser:
     def _parse_server(
         self,
         payload: raw.Server,
-        channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]),
+        channels: typing.Union[
+            tuple[typing.Literal[True], list[str]],
+            tuple[typing.Literal[False], list[ServerChannel]],
+        ],
         /,
     ) -> Server:
         """Parses a server object.
@@ -3153,7 +3165,10 @@ class Parser:
     def parse_server(
         self,
         payload: raw.Server,
-        channels: (tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[raw.ServerChannel]]),
+        channels: typing.Union[
+            tuple[typing.Literal[True], list[str]],
+            tuple[typing.Literal[False], list[raw.ServerChannel]],
+        ],
         /,
     ) -> Server:
         """Parses a server object.
@@ -3170,9 +3185,10 @@ class Parser:
         :class:`Server`
             The parsed server object.
         """
-        internal_channels: (
-            tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]]
-        ) = channels if channels[0] else (False, list(map(self.parse_channel, channels[1])))  # type: ignore
+        internal_channels: typing.Union[
+            tuple[typing.Literal[True], list[str]],
+            tuple[typing.Literal[False], list[ServerChannel]],
+        ] = channels if channels[0] else (False, list(map(self.parse_channel, channels[1])))  # type: ignore
         return self._parse_server(payload, internal_channels)
 
     def parse_server_create_event(
@@ -3733,7 +3749,7 @@ class Parser:
         """
         return UnknownPublicInvite(state=self.state, code=payload['code'], payload=payload)
 
-    def parse_user(self, payload: raw.User, /) -> User | OwnUser:
+    def parse_user(self, payload: raw.User, /) -> typing.Union[User, OwnUser]:
         """Parses a user object.
 
         Parameters
