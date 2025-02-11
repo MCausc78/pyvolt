@@ -2432,7 +2432,7 @@ class HTTPClient:
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
-            If ``nearby`` is provided, then this is ``(limit + 1)``.
+            If ``nearby`` is provided, then this is ``(limit + 2)``.
         before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[ULIDOr[:class:`.BaseMessage`]]
@@ -2620,7 +2620,7 @@ class HTTPClient:
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
-            If ``nearby`` is provided, then this is ``(limit + 1)``.
+            If ``nearby`` is provided, then this is ``(limit + 2)``.
         before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[ULIDOr[:class:`.BaseMessage`]]
@@ -2732,7 +2732,8 @@ class HTTPClient:
         You must have :attr:`~Permissions.send_messages` to do this.
 
         If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
-        If message mentions any roles, you must :attr:`~Permissions.mention_roles` to do that.
+
+        If message mentions any roles, you must have :attr:`~Permissions.mention_roles` to do that.
 
         Parameters
         ----------
@@ -5430,7 +5431,7 @@ class HTTPClient:
             +------------------------+----------------------------------------+
             | Value                  | Reason                                 |
             +------------------------+----------------------------------------+
-            | ``InvalidCredentials`` | The provided password was invalid.     |
+            | ``InvalidCredentials`` | The provided password was incorrect.   |
             +------------------------+----------------------------------------+
             | ``InvalidSession``     | The current bot/user token is invalid. |
             +------------------------+----------------------------------------+
@@ -6251,24 +6252,50 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     # Webhooks control
-    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], /, *, token: typing.Optional[str] = None) -> None:
+    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], *, token: typing.Optional[str] = None) -> None:
         """|coro|
 
-        Deletes a webhook. If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
+        Deletes a webhook.
+
+        If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
+
+        You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to delete.
         token: Optional[:class:`str`]
             The webhook token.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to delete the webhook.
-        :class:`HTTPException`
-            Deleting the webhook failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``token`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The webhook was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         if token is None:
             await self.request(routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook)))
@@ -6281,40 +6308,73 @@ class HTTPClient:
     async def edit_webhook(
         self,
         webhook: ULIDOr[BaseWebhook],
-        /,
         *,
         token: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
-        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         permissions: UndefinedOr[Permissions] = UNDEFINED,
     ) -> Webhook:
         """|coro|
 
-        Edits a webhook. If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
+        Edits a webhook.
+
+        If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
+
+        You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`BaseWebhook`]
+        webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to edit.
         token: Optional[:class:`str`]
             The webhook token.
         name: UndefinedOr[:class:`str`]
-            New webhook name. Should be between 1 and 32 chars long.
-        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            New webhook avatar.
-        permissions: UndefinedOr[:class:`Permissions`]
-            New webhook permissions.
+            The new webhook name. Must be between 1 and 32 chars long.
+        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new webhook avatar.
+        permissions: UndefinedOr[:class:`.Permissions`]
+            The new webhook permissions.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to edit the webhook.
         :class:`HTTPException`
-            Editing the webhook failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``token`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The webhook/file was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Webhook`
+        :class:`.Webhook`
             The newly updated webhook.
         """
         payload: raw.DataEditWebhook = {}
@@ -6348,13 +6408,12 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         token: str,
-        /,
         content: typing.Optional[str] = None,
         *,
         nonce: typing.Optional[str] = None,
-        attachments: list[ResolvableResource] | None = None,
-        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
-        embeds: list[SendableEmbed] | None = None,
+        attachments: typing.Optional[list[ResolvableResource]] = None,
+        replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
+        embeds: typing.Optional[list[SendableEmbed]] = None,
         masquerade: typing.Optional[MessageMasquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
         silent: typing.Optional[bool] = None,
@@ -6363,12 +6422,18 @@ class HTTPClient:
     ) -> Message:
         """|coro|
 
-        Executes a webhook and returns a message.
+        Executes a webhook.
+
+        The webhook must have :attr:`~Permissions.send_messages` to do this.
+
+        If message mentions '@everyone' or '@here', the webhook must have :attr:`~Permissions.mention_everyone` to do that.
+
+        If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
         Parameters
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
-            The ID of the webhook.
+            The webhook to execute.
         token: :class:`str`
             The webhook token.
         content: Optional[:class:`str`]
@@ -6378,20 +6443,20 @@ class HTTPClient:
         attachments: Optional[List[:class:`.ResolvableResource`]]
             The attachments to send the message with.
 
-            To provide this, the webhook must have :attr:`~Permissions.upload_files`.
-        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
+            Webhook must have :attr:`~Permissions.upload_files` to provide this.
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`SendableEmbed`]]
+        embeds: Optional[List[:class:`.SendableEmbed`]]
             The embeds to send the message with.
 
-            To provide non-null or non-empty value, the webhook must have :attr:`~Permissions.send_embeds`.
-        masquearde: Optional[:class:`MessageMasquerade`]
-            The message masquerade.
+            Webhook must have :attr:`~Permissions.send_embeds` to provide this.
+        masquearde: Optional[:class:`.MessagesMasquerade`]
+            The masquerade for the message.
 
-            To provide this, the webhook must have :attr:`~Permissions.use_masquerade`.
+            Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
-        interactions: Optional[:class:`MessageInteractions`]
+        interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
             If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
@@ -6402,10 +6467,71 @@ class HTTPClient:
         mention_online: Optional[:class:`bool`]
             Whether to mention all users who are online and can see the channel. This cannot be mixed with ``mention_everyone`` parameter.
 
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``       | The message was empty.                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                           |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                       |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------+
+            | Value                | Reason                        |
+            +----------------------+-------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. |
+            +----------------------+-------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | The webhook do not have the proper permissions to send messages. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------------------+
+            | Value        | Reason                                        |
+            +--------------+-----------------------------------------------+
+            | ``NotFound`` | The channel/file/reply/webhook was not found. |
+            +--------------+-----------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                     |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
         :class:`.Message`
-            The message sent.
+            The message that was sent.
         """
         payload: raw.DataMessageSend = {}
         if content is not None:
@@ -6455,6 +6581,7 @@ class HTTPClient:
         headers = {}
         if nonce is not None:
             headers['Idempotency-Key'] = nonce
+
         resp: raw.Message = await self.request(
             routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
             json=payload,
@@ -6466,13 +6593,16 @@ class HTTPClient:
     async def get_webhook(
         self,
         webhook: ULIDOr[BaseWebhook],
-        /,
         *,
         token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
 
-        Retrieves a webhook. If webhook token wasn't given, the library will attempt get webhook with bot/user token.
+        Retrieves a webhook.
+
+        If webhook token wasn't given, the library will attempt get webhook with bot/user token.
+
+        You must have :attr:`~Permissions.manage_webhooks` to do this.
 
         .. note::
             Due to Revolt limitation, the webhook avatar information will be partial if no token is provided.
@@ -6487,14 +6617,44 @@ class HTTPClient:
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``token`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to get the webhook.
-        :class:`HTTPException`
-            Getting the webhook failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve this webhook. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The webhook was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Webhook`
+        :class:`.Webhook`
             The retrieved webhook.
         """
 
@@ -6510,6 +6670,15 @@ class HTTPClient:
             )
             return self.state.parser.parse_webhook(r2)
 
+    # Auth below
+    # Note:
+    # - Blacklisted in code actually means
+    # {
+    #   type: 'DisallowedContactSupport',
+    #   email: 'support@revolt.chat',
+    #   note: "If you see this messages right here, you're probably doing something you shouldn't be."
+    # }
+
     # Account authentication control
     async def change_email(
         self,
@@ -6519,7 +6688,7 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Change the current account password.
+        Sends an email message to change email of current account.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -6527,14 +6696,44 @@ class HTTPClient:
         Parameters
         ----------
         email: :class:`str`
-            New email for this account.
+            The new email for current account.
         current_password: :class:`str`
             The current account password.
 
         Raises
         ------
         :class:`HTTPException`
-            Changing the account password failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------+
+            | Value             | Reason                 |
+            +-------------------+------------------------+
+            | ``IncorrectData`` | The email was invalid. |
+            +-------------------+------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------+---------------------------------------------------+
+            | Value                        | Reason                                            |
+            +------------------------------+---------------------------------------------------+
+            | ``DisallowedContactSupport`` | You're probably doing something you shouldn't be. |
+            +------------------------------+---------------------------------------------------+
+            | ``InvalidCredentials``       | The provided password is incorrect.               |
+            +------------------------------+---------------------------------------------------+
+            | ``InvalidSession``           | The current user token is invalid.                |
+            +------------------------------+---------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                              | Populated attributes                                           |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.      | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``   | Failed to send message about changing email.        |                                                                |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during changing email. |                                                                |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataChangeEmail = {
             'email': email,
@@ -6561,14 +6760,42 @@ class HTTPClient:
         Parameters
         ----------
         new_password: :class:`str`
-            New password for this account.
+            The new password for this account. Must be at least 8 characters.
         current_password: :class:`str`
             The current account password.
 
         Raises
         ------
         :class:`HTTPException`
-            Changing the account password failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+---------------------------------------------------+
+            | Value                   | Reason                                            |
+            +-------------------------+---------------------------------------------------+
+            | ``CompromisedPassword`` | The new password was compromised.                 |
+            +-------------------------+---------------------------------------------------+
+            | ``ShortPassword``       | The new password was less than 8 characters long. |
+            +-------------------------+---------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+---------------------------------------------+
+            | Value                  | Reason                                      |
+            +------------------------+---------------------------------------------+
+            | ``InvalidCredentials`` | The provided current password is incorrect. |
+            +------------------------+---------------------------------------------+
+            | ``InvalidSession``     | The current user token is invalid.          |
+            +------------------------+---------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                 | Populated attributes                                           |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.         | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during changing password. |                                                                |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataChangePassword = {
             'password': new_password,
@@ -6595,8 +6822,26 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Confirming the account deletion failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+--------------------------------+
+            | Value            | Reason                         |
+            +------------------+--------------------------------+
+            | ``InvalidToken`` | The deletion token is invalid. |
+            +------------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                              | Populated attributes                                           |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.      | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``   | Failed to send mail about changing email.           |                                                                |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during changing email. |                                                                |
+            +-------------------+-----------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
@@ -6609,14 +6854,16 @@ class HTTPClient:
         self,
         email: str,
         password: str,
-        /,
         *,
         invite: typing.Optional[str] = None,
         captcha: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
-        Register a new account.
+        Registers a new account.
+
+        .. danger::
+            **This function has high rate of abuse on official instance**. Proceed carefully with caution.
 
         Parameters
         ----------
@@ -6627,12 +6874,52 @@ class HTTPClient:
         invite: Optional[:class:`str`]
             The instance invite code.
         captcha: Optional[:class:`str`]
-            The CAPTCHA verification code.
+            The CAPTCHA solution.
 
         Raises
         ------
         :class:`HTTPException`
-            Registering the account failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | Value                   | Reason                                                                                                                                                                                                            |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``BlockedByShield``     | Your request was blocked by Authifier Shield. Try adjusting your HTTP headers to be more human-like, have not flagged IP, and good email. Optionally use a HTTP client that impersonates browser TLS fingerprint. |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CaptchaFailed``       | The CAPTCHA solution was invalid.                                                                                                                                                                                 |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CompromisedPassword`` | The provided password was compromised.                                                                                                                                                                            |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``IncorrectData``       | The email was invalid.                                                                                                                                                                                            |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidInvite``       | The provided instance was not found.                                                                                                                                                                              |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``MissingInvite``       | The instance requires a invite to register, and you did not provide it.                                                                                                                                           |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                            |
+            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------+---------------------------------------------------+
+            | Value                        | Reason                                            |
+            +------------------------------+---------------------------------------------------+
+            | ``DisallowedContactSupport`` | You're probably doing something you shouldn't be. |
+            +------------------------------+---------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                | Populated attributes                                           |
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.        | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``     | Failed to send mail for confirming account creation.  |                                                                |
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError``   | Somehow something went wrong during account creation. |                                                                |
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | Email was not set up on this instance.                |                                                                |
+            +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataCreateAccount = {
             'email': email,
@@ -6649,31 +6936,49 @@ class HTTPClient:
     async def delete_account(
         self,
         *,
-        mfa: str,
+        mfa_ticket: str,
     ) -> None:
         """|coro|
 
-        Request to have an account deleted.
+        Schedules account deletion.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        mfa: :class:`str`
+        mfa_ticket: :class:`str`
             The MFA ticket code.
 
         Raises
         ------
-        :class:`HTTPException`
-            Requesting the account to be deleted failed.
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+----------------------------+
+            | Value            | Reason                     |
+            +------------------+----------------------------+
+            | ``InvalidToken`` | The MFA ticket is invalid. |
+            +------------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                           | Populated attributes                                           |
+            +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.                   | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``   | Failed to send message about scheduling account deletion.        |                                                                |
+            +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during scheduling account deletion. |                                                                |
+            +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa)
+        await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa_ticket)
 
     async def disable_account(
         self,
         *,
-        mfa: str,
+        mfa_ticket: str,
     ) -> None:
         """|coro|
 
@@ -6684,28 +6989,58 @@ class HTTPClient:
 
         Parameters
         ----------
-        mfa: :class:`str`
+        mfa_ticket: :class:`str`
             The MFA ticket code.
 
         Raises
         ------
-        :class:`HTTPException`
-            Disabling the account failed.
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+----------------------------+
+            | Value            | Reason                     |
+            +------------------+----------------------------+
+            | ``InvalidToken`` | The MFA ticket is invalid. |
+            +------------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                 | Populated attributes                                           |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.         | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during disabling account. |                                                                |
+            +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa)
+        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa_ticket)
 
     async def get_account(self) -> PartialAccount:
         """|coro|
 
-        Get account information from the current session.
+        Retrieve account information.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        :class:`HTTPException`
-            Getting the account data failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+---------------------------------------------------------+
+            | Value             | Reason                                                  |
+            +-------------------+---------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during retrieving account. |
+            +-------------------+---------------------------------------------------------+
         """
         resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile())
         return self.state.parser.parse_partial_account(resp)

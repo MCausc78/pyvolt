@@ -119,7 +119,7 @@ class Converter(typing.Protocol[T_co]):
 RE_ID: typing.Final[re.Pattern[str]] = re.compile(r'([0-9A-HJKMNP-TV-Z]{26})$')
 RE_MENTION_ANY: typing.Final[re.Pattern[str]] = re.compile(r'<[ru:]?:?[@#][!&]?([0-9A-HJKMNP-TV-Z]{26})>')
 RE_MENTION_CHANNEL: typing.Final[re.Pattern[str]] = re.compile(r'<c?#([0-9A-HJKMNP-TV-Z]{26})>')
-RE_MENTION_ROLE: typing.Final[re.Pattern[str]] = re.compile(r'<r?@&?([0-9A-HJKMNP-TV-Z]{26})>')
+RE_MENTION_ROLE: typing.Final[re.Pattern[str]] = re.compile(r'<r?[@&%]*([0-9A-HJKMNP-TV-Z]{26})>')
 RE_MENTION_USER: typing.Final[re.Pattern[str]] = re.compile(r'<u?@!?([0-9A-HJKMNP-TV-Z]{26})>')
 RE_ID_PAIR: typing.Final[re.Pattern[str]] = re.compile(
     r'(?:(?P<first_id>[0-9A-HJKMNP-TV-Z]{26})[ -:])?(?P<second_id>[0-9A-HJKMNP-TV-Z]{26})$'
