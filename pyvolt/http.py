@@ -6881,23 +6881,23 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | Value                   | Reason                                                                                                                                                                                                            |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``BlockedByShield``     | Your request was blocked by Authifier Shield. Try adjusting your HTTP headers to be more human-like, have not flagged IP, and good email. Optionally use a HTTP client that impersonates browser TLS fingerprint. |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``CaptchaFailed``       | The CAPTCHA solution was invalid.                                                                                                                                                                                 |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``CompromisedPassword`` | The provided password was compromised.                                                                                                                                                                            |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``IncorrectData``       | The email was invalid.                                                                                                                                                                                            |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidInvite``       | The provided instance was not found.                                                                                                                                                                              |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``MissingInvite``       | The instance requires a invite to register, and you did not provide it.                                                                                                                                           |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                            |
-            +-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | Value                   | Reason                                                                                                                                                                                                             |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``BlockedByShield``     | Your request was blocked by Authifier Shield. Try adjusting your HTTP headers to be more human-like, have not flagged IP, and good email. Optionally, use a HTTP client that impersonates browser TLS fingerprint. |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CaptchaFailed``       | The CAPTCHA solution was invalid.                                                                                                                                                                                  |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CompromisedPassword`` | The provided password was compromised.                                                                                                                                                                             |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``IncorrectData``       | The email was invalid.                                                                                                                                                                                             |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidInvite``       | The provided instance invite was not found.                                                                                                                                                                        |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``MissingInvite``       | The instance requires a invite to register, and you did not provide it.                                                                                                                                            |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                             |
+            +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -6918,7 +6918,7 @@ class HTTPClient:
             +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
             | ``InternalError``   | Somehow something went wrong during account creation. |                                                                |
             +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
-            | ``OperationFailed`` | Email was not set up on this instance.                |                                                                |
+            | ``OperationFailed`` | Email verification was not set up on this instance.   |                                                                |
             +---------------------+-------------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataCreateAccount = {
@@ -7046,11 +7046,11 @@ class HTTPClient:
         return self.state.parser.parse_partial_account(resp)
 
     async def confirm_password_reset(
-        self, token: str, /, *, new_password: str, remove_sessions: typing.Optional[bool] = None
+        self, token: str, *, new_password: str, remove_sessions: typing.Optional[bool] = None
     ) -> None:
         """|coro|
 
-        Confirm password reset and change the password.
+        Confirms password reset and change the password.
 
         Parameters
         ----------
@@ -7064,7 +7064,33 @@ class HTTPClient:
         Raises
         ------
         :class:`HTTPException`
-            Sending the email failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+--------------------------------------------------------+
+            | Value                   | Reason                                                 |
+            +-------------------------+--------------------------------------------------------+
+            | ``CompromisedPassword`` | The provided password was compromised.                 |
+            +-------------------------+--------------------------------------------------------+
+            | ``ShortPassword``       | The provided password was less than 8 characters long. |
+            +-------------------------+--------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-----------------------------------------------+
+            | Value            | Reason                                        |
+            +------------------+-----------------------------------------------+
+            | ``InvalidToken`` | The provided password reset token is invalid. |
+            +------------------+-----------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                         | Populated attributes                                           |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during confirming password reset. |                                                                |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
         """
         payload: raw.a.DataPasswordReset = {
             'token': token,
@@ -7092,13 +7118,42 @@ class HTTPClient:
         email: :class:`str`
             The email associated with the account.
         captcha: Optional[:class:`str`]
-            The CAPTCHA verification code.
+            The CAPTCHA solution.
 
         Raises
         ------
         :class:`HTTPException`
-            Resending the verification mail failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------+
+            | Value             | Reason                            |
+            +-------------------+-----------------------------------+
+            | ``CaptchaFailed`` | The CAPTCHA solution was invalid. |
+            +-------------------+-----------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------+---------------------------------------------------+
+            | Value                        | Reason                                            |
+            +------------------------------+---------------------------------------------------+
+            | ``DisallowedContactSupport`` | You're probably doing something you shouldn't be. |
+            +------------------------------+---------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                         | Populated attributes                                           |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``     | Failed to send mail about confirming password reset.           |                                                                |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | Email verification was not set up on this instance.            |                                                                |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError``   | Somehow something went wrong during confirming password reset. |                                                                |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
         """
+
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
@@ -7121,8 +7176,35 @@ class HTTPClient:
         Raises
         ------
         :class:`HTTPException`
-            Sending the email failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------+
+            | Value             | Reason                            |
+            +-------------------+-----------------------------------+
+            | ``CaptchaFailed`` | The CAPTCHA solution was invalid. |
+            +-------------------+-----------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------------+---------------------------------------------------+
+            | Value                        | Reason                                            |
+            +------------------------------+---------------------------------------------------+
+            | ``DisallowedContactSupport`` | You're probably doing something you shouldn't be. |
+            +------------------------------+---------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                         | Populated attributes                                           |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``     | Failed to send mail for password reset.                        |                                                                |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | Email verification was not set up on this instance.            |                                                                |
+            +---------------------+----------------------------------------------------------------+----------------------------------------------------------------+
         """
+
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
@@ -7130,7 +7212,7 @@ class HTTPClient:
             json=payload,
         )
 
-    async def verify_email(self, code: str, /) -> MFATicket | None:
+    async def verify_email(self, code: str) -> typing.Optional[MFATicket]:
         """|coro|
 
         Verify an email address.
@@ -7138,12 +7220,36 @@ class HTTPClient:
         Parameters
         ----------
         code: :class:`str`
-            The code from mail body.
+            The code from email.
 
         Raises
         ------
         :class:`HTTPException`
-            Verifying the email address failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------+
+            | Value             | Reason                            |
+            +-------------------+-----------------------------------+
+            | ``CaptchaFailed`` | The CAPTCHA solution was invalid. |
+            +-------------------+-----------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-------------------------------+
+            | Value            | Reason                        |
+            +------------------+-------------------------------+
+            | ``InvalidToken`` | The provided code is invalid. |
+            +------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                         | Populated attributes                                           |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``EmailFailed``   | Failed to send mail for password reset.                        |                                                                |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
         """
         response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
         if response is not None and isinstance(response, dict) and 'ticket' in response:
