@@ -64,7 +64,7 @@ class Route:
     )
 
     def __init__(
-        self, method: HTTPMethod, path: str, /, *, ratelimit_key_template: UndefinedOr[str] = UNDEFINED
+        self, method: HTTPMethod, path: str, /, *, ratelimit_key_template: UndefinedOr[typing.Optional[str]] = UNDEFINED
     ) -> None:
         self.method: HTTPMethod = method
         self.path: str = path

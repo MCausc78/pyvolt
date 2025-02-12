@@ -3501,15 +3501,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------+
-            | Value                | Reason                                                  |
-            +----------------------+---------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                                |
-            +----------------------+---------------------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account.               |
-            +----------------------+---------------------------------------------------------+
-            | ``TooManyEmoji``     | You provided more embeds than allowed on this instance. |
-            +----------------------+---------------------------------------------------------+
+            +----------------------+---------------------------------------------------------------+
+            | Value                | Reason                                                        |
+            +----------------------+---------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                      |
+            +----------------------+---------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.                     |
+            +----------------------+---------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
+            +----------------------+---------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3521,11 +3521,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------------+
-            | Value                 | Reason                                                            |
-            +-----------------------+-------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to create emoji in server. |
-            +-----------------------+-------------------------------------------------------------------+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create emojis in server. |
+            +-----------------------+--------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7224,14 +7224,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-------------------+-----------------------------------+
-            | Value             | Reason                            |
-            +-------------------+-----------------------------------+
-            | ``CaptchaFailed`` | The CAPTCHA solution was invalid. |
-            +-------------------+-----------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7243,13 +7235,11 @@ class HTTPClient:
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
-            | Value             | Reason                                                         | Populated attributes                                           |
-            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
-            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
-            | ``EmailFailed``   | Failed to send mail for password reset.                        |                                                                |
-            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
         response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
         if response is not None and isinstance(response, dict) and 'ticket' in response:
@@ -7258,45 +7248,287 @@ class HTTPClient:
             return None
 
     # MFA authentication control
-    async def _create_mfa_ticket(self, payload: raw.a.MFAResponse, /) -> MFATicket:
-        resp: raw.a.MFATicket = await self.request(routes.AUTH_MFA_CREATE_TICKET.compile(), json=payload)
+    async def _create_mfa_ticket(
+        self, payload: raw.a.MFAResponse, mfa_ticket: typing.Optional[str], authenticated: typing.Optional[bool], /
+    ) -> MFATicket:
+        if authenticated is None:
+            authenticated = mfa_ticket is None
+        token = UNDEFINED if authenticated else None
+        resp: raw.a.MFATicket = await self.request(
+            routes.AUTH_MFA_CREATE_TICKET.compile(), json=payload, mfa_ticket=mfa_ticket, token=token
+        )
         return self.state.parser.parse_mfa_ticket(resp)
 
-    async def create_password_ticket(self, password: str, /) -> MFATicket:
+    async def create_password_ticket(
+        self, password: str, *, mfa_ticket: typing.Optional[str] = None, authenticated: typing.Optional[bool] = None
+    ) -> MFATicket:
         """|coro|
 
-        Create a new MFA ticket or validate an existing one.
+        Creates a new MFA password ticket, or validate an existing one.
+
+        Parameters
+        ----------
+        password: :class:`str`
+            The current account password.
+        mfa_ticket: Optional[:class:`str`]
+            The token of existing MFA ticket to validate, if applicable.
+        authenticated: :class:`bool`
+            Whether to create a new MFA password ticket or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+-----------------------------+
+            | Value                   | Reason                      |
+            +-------------------------+-----------------------------+
+            | ``DisallowedMFAMethod`` | The account has MFA set up. |
+            +-------------------------+-----------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------------+
+            | Value                  | Reason                                                           |
+            +------------------------+------------------------------------------------------------------+
+            | ``InvalidCredentials`` | The provided password is incorrect.                              |
+            +------------------------+------------------------------------------------------------------+
+            | ``InvalidToken``       | You was not authenticated nor provided ``mfa_ticket`` parameter. |
+            +------------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-------------------------------+
+            | Value            | Reason                        |
+            +------------------+-------------------------------+
+            | ``UnknownUser``  | The account was not found.    |
+            +------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                       | Populated attributes                                           |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | You was authenticated and provided ``mfa_ticket`` parameter. |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.MFATicket`
+            The MFA ticket created.
         """
         payload: raw.a.PasswordMFAResponse = {'password': password}
-        return await self._create_mfa_ticket(payload)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
 
-    async def create_recovery_code_ticket(self, recovery_code: str, /) -> MFATicket:
+    async def create_recovery_code_ticket(
+        self,
+        recovery_code: str,
+        *,
+        mfa_ticket: typing.Optional[str] = None,
+        authenticated: typing.Optional[bool] = None,
+    ) -> MFATicket:
         """|coro|
 
-        Create a new MFA ticket or validate an existing one.
+        Creates a new MFA recovery code ticket, or validate an existing one.
+
+        Parameters
+        ----------
+        recovery_code: :class:`str`
+            The recovery code in format ``xxxx-yyyy``.
+        mfa_ticket: Optional[:class:`str`]
+            The token of existing MFA ticket to validate, if applicable.
+        authenticated: :class:`bool`
+            Whether to create a new MFA password ticket or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+-----------------------------+
+            | Value                   | Reason                      |
+            +-------------------------+-----------------------------+
+            | ``DisallowedMFAMethod`` | The account has MFA set up. |
+            +-------------------------+-----------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+--------------------------------------------------------------------+
+            | Value            | Reason                                                             |
+            +------------------+--------------------------------------------------------------------+
+            | ``InvalidToken`` | One of these:                                                      |
+            |                  |                                                                    |
+            |                  | - You was not authenticated nor provided ``mfa_ticket`` parameter. |
+            |                  | - The provided recovery code is invalid.                           |
+            +------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-------------------------------+
+            | Value            | Reason                        |
+            +------------------+-------------------------------+
+            | ``UnknownUser``  | The account was not found.    |
+            +------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                       | Populated attributes                                           |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | You was authenticated and provided ``mfa_ticket`` parameter. |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.MFATicket`
+            The MFA ticket created.
         """
+
         payload: raw.a.RecoveryMFAResponse = {'recovery_code': recovery_code}
-        return await self._create_mfa_ticket(payload)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
 
-    async def create_totp_ticket(self, totp_code: str, /) -> MFATicket:
+    async def create_totp_ticket(
+        self, totp_code: str, *, mfa_ticket: typing.Optional[str] = None, authenticated: typing.Optional[bool] = None
+    ) -> MFATicket:
         """|coro|
 
-        Create a new MFA ticket or validate an existing one.
+        Creates a new MFA password ticket, or validate an existing one.
+
+        Parameters
+        ----------
+        totp_code: :class:`str`
+            The TOTP code, in format ``123456``.
+        mfa_ticket: Optional[:class:`str`]
+            The token of existing MFA ticket to validate, if applicable.
+        authenticated: :class:`bool`
+            Whether to create a new MFA password ticket or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+---------------------------------------+
+            | Value                   | Reason                                |
+            +-------------------------+---------------------------------------+
+            | ``DisallowedMFAMethod`` | The account does not have MFA set up. |
+            +-------------------------+---------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------------+
+            | Value                  | Reason                                                           |
+            +------------------------+------------------------------------------------------------------+
+            | ``InvalidCredentials`` | The provided password is incorrect.                              |
+            +------------------------+------------------------------------------------------------------+
+            | ``InvalidToken``       | You was not authenticated nor provided ``mfa_ticket`` parameter. |
+            +------------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-------------------------------+
+            | Value            | Reason                        |
+            +------------------+-------------------------------+
+            | ``UnknownUser``  | The account was not found.    |
+            +------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                       | Populated attributes                                           |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | You was authenticated and provided ``mfa_ticket`` parameter. |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.MFATicket`
+            The MFA ticket created.
         """
+
         payload: raw.a.TotpMFAResponse = {'totp_code': totp_code}
-        return await self._create_mfa_ticket(payload)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
 
-    async def get_recovery_codes(self) -> list[str]:
+    async def get_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
         """|coro|
 
-        Gets recovery codes for an account.
+        Retrieve recovery codes.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        mfa_ticket: :class:`str`
+            The MFA ticket token.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+            | ``InvalidToken``   | The provided MFA ticket token is invalid. |
+            +--------------------+-------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                         |
+            +-------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during retrieving recovery codes. |
+            +-------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`str`]
+            The retrieved recovery codes.
         """
-        return await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile())
+        return await self.request(routes.AUTH_MFA_FETCH_RECOVERY.compile(), mfa_ticket=mfa_ticket)
 
     async def mfa_status(self) -> MFAStatus:
         """|coro|
 
-        Gets MFA status of an account.
+        Retrieves MFA status.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                         | Populated attributes                                           |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.                 | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during retrieving recovery codes. |                                                                |
+            +-------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.MFAStatus`
+            The MFA status.
         """
         resp: raw.a.MultiFactorStatus = await self.request(routes.AUTH_MFA_FETCH_STATUS.compile())
         return self.state.parser.parse_multi_factor_status(resp)
@@ -7304,7 +7536,41 @@ class HTTPClient:
     async def generate_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
         """|coro|
 
-        Regenerates recovery codes for an account.
+        Regenerates recovery codes for this account.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        mfa_ticket: :class:`str`
+            The MFA ticket token.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+            | ``InvalidToken``   | The provided MFA ticket token is invalid. |
+            +--------------------+-------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------------------------+
+            | Value             | Reason                                                           |
+            +-------------------+------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during regenerating recovery codes. |
+            +-------------------+------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`str`]
+            The regenerated recovery codes.
         """
         resp: list[str] = await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket)
         return resp
@@ -7312,26 +7578,112 @@ class HTTPClient:
     async def get_mfa_methods(self) -> list[MFAMethod]:
         """|coro|
 
-        Gets available MFA methods.
+        Retrieves available MFA methods.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------------------------+
+            | Value             | Reason                                                                |
+            +-------------------+-----------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during retrieving available MFA methods. |
+            +-------------------+-----------------------------------------------------------------------+
         """
         resp: list[raw.a.MFAMethod] = await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile())
-        return [MFAMethod(mm) for mm in resp]
+        return list(map(MFAMethod, resp))
 
-    async def disable_totp_2fa(self, *, mfa_ticket: str) -> None:
+    async def disable_totp_mfa(self, *, mfa_ticket: str) -> None:
         """|coro|
 
-        Disables TOTP 2FA for an account.
+        Disables TOTP-based MFA for this account.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        mfa_ticket: :class:`str`
+            The valid MFA ticket token.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+---------------------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                                        | Populated attributes                                           |
+            +-------------------+---------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.                | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+---------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during disabling TOTP-based MFA. |                                                                |
+            +-------------------+---------------------------------------------------------------+----------------------------------------------------------------+
         """
         await self.request(
             routes.AUTH_MFA_TOTP_DISABLE.compile(),
             mfa_ticket=mfa_ticket,
         )
 
-    async def enable_totp_2fa(self, response: MFAResponse, /) -> None:
+    async def enable_totp_mfa(self, response: MFAResponse, /) -> None:
         """|coro|
 
-        Enables TOTP 2FA for an account.
+        Disables TOTP MFA for this account.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        response: :class:`.MFAResponse`
+            The password, TOTP or recovery code to verify with. Currently can be only :class:`.ByTOTP`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+            | ``InvalidToken``   | The provided TOTP code is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                       | Populated attributes                                           |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError``   | Somehow something went wrong during enabling TOTP-based MFA. |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | Something went wrong.                                        |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
         """
+        # TODO: Document OperationFailed better above
+
         await self.request(
             routes.AUTH_MFA_TOTP_ENABLE.compile(),
             json=response.build(),
@@ -7340,13 +7692,53 @@ class HTTPClient:
     async def generate_totp_secret(self, *, mfa_ticket: str) -> str:
         """|coro|
 
-        Generates a new secret for TOTP.
+        Generates a TOTP secret.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        mfa_ticket: :class:`str`
+            The valid MFA ticket token.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+            | ``InvalidToken``   | The provided MFA ticket token is invalid. |
+            +--------------------+-------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | Value               | Reason                                                       | Populated attributes                                           |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``InternalError``   | Somehow something went wrong during enabling TOTP-based MFA. |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+            | ``OperationFailed`` | Something went wrong.                                        |                                                                |
+            +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`str`
+            The TOTP secret.
         """
         resp: raw.a.ResponseTotpSecret = await self.request(
             routes.AUTH_MFA_TOTP_GENERATE_SECRET.compile(),
             mfa_ticket=mfa_ticket,
         )
         return resp['secret']
+
+    # Session authentication control
 
     async def edit_session(self, session: ULIDOr[PartialSession], *, friendly_name: str) -> PartialSession:
         """|coro|

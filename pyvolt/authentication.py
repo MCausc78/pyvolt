@@ -90,14 +90,20 @@ class PartialSession(Base):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The session friendly name."""
 
-    async def edit(self, *, friendly_name: UndefinedOr[str]) -> PartialSession:
+    async def edit(self, *, friendly_name: UndefinedOr[str] = UNDEFINED) -> PartialSession:
         """|coro|
 
         Edits the session.
         """
+        if friendly_name is UNDEFINED:
+            return PartialSession(
+                state=self.state,
+                id=self.id,
+                name=self.name,
+            )
         return await self.state.http.edit_session(
             self.id,
-            friendly_name=friendly_name if friendly_name is not UNDEFINED else self.name,
+            friendly_name=friendly_name,
         )
 
     async def revoke(self) -> None:

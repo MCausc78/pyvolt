@@ -17,7 +17,7 @@ async def on_message(event: pyvolt.MessageCreateEvent):
 
     if message.content == 'disable mfa':
         ticket = await bot.http.create_password_ticket(password)
-        await bot.http.disable_totp_2fa(mfa_ticket=ticket.token)
+        await bot.http.disable_totp_mfa(mfa_ticket=ticket.token)
         await message.reply('Turned off MFA.')
     elif message.content == 'enable mfa':
         await message.reply('Enabling on MFA.')
@@ -34,7 +34,7 @@ async def on_message(event: pyvolt.MessageCreateEvent):
         totp = pyotp.TOTP(secret)
         await message.reply(f'MFA secret: {secret}')
         code = totp.now()
-        await bot.http.enable_totp_2fa(pyvolt.ByTOTP(code))
+        await bot.http.enable_totp_mfa(pyvolt.ByTOTP(code))
         await message.reply('Turned on MFA.')
 
 
