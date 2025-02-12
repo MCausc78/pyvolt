@@ -61,7 +61,6 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .channel import (
         DMChannel,
-        GroupChannel,
         TextChannel,
         VoiceChannel,
         ServerChannel,
@@ -76,6 +75,13 @@ _new_server_flags = ServerFlags.__new__
 
 class Category:
     """Represents a category containing channels in Revolt server.
+
+    Parameters
+    ----------
+    id: :class:`str`
+        The category's ID. Must be between 1 and 32 characters long.
+    title: :class:`str`
+        The category's title. Must be between 1 and 32 characters long.
 
     Attributes
     ----------
@@ -97,7 +103,7 @@ class Category:
     ) -> None:
         self.id: str = resolve_id(id)
         self.title: str = title
-        self.channels: list[str] = [resolve_id(channel) for channel in channels]
+        self.channels: list[str] = list(map(resolve_id, channels))
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -133,15 +139,15 @@ class SystemMessageChannels:
     def __init__(
         self,
         *,
-        user_joined: ULIDOr[TextableChannel | PartialMessageable] | None = None,
-        user_left: ULIDOr[TextableChannel | PartialMessageable] | None = None,
-        user_kicked: ULIDOr[TextableChannel | PartialMessageable] | None = None,
-        user_banned: ULIDOr[TextableChannel | PartialMessageable] | None = None,
+        user_joined: typing.Optional[ULIDOr[typing.Union[TextableChannel, PartialMessageable]]] = None,
+        user_left: typing.Optional[ULIDOr[typing.Union[TextableChannel, PartialMessageable]]] = None,
+        user_kicked: typing.Optional[ULIDOr[typing.Union[TextableChannel, PartialMessageable]]] = None,
+        user_banned: typing.Optional[ULIDOr[typing.Union[TextableChannel, PartialMessageable]]] = None,
     ) -> None:
-        self.user_joined: str | None = None if user_joined is None else resolve_id(user_joined)
-        self.user_left: str | None = None if user_left is None else resolve_id(user_left)
-        self.user_kicked: str | None = None if user_kicked is None else resolve_id(user_kicked)
-        self.user_banned: str | None = None if user_banned is None else resolve_id(user_banned)
+        self.user_joined: typing.Optional[str] = None if user_joined is None else resolve_id(user_joined)
+        self.user_left: typing.Optional[str] = None if user_left is None else resolve_id(user_left)
+        self.user_kicked: typing.Optional[str] = None if user_kicked is None else resolve_id(user_kicked)
+        self.user_banned: typing.Optional[str] = None if user_banned is None else resolve_id(user_banned)
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1316,7 +1322,7 @@ class BaseMember:
         timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
         can_publish: UndefinedOr[bool | None] = UNDEFINED,
         can_receive: UndefinedOr[bool | None] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | TextChannel | VoiceChannel]] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[DMChannel | TextChannel | VoiceChannel]] = UNDEFINED,
     ) -> Member:
         """|coro|
 

@@ -1357,14 +1357,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+-----------------------------------------+
-            | Value              | Reason                                  |
-            +--------------------+-----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid.  |
-            +--------------------+-----------------------------------------+
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1373,6 +1365,14 @@ class HTTPClient:
             +-----------+-------------------------------------------+
             | ``IsBot`` | The current token belongs to bot account. |
             +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3104,7 +3104,7 @@ class HTTPClient:
             +----------------------------------+--------------------------------------------------------------------------------------+
             | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
             +----------------------------------+--------------------------------------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to remove reaction.                           |
+            | ``MissingPermission``            | You do not have the proper permissions to edit overrides for this channel.           |
             +----------------------------------+--------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
@@ -3170,7 +3170,7 @@ class HTTPClient:
         Parameters
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
-            The channel to set default permissions in.
+            The channel to set default permissions for.
         permissions: Union[:class:`.Permissions`, :class:`.PermissionOverride`]
             The new permissions. Must be :class:`.Permissions` for groups and :class:`.PermissionOverride` for server channels.
 
@@ -3204,9 +3204,7 @@ class HTTPClient:
             +----------------------------------+--------------------------------------------------------------------------------------+
             | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
             +----------------------------------+--------------------------------------------------------------------------------------+
-            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
-            +----------------------------------+--------------------------------------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to remove reaction.                           |
+            | ``MissingPermission``            | You do not have the proper permissions to edit default permissions for this channel. |
             +----------------------------------+--------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
@@ -3228,7 +3226,7 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`GroupChannel`, :class:`ServerChannel`]
+        Union[:class:`.GroupChannel`, :class:`.ServerChannel`]
             The updated group/server channel with new permissions.
         """
         payload: raw.DataDefaultChannelPermissions = {
@@ -3685,11 +3683,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------------------+---------------------------------------------------------------+
-            | Value                            | Reason                                                        |
-            +----------------------------------+---------------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete this invite. |
-            +----------------------------------+---------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------+
+            | Value                 | Reason                                                        |
+            +-----------------------+---------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete this invite. |
+            +-----------------------+---------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4224,8 +4222,7 @@ class HTTPClient:
     async def ban(
         self,
         server: ULIDOr[BaseServer],
-        user: str | BaseUser | BaseMember,
-        /,
+        user: typing.Union[str, BaseUser, BaseMember],
         *,
         reason: typing.Optional[str] = None,
     ) -> Ban:
@@ -4233,21 +4230,70 @@ class HTTPClient:
 
         Bans a user from the server.
 
+        You must have :attr:`~Permissions.ban_members` to do this.
+
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+        user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to ban from the server.
         reason: Optional[:class:`str`]
-            The ban reason. Should be between 1 and 1024 chars long.
+            The ban reason. Can be only up to 1024 characters long.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to ban the user.
         :class:`HTTPException`
-            Banning the user failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+--------------------------------+
+            | Value                    | Reason                         |
+            +--------------------------+--------------------------------+
+            | ``CannotRemoveYourself`` | You tried to ban yourself.     |
+            +--------------------------+--------------------------------+
+            | ``FailedValidation``     | The payload was invalid.       |
+            +--------------------------+--------------------------------+
+            | ``InvalidOperation``     | You tried to ban server owner. |
+            +--------------------------+--------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of top role of user you're trying to ban. |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to ban members.                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/user was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Ban`
+            The created ban.
         """
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
@@ -4259,19 +4305,48 @@ class HTTPClient:
             {},
         )
 
-    async def get_bans(self, server: ULIDOr[BaseServer], /) -> list[Ban]:
+    async def get_bans(self, server: ULIDOr[BaseServer]) -> list[Ban]:
         """|coro|
 
         Retrieves all bans on a server.
 
+        You must have :attr:`~Permissions.ban_members` to do this.
+
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve all bans. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`Ban`]
+        List[:class:`.Ban`]
             The ban entries.
         """
         resp: raw.BanListResult = await self.request(routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server)))
@@ -4282,19 +4357,41 @@ class HTTPClient:
 
         Unbans a user from the server.
 
+        You must have :attr:`~Permissions.ban_members` to do this.
+
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        user: ULIDOr[:class:`BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to unban from the server.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to unban the user.
-        :class:`HTTPException`
-            Unbanning the user failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------+
+            | Value                 | Reason                                                   |
+            +-----------------------+----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to unban members. |
+            +-----------------------+----------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
@@ -4304,7 +4401,6 @@ class HTTPClient:
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
@@ -4316,7 +4412,6 @@ class HTTPClient:
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         type: None = ...,
         name: str,
@@ -4328,7 +4423,6 @@ class HTTPClient:
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
@@ -4340,7 +4434,6 @@ class HTTPClient:
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         type: ChannelType = ...,
         name: str,
@@ -4351,34 +4444,78 @@ class HTTPClient:
     async def create_server_channel(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
-    ) -> ServerChannel:
+    ) -> typing.Union[TextChannel, VoiceChannel]:
         """|coro|
 
         Create a new text or voice channel within server.
 
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
         Parameters
         ----------
-        type: Optional[:class:`ChannelType`]
-            The channel type. Defaults to :attr:`ChannelType.text` if not provided.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to create channel in.
+        type: Optional[:class:`.ChannelType`]
+            The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
         name: :class:`str`
-            The channel name.
+            The channel name. Must be between 1 and 32 characters.
         description: Optional[:class:`str`]
-            The channel description.
+            The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to create the channel.
         :class:`HTTPException`
-            Creating the channel failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-----------------------------------------------------------------+
+            | Value               | Reason                                                          |
+            +---------------------+-----------------------------------------------------------------+
+            | ``TooManyChannels`` | The server has too many channels than allowed on this instance. |
+            +---------------------+-----------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------+
+            | Value                 | Reason                                                   |
+            +-----------------------+----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to unban members. |
+            +-----------------------+----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`.TextChannel`, :class:`.VoiceChannel`]
+            The channel created in server.
         """
 
         if type not in (ChannelType.text, ChannelType.voice, None):
@@ -4400,16 +4537,43 @@ class HTTPClient:
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
-        Retrieves all custom :class:`ServerEmoji`'s from the server.
+        Retrieves all custom :class:`ServerEmoji`'s that belong to a server.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`ServerEmoji`]
+        List[:class:`.ServerEmoji`]
             The retrieved emojis.
         """
         resp: list[raw.ServerEmoji] = await self.request(
@@ -4420,19 +4584,49 @@ class HTTPClient:
     async def get_server_invites(self, server: ULIDOr[BaseServer], /) -> list[ServerInvite]:
         """|coro|
 
-        Returns a list of all invites from the server.
+        Retrieves all invites that belong to a server.
+
+        You must have :attr:`~Permissions.manage_server` to do this.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to manage the server.
-        :class:`HTTPException`
-            Getting the invites failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve server invites. |
+            +-----------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -4451,61 +4645,136 @@ class HTTPClient:
         /,
         *,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
-        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
-        roles: UndefinedOr[list[ULIDOr[BaseRole]] | None] = UNDEFINED,
-        timeout: UndefinedOr[datetime | timedelta | float | int | None] = UNDEFINED,
-        can_publish: UndefinedOr[bool | None] = UNDEFINED,
-        can_receive: UndefinedOr[bool | None] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[DMChannel | GroupChannel | TextChannel | VoiceChannel]] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
+        roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
+        timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
+        can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[typing.Union[DMChannel, TextChannel, VoiceChannel]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
-        Edits the member.
+        Edits a member.
 
         Parameters
         ----------
-        server: :class:`BaseServer`
+        server: :class:`.BaseServer`
             The server.
-        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The member.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
+
+            To provide this, you must have :attr:`~Permissions.manage_nicknames` if changing other member's nick.
+            Otherwise, :attr:`~Permissions.change_nickname` is required instead.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
-            The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
+            The member's new avatar. Use ``None`` to remove the avatar.
+
+            You can only change your own server avatar.
+
+            You must have :attr:`~Permissions.change_avatar` to provide this.
         roles: UndefinedOr[Optional[List[ULIDOr[:class:`.BaseRole`]]]]
             The member's new list of roles. This *replaces* the roles.
-        timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+
+            You must have :attr:`~Permissions.assign_roles` to provide this.
+        timeout: UndefinedOr[Optional[Union[:class:`~datetime.datetime`, :class:`~datetime.timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
+
             This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+
+            You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
+
+            You must have :attr:`~Permissions.mute_members` to provide this.
         can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: UndefinedOr[ULIDOr[Union[:class:`.DMChannel`, :class:`.GroupChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]]
+
+            You must have :attr:`~Permissions.deafen_members` to provide this.
+        voice: UndefinedOr[ULIDOr[Union[:class:`.DMChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]]
             The voice channel to move the member to.
+
+            You must have :attr:`~Permissions.move_members` to provide this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------+
+            | Value                     | Reason                                                                |
+            +---------------------------+-----------------------------------------------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                       |
+            +---------------------------+-----------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. |
+            +---------------------------+-----------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                           |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                      |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role. |
+            +-----------------------+----------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+--------------------------------------------------------------------+
+            | Value              | Reason                                                             |
+            +--------------------+--------------------------------------------------------------------+
+            | ``InvalidRole``    | One of provided roles passed in ``roles`` parameter was not found. |
+            +--------------------+--------------------------------------------------------------------+
+            | ``NotFound``       | The server/member was not found.                                   |
+            +--------------------+--------------------------------------------------------------------+
+            | ``UnknownChannel`` | The channel passed in ``voice`` parameter was not found.           |
+            +--------------------+--------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                              | Populated attributes                                                |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.      | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during editing member. |                                                                     |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Member`
+        :class:`.Member`
             The newly updated member.
         """
         payload: raw.DataMemberEdit = {}
         remove: list[raw.FieldsMember] = []
+
         if nick is not UNDEFINED:
             if nick is None:
                 remove.append('Nickname')
             else:
                 payload['nickname'] = nick
+
         if avatar is not UNDEFINED:
-            if avatar is not None:
-                payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
-            else:
+            if avatar is None:
                 remove.append('Avatar')
-        if roles is not UNDEFINED:
-            if roles is not None:
-                payload['roles'] = list(map(resolve_id, roles))
             else:
+                payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
+
+        if roles is not UNDEFINED:
+            if roles is None:
                 remove.append('Roles')
+            else:
+                payload['roles'] = list(map(resolve_id, roles))
+
         if timeout is not UNDEFINED:
             if timeout is None:
                 remove.append('Timeout')
@@ -4515,18 +4784,22 @@ class HTTPClient:
                 payload['timeout'] = (datetime.now() + timeout).isoformat()
             elif isinstance(timeout, (float, int)):
                 payload['timeout'] = (datetime.now() + timedelta(seconds=timeout)).isoformat()
+
         if can_publish is not UNDEFINED:
             if can_publish is None:
                 remove.append('CanPublish')
             else:
                 payload['can_publish'] = can_publish
+
         if can_receive is not UNDEFINED:
             if can_receive is None:
                 remove.append('CanReceive')
             else:
                 payload['can_receive'] = can_receive
+
         if voice is not UNDEFINED:
             payload['voice_channel'] = resolve_id(voice)
+
         if len(remove) > 0:
             payload['remove'] = remove
 
@@ -4539,52 +4812,109 @@ class HTTPClient:
         )
         return self.state.parser.parse_member(resp)
 
-    async def query_members_by_name(self, server: ULIDOr[BaseServer], query: str, /) -> list[Member]:
+    async def query_members_by_name(self, server: ULIDOr[BaseServer], query: str) -> list[Member]:
         """|coro|
 
-        Query members by a given name, this API is not stable and will be removed in the future.
+        Query members by a given name.
+
+        .. warn::
+            This API is not stable and may be removed in the future.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
         query: :class:`str`
             The query to search members for.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        List[:class:`Member`]
+        List[:class:`.Member`]
             The members matched.
         """
+        params = {
+            'query': query,
+            'experimental_api': 'true',
+        }
         resp: raw.AllMemberResponse = await self.request(
             routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(server_id=resolve_id(server)),
-            params={
-                'query': query,
-                'experimental_api': 'true',
-            },
+            params=params,
         )
         return self.state.parser.parse_members_with_users(resp)
 
     async def get_member(
         self,
         server: ULIDOr[BaseServer],
-        member: str | BaseUser | BaseMember,
-        /,
+        member: typing.Union[str, BaseUser, BaseMember],
     ) -> Member:
         """|coro|
 
-        Retrieves a Member from a server ID, and a user ID.
+        Retrieves a member.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server.
-        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
-            The ID of the user.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to retrieve member in.
+        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+            The user to retrieve.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Member`
+        :class:`.Member`
             The retrieved member.
         """
         resp: raw.Member = await self.request(
@@ -4596,7 +4926,7 @@ class HTTPClient:
         return self.state.parser.parse_member(resp)
 
     async def get_members(
-        self, server: ULIDOr[BaseServer], /, *, exclude_offline: typing.Optional[bool] = None
+        self, server: ULIDOr[BaseServer], *, exclude_offline: typing.Optional[bool] = None
     ) -> list[Member]:
         """|coro|
 
@@ -4604,14 +4934,41 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        List[:class:`Member`]
+        List[:class:`.Member`]
             The retrieved members.
         """
         params: raw.OptionsFetchAllMembers = {}
@@ -4625,22 +4982,49 @@ class HTTPClient:
         return self.state.parser.parse_members_with_users(resp)
 
     async def get_member_list(
-        self, server: ULIDOr[BaseServer], /, *, exclude_offline: typing.Optional[bool] = None
+        self, server: ULIDOr[BaseServer], *, exclude_offline: typing.Optional[bool] = None
     ) -> MemberList:
         """|coro|
 
-        Retrieves server members list.
+        Retrieves server member list.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        :class:`MemberList`
+        :class:`.MemberList`
             The member list.
         """
         params: raw.OptionsFetchAllMembers = {}
@@ -4653,7 +5037,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_member_list(resp)
 
-    async def kick_member(self, server: ULIDOr[BaseServer], member: str | BaseUser | BaseMember, /) -> None:
+    async def kick_member(self, server: ULIDOr[BaseServer], member: typing.Union[str, BaseUser, BaseMember]) -> None:
         """|coro|
 
         Removes a member from the server.
@@ -4667,10 +5051,50 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to kick the member.
         :class:`HTTPException`
-            Kicking the member failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+---------------------------------+
+            | Value                    | Reason                          |
+            +--------------------------+---------------------------------+
+            | ``CannotRemoveYourself`` | You tried to kick yourself.     |
+            +--------------------------+---------------------------------+
+            | ``InvalidOperation``     | You tried to kick server owner. |
+            +--------------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of top role of user you're trying to ban. |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to ban members.                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/user was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
             routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member))
@@ -4680,38 +5104,77 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
-        /,
         *,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
         """|coro|
 
-        Sets permissions for the specified role in the server.
+        Sets permissions for the specified server role.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        role: ULIDOr[:class:`BaseRole`]
+        role: ULIDOr[:class:`.BaseRole`]
             The role.
-        allow: :class:`Permissions`
-            New allow flags.
-        deny: :class:`Permissions`
-            New deny flags.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to set role permissions on the server.
         :class:`HTTPException`
-            Setting permissions failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | The provided channel was not server channel. |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit permissions for this role.            |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Server`
-            The newly updated server.
+        :class:`.Server`
+            The updated server with new permissions.
         """
+
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
         resp: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
@@ -4724,29 +5187,60 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         permissions: Permissions,
-        /,
     ) -> Server:
         """|coro|
 
-        Sets permissions for the default role in this server.
+        Sets default permissions for everyone in a server.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server.
-        permissions: :class:`Permissions`
-            New default permissions.
+        channel: ULIDOr[:class:`.BaseServer`]
+            The server to set default permissions for.
+        permissions: :class:`.Permissions`
+            The new permissions.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to set default permissions on the server.
-        :class:`HTTPException`
-            Setting permissions failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit default permissions for this server. |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The newly updated server.
         """
         payload: raw.DataPermissionsValue = {'permissions': permissions.value}
@@ -4759,24 +5253,71 @@ class HTTPClient:
             (True, d['channels']),
         )
 
-    async def create_role(self, server: ULIDOr[BaseServer], /, *, name: str, rank: typing.Optional[int] = None) -> Role:
+    async def create_role(self, server: ULIDOr[BaseServer], *, name: str, rank: typing.Optional[int] = None) -> Role:
         """|coro|
 
         Creates a new server role.
 
+        You must have :attr:`~Permissions.manage_roles` to do this.
+
         Parameters
         ----------
         name: :class:`str`
-            The role name. Should be between 1 and 32 chars long.
+            The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
-            The ranking position. Smaller values take priority.
+            The ranking position. The smaller value is, the more role takes priority.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to create the role.
         :class:`HTTPException`
-            Creating the role failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------------------------------------+
+            | Value                | Reason                                                       |
+            +----------------------+--------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                     |
+            +----------------------+--------------------------------------------------------------+
+            | ``TooManyRoles``     | The server has too many roles than allowed on this instance. |
+            +----------------------+--------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------+
+            | Value                 | Reason                                                                     |
+            +-----------------------+----------------------------------------------------------------------------+
+            | ``NotElevated``       | Rank of your top role is higher than rank of role you're trying to create. |
+            +-----------------------+----------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to remove reaction.                 |
+            +-----------------------+----------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Role`
+            The role created in server.
         """
         server_id = resolve_id(server)
         payload: raw.DataCreateRole = {'name': name, 'rank': rank}
@@ -4786,24 +5327,56 @@ class HTTPClient:
         )
         return self.state.parser.parse_role(d['role'], d['id'], server_id)
 
-    async def delete_role(self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole], /) -> None:
+    async def delete_role(self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole]) -> None:
         """|coro|
 
         Deletes a server role.
 
+        You must have :attr:`~Permissions.manage_roles` to do this.
+
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        role: ULIDOr[:class:`BaseRole`]
+        role: ULIDOr[:class:`.BaseRole`]
             The role to delete.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to delete the role.
-        :class:`HTTPException`
-            Deleting the role failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------+
+            | Value                 | Reason                                                                     |
+            +-----------------------+----------------------------------------------------------------------------+
+            | ``NotElevated``       | Rank of your top role is higher than rank of role you're trying to delete. |
+            +-----------------------+----------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete role.                     |
+            +-----------------------+----------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)))
 
@@ -4811,7 +5384,6 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
-        /,
         *,
         name: UndefinedOr[str] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -4820,44 +5392,80 @@ class HTTPClient:
     ) -> Role:
         """|coro|
 
-        Edits the role.
+        Edits a role.
+
+        You must have :attr:`~Permissions.manage_roles` to do this.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server.
-        role: ULIDOr[:class:`BaseRole`]
+        server: ULIDOr[:class:`.BaseServer`]
+            The server the role in.
+        role: ULIDOr[:class:`.BaseRole`]
             The role to edit.
         name: UndefinedOr[:class:`str`]
-            New role name. Should be between 1 and 32 chars long.
+            The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
-            New role color. This should be valid CSS color.
+            The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]
             Whether this role should be displayed separately.
         rank: UndefinedOr[:class:`int`]
-            The new ranking position. Smaller values take priority.
+            The new ranking position. The smaller value is, the more role takes priority.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
-            You do not have permissions to edit the role.
-        :class:`HTTPException`
-            Editing the role failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                          |
+            +-----------------------+---------------------------------------------------------------------------------+
+            | ``NotElevated``       | One of these:                                                                   |
+            |                       |                                                                                 |
+            |                       | - Rank of your top role is higher than rank of role you're trying to edit.      |
+            |                       | - Rank of your top role is higher than rank you're trying to set for this role. |
+            +-----------------------+---------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit role.                            |
+            +-----------------------+---------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Role`
+        :class:`.Role`
             The newly updated role.
         """
         payload: raw.DataEditRole = {}
         remove: list[raw.FieldsRole] = []
+
         if name is not UNDEFINED:
             payload['name'] = name
         if color is not UNDEFINED:
-            if color is not None:
-                payload['colour'] = color
-            else:
+            if color is None:
                 remove.append('Colour')
+            else:
+                payload['colour'] = color
         if hoist is not UNDEFINED:
             payload['hoist'] = hoist
         if rank is not UNDEFINED:
@@ -4882,7 +5490,6 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
-        /,
     ) -> Role:
         """|coro|
 
@@ -4890,21 +5497,33 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server.
-        role: ULIDOr[:class:`BaseRole`]
-            The ID of the role to retrieve.
+        role: ULIDOr[:class:`.BaseRole`]
+            The role to retrieve.
 
         Raises
         ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`NotFound`
-            The role does not exist.
-        :class:`HTTPException`
-            Getting the role failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
 
         Returns
         -------
-        :class:`Role`
+        :class:`.Role`
             The retrieved role.
         """
         server_id = resolve_id(server)
@@ -4920,16 +5539,52 @@ class HTTPClient:
     async def mark_server_as_read(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
-        Mark all channels in a server as read.
+        Marks all channels in a server as read.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server to mark as read.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
 
     async def create_server(
@@ -4948,9 +5603,42 @@ class HTTPClient:
         nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
 
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.            |
+            +----------------------+------------------------------------------------------+
+            | ``TooManyChannels``  | The instance was incorrectly configured. (?)         |
+            +----------------------+------------------------------------------------------+
+            | ``TooManyServers``   | You're in too many servers than the instance allows. |
+            +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The created server.
         """
         payload: raw.DataCreateServer = {'name': name}
@@ -4958,36 +5646,106 @@ class HTTPClient:
             payload['description'] = description
         if nsfw is not None:
             payload['nsfw'] = nsfw
-        d: raw.CreateServerLegacyResponse = await self.request(routes.SERVERS_SERVER_CREATE.compile(), json=payload)
 
+        resp: raw.CreateServerLegacyResponse = await self.request(routes.SERVERS_SERVER_CREATE.compile(), json=payload)
         return self.state.parser.parse_server(
-            d['server'],
-            (False, d['channels']),
+            resp['server'],
+            (False, resp['channels']),
         )
 
     async def delete_server(self, server: ULIDOr[BaseServer], /) -> None:
         """|coro|
 
-        Deletes a server if owner otherwise leaves.
+        Deletes a server if owner, or leaves otherwise.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server to delete.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to delete or leave.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
 
     async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
-        Leaves the server if not owner otherwise deletes it.
+        Leaves a server if not owner, or deletes otherwise.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server to leave from.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to leave.
         silent: Optional[:class:`bool`]
-            Whether to not send a leave message.
+            Whether to silently leave server or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         p: raw.OptionsServerDelete = {}
         if silent is not None:
@@ -5014,37 +5772,86 @@ class HTTPClient:
     ) -> Server:
         """|coro|
 
-        Edits the server.
+        Edits a server.
+
+        To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server to edit.
         name: UndefinedOr[:class:`str`]
-            New server name. Should be between 1 and 32 chars long.
+            The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
-            New server description. Can be 1024 chars maximum long.
-        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            New server icon.
-        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            New server banner.
-        categories: UndefinedOr[Optional[List[:class:`Category`]]]
-            New category structure for this server.
-        system_messsages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
-            New system message channels configuration.
-        flags: UndefinedOr[:class:`ServerFlags`]
-            The new server flags. Can be passed only if you're privileged user.
+            The new server description. Can be only up to 1024 characters.
+        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new server icon.
+        banner: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new server banner.
+        categories: UndefinedOr[Optional[List[:class:`.Category`]]]
+            The new server categories structure.
+
+            You must have :attr:`~Permissions.manage_channels`.
+        system_messsages: UndefinedOr[Optional[:class:`.SystemMessageChannels`]]
+            The new system message channels configuration.
+        flags: UndefinedOr[:class:`.ServerFlags`]
+            The new server flags. You must be a privileged user to provide this.
         discoverable: UndefinedOr[:class:`bool`]
-            Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_. Can be passed only if you're privileged user.
+            Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_.
+
+            The new server flags. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
 
         Raises
         ------
-        :class:`Forbidden`
-            You do not have permissions to edit the server.
         :class:`HTTPException`
-            Editing the server failed.
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------------------+
+            | Value                | Reason                                    |
+            +----------------------+-------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                  |
+            +----------------------+-------------------------------------------+
+            | ``InvalidOperation`` | More than 2 categories had same channel.  |
+            +----------------------+-------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. |
+            +----------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+---------------------------------------------------------------------------------------+
+            | Value             | Reason                                                                                |
+            +-------------------+---------------------------------------------------------------------------------------+
+            | ``NotPrivileged`` | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user. |
+            +-------------------+---------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------------------------+
+            | Value        | Reason                                                         |
+            +--------------+----------------------------------------------------------------+
+            | ``NotFound`` | One of these:                                                  |
+            |              |                                                                |
+            |              | - The server was not found.                                    |
+            |              | - One of channels in one of provided categories was not found. |
+            +--------------+----------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
@@ -5053,39 +5860,49 @@ class HTTPClient:
         """
         payload: raw.DataEditServer = {}
         remove: list[raw.FieldsServer] = []
+
         if name is not UNDEFINED:
             payload['name'] = name
+
         if description is not UNDEFINED:
-            if description is not None:
-                payload['description'] = description
-            else:
+            if description is None:
                 remove.append('Description')
+            else:
+                payload['description'] = description
+
         if icon is not UNDEFINED:
-            if icon is not None:
-                payload['icon'] = await resolve_resource(self.state, icon, tag='icons')
-            else:
+            if icon is None:
                 remove.append('Icon')
+            else:
+                payload['icon'] = await resolve_resource(self.state, icon, tag='icons')
+
         if banner is not UNDEFINED:
-            if banner is not None:
-                payload['banner'] = await resolve_resource(self.state, banner, tag='banners')
-            else:
+            if banner is None:
                 remove.append('Banner')
+            else:
+                payload['banner'] = await resolve_resource(self.state, banner, tag='banners')
+
         if categories is not UNDEFINED:
-            if categories is not None:
-                payload['categories'] = [e.build() for e in categories]
-            else:
+            if categories is None:
                 remove.append('Categories')
-        if system_messages is not UNDEFINED:
-            if system_messages is not None:
-                payload['system_messages'] = system_messages.build()
             else:
+                payload['categories'] = [e.build() for e in categories]
+
+        if system_messages is not UNDEFINED:
+            if system_messages is None:
                 remove.append('SystemMessages')
+            else:
+                payload['system_messages'] = system_messages.build()
+
         if flags is not UNDEFINED:
             payload['flags'] = flags.value
+
         if discoverable is not UNDEFINED:
             payload['discoverable'] = discoverable
+
         if analytics is not UNDEFINED:
             payload['analytics'] = analytics
+
         if len(remove) > 0:
             payload['remove'] = remove
 
@@ -5116,20 +5933,41 @@ class HTTPClient:
         populate_channels: :class:`bool`
             Whether to populate channels.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The retrieved server.
         """
-        p: raw.OptionsFetchServer = {}
+        params: raw.OptionsFetchServer = {}
         if populate_channels is not None:
-            p['include_channels'] = utils._bool(populate_channels)
-        d: raw.FetchServerResponse = await self.request(
-            routes.SERVERS_SERVER_FETCH.compile(server_id=resolve_id(server))
+            params['include_channels'] = utils._bool(populate_channels)
+
+        resp: raw.FetchServerResponse = await self.request(
+            routes.SERVERS_SERVER_FETCH.compile(server_id=resolve_id(server)),
+            params=params,
         )
         return self.state.parser.parse_server(
-            d,  # type: ignore
-            (not populate_channels, d['channels']),  # type: ignore
+            resp,  # type: ignore
+            (not populate_channels, resp['channels']),  # type: ignore
         )
 
     # Sync control
@@ -7931,7 +8769,7 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------------+-----------------------------------------------------+
+            +-------------------------+------------------------------------------------------+
             | Value                   | Reason                                               |
             +-------------------------+------------------------------------------------------+
             | ``DisallowedMFAMethod`` | You tried to use disallowed MFA verification method. |

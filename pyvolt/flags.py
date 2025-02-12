@@ -425,7 +425,7 @@ class MessageFlags(BaseFlags, support_kwargs=False):
 class Permissions(BaseFlags, support_kwargs=True):
     __slots__ = ()
 
-    # * Generic premissions
+    # * Generic permissions
     @flag()
     def manage_channels(cls) -> int:
         """:class:`bool`: Whether the user can edit, delete, or create channels in the server.
@@ -465,22 +465,22 @@ class Permissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def kick_members(cls) -> int:
-        """:class:`bool`: Whether the user can kick other members below his ranking."""
+        """:class:`bool`: Whether the user can kick other members below their ranking."""
         return 1 << 6
 
     @flag()
     def ban_members(cls) -> int:
-        """:class:`bool`: Whether the user can ban other members below his ranking."""
+        """:class:`bool`: Whether the user can ban other members below their ranking."""
         return 1 << 7
 
     @flag()
     def timeout_members(cls) -> int:
-        """:class:`bool`: Whether the user can timeout other members below his ranking."""
+        """:class:`bool`: Whether the user can timeout other members below their ranking."""
         return 1 << 8
 
     @flag()
     def assign_roles(cls) -> int:
-        """:class:`bool`: Whether the user can assign roles to members below his ranking."""
+        """:class:`bool`: Whether the user can assign roles to members below their ranking."""
         return 1 << 9
 
     @flag()
@@ -490,7 +490,7 @@ class Permissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def manage_nicknames(cls) -> int:
-        """:class:`bool`: Whether the user can change or remove other's nicknames below his ranking."""
+        """:class:`bool`: Whether the user can change or remove other's nicknames below their ranking."""
         return 1 << 11
 
     @flag()
@@ -500,7 +500,7 @@ class Permissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def remove_avatars(cls) -> int:
-        """:class:`bool`: Whether the user can remove other's avatars below his ranking."""
+        """:class:`bool`: Whether the user can remove other's avatars below their ranking."""
         return 1 << 13
 
     @classmethod
