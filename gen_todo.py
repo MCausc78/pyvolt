@@ -10,17 +10,22 @@ def get_branch() -> str:
 
     RE_BRANCH = re.compile(rb"On branch ([0-9A-Za-z/]+)\n", re.MULTILINE)
 
-    match = RE_BRANCH.findall(proc.stdout)
-    if not match:
-        print(f"Unable to get git branch! Stdout:")
+    match = RE_BRANCH.search(proc.stdout)
+    if match is None:
+        print(f"Unable to get Git branch! Stdout:")
         sys.stdout.write(proc.stdout.decode())
         sys.exit(1)
 
-    return match[0].decode()
+    return match.group(1).decode()
+
+def get_latest_commit():
+    proc = subprocess.run("git log -n1 --format=%H", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.check_returncode()
+    return proc.stdout.decode().strip()
 
 
 def main():
-    branch = 'master'
+    commit = get_latest_commit()
 
     RE_TODO = re.compile(r"TODO: (.*)")
 
@@ -48,7 +53,7 @@ def main():
                 fragment = f"L{item[0]}C{span[0]}-L{item[0]}C{span[1]}"
                 todo_md.write(
                     f"* {item[2]}\n\n"
-                    f"  Source: https://github.com/MCausc78/pyvolt/blob/{branch}/{file}#{fragment}\n\n"
+                    f"  Source: https://github.com/MCausc78/pyvolt/blob/{commit}/{file}#{fragment}\n\n"
                 )
 
 

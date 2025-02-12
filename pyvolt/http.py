@@ -5478,7 +5478,7 @@ class HTTPClient:
         /,
         *,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
-        avatar: UndefinedOr[ResolvableResource | None] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
         profile: UndefinedOr[UserProfileEdit] = UNDEFINED,
         badges: UndefinedOr[UserBadges] = UNDEFINED,
@@ -5704,9 +5704,9 @@ class HTTPClient:
         List[Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`, :class:`.GroupChannel`]]
             The private channels.
         """
-        resp: list[raw.SavedMessagesChannel | raw.DirectMessageChannel | raw.GroupChannel] = await self.request(
-            routes.USERS_FETCH_DMS.compile()
-        )
+        resp: list[
+            typing.Union[raw.SavedMessagesChannel, raw.DirectMessageChannel, raw.GroupChannel]
+        ] = await self.request(routes.USERS_FETCH_DMS.compile())
         return list(map(self.state.parser.parse_channel, resp))  # type: ignore[return-value]
 
     async def get_user_profile(self, user: ULIDOr[BaseUser]) -> UserProfile:
@@ -5986,7 +5986,7 @@ class HTTPClient:
         Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`]
             The private channel.
         """
-        resp: raw.SavedMessagesChannel | raw.DirectMessageChannel = await self.request(
+        resp: typing.Union[raw.SavedMessagesChannel, raw.DirectMessageChannel] = await self.request(
             routes.USERS_OPEN_DM.compile(user_id=resolve_id(user))
         )
         channel = self.state.parser.parse_channel(resp)
@@ -6741,6 +6741,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_EMAIL.compile(),
+            bot=False,
             json=payload,
         )
 
@@ -6803,6 +6804,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_PASSWORD.compile(),
+            bot=False,
             json=payload,
         )
 
@@ -6846,8 +6848,8 @@ class HTTPClient:
         payload: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
             routes.AUTH_ACCOUNT_CONFIRM_DELETION.compile(),
-            token=None,
             json=payload,
+            token=None,
         )
 
     async def register(
@@ -6870,7 +6872,7 @@ class HTTPClient:
         email: :class:`str`
             The account email.
         password: :class:`str`
-            The account password.
+            The account password. Must be at least 8 characters.
         invite: Optional[:class:`str`]
             The instance invite code.
         captcha: Optional[:class:`str`]
@@ -6929,8 +6931,8 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CREATE_ACCOUNT.compile(),
-            token=None,
             json=payload,
+            token=None,
         )
 
     async def delete_account(
@@ -6973,7 +6975,7 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during scheduling account deletion. |                                                                |
             +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), mfa_ticket=mfa_ticket)
+        await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), bot=False, mfa_ticket=mfa_ticket)
 
     async def disable_account(
         self,
@@ -7013,7 +7015,7 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during disabling account. |                                                                |
             +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), mfa_ticket=mfa_ticket)
+        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), bot=False, mfa_ticket=mfa_ticket)
 
     async def get_account(self) -> PartialAccount:
         """|coro|
@@ -7042,7 +7044,7 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during retrieving account. |
             +-------------------+---------------------------------------------------------+
         """
-        resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile())
+        resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile(), bot=False)
         return self.state.parser.parse_partial_account(resp)
 
     async def confirm_password_reset(
@@ -7057,7 +7059,7 @@ class HTTPClient:
         token: :class:`str`
             The password reset token.
         new_password: :class:`str`
-            New password for the account.
+            The new password for the account. Must be at least 8 characters.
         remove_sessions: Optional[:class:`bool`]
             Whether to logout all sessions.
 
@@ -7099,8 +7101,8 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_PASSWORD_RESET.compile(),
-            token=None,
             json=payload,
+            token=None,
         )
 
     async def resend_verification(
@@ -7157,8 +7159,8 @@ class HTTPClient:
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
-            token=None,
             json=payload,
+            token=None,
         )
 
     async def send_password_reset(self, *, email: str, captcha: typing.Optional[str] = None) -> None:
@@ -7208,8 +7210,8 @@ class HTTPClient:
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
-            token=None,
             json=payload,
+            token=None,
         )
 
     async def verify_email(self, code: str) -> typing.Optional[MFATicket]:
@@ -7255,7 +7257,11 @@ class HTTPClient:
             authenticated = mfa_ticket is None
         token = UNDEFINED if authenticated else None
         resp: raw.a.MFATicket = await self.request(
-            routes.AUTH_MFA_CREATE_TICKET.compile(), json=payload, mfa_ticket=mfa_ticket, token=token
+            routes.AUTH_MFA_CREATE_TICKET.compile(),
+            bot=False,
+            json=payload,
+            mfa_ticket=mfa_ticket,
+            token=token,
         )
         return self.state.parser.parse_mfa_ticket(resp)
 
@@ -7298,11 +7304,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------+-------------------------------+
-            | Value            | Reason                        |
-            +------------------+-------------------------------+
-            | ``UnknownUser``  | The account was not found.    |
-            +------------------+-------------------------------+
+            +-----------------+----------------------------+
+            | Value           | Reason                     |
+            +-----------------+----------------------------+
+            | ``UnknownUser`` | The account was not found. |
+            +-----------------+----------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7366,11 +7372,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------+-------------------------------+
-            | Value            | Reason                        |
-            +------------------+-------------------------------+
-            | ``UnknownUser``  | The account was not found.    |
-            +------------------+-------------------------------+
+            +-----------------+----------------------------+
+            | Value           | Reason                     |
+            +-----------------+----------------------------+
+            | ``UnknownUser`` | The account was not found. |
+            +-----------------+----------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7430,11 +7436,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------+-------------------------------+
-            | Value            | Reason                        |
-            +------------------+-------------------------------+
-            | ``UnknownUser``  | The account was not found.    |
-            +------------------+-------------------------------+
+            +-----------------+----------------------------+
+            | Value           | Reason                     |
+            +-----------------+----------------------------+
+            | ``UnknownUser`` | The account was not found. |
+            +-----------------+----------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7494,7 +7500,7 @@ class HTTPClient:
         List[:class:`str`]
             The retrieved recovery codes.
         """
-        return await self.request(routes.AUTH_MFA_FETCH_RECOVERY.compile(), mfa_ticket=mfa_ticket)
+        return await self.request(routes.AUTH_MFA_FETCH_RECOVERY.compile(), bot=False, mfa_ticket=mfa_ticket)
 
     async def mfa_status(self) -> MFAStatus:
         """|coro|
@@ -7530,7 +7536,7 @@ class HTTPClient:
         :class:`.MFAStatus`
             The MFA status.
         """
-        resp: raw.a.MultiFactorStatus = await self.request(routes.AUTH_MFA_FETCH_STATUS.compile())
+        resp: raw.a.MultiFactorStatus = await self.request(routes.AUTH_MFA_FETCH_STATUS.compile(), bot=False)
         return self.state.parser.parse_multi_factor_status(resp)
 
     async def generate_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
@@ -7572,7 +7578,9 @@ class HTTPClient:
         List[:class:`str`]
             The regenerated recovery codes.
         """
-        resp: list[str] = await self.request(routes.AUTH_MFA_GENERATE_RECOVERY.compile(), mfa_ticket=mfa_ticket)
+        resp: list[str] = await self.request(
+            routes.AUTH_MFA_GENERATE_RECOVERY.compile(), bot=False, mfa_ticket=mfa_ticket
+        )
         return resp
 
     async def get_mfa_methods(self) -> list[MFAMethod]:
@@ -7602,7 +7610,7 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during retrieving available MFA methods. |
             +-------------------+-----------------------------------------------------------------------+
         """
-        resp: list[raw.a.MFAMethod] = await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile())
+        resp: list[raw.a.MFAMethod] = await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile(), bot=False)
         return list(map(MFAMethod, resp))
 
     async def disable_totp_mfa(self, *, mfa_ticket: str) -> None:
@@ -7641,13 +7649,14 @@ class HTTPClient:
         """
         await self.request(
             routes.AUTH_MFA_TOTP_DISABLE.compile(),
+            bot=False,
             mfa_ticket=mfa_ticket,
         )
 
     async def enable_totp_mfa(self, response: MFAResponse, /) -> None:
         """|coro|
 
-        Disables TOTP MFA for this account.
+        Enables TOTP-based MFA for this account.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7655,7 +7664,7 @@ class HTTPClient:
         Parameters
         ----------
         response: :class:`.MFAResponse`
-            The password, TOTP or recovery code to verify with. Currently can be only :class:`.ByTOTP`.
+            The password, TOTP or recovery code to verify. Currently can be only :class:`.ByTOTP`.
 
         Raises
         ------
@@ -7686,6 +7695,7 @@ class HTTPClient:
 
         await self.request(
             routes.AUTH_MFA_TOTP_ENABLE.compile(),
+            bot=False,
             json=response.build(),
         )
 
@@ -7734,6 +7744,7 @@ class HTTPClient:
         """
         resp: raw.a.ResponseTotpSecret = await self.request(
             routes.AUTH_MFA_TOTP_GENERATE_SECRET.compile(),
+            bot=False,
             mfa_ticket=mfa_ticket,
         )
         return resp['secret']
@@ -7743,19 +7754,55 @@ class HTTPClient:
     async def edit_session(self, session: ULIDOr[PartialSession], *, friendly_name: str) -> PartialSession:
         """|coro|
 
-        Edits the session information.
+        Edits a session.
 
         Parameters
         ----------
-        session: ULIDOr[:class:`PartialSession`]
+        session: ULIDOr[:class:`.PartialSession`]
             The session to edit.
         friendly_name: :class:`str`
-            The new device name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
+            The new user-friendly client name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------------------------------+
+            | Value              | Reason                                                         |
+            +--------------------+----------------------------------------------------------------+
+            | ``InvalidSession`` | One of these:                                                  |
+            |                    |                                                                |
+            |                    | - The current user token is invalid.                           |
+            |                    | - The session you tried to edit didn't belong to your account. |
+            +--------------------+----------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------+----------------------------+
+            | Value           | Reason                     |
+            +-----------------+----------------------------+
+            | ``UnknownUser`` | The session was not found. |
+            +-----------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.PartialSession`
+            The newly updated session.
         """
         payload: raw.a.DataEditSession = {'friendly_name': friendly_name}
         resp: raw.a.SessionInfo = await self.request(
-            routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)), json=payload
+            routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)),
+            bot=False,
+            json=payload,
         )
         return self.state.parser.parse_partial_session(resp)
 
@@ -7764,16 +7811,35 @@ class HTTPClient:
 
         Retrieves all sessions associated with this account.
 
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
         Returns
         -------
-        List[:class:`PartialSession`]
+        List[:class:`.PartialSession`]
             The sessions.
         """
         resp: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
         return list(map(self.state.parser.parse_partial_session, resp))
 
     async def login_with_email(
-        self, email: str, password: str, /, *, friendly_name: typing.Optional[str] = None
+        self, email: str, password: str, *, friendly_name: typing.Optional[str] = None
     ) -> LoginResult:
         """|coro|
 
@@ -7784,13 +7850,52 @@ class HTTPClient:
         email: :class:`str`
             The email.
         password: :class:`str`
-            The password.
+            The password. Must be at least 8 characters.
         friendly_name: Optional[:class:`str`]
-            The device name.
+            The user-friendly client name.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+---------------------------------------------------+
+            | Value                   | Reason                                            |
+            +-------------------------+---------------------------------------------------+
+            | ``CompromisedPassword`` | The new password was compromised.                 |
+            +-------------------------+---------------------------------------------------+
+            | ``ShortPassword``       | The new password was less than 8 characters long. |
+            +-------------------------+---------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+--------------------------------------+
+            | Value                  | Reason                               |
+            +------------------------+--------------------------------------+
+            | ``InvalidCredentials`` | The provided password was incorrect. |
+            +------------------------+--------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``LockedOut``         | The account was locked out.                                |
+            +-----------------------+------------------------------------------------------------+
+            | ``UnverifiedAccount`` | The account you tried to log into is currently unverified. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
 
         Returns
         -------
-        :class:`LoginResult`
+        :class:`.LoginResult`
             The login response.
         """
         payload: raw.a.EmailDataLogin = {
@@ -7804,35 +7909,76 @@ class HTTPClient:
     async def login_with_mfa(
         self,
         ticket: str,
-        by: MFAResponse | None,
-        /,
+        by: typing.Optional[MFAResponse] = None,
         *,
         friendly_name: typing.Optional[str] = None,
-    ) -> Session | AccountDisabled:
+    ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
-        Logs in to an account.
+        Complete MFA login flow.
 
         Parameters
         ----------
         ticket: :class:`str`
-            The MFA ticket.
-        by: Optional[:class:`MFAResponse`]
-            The :class:`ByPassword`, :class:`ByRecoveryCode`, or :class:`ByTOTP` object.
+            The valid MFA ticket token.
+        by: Optional[:class:`.MFAResponse`]
+            The :class:`.ByRecoveryCode` or :class:`.ByTOTP` object.
         friendly_name: Optional[:class:`str`]
-            The device name.
+            The user-friendly client name.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+-----------------------------------------------------+
+            | Value                   | Reason                                               |
+            +-------------------------+------------------------------------------------------+
+            | ``DisallowedMFAMethod`` | You tried to use disallowed MFA verification method. |
+            +-------------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The provided password (in ``by`` parameter) was incorrect. |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidToken``       | One of these:                                              |
+            |                        |                                                            |
+            |                        | - The provided MFA ticket token is invalid.                |
+            |                        | - The provided TOTP, or recovery code is invalid.          |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``LockedOut``         | The account was locked out.                                |
+            +-----------------------+------------------------------------------------------------+
+            | ``UnverifiedAccount`` | The account you tried to log into is currently unverified. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
 
         Returns
         -------
-        Union[:class:`Session`, :class:`AccountDisabled`]
+        Union[:class:`.Session`, :class:`.AccountDisabled`]
             The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
         """
         payload: raw.a.MFADataLogin = {
             'mfa_ticket': ticket,
-            'mfa_response': by.build() if by else None,
+            'mfa_response': None if by is None else by.build(),
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
+        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), json=payload, token=None)
         ret = self.state.parser.parse_response_login(resp, friendly_name)
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret
@@ -7840,16 +7986,69 @@ class HTTPClient:
     async def logout(self) -> None:
         """|coro|
 
-        Deletes current session.
-        """
-        await self.request(routes.AUTH_SESSION_LOGOUT.compile())
+        Deletes the current session.
 
-    async def revoke_session(self, session_id: ULIDOr[PartialSession], /) -> None:
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+        """
+        await self.request(routes.AUTH_SESSION_LOGOUT.compile(), bot=False)
+
+    async def revoke_session(self, session: ULIDOr[PartialSession], /) -> None:
         """|coro|
 
         Deletes a specific active session.
+
+        Parameters
+        ----------
+        session: ULIDOr[:class:`.PartialSession`]
+            The session to delete.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------------------------+
+            | Value              | Reason                                               |
+            +--------------------+------------------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.                   |
+            +--------------------+------------------------------------------------------+
+            | ``InvalidToken``   | The provided session did not belong to your account. |
+            +--------------------+------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------+-------------------------------------+
+            | Value           | Reason                              |
+            +-----------------+-------------------------------------+
+            | ``UnknownUser`` | The provided session was not found. |
+            +-----------------+-------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session_id)))
+        await self.request(routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session)))
 
     async def revoke_all_sessions(self, *, revoke_self: typing.Optional[bool] = None) -> None:
         """|coro|
@@ -7860,6 +8059,25 @@ class HTTPClient:
         ----------
         revoke_self: Optional[:class:`bool`]
             Whether to revoke current session or not.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------+
+            | Value              | Reason                             |
+            +--------------------+------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid. |
+            +--------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
         params = {}
         if revoke_self is not None:

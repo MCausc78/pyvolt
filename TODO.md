@@ -2,25 +2,29 @@
 
 * TODO: events
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/cache.py#L151C7-L151C19
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/cache.py#L745C7-L745C19
 
 * TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/events.py#L251C11-L251C94
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/events.py#L460C11-L460C94
 
-* TODO: What we should do in case of mentions? This solution sucks.
+* TODO: Maybe ignore @everyone and @online pings in DM and groups?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/events.py#L348C15-L348C80
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/events.py#L707C15-L707C79
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L541C19-L541C38
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/http.py#L716C19-L716C38
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L703C11-L703C49
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/http.py#L938C11-L938C49
 
 * TODO: Remove when Revolt will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/master/pyvolt/http.py#L779C11-L779C49
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/http.py#L1078C11-L1078C49
+
+* TODO: Document OperationFailed better above
+
+  Source: https://github.com/MCausc78/pyvolt/blob/d82e7da7f875082e4a3a7c43bcf53c030462526c/pyvolt/http.py#L7692C11-L7692C54
 
