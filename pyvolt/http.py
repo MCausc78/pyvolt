@@ -1322,9 +1322,10 @@ class HTTPClient:
         :class:`TypeError`
             You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
+
         if server and group:
             raise TypeError('Cannot pass both server and group')
-        if not server and not group:
+        if server is None and group is not None:
             raise TypeError('Pass server or group')
 
         payload: raw.InviteBotDestination
@@ -1713,7 +1714,7 @@ class HTTPClient:
         *,
         description: typing.Optional[str] = None,
         icon: typing.Optional[ResolvableResource] = None,
-        recipients: list[ULIDOr[BaseUser]] | None = None,
+        recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
         nsfw: typing.Optional[bool] = None,
     ) -> GroupChannel:
         """|coro|
@@ -4449,7 +4450,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
-    ) -> typing.Union[TextChannel, VoiceChannel]:
+    ) -> ServerChannel:
         """|coro|
 
         Create a new text or voice channel within server.
@@ -4490,11 +4491,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+----------------------------------------------------------+
-            | Value                 | Reason                                                   |
-            +-----------------------+----------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to unban members. |
-            +-----------------------+----------------------------------------------------------+
+            +-----------------------+----------------------------------------------------------------------+
+            | Value                 | Reason                                                               |
+            +-----------------------+----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create channels in server. |
+            +-----------------------+----------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4514,7 +4515,7 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`.TextChannel`, :class:`.VoiceChannel`]
+        :class:`.ServerChannel`
             The channel created in server.
         """
 
@@ -4641,8 +4642,7 @@ class HTTPClient:
     async def edit_member(
         self,
         server: ULIDOr[BaseServer],
-        member: str | BaseUser | BaseMember,
-        /,
+        member: typing.Union[str, BaseUser, BaseMember],
         *,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -4650,7 +4650,7 @@ class HTTPClient:
         timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
         can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[typing.Union[DMChannel, TextChannel, VoiceChannel]]] = UNDEFINED,
+        voice: UndefinedOr[ULIDOr[typing.Union[TextChannel, VoiceChannel]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -4691,7 +4691,7 @@ class HTTPClient:
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`.DMChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`.TextChannel`, :class:`.VoiceChannel`]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
@@ -5040,7 +5040,7 @@ class HTTPClient:
     async def kick_member(self, server: ULIDOr[BaseServer], member: typing.Union[str, BaseUser, BaseMember]) -> None:
         """|coro|
 
-        Removes a member from the server.
+        Kicks a member from the server.
 
         Parameters
         ----------
@@ -5120,17 +5120,13 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
+        allow: :class:`.Permissions`
+            The permissions to allow for the specified role.
+        deny: :class:`.Permissions`
+            The permissions to deny for the specified role.
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +----------------------+----------------------------------------------+
-            | Value                | Reason                                       |
-            +----------------------+----------------------------------------------+
-            | ``InvalidOperation`` | The provided channel was not server channel. |
-            +----------------------+----------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5159,7 +5155,6 @@ class HTTPClient:
             +--------------+--------------------------------+
             | ``NotFound`` | The server/role was not found. |
             +--------------+--------------------------------+
-
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5262,6 +5257,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to create role in.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -5295,7 +5292,7 @@ class HTTPClient:
             +-----------------------+----------------------------------------------------------------------------+
             | ``NotElevated``       | Rank of your top role is higher than rank of role you're trying to create. |
             +-----------------------+----------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to remove reaction.                 |
+            | ``MissingPermission`` | You do not have the proper permissions to create role in this server.      |
             +-----------------------+----------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
@@ -5665,14 +5662,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5714,14 +5703,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5758,14 +5739,13 @@ class HTTPClient:
     async def edit_server(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
-        icon: UndefinedOr[ResolvableResource | None] = UNDEFINED,
-        banner: UndefinedOr[ResolvableResource | None] = UNDEFINED,
-        categories: UndefinedOr[list[Category] | None] = UNDEFINED,
-        system_messages: UndefinedOr[SystemMessageChannels | None] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
+        banner: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
+        categories: UndefinedOr[typing.Optional[list[Category]]] = UNDEFINED,
+        system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = UNDEFINED,
         flags: UndefinedOr[ServerFlags] = UNDEFINED,
         discoverable: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
@@ -5815,8 +5795,6 @@ class HTTPClient:
             +----------------------+-------------------------------------------+
             | ``InvalidOperation`` | More than 2 categories had same channel.  |
             +----------------------+-------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account. |
-            +----------------------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5828,11 +5806,13 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------+---------------------------------------------------------------------------------------+
-            | Value             | Reason                                                                                |
-            +-------------------+---------------------------------------------------------------------------------------+
-            | ``NotPrivileged`` | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user. |
-            +-------------------+---------------------------------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                        |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user. |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5855,7 +5835,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The newly updated server.
         """
         payload: raw.DataEditServer = {}
