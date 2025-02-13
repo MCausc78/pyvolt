@@ -89,14 +89,56 @@ class ServerEmoji(BaseEmoji):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes the emoji.
+        Deletes a emoji.
+
+        You must have :attr:`~Permissions.manage_customization` to do this if you do not own
+        the emoji, unless it was detached (already deleted).
+
+        .. note::
+            If deleting detached emoji, this will successfully return.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to delete emojis.
-        HTTPException
-            Deleting the emoji failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-----------------------------------------------------------+
+            | Value                            | Reason                                                    |
+            +----------------------------------+-----------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to delete a emoji. |
+            +----------------------------------+-----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The emoji/server was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.delete_emoji(self.id)
 

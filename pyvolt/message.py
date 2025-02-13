@@ -90,7 +90,7 @@ class MessageInteractions:
     restrict_reactions: :class:`bool`
         Whether reactions should be restricted to the given list.
 
-        Can only be set to ``True`` if :attr:`.reactions` has at least 1 emoji. Defaults to `False`.
+        Can only be set to ``True`` if :attr:`.reactions` has at least 1 emoji. Defaults to ``False``.
     """
 
     __slots__ = ('reactions', 'restrict_reactions')
@@ -250,7 +250,7 @@ class BaseMessage(Base):
         """Optional[:class:`.Server`]: The server this message was sent in."""
 
         cache = self.state.cache
-        if not cache:
+        if cache is None:
             return None
 
         channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
@@ -276,14 +276,6 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+-----------------------------------------+
-            | Value              | Reason                                  |
-            +--------------------+-----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid.  |
-            +--------------------+-----------------------------------------+
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -292,6 +284,14 @@ class BaseMessage(Base):
             +-----------+-------------------------------------------+
             | ``IsBot`` | The current token belongs to bot account. |
             +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -325,14 +325,6 @@ class BaseMessage(Base):
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+-----------------------------------------+
-            | Value              | Reason                                  |
-            +--------------------+-----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid.  |
-            +--------------------+-----------------------------------------+
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -341,6 +333,14 @@ class BaseMessage(Base):
             +-----------+-------------------------------------------+
             | ``IsBot`` | The current token belongs to bot account. |
             +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 

@@ -24,8 +24,10 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from attrs import define, field
 from datetime import datetime
+import typing
+
+from attrs import define, field
 
 
 @define(slots=True)
@@ -112,7 +114,7 @@ class InstanceBuild:
     commit_as_sha: str = field(repr=True, kw_only=True)
     """:class:`str`: The commit hash. For example: ``'a52d610e6c152e7acc23cd017a7c67af46eace4c'``."""
 
-    committed_at: datetime | None = field(repr=True, kw_only=True)
+    committed_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: When last commit was at."""
 
     semver: str = field(repr=True, kw_only=True)
@@ -121,7 +123,7 @@ class InstanceBuild:
     origin_url: str = field(repr=True, kw_only=True)
     """:class:`str`: The origin URL. Example: ``'https://github.com/revoltchat/backend'``."""
 
-    built_at: datetime | None = field(repr=True, kw_only=True)
+    built_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: When the instance executables were built at. This is different from :attr:`.committed_at`."""
 
 

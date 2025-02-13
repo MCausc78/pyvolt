@@ -38,6 +38,8 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True, eq=True)
 class PartialAccount:
+    """Represents a partial Revolt account."""
+
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The unique account ID."""
 
@@ -50,7 +52,7 @@ class PartialAccount:
 
 @define(slots=True, eq=True)
 class MFATicket:
-    """The Multi-factor authentication ticket."""
+    """The MFA ticket."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The unique ticket ID."""
@@ -64,8 +66,8 @@ class MFATicket:
     validated: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this ticket has been validated (can be used for account actions)."""
 
-    authorised: bool = field(repr=True, kw_only=True)
-    """:class:`bool`: Whether this ticket is authorised (can be used to log a user in)."""
+    authorized: bool = field(repr=True, kw_only=True)
+    """:class:`bool`: Whether this ticket is authorized (can be used to log a user in)."""
 
     last_totp_code: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The TOTP code at time of ticket creation."""
@@ -79,22 +81,68 @@ class WebPushSubscription:
     """Represents WebPush subscription."""
 
     endpoint: str = field(repr=True, kw_only=True)
+    """:class:`str`: The HTTP `endpoint <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint>`_ associated with push subscription."""
+
     p256dh: str = field(repr=True, kw_only=True)
+    """:class:`str`: The `Elliptic curve Diffie–Hellman public key on the P-256 curve <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/getKey#p256dh>`_."""
+
     auth: str = field(repr=True, kw_only=True)
+    """:class:`str`: The `authentication secret <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/getKey#auth>`_."""
 
 
 @define(slots=True)
 class PartialSession(Base):
-    """Represents partial Revolt auth session."""
+    """Represents partial Revolt authentication session."""
 
     name: str = field(repr=True, kw_only=True)
-    """:class:`str`: The session friendly name."""
+    """:class:`str`: The user-friendly client name."""
 
     async def edit(self, *, friendly_name: UndefinedOr[str] = UNDEFINED) -> PartialSession:
         """|coro|
 
         Edits the session.
+
+        Parameters
+        ----------
+        friendly_name: UndefinedOr[:class:`str`]
+            The new user-friendly client name.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------------------------------+
+            | Value              | Reason                                                         |
+            +--------------------+----------------------------------------------------------------+
+            | ``InvalidSession`` | One of these:                                                  |
+            |                    |                                                                |
+            |                    | - The current user token is invalid.                           |
+            |                    | - The session you tried to edit didn't belong to your account. |
+            +--------------------+----------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------+----------------------------+
+            | Value           | Reason                     |
+            +-----------------+----------------------------+
+            | ``UnknownUser`` | The session was not found. |
+            +-----------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.PartialSession`
+            The newly updated session.
         """
+
         if friendly_name is UNDEFINED:
             return PartialSession(
                 state=self.state,
@@ -109,7 +157,36 @@ class PartialSession(Base):
     async def revoke(self) -> None:
         """|coro|
 
-        Deletes this session.
+        Deletes the session.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+------------------------------------------------------+
+            | Value              | Reason                                               |
+            +--------------------+------------------------------------------------------+
+            | ``InvalidSession`` | The current user token is invalid.                   |
+            +--------------------+------------------------------------------------------+
+            | ``InvalidToken``   | The provided session did not belong to your account. |
+            +--------------------+------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------+-------------------------------------+
+            | Value           | Reason                              |
+            +-----------------+-------------------------------------+
+            | ``UnknownUser`` | The provided session was not found. |
+            +-----------------+-------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
         return await self.state.http.revoke_session(self.id)
 
@@ -140,25 +217,135 @@ class MFARequired:
 
     # internals
     state: State = field(repr=True, kw_only=True)
-    internal_friendly_name: typing.Optional[str] = field(repr=True, kw_only=True)
+    friendly_name: typing.Optional[str] = field(repr=True, kw_only=True)
 
-    async def use_recovery_code(self, code: str, /) -> typing.Union[Session, AccountDisabled]:
+    async def use_recovery_code(
+        self, code: str, *, friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED
+    ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
-        Login to an account.
+        Complete MFA login flow.
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The valid recovery code.
+        friendly_name: UndefinedOr[Optional[:class:`str`]]
+            The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+------------------------------------------------------+
+            | Value                   | Reason                                               |
+            +-------------------------+------------------------------------------------------+
+            | ``DisallowedMFAMethod`` | You tried to use disallowed MFA verification method. |
+            +-------------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+----------------------------------------+
+            | Value            | Reason                                 |
+            +------------------+----------------------------------------+
+            | ``InvalidToken`` | The provided recovery code is invalid. |
+            +------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``LockedOut``         | The account was locked out.                                |
+            +-----------------------+------------------------------------------------------------+
+            | ``UnverifiedAccount`` | The account you tried to log into is currently unverified. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`.Session`, :class:`.AccountDisabled`]
+            The session if successfully logged in, or :class:`.AccountDisabled` containing user ID associated with the account.
         """
+
+        if friendly_name is UNDEFINED:
+            friendly_name = self.friendly_name
+
         return await self.state.http.login_with_mfa(
-            self.ticket, ByRecoveryCode(code), friendly_name=self.internal_friendly_name
+            self.ticket,
+            ByRecoveryCode(code),
+            friendly_name=friendly_name,
         )
 
-    async def use_totp(self, code: str, /) -> typing.Union[Session, AccountDisabled]:
+    async def use_totp(
+        self, code: str, *, friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED
+    ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
-        Login to an account.
+        Complete MFA login flow.
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The valid TOTP code.
+        friendly_name: UndefinedOr[Optional[:class:`str`]]
+            The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------------+------------------------------------------------------+
+            | Value                   | Reason                                               |
+            +-------------------------+------------------------------------------------------+
+            | ``DisallowedMFAMethod`` | You tried to use disallowed MFA verification method. |
+            +-------------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+------------------------------------+
+            | Value            | Reason                             |
+            +------------------+------------------------------------+
+            | ``InvalidToken`` | The provided TOTP code is invalid. |
+            +------------------+------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``LockedOut``         | The account was locked out.                                |
+            +-----------------------+------------------------------------------------------------+
+            | ``UnverifiedAccount`` | The account you tried to log into is currently unverified. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`.Session`, :class:`.AccountDisabled`]
+            The session if successfully logged in, or :class:`.AccountDisabled` containing user ID associated with the account.
         """
-        return await self.state.http.login_with_mfa(
-            self.ticket, ByTOTP(code), friendly_name=self.internal_friendly_name
-        )
+
+        if friendly_name is UNDEFINED:
+            friendly_name = self.friendly_name
+
+        return await self.state.http.login_with_mfa(self.ticket, ByTOTP(code), friendly_name=self.friendly_name)
 
 
 @define(slots=True)
@@ -179,23 +366,41 @@ class MFAStatus:
 
 
 class BaseMFAResponse:
+    """Represents a MFA verification way."""
+
     __slots__ = ()
 
 
 class ByPassword(BaseMFAResponse):
+    """Represents MFA verification by password.
+
+    Attributes
+    ----------
+    password: :class:`str`
+        The password.
+    """
+
     __slots__ = ('password',)
 
-    def __init__(self, password: str, /) -> None:
+    def __init__(self, password: str) -> None:
         self.password = password
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByPassword) and self.password == other.password
 
-    def build(self) -> raw.a.PasswordMFAResponse:
+    def to_dict(self) -> raw.a.PasswordMFAResponse:
         return {'password': self.password}
 
 
 class ByRecoveryCode(BaseMFAResponse):
+    """Represents MFA verification by recovery code.
+
+    Attributes
+    ----------
+    code: :class:`str`
+        The recovery code.
+    """
+
     __slots__ = ('code',)
 
     def __init__(self, code: str, /) -> None:
@@ -204,11 +409,19 @@ class ByRecoveryCode(BaseMFAResponse):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByRecoveryCode) and self.code == other.code
 
-    def build(self) -> raw.a.RecoveryMFAResponse:
+    def to_dict(self) -> raw.a.RecoveryMFAResponse:
         return {'recovery_code': self.code}
 
 
 class ByTOTP(BaseMFAResponse):
+    """Represents MFA verification by TOTP code.
+
+    Attributes
+    ----------
+    code: :class:`str`
+        The TOTP code.
+    """
+
     __slots__ = ('code',)
 
     def __init__(self, code: str, /) -> None:
@@ -217,7 +430,7 @@ class ByTOTP(BaseMFAResponse):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, ByTOTP) and self.code == other.code
 
-    def build(self) -> raw.a.TotpMFAResponse:
+    def to_dict(self) -> raw.a.TotpMFAResponse:
         return {'totp_code': self.code}
 
 

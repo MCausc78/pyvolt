@@ -3115,7 +3115,6 @@ class HTTPClient:
             +--------------+----------------------------------------+
             | ``NotFound`` | The channel/server/role was not found. |
             +--------------+----------------------------------------+
-
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3215,7 +3214,6 @@ class HTTPClient:
             +--------------+----------------------------+
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
-
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3760,13 +3758,13 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+-------------------------------------------+
-            | Value                | Reason                                    |
-            +----------------------+-------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account. |
-            +----------------------+-------------------------------------------+
-            | ``TooManyServers``   | You're participating in too many servers. |
-            +----------------------+-------------------------------------------+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``IsBot``          | The current token belongs to bot account. |
+            +--------------------+-------------------------------------------+
+            | ``TooManyServers`` | You're participating in too many servers. |
+            +--------------------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -3778,13 +3776,13 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------+
-            | Value                 | Reason                                          |
-            +-----------------------+-------------------------------------------------+
-            | ``Banned``            | You're banned from server.                      |
-            +-----------------------+-------------------------------------------------+
-            | ``GroupTooLarge``     | The group exceeded maximum count of recipients. |
-            +-----------------------+-------------------------------------------------+
+            +-------------------+-------------------------------------------------+
+            | Value             | Reason                                          |
+            +-------------------+-------------------------------------------------+
+            | ``Banned``        | You're banned from server.                      |
+            +-------------------+-------------------------------------------------+
+            | ``GroupTooLarge`` | The group exceeded maximum count of recipients. |
+            +-------------------+-------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5585,11 +5583,14 @@ class HTTPClient:
         await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
 
     async def create_server(
-        self, name: str, /, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+        self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
     ) -> Server:
         """|coro|
 
         Create a new server.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -6421,7 +6422,7 @@ class HTTPClient:
     ) -> User:
         """|coro|
 
-        Edits the user.
+        Edits a user.
 
         Parameters
         ----------
@@ -6477,7 +6478,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`User`
+        :class:`.User`
             The newly updated user.
         """
         resp = await self._edit_user(
@@ -6755,7 +6756,7 @@ class HTTPClient:
             response.close()
         return avatar
 
-    async def open_dm(self, user: ULIDOr[BaseUser], /) -> typing.Union[SavedMessagesChannel, DMChannel]:
+    async def open_dm(self, user: ULIDOr[BaseUser]) -> typing.Union[SavedMessagesChannel, DMChannel]:
         """|coro|
 
         Retrieve a DM (or create if it doesn't exist) with another user.
@@ -6763,6 +6764,11 @@ class HTTPClient:
         If target is current user, a :class:`.SavedMessagesChannel` is always returned.
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to open DM with.
 
         Raises
         ------
@@ -6811,13 +6817,18 @@ class HTTPClient:
         assert isinstance(channel, (SavedMessagesChannel, DMChannel))
         return channel
 
-    async def deny_friend_request(self, user: ULIDOr[BaseUser], /) -> User:
+    async def deny_friend_request(self, user: ULIDOr[BaseUser]) -> User:
         """|coro|
 
         Denies another user's friend request.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to deny friend request from.
 
         Raises
         ------
@@ -6866,13 +6877,18 @@ class HTTPClient:
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def remove_friend(self, user: ULIDOr[BaseUser], /) -> User:
+    async def remove_friend(self, user: ULIDOr[BaseUser]) -> User:
         """|coro|
 
         Removes the user from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to remove from friend list.
 
         Raises
         ------
@@ -7017,7 +7033,7 @@ class HTTPClient:
     async def unblock_user(self, user: ULIDOr[BaseUser]) -> User:
         """|coro|
 
-        Blocks an user.
+        Unblocks an user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -7025,7 +7041,7 @@ class HTTPClient:
         Parameters
         ----------
         user: ULIDOr[:class:`BaseUser`]
-            The user to block.
+            The user to unblock.
 
         Raises
         ------
@@ -7158,11 +7174,11 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+------------------------------------------------------+
-            | Value                | Reason                                               |
-            +----------------------+------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                             |
-            +----------------------+------------------------------------------------------+
+            +----------------------+--------------------------+
+            | Value                | Reason                   |
+            +----------------------+--------------------------+
+            | ``FailedValidation`` | The payload was invalid. |
+            +----------------------+--------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -8514,7 +8530,7 @@ class HTTPClient:
         await self.request(
             routes.AUTH_MFA_TOTP_ENABLE.compile(),
             bot=False,
-            json=response.build(),
+            json=response.to_dict(),
         )
 
     async def generate_totp_secret(self, *, mfa_ticket: str) -> str:
@@ -8789,11 +8805,11 @@ class HTTPClient:
         Returns
         -------
         Union[:class:`.Session`, :class:`.AccountDisabled`]
-            The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
+            The session if successfully logged in, or :class:`.AccountDisabled` containing user ID associated with the account.
         """
         payload: raw.a.MFADataLogin = {
             'mfa_ticket': ticket,
-            'mfa_response': None if by is None else by.build(),
+            'mfa_response': None if by is None else by.to_dict(),
             'friendly_name': friendly_name,
         }
         resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), json=payload, token=None)

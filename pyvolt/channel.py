@@ -50,7 +50,7 @@ from .flags import (
 
 if typing.TYPE_CHECKING:
     from .bot import BaseBot
-    from .cdn import StatelessAsset, Asset
+    from .cdn import StatelessAsset, Asset, ResolvableResource
     from .invite import Invite
     from .message import BaseMessage
     from .permissions import PermissionOverride
@@ -80,7 +80,7 @@ class BaseChannel(Base):
 
         return f'<#{self.id}>'
 
-    async def close(self, *, silent: bool | None = None) -> None:
+    async def close(self, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
@@ -94,40 +94,49 @@ class BaseChannel(Base):
 
         Raises
         ------
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        Forbidden
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                                    | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view and/or delete the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------------------+------------------------------+
-        NotFound
-            +--------------------------------------+----------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                     |
-            +--------------------------------------+----------------------------+
-            | ``NotFound``                         | The channel was not found. |
-            +--------------------------------------+----------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------------+
+            | Value                 | Reason                                                                    |
+            +-----------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view and/or delete the channel. |
+            +-----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.close_channel(self.id, silent=silent)
 
     async def edit(
         self,
         *,
         name: UndefinedOr[str] = UNDEFINED,
-        description: UndefinedOr[str | None] = UNDEFINED,
+        description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
-        icon: UndefinedOr[str | None] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         nsfw: UndefinedOr[bool] = UNDEFINED,
         archived: UndefinedOr[bool] = UNDEFINED,
         default_permissions: UndefinedOr[None] = UNDEFINED,
@@ -157,46 +166,56 @@ class BaseChannel(Base):
 
         Raises
         ------
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``InvalidOperation``                      | The target channel was not group/text/voice channel.    |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-        Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to edit the channel. | :attr:`Forbidden.permission` |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``NotOwner``                          | You do not own the group.                                   |                              |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-        NotFound
-            +--------------------------------------+---------------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                          |
-            +--------------------------------------+---------------------------------+
-            | ``NotFound``                         | The channel was not found.      |
-            +--------------------------------------+---------------------------------+
-            | ``NotInGroup``                       | The new owner was not in group. |
-            +--------------------------------------+---------------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+            | ``InvalidOperation`` | The target channel was not group/text/voice channel. |
+            +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit the channel. |
+            +-----------------------+-------------------------------------------------------------+
+            | ``NotOwner``          | You do not own the group.                                   |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+---------------------------------+
+            | Value          | Reason                          |
+            +----------------+---------------------------------+
+            | ``NotFound``   | The channel was not found.      |
+            +----------------+---------------------------------+
+            | ``NotInGroup`` | The new owner was not in group. |
+            +----------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Channel`
+        :class:`.Channel`
             The newly updated channel.
         """
         return await self.state.http.edit_channel(
@@ -215,19 +234,75 @@ class BaseChannel(Base):
 
         Asks the voice server for a token to join the call.
 
+        You must have :attr:`~Permissions.connect` to do this.
+
+        If current instance uses legacy voice server (determined by whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``),
+        then you cannot connect to channel with type of :attr:`~ChannelType.text` and if you do,
+        it will raise :class:`HTTPException` with ``CannotJoinCall`` type.
+
         Raises
         ------
-        HTTPException
-            Asking the token failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                                            |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``      | The current user was already connected to this voice channel.                                                                     |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyInVoiceChannel`` | The current user was already connected to other voice channel.                                                                    |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``        | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | ???. Only applicable to instances using Livekit                                                                                   |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``       | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------+
+            | Value                            | Reason                                                 |
+            +----------------------------------+--------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to join a call. |
+            +----------------------------------+--------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
         :class:`str`
-            Token for authenticating with the voice server.
+            The token for authenticating with the voice server.
         """
         return await self.state.http.join_call(self.id)
 
-    def permissions_for(self, _target: User | Member, /) -> Permissions:
+    def permissions_for(self, _target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
 
         By default, this returns no permissions.
@@ -255,10 +330,10 @@ class PartialChannel(BaseChannel):
     owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The ID of new group owner, if applicable. Only for :class:`GroupChannel`."""
 
-    description: UndefinedOr[str | None] = field(repr=True, kw_only=True, eq=True)
+    description: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[Optional[:class:`str`]]: The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
-    internal_icon: UndefinedOr[StatelessAsset | None] = field(repr=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
@@ -273,14 +348,14 @@ class PartialChannel(BaseChannel):
     role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[Dict[:class:`str`, :class:`.PermissionOverride`]]: The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
 
-    default_permissions: UndefinedOr[PermissionOverride | None] = field(repr=True, kw_only=True, eq=True)
+    default_permissions: UndefinedOr[typing.Optional[PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[Optional[:class:`.PermissionOverride`]]: The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
 
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
 
     @property
-    def icon(self) -> UndefinedOr[Asset | None]:
+    def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
         r"""UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon
@@ -342,7 +417,7 @@ def calculate_group_channel_permissions(
     /,
     *,
     group_owner_id: str,
-    group_permissions: Permissions | None,
+    group_permissions: typing.Optional[Permissions],
     group_recipients: list[str],
 ) -> Permissions:
     """Calculates the permissions in :class:`.GroupChannel` scope.
@@ -353,7 +428,7 @@ def calculate_group_channel_permissions(
         The ID of perspective user.
     group_owner_id: :class:`str`
         The ID of group owner (:attr:`.GroupChannel.owner_id`).
-    group_permissions: Optional[:class:`Permissions`]
+    group_permissions: Optional[:class:`.Permissions`]
         The default group permissions (:attr:`.GroupChannel.permissions`).
     group_recipients: List[:class:`str`]
         The IDs of group recipients (:attr:`.GroupChannel.recipient_ids`).
@@ -375,9 +450,8 @@ def calculate_group_channel_permissions(
 def calculate_server_channel_permissions(
     initial_permissions: Permissions,
     roles: list[Role],
-    /,
     *,
-    default_permissions: PermissionOverride | None,
+    default_permissions: typing.Optional[PermissionOverride],
     role_permissions: dict[str, PermissionOverride],
 ) -> Permissions:
     """Calculates the permissions in :class:`.BaseServerChannel` scope.
@@ -391,7 +465,7 @@ def calculate_server_channel_permissions(
         The member's roles. Should be empty list if calculating for :class:`.User`.
     default_permissions: :class:`str`
         The default channel permissions (:attr:`.BaseServerChannel.default_permissions`).
-    role_permissions: Dict[:class:`str`, :class:`Permissions`]
+    role_permissions: Dict[:class:`str`, :class:`.Permissions`]
         The permissions overrides for roles in the channel (:attr:`.BaseServerChannel.role_permissions`).
 
     Returns
@@ -443,7 +517,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
         """Literal[:attr:`ChannelType.saved_messages`]: The channel's type."""
         return ChannelType.saved_messages
 
-    def permissions_for(self, target: User | Member, /) -> Permissions:
+    def permissions_for(self, target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given member.
 
         Parameters
@@ -470,7 +544,7 @@ class DMChannel(BaseChannel, Messageable):
     recipient_ids: tuple[str, str] = field(repr=True, kw_only=True)
     """Tuple[:class:`str`, :class:`str`]: The tuple of user IDs participating in DM."""
 
-    last_message_id: str | None = field(repr=True, kw_only=True)
+    last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     def get_channel_id(self) -> str:
@@ -515,7 +589,7 @@ class DMChannel(BaseChannel, Messageable):
         """Literal[:attr:`.ChannelType.private`]: The channel's type."""
         return ChannelType.private
 
-    def permissions_for(self, target: User | Member, /) -> Permissions:
+    def permissions_for(self, target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
 
         Parameters
@@ -560,20 +634,21 @@ class GroupChannel(BaseChannel, Messageable):
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns this group."""
 
-    description: str | None = field(repr=True, kw_only=True)
+    description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The group description."""
 
-    _recipients: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[User]] = field(
-        repr=True, kw_only=True, alias='internal_recipients'
-    )
+    _recipients: typing.Union[
+        tuple[typing.Literal[True], list[str]],
+        tuple[typing.Literal[False], list[User]],
+    ] = field(repr=True, kw_only=True, alias='internal_recipients')
 
-    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless group icon."""
 
-    last_message_id: str | None = field(repr=True, kw_only=True)
+    last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
-    raw_permissions: int | None = field(repr=True, kw_only=True)
+    raw_permissions: typing.Optional[int] = field(repr=True, kw_only=True)
     """Optional[:class:`int`]: The permissions assigned to members of this group.
     
     .. note::
@@ -612,14 +687,14 @@ class GroupChannel(BaseChannel, Messageable):
         if data.nsfw is not UNDEFINED:
             self.nsfw = data.nsfw
 
-    def _join(self, user_id: str) -> None:
+    def _join(self, user_id: str, /) -> None:
         if self._recipients[0]:
             self._recipients[1].append(user_id)  # type: ignore # Pyright doesn't understand `if`
         else:
             self._recipients = (True, [u.id for u in self._recipients[1]])  # type: ignore
             self._recipients[1].append(user_id)
 
-    def _leave(self, user_id: str) -> None:
+    def _leave(self, user_id: str, /) -> None:
         if self._recipients[0]:
             try:
                 self._recipients[1].remove(user_id)  # type: ignore
@@ -632,12 +707,12 @@ class GroupChannel(BaseChannel, Messageable):
             )
 
     @property
-    def icon(self) -> Asset | None:
+    def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The group icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
-    def permissions(self) -> Permissions | None:
+    def permissions(self) -> typing.Optional[Permissions]:
         """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
 
         .. note::
@@ -687,6 +762,11 @@ class GroupChannel(BaseChannel, Messageable):
 
         Adds another user to the group.
 
+        You must have :attr:`~Permissions.create_invites` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
         Parameters
         ----------
         user: ULIDOr[:class:`.BaseUser`]
@@ -694,48 +774,209 @@ class GroupChannel(BaseChannel, Messageable):
 
         Raises
         ------
-        Forbidden
-            You're bot, lacking `InviteOthers` permission, or not friends with this user.
-        HTTPException
-            Adding user to the group failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.              |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add the recipient. |
+            +-----------------------+--------------------------------------------------------------+
+            | ``NotFriends``        | You're not friends with the user you want to add.            |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The channel or user were not found. |
+            +--------------+-------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------+
+            | Value               | Reason                        |
+            +---------------------+-------------------------------+
+            | ``AlreadyInGroup``  | The user is already in group. |
+            +---------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.add_group_recipient(self.id, user)
 
     async def add_bot(
         self,
-        bot: ULIDOr[BaseBot | BaseUser],
+        bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
     ) -> None:
         """|coro|
 
-        Adds a bot to a group.
+        Invites a bot to a group.
+
+        You must have :attr:`~Permissions.create_invites` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
+            The bot.
+        server: Optional[ULIDOr[:class:`.BaseServer`]]
+            The destination server.
+        group: Optional[ULIDOr[:class:`.GroupChannel`]]
+            The destination group.
 
         Raises
         ------
-        Forbidden
-            You're bot, or lacking `InviteOthers` permission.
-        HTTPException
-            Adding bot to the group failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.            |
+            +----------------------+------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------+
+            | Value                 | Reason                                              |
+            +-----------------------+-----------------------------------------------------+
+            | ``BotIsPrivate``      | You do not own the bot to add it.                   |
+            +-----------------------+-----------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.     |
+            +-----------------------+-----------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add bots. |
+            +-----------------------+-----------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The bot/group/server was not found. |
+            +--------------+-------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------+
+            | Value               | Reason                        |
+            +---------------------+-------------------------------+
+            | ``AlreadyInGroup``  | The bot is already in group.  |
+            +---------------------+-------------------------------+
+            | ``AlreadyInServer`` | The bot is already in server. |
+            +---------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        :class:`TypeError`
+            You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
         return await self.state.http.invite_bot(bot, group=self.id)
 
     async def create_invite(self) -> Invite:
         """|coro|
 
-        Creates an invite to this channel.
+        Creates an invite to channel. The destination channel must be a group or server channel.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to create invite in that channel.
-        HTTPException
-            Creating invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------+
+            | Value                | Reason                                             |
+            +----------------------+----------------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group or server channel. |
+            +----------------------+----------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.          |
+            +----------------------+----------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------+
+            | Value                 | Reason                                                               |
+            +-----------------------+----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create invites in channel. |
+            +-----------------------+----------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Invite`
+            The invite that was created.
         """
+
         return await self.state.http.create_channel_invite(self.id)
 
-    async def leave(self, *, silent: bool | None = None) -> None:
+    async def leave(self, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
-        Leaves a group.
+        Leaves a group or closes a group.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
@@ -746,37 +987,48 @@ class GroupChannel(BaseChannel, Messageable):
 
         Raises
         ------
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-        NotFound
-            +--------------------------------------+----------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                     |
-            +--------------------------------------+----------------------------+
-            | ``NotFound``                         | The channel was not found. |
-            +--------------------------------------+----------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------------+
+            | Value                 | Reason                                                                    |
+            +-----------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view and/or delete the channel. |
+            +-----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.close(silent=silent)
 
-    async def set_default_permissions(self, permissions: Permissions, /) -> GroupChannel:
+    async def set_default_permissions(self, permissions: Permissions) -> GroupChannel:
         """|coro|
 
-        Sets default permissions in a channel.
+        Sets default permissions for everyone in a channel.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
 
         Parameters
         ----------
@@ -785,21 +1037,52 @@ class GroupChannel(BaseChannel, Messageable):
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to set default permissions on the channel.
-        HTTPException
-            Setting permissions failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit default permissions for this channel. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`GroupChannel`
+        :class:`.GroupChannel`
             The updated group with new permissions.
         """
+
         result = await self.state.http.set_default_channel_permissions(self.id, permissions)
         assert isinstance(result, GroupChannel)
         return result
 
-    def permissions_for(self, target: User | Member, /) -> Permissions:
+    def permissions_for(self, target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
 
         Parameters
@@ -845,13 +1128,13 @@ class BaseServerChannel(BaseChannel):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The display name of the channel."""
 
-    description: str | None = field(repr=True, kw_only=True)
+    description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The channel description."""
 
-    internal_icon: StatelessAsset | None = field(repr=True, kw_only=True)
+    internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The stateless custom channel icon."""
 
-    default_permissions: PermissionOverride | None = field(repr=True, kw_only=True)
+    default_permissions: typing.Optional[PermissionOverride] = field(repr=True, kw_only=True)
     """Optional[:class:`.PermissionOverride`]: Default permissions assigned to users in this channel."""
 
     role_permissions: dict[str, PermissionOverride] = field(repr=True, kw_only=True)
@@ -885,7 +1168,7 @@ class BaseServerChannel(BaseChannel):
             self.default_permissions = data.default_permissions
 
     @property
-    def icon(self) -> Asset | None:
+    def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
@@ -893,15 +1176,16 @@ class BaseServerChannel(BaseChannel):
     def server(self) -> Server:
         """:class:`.Server`: The server that channel belongs to."""
         server = self.get_server()
-        if server:
-            return server
-        raise NoData(self.server_id, 'channel server')
+        if server is None:
+            raise NoData(self.server_id, 'channel server')
+        return server
 
-    def get_server(self) -> Server | None:
+    def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server that channel belongs to."""
-        if not self.state.cache:
+        cache = self.state.cache
+        if cache is None:
             return None
-        return self.state.cache.get_server(self.server_id, caching._USER_REQUEST)
+        return cache.get_server(self.server_id, caching._USER_REQUEST)
 
     async def create_invite(self) -> Invite:
         """|coro|
@@ -928,42 +1212,46 @@ class BaseServerChannel(BaseChannel):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes the channel.
+        Deletes a server channel.
 
-        You must have :attr:`~Permissions.manage_channels` to do this.
-
-        Parameters
-        ----------
-        silent: Optional[:class:`bool`]
-            Whether to not send message when leaving.
+        You must have :attr:`~Permissions.view_channel` and :attr:`~Permissions.manage_channels` to do this.
 
         Raises
         ------
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        Forbidden
-            +---------------------------------------+---------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                        | Populated attributes         |
-            +---------------------------------------+---------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to delete the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+---------------------------------------------------------------+------------------------------+
-        NotFound
-            +--------------------------------------+----------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                     |
-            +--------------------------------------+----------------------------+
-            | ``NotFound``                         | The channel was not found. |
-            +--------------------------------------+----------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------------+
+            | Value                 | Reason                                                                    |
+            +-----------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view and/or delete the channel. |
+            +-----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.close()
 
     async def set_role_permissions(
@@ -975,8 +1263,9 @@ class BaseServerChannel(BaseChannel):
     ) -> ServerChannel:
         """|coro|
 
-        Sets permissions for the specified role in this channel.
-        Channel must be a `TextChannel` or `VoiceChannel`.
+        Sets permissions for the specified role in a channel.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
 
         Parameters
         ----------
@@ -985,18 +1274,57 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to set role permissions on the channel.
-        HTTPException
-            Setting permissions failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit overrides for this channel.           |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------+
+            | Value        | Reason                                 |
+            +--------------+----------------------------------------+
+            | ``NotFound`` | The channel/server/role was not found. |
+            +--------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.ServerChannel`
+            The updated server channel with new permissions.
         """
         result = await self.state.http.set_channel_permissions_for_role(self.id, role, allow=allow, deny=deny)
         return result
 
-    async def set_default_permissions(self, permissions: PermissionOverride, /) -> ServerChannel:
+    async def set_default_permissions(self, permissions: PermissionOverride) -> ServerChannel:
         """|coro|
 
-        Sets permissions for the default role in a channel.
+        Sets default permissions for everyone in a channel.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
 
         Parameters
         ----------
@@ -1005,21 +1333,58 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to set default permissions on the channel.
-        HTTPException
-            Setting permissions failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit default permissions for this channel. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
         :class:`.ServerChannel`
             The updated server channel with new permissions.
         """
+
         result = await self.state.http.set_default_channel_permissions(self.id, permissions)
         return result  # type: ignore
 
     def permissions_for(
-        self, target: User | Member, /, *, safe: bool = True, with_ownership: bool = True, include_timeout: bool = True
+        self,
+        target: typing.Union[User, Member],
+        /,
+        *,
+        safe: bool = True,
+        with_ownership: bool = True,
+        include_timeout: bool = True,
     ) -> Permissions:
         """Calculate permissions for given user.
 
@@ -1036,7 +1401,7 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        NoData
+        :class:`NoData`
             The server or role is not found in cache.
 
         Returns
@@ -1083,6 +1448,8 @@ class BaseServerChannel(BaseChannel):
 
 @define(slots=True)
 class ChannelVoiceMetadata:
+    """Represents some voice-specific metadata for text channel."""
+
     max_users: int = field(repr=True, kw_only=True)
     """:class:`int`: The maximium amount of users allowed in the voice channel at once.
     
@@ -1094,10 +1461,10 @@ class ChannelVoiceMetadata:
 class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a text channel that belongs to a server on Revolt."""
 
-    last_message_id: str | None = field(repr=True, kw_only=True)
+    last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
-    voice: ChannelVoiceMetadata | None = field(repr=True, kw_only=True)
+    voice: typing.Optional[ChannelVoiceMetadata] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel."""
 
     def get_channel_id(self) -> str:
@@ -1157,13 +1524,13 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     def voice_states(self) -> ChannelVoiceStateContainer:
         """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
         cache = self.state.cache
-        if cache:
+        if cache is None:
+            res = None
+        else:
             res = cache.get_channel_voice_state(
                 self.id,
                 caching._USER_REQUEST,
             )
-        else:
-            res = None
         return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
 
 
@@ -1192,7 +1559,7 @@ class ChannelVoiceStateContainer:
         """
         self.participants[state.user_id] = state
 
-    def locally_remove(self, user_id: str, /) -> UserVoiceState | None:
+    def locally_remove(self, user_id: str, /) -> typing.Optional[UserVoiceState]:
         """Locally removes user's voice state from this container.
 
         Parameters

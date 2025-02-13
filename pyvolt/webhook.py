@@ -24,6 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+import typing
+
 from attrs import define, field
 
 from .base import Base
@@ -36,7 +38,7 @@ from .core import (
 from .message import (
     Reply,
     MessageInteractions,
-    Masquerade,
+    MessageMasquerade,
     SendableEmbed,
     BaseMessage,
     Message,
@@ -53,20 +55,49 @@ class BaseWebhook(Base):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseWebhook) and self.id == other.id
 
-    def _token(self) -> str | None:
+    def _token(self) -> typing.Optional[str]:
         return None
 
     async def delete(self, *, by_token: bool = False) -> None:
         """|coro|
 
-        Deletes a webhook. If webhook token wasn't given, the library will attempt delete webhook with bot/user token.
+        Deletes the webhook.
+
+        Parameters
+        ----------
+        by_token: :class:`bool`
+            Whether to use webhook token, if possible.
+
+            You must have :attr:`~Permissions.manage_webhooks` to provide ``False``.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to delete the webhook.
-        HTTPException
-            Deleting the webhook failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``token`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The webhook was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
         if by_token:
@@ -80,36 +111,69 @@ class BaseWebhook(Base):
         *,
         by_token: bool = False,
         name: UndefinedOr[str] = UNDEFINED,
-        avatar: UndefinedOr[str | None] = UNDEFINED,
+        avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         permissions: UndefinedOr[Permissions] = UNDEFINED,
     ) -> Webhook:
         """|coro|
 
-        Edits a webhook. If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
+        Edits the webhook.
 
         Parameters
         ----------
-        token: Optional[:class:`str`]
-            The webhook token.
+        by_token: :class:`bool`
+            Whether to use webhook token, if possible.
+
+            You must have :attr:`~Permissions.manage_webhooks` to provide ``False``.
         name: UndefinedOr[:class:`str`]
-            New webhook name. Should be between 1 and 32 chars long.
+            The new webhook name. Must be between 1 and 32 chars long.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
-            New webhook avatar.
+            The new webhook avatar.
         permissions: UndefinedOr[:class:`.Permissions`]
-            New webhook permissions.
+            The new webhook permissions.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to edit the webhook.
-        HTTPException
-            Editing the webhook failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------+
+            | Value                | Reason                   |
+            +----------------------+--------------------------+
+            | ``FailedValidation`` | The payload was invalid. |
+            +----------------------+--------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``by_`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The webhook/file was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Webhook`
+        :class:`.Webhook`
             The newly updated webhook.
         """
+
         if by_token:
             token = self._token()
 
@@ -125,36 +189,147 @@ class BaseWebhook(Base):
 
     async def execute(
         self,
-        content: str | None = None,
+        content: typing.Optional[str] = None,
         *,
-        nonce: str | None = None,
-        attachments: list[ResolvableResource] | None = None,
-        replies: list[Reply | ULIDOr[BaseMessage]] | None = None,
-        embeds: list[SendableEmbed] | None = None,
-        masquerade: Masquerade | None = None,
-        interactions: MessageInteractions | None = None,
+        nonce: typing.Optional[str] = None,
+        attachments: typing.Optional[list[ResolvableResource]] = None,
+        replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
+        embeds: typing.Optional[list[SendableEmbed]] = None,
+        masquerade: typing.Optional[MessageMasquerade] = None,
+        interactions: typing.Optional[MessageInteractions] = None,
+        silent: typing.Optional[bool] = None,
+        mention_everyone: typing.Optional[bool] = None,
+        mention_online: typing.Optional[bool] = None,
     ) -> Message:
         """|coro|
 
-        Executes a webhook and returns a message.
+        Executes a webhook.
+
+        The webhook must have :attr:`~Permissions.send_messages` to do this.
+
+        If message mentions '@everyone' or '@here', the webhook must have :attr:`~Permissions.mention_everyone` to do that.
+
+        If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
+
+        Parameters
+        ----------
+        webhook: ULIDOr[:class:`.BaseWebhook`]
+            The webhook to execute.
+        token: :class:`str`
+            The webhook token.
+        content: Optional[:class:`str`]
+            The message content.
+        nonce: Optional[:class:`str`]
+            The message nonce.
+        attachments: Optional[List[:class:`.ResolvableResource`]]
+            The attachments to send the message with.
+
+            Webhook must have :attr:`~Permissions.upload_files` to provide this.
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+            The message replies.
+        embeds: Optional[List[:class:`.SendableEmbed`]]
+            The embeds to send the message with.
+
+            Webhook must have :attr:`~Permissions.send_embeds` to provide this.
+        masquearde: Optional[:class:`.MessagesMasquerade`]
+            The masquerade for the message.
+
+            Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
+
+            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+        interactions: Optional[:class:`.MessageInteractions`]
+            The message interactions.
+
+            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
+        silent: Optional[:class:`bool`]
+            Whether to suppress notifications or not.
+        mention_everyone: Optional[:class:`bool`]
+            Whether to mention all users who can see the channel. This cannot be mixed with ``mention_online`` parameter.
+        mention_online: Optional[:class:`bool`]
+            Whether to mention all users who are online and can see the channel. This cannot be mixed with ``mention_everyone`` parameter.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``       | The message was empty.                                                                                             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                           |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                       |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------+
+            | Value                | Reason                        |
+            +----------------------+-------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. |
+            +----------------------+-------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | The webhook do not have the proper permissions to send messages. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------------------+
+            | Value        | Reason                                        |
+            +--------------+-----------------------------------------------+
+            | ``NotFound`` | The channel/file/reply/webhook was not found. |
+            +--------------+-----------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                     |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`Message`
-            The message sent.
+        :class:`.Message`
+            The message that was sent.
         """
+
         token = self._token()
-        assert token, 'No token'
+        assert token is not None, 'No token'
         return await self.state.http.execute_webhook(
             self.id,
             token,
-            content,
+            content=content,
             nonce=nonce,
             attachments=attachments,
             replies=replies,
             embeds=embeds,
             masquerade=masquerade,
             interactions=interactions,
+            silent=silent,
+            mention_everyone=mention_everyone,
+            mention_online=mention_online,
         )
 
 
@@ -162,20 +337,20 @@ class BaseWebhook(Base):
 class PartialWebhook(BaseWebhook):
     """Represents a partial webhook on Revolt.
 
-    Unmodified fields will have :data:`.UNDEFINED` value.
+    Unmodified fields will have :data:`.UNDEFINED` as their value.
     """
 
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new webhook's name."""
 
-    internal_avatar: UndefinedOr[StatelessAsset | None] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new webhook's stateless avatar."""
 
     raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`int`: The new webhook's permissions raw value."""
 
     @property
-    def avatar(self) -> UndefinedOr[Asset | None]:
+    def avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
@@ -196,7 +371,7 @@ class Webhook(BaseWebhook):
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The webhook's name."""
 
-    internal_avatar: StatelessAsset | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: typing.Optional[StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`.StatelessAsset`]: The webhook's stateless avatar."""
 
     creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -214,7 +389,7 @@ class Webhook(BaseWebhook):
     raw_permissions: int = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`int`: The webhook's permissions raw value."""
 
-    token: str | None = field(repr=True, hash=True, kw_only=True, eq=True)
+    token: typing.Optional[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The webhook's private token."""
 
     def locally_update(self, data: PartialWebhook, /) -> None:
@@ -237,7 +412,7 @@ class Webhook(BaseWebhook):
             self.raw_permissions = data.raw_permissions
 
     @property
-    def avatar(self) -> Asset | None:
+    def avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The webhook's avatar."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 

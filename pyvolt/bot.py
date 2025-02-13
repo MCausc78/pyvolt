@@ -94,32 +94,45 @@ class BaseBot(Base):
 
         Raises
         ------
-        HTTPException
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | Possible :attr:`HTTPException.type` value | Reason                                                  | Populated attributes        |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-            | ``FailedValidation``                      | The bot's name exceeded length or contained whitespace. | :attr:`HTTPException.error` |
-            | ``InvalidUsername``                       | The bot's name had forbidden characters/substrings.     |                             |
-            +-------------------------------------------+---------------------------------------------------------+-----------------------------+
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        NotFound
-            +--------------------------------------+--------------------------------------------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                                                       |
-            +--------------------------------------+--------------------------------------------------------------+
-            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
-            +--------------------------------------+--------------------------------------------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
 
+            +----------------------+---------------------------------------------------------+
+            | Value                | Reason                                                  |
+            +----------------------+---------------------------------------------------------+
+            | ``FailedValidation`` | The bot's name exceeded length or contained whitespace. |
+            +----------------------+---------------------------------------------------------+
+            | ``InvalidUsername``  | The bot's name had forbidden characters/substrings.     |
+            +----------------------+---------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------------------------------------+
+            | Value        | Reason                                                       |
+            +--------------+--------------------------------------------------------------+
+            | ``NotFound`` | The bot was not found, or the current user does not own bot. |
+            +--------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Bot`
+            The updated bot.
         """
         return await self.state.http.edit_bot(
             self.id,
@@ -171,7 +184,7 @@ class Bot(BaseBot):
 
     @property
     def flags(self) -> BotFlags:
-        """:class:`BotFlags`: The bot's flags."""
+        """:class:`.BotFlags`: The bot's flags."""
         ret = _new_bot_flags(BotFlags)
         ret.value = self.raw_flags
         return ret

@@ -2546,7 +2546,7 @@ class Parser:
             ticket=payload['ticket'],
             allowed_methods=list(map(MFAMethod, payload['allowed_methods'])),
             state=self.state,
-            internal_friendly_name=friendly_name,
+            friendly_name=friendly_name,
         )
 
     def parse_mfa_ticket(self, payload: raw.a.MFATicket, /) -> MFATicket:
@@ -2567,7 +2567,7 @@ class Parser:
             account_id=payload['account_id'],
             token=payload['token'],
             validated=payload['validated'],
-            authorised=payload['authorised'],
+            authorized=payload['authorised'],
             last_totp_code=payload.get('last_totp_code'),
         )
 

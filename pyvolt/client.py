@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from . import raw
+    from .cdn import ResolvableResource
     from .events import (
         AuthenticatedEvent,
         AuthifierEvent,
@@ -1716,13 +1717,14 @@ class Client:
         self,
         name: str,
         *,
-        description: str | None = None,
-        recipients: list[ULIDOr[BaseUser]] | None = None,
-        nsfw: bool | None = None,
+        description: typing.Optional[str] = None,
+        icon: typing.Optional[ResolvableResource] = None,
+        recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> GroupChannel:
         """|coro|
 
-        Creates the new group channel.
+        Creates a new group.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1730,30 +1732,82 @@ class Client:
         Parameters
         ----------
         name: :class:`str`
-            The group name.
+            The group name. Must be between 1 and 32 characters long.
         description: Optional[:class:`str`]
-            The group description.
-        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
-            The list of recipients to add to the group. You must be friends with these users.
+            The group description. Can be only up to 1024 characters.
+        icon: Optional[:class:`.ResolvableResource`]
+            The group's icon.
+        recipients: Optional[List[ULIDOr[:class:`.BaseUser`]]]
+            The users to create the group with, only up to 49 users. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
-            Whether this group should be age-restricted.
+            To mark the group as NSFW or not.
 
         Raises
         ------
-        HTTPException
-            Creating the group failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-------------------------------------------+
+            | Value                | Reason                                    |
+            +----------------------+-------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                  |
+            +----------------------+-------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. |
+            +----------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients.                  |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add the recipient.     |
+            +-----------------------+------------------------------------------------------------------+
+            | ``NotFriends``        | You're not friends with the users you want to create group with. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------+
+            | Value        | Reason                           |
+            +--------------+----------------------------------+
+            | ``NotFound`` | One of recipients was not found. |
+            +--------------+----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`GroupChannel`
+        :class:`.GroupChannel`
             The new group.
         """
-        return await self.http.create_group(name, description=description, recipients=recipients, nsfw=nsfw)
 
-    async def create_server(self, name: str, /, *, description: str | None = None, nsfw: bool | None = None) -> Server:
+        return await self.http.create_group(name, description=description, icon=icon, recipients=recipients, nsfw=nsfw)
+
+    async def create_server(
+        self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+    ) -> Server:
         """|coro|
 
         Create a new server.
+
+        .. note::
+            This can only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -1764,15 +1818,47 @@ class Client:
         nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
 
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------+
+            | Value                | Reason                                               |
+            +----------------------+------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                             |
+            +----------------------+------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.            |
+            +----------------------+------------------------------------------------------+
+            | ``TooManyChannels``  | The instance was incorrectly configured. (?)         |
+            +----------------------+------------------------------------------------------+
+            | ``TooManyServers``   | You're in too many servers than the instance allows. |
+            +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
         Returns
         -------
-        :class:`Server`
+        :class:`.Server`
             The created server.
         """
+
         return await self.http.create_server(name, description=description, nsfw=nsfw)
 
-
-listen = Client.listen
 
 __all__ = (
     'EventSubscription',
@@ -1782,5 +1868,4 @@ __all__ = (
     '_private_channel_sort_old',
     '_private_channel_sort_new',
     'Client',
-    'listen',
 )

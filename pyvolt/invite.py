@@ -57,45 +57,165 @@ class BaseInvite:
     async def accept(self) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
-        Accept this invite.
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You're banned.
-        HTTPException
-            Accepting the invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``IsBot``          | The current token belongs to bot account. |
+            +--------------------+-------------------------------------------+
+            | ``TooManyServers`` | You're participating in too many servers. |
+            +--------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------+
+            | Value                 | Reason                                          |
+            +-----------------------+-------------------------------------------------+
+            | ``Banned``            | You're banned from server.                      |
+            +-----------------------+-------------------------------------------------+
+            | ``GroupTooLarge``     | The group exceeded maximum count of recipients. |
+            +-----------------------+-------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------------+
+            | Value        | Reason                                   |
+            +--------------+------------------------------------------+
+            | ``NotFound`` | The invite/channel/server was not found. |
+            +--------------+------------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------+
+            | Value               | Reason                         |
+            +---------------------+--------------------------------+
+            | ``AlreadyInGroup``  | The user is already in group.  |
+            +---------------------+--------------------------------+
+            | ``AlreadyInServer`` | The user is already in server. |
+            +---------------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`.Server`, :class:`.GroupChannel`]
+            The joined server or group.
         """
+
         return await self.state.http.accept_invite(self.code)
 
     async def delete(self) -> None:
         """|coro|
 
-        Delete an invite.
+        Deletes the invite.
+
+        You must have :class:`~Permissions.manage_server` if deleting server invite.
+
+        There is an alias for this called :meth:`~.revoke`.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to delete invite or not creator of that invite.
-        HTTPException
-            Deleting the invite failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------+
+            | Value                 | Reason                                                        |
+            +-----------------------+---------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete this invite. |
+            +-----------------------+---------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The invite was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.delete_invite(self.code)
 
     async def revoke(self) -> None:
         """|coro|
 
-        Alias to :meth:`.delete`.
+        Deletes the invite.
+
+        You must have :class:`~Permissions.manage_server` if deleting server invite.
+
+        This is an alias of :meth:`~.delete`.
 
         Raises
         ------
-        Forbidden
-            You do not have permissions to delete invite or not creator of that invite.
-        HTTPException
-            Deleting the invite failed.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------+
+            | Value                 | Reason                                                        |
+            +-----------------------+---------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete this invite. |
+            +-----------------------+---------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The invite was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.delete_invite(self.code)
 
@@ -162,20 +282,74 @@ class ServerPublicInvite(BaseInvite):
     async def accept(self) -> Server:
         """|coro|
 
-        Accept this invite.
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You're banned.
-        HTTPException
-            Accepting the invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``IsBot``          | The current token belongs to bot account. |
+            +--------------------+-------------------------------------------+
+            | ``TooManyServers`` | You're participating in too many servers. |
+            +--------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------+----------------------------+
+            | Value      | Reason                     |
+            +------------+----------------------------+
+            | ``Banned`` | You're banned from server. |
+            +------------+----------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------------+
+            | Value        | Reason                                   |
+            +--------------+------------------------------------------+
+            | ``NotFound`` | The invite/channel/server was not found. |
+            +--------------+------------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------+
+            | Value               | Reason                         |
+            +---------------------+--------------------------------+
+            | ``AlreadyInServer`` | The user is already in server. |
+            +---------------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Server`
+            The joined server.
         """
+        from .server import Server
+
         server = await super().accept()
-        return server  # type: ignore
+        assert isinstance(server, Server)
+        return server
 
 
 @define(slots=True)
@@ -205,17 +379,66 @@ class GroupPublicInvite(BaseInvite):
     async def accept(self) -> GroupChannel:
         """|coro|
 
-        Accept this invite.
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You're banned.
-        HTTPException
-            Accepting the invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+
+            | Value             | Reason                                          |
+            +-------------------+-------------------------------------------------+
+            | ``GroupTooLarge`` | The group exceeded maximum count of recipients. |
+            +-------------------+-------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------+
+            | Value        | Reason                            |
+            +--------------+-----------------------------------+
+            | ``NotFound`` | The invite/channel was not found. |
+            +--------------+-----------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------+
+            | Value              | Reason                        |
+            +--------------------+-------------------------------+
+            | ``AlreadyInGroup`` | The user is already in group. |
+            +--------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.GroupChannel`
+            The joined group.
         """
         group = await super().accept()
         return group  # type: ignore
@@ -250,17 +473,66 @@ class GroupInvite(PrivateBaseInvite):
     async def accept(self) -> GroupChannel:
         """|coro|
 
-        Accept this invite.
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You're banned.
-        HTTPException
-            Accepting the invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+
+            | Value             | Reason                                          |
+            +-------------------+-------------------------------------------------+
+            | ``GroupTooLarge`` | The group exceeded maximum count of recipients. |
+            +-------------------+-------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-----------------------------------+
+            | Value        | Reason                            |
+            +--------------+-----------------------------------+
+            | ``NotFound`` | The invite/channel was not found. |
+            +--------------+-----------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------+
+            | Value              | Reason                        |
+            +--------------------+-------------------------------+
+            | ``AlreadyInGroup`` | The user is already in group. |
+            +--------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.GroupChannel`
+            The joined group.
         """
         group = await super().accept()
         return group  # type: ignore
@@ -279,20 +551,74 @@ class ServerInvite(PrivateBaseInvite):
     async def accept(self) -> Server:
         """|coro|
 
-        Accept this invite.
+        Accepts an invite.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Raises
         ------
-        Forbidden
-            You're banned.
-        HTTPException
-            Accepting the invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-------------------------------------------+
+            | Value              | Reason                                    |
+            +--------------------+-------------------------------------------+
+            | ``IsBot``          | The current token belongs to bot account. |
+            +--------------------+-------------------------------------------+
+            | ``TooManyServers`` | You're participating in too many servers. |
+            +--------------------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------+----------------------------+
+            | Value      | Reason                     |
+            +------------+----------------------------+
+            | ``Banned`` | You're banned from server. |
+            +------------+----------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------------+
+            | Value        | Reason                                   |
+            +--------------+------------------------------------------+
+            | ``NotFound`` | The invite/channel/server was not found. |
+            +--------------+------------------------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------+
+            | Value               | Reason                         |
+            +---------------------+--------------------------------+
+            | ``AlreadyInServer`` | The user is already in server. |
+            +---------------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Server`
+            The joined server.
         """
+        from .server import Server
+
         server = await super().accept()
-        return server  # type: ignore
+        assert isinstance(server, Server)
+        return server
 
 
 Invite = typing.Union[GroupInvite, ServerInvite]
